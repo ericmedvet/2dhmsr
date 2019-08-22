@@ -16,74 +16,90 @@
  */
 package it.units.erallab.hmsrobots;
 
-import com.google.common.collect.EvictingQueue;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Queue;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.dyn4j.collision.AxisAlignedBounds;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Circle;
+import org.dyn4j.dynamics.joint.DistanceJoint;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Rectangle;
-import org.dyn4j.geometry.Shape;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Starter {
-  
+
   public static void main(String[] args) {
-    World world = new World(new AxisAlignedBounds(100, 100));
-    
+    World world = new World(new AxisAlignedBounds(250, 250));
+
     Body floor = new Body();
     floor.addFixture(new BodyFixture(new Rectangle(100, 2)));
     floor.setMass(MassType.INFINITE);
     floor.translate(0, 0);
-    
-    Body ball = new Body();
-    ball.addFixture(new BodyFixture(new Circle(2)));
-    ball.getFixtures().get(0).setDensity(100);
-    ball.setMass(MassType.NORMAL);
-    ball.translate(3, 10);
-    
+
+    Body r1 = new Body();
+    r1.addFixture(new BodyFixture(new Rectangle(8, 2)));
+    r1.getFixtures().get(0).setDensity(100);
+    r1.setMass(MassType.NORMAL);
+    r1.translate(0, 70);
+    Body r2 = new Body();
+    r2.addFixture(new BodyFixture(new Rectangle(4, 1)));
+    r2.getFixtures().get(0).setDensity(100);
+    r2.setMass(MassType.NORMAL);
+    r2.translate(0, 50);
+
+    DistanceJoint j = new DistanceJoint(r1, r2, r1.getLocalCenter(), r2.getLocalCenter());
+    j.setFrequency(10);
+    j.setDampingRatio(1d);
+    j.setDistance(5);
+
     world.addBody(floor);
-    world.addBody(ball);
-        
-    Viewer viewer = new Viewer();
+    world.addBody(r1);
+    world.addBody(r2);
+    world.addJoint(j);
+
+    ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+    Viewer viewer = new Viewer(executor);
     viewer.start();
-    
-    double t = 0d;
-    double dt = 0.1d;
-    for (int i = 0; i<10; i++) {
+
+    double dt = 0.01d;
+    Runnable runnable = () -> {
       world.update(dt);
-      t = t+dt;
       viewer.listen(buildWorldEvent(world));
-    }
+    };
+    executor.scheduleAtFixedRate(runnable, 0, Math.round(dt*1000d), TimeUnit.MILLISECONDS);
   }
-  
+
   private static WorldEvent buildWorldEvent(World world) {
-    Collection<Shape> shapes = new ArrayList<>();
+    Collection<List<Point2D>> shapes = new ArrayList<>();
     double time = world.getAccumulatedTime();
-    for (Iterator<Body> worldIterator = world.getBodyIterator(); worldIterator.hasNext(); ) {
+    for (Iterator<Body> worldIterator = world.getBodyIterator(); worldIterator.hasNext();) {
       Body body = worldIterator.next();
-      
-      System.out.println(body.isActive());
-      
-      for (Iterator<BodyFixture> bodyIterator = body.getFixtureIterator(); bodyIterator.hasNext(); ) {
-        
-        Shape shape = bodyIterator.next().getShape();
-                
-        
-        Rectangle rectangle = new Rectangle(shape.createAABB().getWidth(),shape.createAABB().getHeight());
-        rectangle.translate(shape.getCenter().x, shape.getCenter().y);
-        shapes.add(rectangle);
-        System.out.printf("%5.1f,%5.1f %5.1f,%5.1f%n", rectangle.getCenter().x, rectangle.getCenter().y, rectangle.getWidth(), rectangle.getHeight());
+      AffineTransform transform = new AffineTransform();
+      transform.translate(body.getTransform().getTranslationX(), body.getTransform().getTranslationY());
+      transform.rotate(body.getTransform().getRotation());
+      for (Iterator<BodyFixture> bodyIterator = body.getFixtureIterator(); bodyIterator.hasNext();) {
+        Rectangle rectangle = (Rectangle) bodyIterator.next().getShape();
+        List<Point2D> shape = new ArrayList<>();
+        shape.add(transform.transform(new Point2D.Double(rectangle.getCenter().x - rectangle.getWidth() / 2, rectangle.getCenter().y - rectangle.getHeight() / 2), null));
+        shape.add(transform.transform(new Point2D.Double(rectangle.getCenter().x + rectangle.getWidth() / 2, rectangle.getCenter().y - rectangle.getHeight() / 2), null));
+        shape.add(transform.transform(new Point2D.Double(rectangle.getCenter().x + rectangle.getWidth() / 2, rectangle.getCenter().y + rectangle.getHeight() / 2), null));
+        shape.add(transform.transform(new Point2D.Double(rectangle.getCenter().x - rectangle.getWidth() / 2, rectangle.getCenter().y + rectangle.getHeight() / 2), null));
+        shapes.add(shape);
       }
     }
     return new WorldEvent(time, shapes);
-  }  
+  }
 }

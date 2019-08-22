@@ -17,32 +17,26 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.EvictingQueue;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
-import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import org.dyn4j.collision.Fixture;
-import org.dyn4j.geometry.Circle;
-import org.dyn4j.geometry.Convex;
-import org.dyn4j.geometry.Rectangle;
-import org.dyn4j.geometry.Shape;
 
 /**
  *
@@ -60,12 +54,12 @@ public class Viewer extends JFrame {
 
   private double timeScale = 1d;
   private double worldTime = 0d;
-  private double worldX1 = 0d, worldY1 = 0d, worldX2 = 100d, worldY2 = 100d;
+  private double worldX1 = -100d, worldY1 = -10d, worldX2 = 100d, worldY2 = 75d;
 
-  public Viewer() {
+  public Viewer(ScheduledExecutorService scheduledExecutorService) {
     super("World viewer");
     //create things
-    scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    this.scheduledExecutorService = scheduledExecutorService;
     queue = EvictingQueue.create(MAX_QUEUE_SIZE);
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -97,7 +91,12 @@ public class Viewer extends JFrame {
         WorldEvent event = findEvent(newWorldTime);
         if (event!=null) {
           worldTime = newWorldTime;
-          draw(event, worldX1, worldY1, worldX2, worldY2);          
+          try {
+            draw(event, worldX1, worldY1, worldX2, worldY2);
+          } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            System.exit(0);
+          }
         }
         label.setText(String.format(
                 "t=%5.2f FPS=%4.1f queue=%4d/%4d",
@@ -119,28 +118,26 @@ public class Viewer extends JFrame {
     g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     AffineTransform oAt = g.getTransform();
     //transform
-    double xRatio = (x2-x1)/canvas.getWidth();
-    double yRatio = (y2-y1)/canvas.getHeight();
-    double ratio = Math.max(xRatio, yRatio);
+    double xRatio = (double)canvas.getWidth()/(x2-x1);
+    double yRatio = (double)canvas.getHeight()/(y2-y1);
+    double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
-    at.translate(-x1, y1);
-    at.scale(1/ratio, 1/ratio);
+    at.scale(ratio, -ratio);
+    at.translate(-x1, -y2);
     g.setTransform(at);
+    g.setStroke(new BasicStroke(1f/(float)ratio));
     //draw
     g.setColor(Color.BLACK);
     g.fill(new Rectangle2D.Double(x1, y1, x2-x1, y2-y1));
     g.setColor(Color.RED);
-    for (Shape shape : event.getShapes()) {
-      if (shape instanceof Rectangle) {
-        Rectangle rectangle = (Rectangle)shape;
-        Rectangle2D.Double gShape = new Rectangle2D.Double(
-                rectangle.getCenter().x-rectangle.getWidth()/2,
-                rectangle.getCenter().y-rectangle.getHeight()/2,
-                rectangle.getWidth(),
-                rectangle.getHeight()
-        );
-        g.draw(gShape);
+    for (List<Point2D> shape : event.getShapes()) {
+      Line2D line2D;
+      for (int i = 1; i<shape.size(); i++) {
+        line2D = new Line2D.Double(shape.get(i-1), shape.get(i));
+        g.draw(line2D);
       }
+      line2D = new Line2D.Double(shape.get(0), shape.get(shape.size()-1));
+      g.draw(line2D);
     }
     //inverse transform
     g.setTransform(oAt);

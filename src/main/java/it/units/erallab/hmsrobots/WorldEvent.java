@@ -16,8 +16,9 @@
  */
 package it.units.erallab.hmsrobots;
 
+import java.awt.geom.Point2D;
 import java.util.Collection;
-import org.dyn4j.geometry.Shape;
+import java.util.List;
 
 /**
  *
@@ -26,9 +27,9 @@ import org.dyn4j.geometry.Shape;
 public class WorldEvent {
   
   private final double time;
-  private final Collection<Shape> shapes;
+  private final Collection<List<Point2D>> shapes;
 
-  public WorldEvent(double time, Collection<Shape> shapes) {
+  public WorldEvent(double time, Collection<List<Point2D>> shapes) {
     this.time = time;
     this.shapes = shapes;
   }
@@ -37,7 +38,7 @@ public class WorldEvent {
     return time;
   }
 
-  public Collection<Shape> getShapes() {
+  public Collection<List<Point2D>> getShapes() {
     return shapes;
   }
 
