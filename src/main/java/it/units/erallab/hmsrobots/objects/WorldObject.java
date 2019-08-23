@@ -14,31 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
+package it.units.erallab.hmsrobots.objects;
 
 import it.units.erallab.hmsrobots.objects.snapshot.Compound;
-import java.util.Collection;
+import org.dyn4j.dynamics.World;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent {
+public interface WorldObject {
   
-  private final double time;
-  private final Collection<Compound> snapshots;
-
-  public WorldEvent(double time, Collection<Compound> snapshots) {
-    this.time = time;
-    this.snapshots = snapshots;
-  }
-
-  public double getTime() {
-    return time;
-  }
-
-  public Collection<Compound> getSnapshots() {
-    return snapshots;
-  }
+  public Compound getSnapshot();
+  public void addTo(World world);
   
 }

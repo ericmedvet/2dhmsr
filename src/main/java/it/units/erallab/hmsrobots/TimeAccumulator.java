@@ -16,29 +16,25 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
-import java.util.Collection;
-
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent {
+public class TimeAccumulator {
   
-  private final double time;
-  private final Collection<Compound> snapshots;
+  private double t;
 
-  public WorldEvent(double time, Collection<Compound> snapshots) {
-    this.time = time;
-    this.snapshots = snapshots;
+  public TimeAccumulator() {
+    t = 0d;
   }
 
-  public double getTime() {
-    return time;
+  public double getT() {
+    return t;
   }
-
-  public Collection<Compound> getSnapshots() {
-    return snapshots;
+  
+  public double add(double dt) {
+    t = t+dt;
+    return t;
   }
   
 }

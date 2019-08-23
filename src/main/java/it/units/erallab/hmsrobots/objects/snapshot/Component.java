@@ -14,31 +14,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
-
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
-import java.util.Collection;
+package it.units.erallab.hmsrobots.objects.snapshot;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent {
-  
-  private final double time;
-  private final Collection<Compound> snapshots;
+public class Component {
 
-  public WorldEvent(double time, Collection<Compound> snapshots) {
-    this.time = time;
-    this.snapshots = snapshots;
-  }
-
-  public double getTime() {
-    return time;
-  }
-
-  public Collection<Compound> getSnapshots() {
-    return snapshots;
+  public static enum Type {
+    RIGID, CONNECTION, ENCLOSING
   }
   
+  private final Type type;
+  private final Poly poly;
+
+  public Component(Type type, Poly poly) {
+    this.type = type;
+    this.poly = poly;
+  }
+
+  public Type getType() {
+    return type;
+  }
+
+  public Poly getPoly() {
+    return poly;
+  }
+
+  @Override
+  public String toString() {
+    return "Component{" + "type=" + type + ", poly=" + poly + '}';
+  }
+
 }

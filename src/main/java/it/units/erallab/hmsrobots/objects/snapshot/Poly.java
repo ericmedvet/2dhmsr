@@ -14,31 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
+package it.units.erallab.hmsrobots.objects.snapshot;
 
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
+import org.dyn4j.geometry.Vector2;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent {
+public class Poly {
   
-  private final double time;
-  private final Collection<Compound> snapshots;
+  private final Vector2[] vertexes;
 
-  public WorldEvent(double time, Collection<Compound> snapshots) {
-    this.time = time;
-    this.snapshots = snapshots;
+  public Poly(List<Vector2> vertexes) {
+    this.vertexes = new Vector2[vertexes.size()];
+    for (int i = 0; i<vertexes.size(); i++) {
+      this.vertexes[i] = vertexes.get(i);
+    }
+  }
+  
+  public Poly(Vector2... vertexes) {
+    this.vertexes = vertexes;
   }
 
-  public double getTime() {
-    return time;
-  }
-
-  public Collection<Compound> getSnapshots() {
-    return snapshots;
-  }
+  public Vector2[] getVertexes() {
+    return vertexes;
+  }    
   
 }
