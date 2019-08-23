@@ -37,27 +37,30 @@ import org.dyn4j.geometry.Vector2;
 public class Voxel implements WorldObject {
 
   public final static double SIDE_LENGHT = 3d;
-  private final static double V_L = 1d;
+  private final static double V_L = SIDE_LENGHT / 3d * 1d;
   private final static double SPRING_F = 25d;
   private final static double SPRING_D = 1d;
 
   private final Body[] vertexBodies;
   private final DistanceJoint[] joints;
 
+  private final double externalJointDistance;
+  private final double diagonalJointDistance;
+
   public Voxel(double x, double y, double mass) {
     vertexBodies = new Body[4];
     joints = new DistanceJoint[6];
     //compute densities
-    double vertexDensity = mass * V_L / V_L / 4;
+    double density = mass * V_L / V_L / 4;
     //build bodies
     vertexBodies[0] = new Body(1);
     vertexBodies[1] = new Body(1);
     vertexBodies[2] = new Body(1);
     vertexBodies[3] = new Body(1);
-    vertexBodies[0].addFixture(new Rectangle(V_L, V_L), vertexDensity);
-    vertexBodies[1].addFixture(new Rectangle(V_L, V_L), vertexDensity);
-    vertexBodies[2].addFixture(new Rectangle(V_L, V_L), vertexDensity);
-    vertexBodies[3].addFixture(new Rectangle(V_L, V_L), vertexDensity);
+    vertexBodies[0].addFixture(new Rectangle(V_L, V_L), density);
+    vertexBodies[1].addFixture(new Rectangle(V_L, V_L), density);
+    vertexBodies[2].addFixture(new Rectangle(V_L, V_L), density);
+    vertexBodies[3].addFixture(new Rectangle(V_L, V_L), density);
     vertexBodies[0].translate(-(SIDE_LENGHT / 2 - V_L / 2), +(SIDE_LENGHT / 2 - V_L / 2));
     vertexBodies[1].translate(+(SIDE_LENGHT / 2 - V_L / 2), +(SIDE_LENGHT / 2 - V_L / 2));
     vertexBodies[2].translate(+(SIDE_LENGHT / 2 - V_L / 2), -(SIDE_LENGHT / 2 - V_L / 2));
@@ -80,6 +83,8 @@ public class Voxel implements WorldObject {
       joint.setFrequency(SPRING_F);
       joint.setDampingRatio(SPRING_D);
     }
+    externalJointDistance = joints[0].getDistance();
+    diagonalJointDistance = joints[4].getDistance();
   }
 
   @Override
@@ -135,6 +140,21 @@ public class Voxel implements WorldObject {
 
   public Body[] getVertexBodies() {
     return vertexBodies;
-  }    
+  }
+
+  public void applyForce(double f) {
+    double xc = 0d;
+    double yc = 0d;
+    for (Body body : vertexBodies) {
+      xc = xc + body.getWorldCenter().x;
+      yc = yc + body.getWorldCenter().y;
+    }
+    xc = xc / (double) vertexBodies.length;
+    yc = yc / (double) vertexBodies.length;
+    for (Body body : vertexBodies) {
+      Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f);
+      body.applyForce(force);
+    }
+  }
 
 }

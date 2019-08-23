@@ -16,14 +16,14 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
+import it.units.erallab.hmsrobots.Grid;
+import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.snapshot.Component;
 import it.units.erallab.hmsrobots.objects.snapshot.Compound;
-import it.units.erallab.hmsrobots.objects.snapshot.Poly;
 import java.util.ArrayList;
 import java.util.List;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.dynamics.joint.DistanceJoint;
 import org.dyn4j.dynamics.joint.Joint;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
@@ -34,56 +34,58 @@ import org.dyn4j.geometry.Vector2;
  */
 public class VoxelCompound implements WorldObject {
 
-  private final List<Voxel> voxels;
   private final List<Joint> joints;
+  private final Controller controller;
+  private final Grid<Voxel> voxels;
 
-  public VoxelCompound(double x, double y, boolean[][] grid, double mass) {
-    voxels = new ArrayList<>();
+  public VoxelCompound(double x, double y, Grid<Boolean> grid, double mass, Controller controller) {
+    this.controller = controller;
     joints = new ArrayList<>();
     //construct voxels
-    int w = grid[0].length;
-    int h = grid.length;
-    Voxel[][] gridVoxels = new Voxel[h][w];
-    for (int gx = 0; gx < w; gx++) {
-      for (int gy = 0; gy < h; gy++) {
-        if (grid[gy][gx]) {
+    voxels = Grid.create(grid);
+    for (int gx = 0; gx < grid.getW(); gx++) {
+      for (int gy = 0; gy < grid.getH(); gy++) {
+        if (grid.get(gx, gy)) {
           Voxel voxel = new Voxel(x + (double) gx * Voxel.SIDE_LENGHT, y + gy * Voxel.SIDE_LENGHT, mass);
-          gridVoxels[gy][gx] = voxel;
-          voxels.add(voxel);
+          voxels.set(gx, gy, voxel);
           //check for adjacent voxels
-          if ((gx > 0) && (gridVoxels[gy][gx - 1] != null)) {
-            Voxel adjacent = gridVoxels[gy][gx - 1];
+          if ((gx > 0) && (voxels.get(gx - 1, gy) != null)) {
+            Voxel adjacent = voxels.get(gx - 1, gy);
             joints.add(join(voxel.getVertexBodies()[0], adjacent.getVertexBodies()[1]));
             joints.add(join(voxel.getVertexBodies()[3], adjacent.getVertexBodies()[2]));
           }
-          if ((gy > 0) && (gridVoxels[gy - 1][gx] != null)) {
-            Voxel adjacent = gridVoxels[gy - 1][gx];
+          if ((gy > 0) && (voxels.get(gx, gy - 1) != null)) {
+            Voxel adjacent = voxels.get(gx, gy - 1);
             joints.add(join(voxel.getVertexBodies()[3], adjacent.getVertexBodies()[0]));
             joints.add(join(voxel.getVertexBodies()[2], adjacent.getVertexBodies()[1]));
           }
         }
       }
     }
-  }    
-
-  public VoxelCompound(double x, double y, String grid, double mass) {
-    this(x, y, fromString(grid), mass);
   }
-  
+
+  public VoxelCompound(double x, double y, String grid, double mass, Controller controller) {
+    this(x, y, fromString(grid), mass, controller);
+  }
+
   private static Joint join(Body body1, Body body2) {
     WeldJoint joint = new WeldJoint(body1, body2, new Vector2(
-            (body1.getWorldCenter().x+body1.getWorldCenter().x)/2d,
-            (body1.getWorldCenter().y+body1.getWorldCenter().y)/2d
+            (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
+            (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
     return joint;
   }
 
-  private static boolean[][] fromString(String s) {
+  private static Grid<Boolean> fromString(String s) {
     String[] rows = s.split(",");
-    boolean[][] grid = new boolean[rows.length][rows[0].length()];
-    for (int x = 0; x < rows.length; x++) {
-      for (int y = 0; y < Math.min(rows[0].length(), rows[x].length()); y++) {
-        grid[x][y] = rows[x].charAt(y) != ' ';
+    Grid<Boolean> grid = Grid.create(rows[0].length(), rows.length, false);
+    for (int y = 0; y < grid.getH(); y++) {
+      for (int x = 0; x < grid.getW(); x++) {
+        if (x >= rows[y].length()) {
+          grid.set(x, grid.getH() - y - 1, false);
+        } else {
+          grid.set(x, grid.getH() - y - 1, rows[y].charAt(x) != ' ');
+        }
       }
     }
     return grid;
@@ -92,19 +94,43 @@ public class VoxelCompound implements WorldObject {
   @Override
   public Compound getSnapshot() {
     List<Component> components = new ArrayList<>();
-    for (Voxel voxel : voxels) {
-      components.addAll(voxel.getSnapshot().getComponents());
+    for (int x = 0; x < voxels.getW(); x++) {
+      for (int y = 0; y < voxels.getH(); y++) {
+        Voxel voxel = voxels.get(x, y);
+        if (voxel != null) {
+          components.addAll(voxel.getSnapshot().getComponents());
+        }
+      }
     }
     return new Compound(Voxel.class, components);
   }
 
   @Override
   public void addTo(World world) {
-    for (Voxel voxel : voxels) {
-      voxel.addTo(world);
+    for (int x = 0; x < voxels.getW(); x++) {
+      for (int y = 0; y < voxels.getH(); y++) {
+        Voxel voxel = voxels.get(x, y);
+        if (voxel != null) {
+          voxel.addTo(world);
+        }
+      }
     }
     for (Joint joint : joints) {
       world.addJoint(joint);
+    }
+  }
+
+  public void control(double t, double dt) {
+    if (controller != null) {
+      Grid<Double> forceGrid = controller.control(t, dt, voxels);
+      for (int x = 0; x < voxels.getW(); x++) {
+        for (int y = 0; y < voxels.getH(); y++) {
+          Voxel voxel = voxels.get(x, y);
+          if (voxel != null) {
+            voxels.get(x, y).applyForce(forceGrid.get(x, y));
+          }
+        }
+      }
     }
   }
 

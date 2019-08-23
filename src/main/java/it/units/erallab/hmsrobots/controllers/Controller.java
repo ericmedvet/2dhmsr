@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2019 eric
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,31 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
+package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
-import java.util.Collection;
+import it.units.erallab.hmsrobots.Grid;
+import it.units.erallab.hmsrobots.objects.Voxel;
 
 /**
  *
- * @author Eric Medvet <eric.medvet@gmail.com>
+ * @author eric
  */
-public class WorldEvent {
+public interface Controller {
   
-  private final double time;
-  private final Collection<Compound> compounds;
-
-  public WorldEvent(double time, Collection<Compound> compounds) {
-    this.time = time;
-    this.compounds = compounds;
-  }
-
-  public double getTime() {
-    return time;
-  }
-
-  public Collection<Compound> getCompounds() {
-    return compounds;
-  }
+  public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid);
   
 }

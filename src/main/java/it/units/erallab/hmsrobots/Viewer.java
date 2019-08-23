@@ -28,14 +28,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -60,15 +60,19 @@ public class Viewer extends JFrame {
   private final JSlider timeScaleSlider;
   private final JCheckBox playCheckBox;
   private final JProgressBar queueProgressBar;
+  private final Map<VoxelVizMode, JCheckBox> vizModeCheckBoxes;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final EvictingQueue<WorldEvent> queue;
-  private final Set<VoxelVizMode> voxelVizModes;
 
-  private double timeScale = 1d;
+  private double timeScale;
+
   private double worldTime = 0d;
   private double localTime = 0d;
   private double worldX1 = -5d, worldY1 = -5d, worldX2 = 105d, worldY2 = 75d;
+
+  private final static float VOXEL_FILL_ALPHA = 0.75f;
+  private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
 
   public static enum VoxelVizMode {
     POLY, FILL_AREA, SPRINGS, COMPONENTS
@@ -79,7 +83,7 @@ public class Viewer extends JFrame {
     //create things
     this.scheduledExecutorService = scheduledExecutorService;
     queue = EvictingQueue.create(MAX_QUEUE_SIZE);
-    voxelVizModes = EnumSet.allOf(VoxelVizMode.class);
+    vizModeCheckBoxes = new EnumMap<>(VoxelVizMode.class);
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     Dimension dimension = new Dimension(1000, 800);
@@ -88,10 +92,16 @@ public class Viewer extends JFrame {
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
     infoLabel = new JLabel();
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
     playCheckBox = new JCheckBox("Play", true);
+    for (VoxelVizMode mode : VoxelVizMode.values()) {
+      final JCheckBox checkBox = new JCheckBox(mode.name().toLowerCase().replace('_', ' '), true);
+      vizModeCheckBoxes.put(mode, checkBox);
+      topPanel.add(checkBox);
+    }
     //set layout and put components
     bottomPanel.add(infoLabel);
     bottomPanel.add(queueProgressBar);
@@ -99,6 +109,7 @@ public class Viewer extends JFrame {
     bottomPanel.add(playCheckBox);
     getContentPane().add(canvas, BorderLayout.CENTER);
     getContentPane().add(bottomPanel, BorderLayout.PAGE_END);
+    getContentPane().add(topPanel, BorderLayout.PAGE_START);
     //add(label);
     //pack
     pack();
@@ -173,14 +184,14 @@ public class Viewer extends JFrame {
     //draw
     g.setColor(Color.BLACK);
     g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
-    for (Compound object : event.getSnapshots()) {
-      drawObject(object, g);
+    for (Compound object : event.getCompounds()) {
+      draw(object, g);
     }
     //inverse transform    
     g.setTransform(oAt);
     //info
     g.setColor(Color.WHITE);
-    g.drawString(String.format("%6.2f", event.getTime()), 1, 1 + g.getFontMetrics().getMaxAscent());
+    g.drawString(String.format("(%.0f;%.0f)->(%.0f;%.0f)", x1, y1, x2, y2), 1, 1 + g.getFontMetrics().getMaxAscent());
     //finalize
     g.dispose();
     BufferStrategy strategy = canvas.getBufferStrategy();
@@ -190,17 +201,35 @@ public class Viewer extends JFrame {
     Toolkit.getDefaultToolkit().sync();
   }
 
-  private void drawObject(Compound snapshot, Graphics2D g) {
-    if (snapshot.getObjectClass().equals(Voxel.class)) {
-      for (Component component : snapshot.getComponents()) {
+  private void draw(Compound compound, Graphics2D g) {
+    if (compound.getObjectClass().equals(Voxel.class)) {
+      for (Component component : compound.getComponents()) {
         if (component.getType().equals(Component.Type.ENCLOSING)) {
-          final double area = area(component.getPoly());
-          g.setColor(mid(Color.GREEN, Color.RED, Math.round(1d - area / Voxel.SIDE_LENGHT / Voxel.SIDE_LENGHT)));
+          if (vizModeCheckBoxes.get(VoxelVizMode.FILL_AREA).isSelected()) {
+            final double area = area(component.getPoly());
+            final Color color = linear(
+                    Color.RED, Color.GREEN, Color.CYAN,
+                    .75d, 1d, 1.25d,
+                    area / Voxel.SIDE_LENGHT / Voxel.SIDE_LENGHT,
+                    VOXEL_FILL_ALPHA
+            );
+            g.setColor(color);
+            g.fill(toPath(component.getPoly(), true));
+          }
+          if (vizModeCheckBoxes.get(VoxelVizMode.POLY).isSelected()) {
+            g.setColor(new Color(0f, 0f, 1f, VOXEL_COMPONENT_ALPHA));
+            g.draw(toPath(component.getPoly(), true));
+          }
+        } else if (component.getType().equals(Component.Type.CONNECTION)&&vizModeCheckBoxes.get(VoxelVizMode.SPRINGS).isSelected()) {
+          g.setColor(Color.BLUE);
+          g.draw(toPath(component.getPoly(), false));
+        } else if (component.getType().equals(Component.Type.RIGID)&&vizModeCheckBoxes.get(VoxelVizMode.COMPONENTS).isSelected()) {
+          g.setColor(new Color(0f, 0f, 1f, VOXEL_COMPONENT_ALPHA));
           g.fill(toPath(component.getPoly(), true));
         }
       }
     } else {
-      for (Component component : snapshot.getComponents()) {
+      for (Component component : compound.getComponents()) {
         drawComponent(component, g);
       }
     }
@@ -223,18 +252,26 @@ public class Viewer extends JFrame {
     }
   }
 
-  private Color mid(final Color c1, final Color c2, double x) {
+  private Color linear(final Color c1, final Color c2, final Color c3, double x1, double x2, double x3, double x, float alpha) {
+    if (x < x2) {
+      return mid(c1, c2, x1, x2, x, alpha);
+    }
+    return mid(c2, c3, x2, x3, x, alpha);
+  }
+
+  private Color mid(final Color c1, final Color c2, double min, double max, double x, float alpha) {
+    x = (x - min) / (max - min);
     x = Math.max(0d, Math.min(1d, x));
-    final double r1 = c1.getRed();
-    final double g1 = c1.getGreen();
-    final double b1 = c1.getBlue();
-    final double r2 = c2.getRed();
-    final double g2 = c2.getGreen();
-    final double b2 = c2.getBlue();
-    final long r = Math.round(r1 + (r2 - r1) * x);
-    final long g = Math.round(g1 + (g2 - g1) * x);
-    final long b = Math.round(b1 + (b2 - b1) * x);
-    return new Color((int)r, (int)g, (int)b);
+    final double r1 = c1.getRed() / 255d;
+    final double g1 = c1.getGreen() / 255d;
+    final double b1 = c1.getBlue() / 255d;
+    final double r2 = c2.getRed() / 255d;
+    final double g2 = c2.getGreen() / 255d;
+    final double b2 = c2.getBlue() / 255d;
+    final double r = r1 + (r2 - r1) * x;
+    final double g = g1 + (g2 - g1) * x;
+    final double b = b1 + (b2 - b1) * x;
+    return new Color((float) r, (float) g, (float) b, alpha);
   }
 
   private double area(Poly poly) {
