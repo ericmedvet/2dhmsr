@@ -16,9 +16,9 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.snapshot.Component;
-import it.units.erallab.hmsrobots.objects.snapshot.Poly;
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Component;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

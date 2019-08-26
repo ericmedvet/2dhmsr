@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.objects.snapshot;
+package it.units.erallab.hmsrobots.objects.immutable;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.List;
 import org.dyn4j.geometry.Vector2;
 
@@ -24,23 +24,43 @@ import org.dyn4j.geometry.Vector2;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Poly {
-  
+public class Poly implements Serializable {
+
   private final Vector2[] vertexes;
 
   public Poly(List<Vector2> vertexes) {
     this.vertexes = new Vector2[vertexes.size()];
-    for (int i = 0; i<vertexes.size(); i++) {
+    for (int i = 0; i < vertexes.size(); i++) {
       this.vertexes[i] = vertexes.get(i);
     }
   }
-  
+
   public Poly(Vector2... vertexes) {
     this.vertexes = vertexes;
   }
 
   public Vector2[] getVertexes() {
     return vertexes;
-  }    
-  
+  }
+
+  public double area() {
+    double a = 0d;
+    int l = vertexes.length;
+    for (int i = 0; i < l; i++) {
+      a = a + vertexes[i].x * (vertexes[(l + i + 1) % l].y - vertexes[(l + i - 1) % l].y);
+    }
+    a = 0.5d * Math.abs(a);
+    return a;
+  }
+
+  public Vector2 center() {
+    double x = 0d;
+    double y= 0d;
+    for (Vector2 v : vertexes) {
+      x = x+v.x;
+      y = y+v.y;
+    }
+    return new Vector2(x/(double)vertexes.length, y/(double)vertexes.length);
+  }
+
 }

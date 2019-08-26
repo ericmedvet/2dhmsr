@@ -16,7 +16,8 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.controllers.PhaseController;
+import it.units.erallab.hmsrobots.controllers.Controller;
+import it.units.erallab.hmsrobots.controllers.PhaseSin;
 import it.units.erallab.hmsrobots.objects.Box;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
@@ -56,18 +57,33 @@ public class Starter {
       worldObjects.add(box);
     }
 
-    Voxel v = new Voxel(10, 50, 1);
-    v.addTo(world);
-    worldObjects.add(v);
-
-    VoxelCompound vc = new VoxelCompound(
-            30, 20,
+    VoxelCompound vc1 = new VoxelCompound(
+            10, 20,
             " **, * , * , * , * , * ,***",
             1,
-            new PhaseController(0.5d, 100d, Grid.create(3, 7, 0d))
+            new PhaseSin(0.5d, 250d, Grid.create(3, 7, 0d))
     );
-    vc.addTo(world);
-    worldObjects.add(vc);
+    //vc1.addTo(world);
+    //worldObjects.add(vc1);
+
+    int wormW = 10;
+    int wormH = 5;
+    Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
+    for (int x = 0; x < wormW; x++) {
+      for (int y = 0; y < wormH; y++) {
+        wormController.set(x, y, (double) x / (double) wormH * 1 * Math.PI);
+      }
+    }
+    Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
+    VoxelCompound vc2 = new VoxelCompound(
+            50, 5,
+            wormShape,
+            1,
+            new PhaseSin(1d, 1d, wormController)
+            //(double t, double dt, Grid<Voxel> voxelGrid) -> Grid.create(wormW, wormH, -1000d)
+    );
+    vc2.addTo(world);
+    worldObjects.add(vc2);
 
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
     Viewer viewer = new Viewer(executor);
@@ -78,8 +94,8 @@ public class Starter {
     Runnable runnable = () -> {
       try {
         t.add(dt);
-        v.applyForce(Math.sin(2d * Math.PI * 0.5d * t.getT()) * 500d);
-        vc.control(t.getT(), dt);
+        //vc1.control(t.getT(), dt);
+        vc2.control(t.getT(), dt);
         world.update(dt);
         viewer.listen(new WorldEvent(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
       } catch (Throwable ex) {

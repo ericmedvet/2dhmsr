@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import org.dyn4j.dynamics.World;
 
 /**

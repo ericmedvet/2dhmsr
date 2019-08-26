@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2019 eric
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,37 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.objects.snapshot;
+package it.units.erallab.hmsrobots.objects.immutable;
 
 /**
  *
- * @author Eric Medvet <eric.medvet@gmail.com>
+ * @author eric
  */
-public class Component {
+public class VoxelComponent extends Component {
+  
+  private final double lastAppliedForce;
+  private final double restArea;
+  private final double lastArea;
 
-  public static enum Type {
-    RIGID, CONNECTION, ENCLOSING
+  public VoxelComponent(double lastAppliedForce, double restArea, double lastArea, Poly poly) {
+    super(Type.ENCLOSING, poly);
+    this.lastAppliedForce = lastAppliedForce;
+    this.restArea = restArea;
+    this.lastArea = lastArea;
+  }
+
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
+  }
+
+  public double getRestArea() {
+    return restArea;
+  }
+
+  public double getLastArea() {
+    return lastArea;
   }
   
-  private final Type type;
-  private final Poly poly;
-
-  public Component(Type type, Poly poly) {
-    this.type = type;
-    this.poly = poly;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public Poly getPoly() {
-    return poly;
-  }
-
-  @Override
-  public String toString() {
-    return "Component{" + "type=" + type + ", poly=" + poly + '}';
-  }
-
 }

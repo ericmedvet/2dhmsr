@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.objects.snapshot;
+package it.units.erallab.hmsrobots.objects.immutable;
 
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,7 +25,7 @@ import java.util.List;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Compound {
+public class Compound implements Serializable {
   
   private final Class<? extends WorldObject> objectClass;
   private final List<Component> components;

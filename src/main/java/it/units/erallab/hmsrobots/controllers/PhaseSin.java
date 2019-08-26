@@ -23,13 +23,13 @@ import it.units.erallab.hmsrobots.objects.Voxel;
  *
  * @author eric
  */
-public class PhaseController implements Controller {
+public class PhaseSin implements Controller {
   
   private final double frequency;
   private final double amplitude;
   private final Grid<Double> phases;
 
-  public PhaseController(double frequency, double amplitude, Grid<Double> phases) {
+  public PhaseSin(double frequency, double amplitude, Grid<Double> phases) {
     this.frequency = frequency;
     this.amplitude = amplitude;
     this.phases = phases;

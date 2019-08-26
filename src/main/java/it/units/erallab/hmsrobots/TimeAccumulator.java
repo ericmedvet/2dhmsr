@@ -36,5 +36,9 @@ public class TimeAccumulator {
     t = t+dt;
     return t;
   }
+
+  public void setT(double t) {
+    this.t = t;
+  }
   
 }

@@ -16,9 +16,10 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.snapshot.Component;
-import it.units.erallab.hmsrobots.objects.snapshot.Poly;
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Component;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.util.ArrayList;
 import java.util.List;
 import org.dyn4j.dynamics.Body;
@@ -37,15 +38,19 @@ import org.dyn4j.geometry.Vector2;
 public class Voxel implements WorldObject {
 
   public final static double SIDE_LENGHT = 3d;
+  
   private final static double V_L = SIDE_LENGHT / 3d * 1d;
   private final static double SPRING_F = 25d;
   private final static double SPRING_D = 1d;
+  private final static double MAX_ABS_FORCE = 400d;
 
   private final Body[] vertexBodies;
   private final DistanceJoint[] joints;
 
   private final double externalJointDistance;
   private final double diagonalJointDistance;
+  
+  private double lastAppliedForce = 0d;
 
   public Voxel(double x, double y, double mass) {
     vertexBodies = new Body[4];
@@ -91,12 +96,13 @@ public class Voxel implements WorldObject {
   public Compound getSnapshot() {
     List<Component> components = new ArrayList<>(1 + 1 + vertexBodies.length + joints.length);
     //add enclosing
-    components.add(new Component(Component.Type.ENCLOSING, new Poly(
+    Poly poly = new Poly(
             getIndexedVertex(0, 3),
             getIndexedVertex(1, 2),
             getIndexedVertex(2, 1),
             getIndexedVertex(3, 0)
-    )));
+    );
+    components.add(new VoxelComponent(lastAppliedForce, SIDE_LENGHT*SIDE_LENGHT, poly.area(), poly));
     //add parts
     for (Body body : vertexBodies) {
       components.add(new Component(Component.Type.RIGID, rectangleToPoly(body)));
@@ -143,6 +149,9 @@ public class Voxel implements WorldObject {
   }
 
   public void applyForce(double f) {
+    if (Math.abs(f)>1d) {
+      f = Math.signum(f);
+    }
     double xc = 0d;
     double yc = 0d;
     for (Body body : vertexBodies) {
@@ -152,9 +161,18 @@ public class Voxel implements WorldObject {
     xc = xc / (double) vertexBodies.length;
     yc = yc / (double) vertexBodies.length;
     for (Body body : vertexBodies) {
-      Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f);
+      Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f*MAX_ABS_FORCE);
       body.applyForce(force);
     }
+    lastAppliedForce = f;
   }
 
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
+  }
+
+  public void setLastAppliedForce(double lastAppliedForce) {
+    this.lastAppliedForce = lastAppliedForce;
+  }
+  
 }

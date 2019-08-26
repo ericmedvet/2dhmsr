@@ -18,9 +18,10 @@ package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.snapshot.Component;
-import it.units.erallab.hmsrobots.objects.snapshot.Poly;
-import it.units.erallab.hmsrobots.objects.snapshot.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Component;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
@@ -30,13 +31,12 @@ import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JCheckBox;
@@ -45,6 +45,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSlider;
+import org.dyn4j.geometry.Vector2;
 
 /**
  *
@@ -52,8 +53,12 @@ import javax.swing.JSlider;
  */
 public class Viewer extends JFrame {
 
-  private final static int TARGET_FPS = 50;
+  private final static int TARGET_FPS = 25;
   private final static int MAX_QUEUE_SIZE = 10000;
+
+  private final static double FORCE_CIRCLE_RANGE = 0.5d;
+  private final static float VOXEL_FILL_ALPHA = 0.75f;
+  private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
 
   private final Canvas canvas;
   private final JLabel infoLabel;
@@ -71,11 +76,8 @@ public class Viewer extends JFrame {
   private double localTime = 0d;
   private double worldX1 = -5d, worldY1 = -5d, worldX2 = 105d, worldY2 = 75d;
 
-  private final static float VOXEL_FILL_ALPHA = 0.75f;
-  private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
-
   public static enum VoxelVizMode {
-    POLY, FILL_AREA, SPRINGS, COMPONENTS
+    POLY, FILL_AREA, SPRINGS, COMPONENTS, FORCE
   }
 
   public Viewer(ScheduledExecutorService scheduledExecutorService) {
@@ -135,7 +137,7 @@ public class Viewer extends JFrame {
             double newWorldTime = worldTime + (double) (elapsedMillis) / 1000d * timeScale;
             WorldEvent event = findEvent(newWorldTime);
             if (event != null) {
-              worldTime = event.getTime();
+              worldTime = newWorldTime;
               draw(event, worldX1, worldY1, worldX2, worldY2);
             }
           }
@@ -182,7 +184,7 @@ public class Viewer extends JFrame {
     g.setTransform(at);
     g.setStroke(new BasicStroke(1f / (float) ratio));
     //draw
-    g.setColor(Color.BLACK);
+    g.setColor(Color.WHITE);
     g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
     for (Compound object : event.getCompounds()) {
       draw(object, g);
@@ -190,7 +192,7 @@ public class Viewer extends JFrame {
     //inverse transform    
     g.setTransform(oAt);
     //info
-    g.setColor(Color.WHITE);
+    g.setColor(Color.BLACK);
     g.drawString(String.format("(%.0f;%.0f)->(%.0f;%.0f)", x1, y1, x2, y2), 1, 1 + g.getFontMetrics().getMaxAscent());
     //finalize
     g.dispose();
@@ -205,12 +207,16 @@ public class Viewer extends JFrame {
     if (compound.getObjectClass().equals(Voxel.class)) {
       for (Component component : compound.getComponents()) {
         if (component.getType().equals(Component.Type.ENCLOSING)) {
+          final double lastArea = ((VoxelComponent) component).getLastArea();
+          final double restArea = ((VoxelComponent) component).getRestArea();
+          final Vector2 c = component.getPoly().center();
+          final double f = ((VoxelComponent) component).getLastAppliedForce();
+          final double l = Math.sqrt(restArea);
           if (vizModeCheckBoxes.get(VoxelVizMode.FILL_AREA).isSelected()) {
-            final double area = area(component.getPoly());
             final Color color = linear(
-                    Color.RED, Color.GREEN, Color.CYAN,
+                    Color.RED, Color.GREEN, Color.YELLOW,
                     .75d, 1d, 1.25d,
-                    area / Voxel.SIDE_LENGHT / Voxel.SIDE_LENGHT,
+                    lastArea / restArea,
                     VOXEL_FILL_ALPHA
             );
             g.setColor(color);
@@ -220,10 +226,16 @@ public class Viewer extends JFrame {
             g.setColor(new Color(0f, 0f, 1f, VOXEL_COMPONENT_ALPHA));
             g.draw(toPath(component.getPoly(), true));
           }
-        } else if (component.getType().equals(Component.Type.CONNECTION)&&vizModeCheckBoxes.get(VoxelVizMode.SPRINGS).isSelected()) {
+          if (vizModeCheckBoxes.get(VoxelVizMode.FORCE).isSelected()) {
+            g.setColor(Color.BLUE);
+            double r = (l * (1 - FORCE_CIRCLE_RANGE * f)) / 2d;
+            Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
+            g.draw(circle);
+          }
+        } else if (component.getType().equals(Component.Type.CONNECTION) && vizModeCheckBoxes.get(VoxelVizMode.SPRINGS).isSelected()) {
           g.setColor(Color.BLUE);
           g.draw(toPath(component.getPoly(), false));
-        } else if (component.getType().equals(Component.Type.RIGID)&&vizModeCheckBoxes.get(VoxelVizMode.COMPONENTS).isSelected()) {
+        } else if (component.getType().equals(Component.Type.RIGID) && vizModeCheckBoxes.get(VoxelVizMode.COMPONENTS).isSelected()) {
           g.setColor(new Color(0f, 0f, 1f, VOXEL_COMPONENT_ALPHA));
           g.fill(toPath(component.getPoly(), true));
         }
@@ -272,16 +284,6 @@ public class Viewer extends JFrame {
     final double g = g1 + (g2 - g1) * x;
     final double b = b1 + (b2 - b1) * x;
     return new Color((float) r, (float) g, (float) b, alpha);
-  }
-
-  private double area(Poly poly) {
-    double a = 0d;
-    int l = poly.getVertexes().length;
-    for (int i = 0; i < l; i++) {
-      a = a + poly.getVertexes()[i].x * (poly.getVertexes()[(l + i + 1) % l].y - poly.getVertexes()[(l + i - 1) % l].y);
-    }
-    a = 0.5d * Math.abs(a);
-    return a;
   }
 
   private Path2D toPath(Poly poly, boolean close) {

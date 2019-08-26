@@ -14,31 +14,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
+package it.units.erallab.hmsrobots.objects.immutable;
 
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
-import java.util.Collection;
+import java.io.Serializable;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent {
-  
-  private final double time;
-  private final Collection<Compound> compounds;
+public class Component implements Serializable {
 
-  public WorldEvent(double time, Collection<Compound> compounds) {
-    this.time = time;
-    this.compounds = compounds;
-  }
-
-  public double getTime() {
-    return time;
-  }
-
-  public Collection<Compound> getCompounds() {
-    return compounds;
+  public static enum Type {
+    RIGID, CONNECTION, ENCLOSING
   }
   
+  private final Type type;
+  private final Poly poly;
+
+  public Component(Type type, Poly poly) {
+    this.type = type;
+    this.poly = poly;
+  }
+
+  public Type getType() {
+    return type;
+  }
+
+  public Poly getPoly() {
+    return poly;
+  }
+
+  @Override
+  public String toString() {
+    return "Component{" + "type=" + type + ", poly=" + poly + '}';
+  }
+
 }
