@@ -16,11 +16,9 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.controllers.PhaseSin;
 import it.units.erallab.hmsrobots.objects.Box;
 import it.units.erallab.hmsrobots.objects.Ground;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import java.util.ArrayList;
@@ -32,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.dyn4j.collision.AxisAlignedBounds;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Vector2;
 
 /**
  *
@@ -46,8 +43,8 @@ public class Starter {
     //world.setGravity(new Vector2(0, 0));
     List<WorldObject> worldObjects = new ArrayList<>();
 
-    //Ground ground = new Ground(new double[]{0, 2, 4, 40, 50, 63, 100}, new double[]{10, 13, 12, 3, 8, 24, 10});
-    Ground ground = new Ground(new double[]{0, 1, 99, 100}, new double[]{25, 0, 0, 25});
+    Ground ground = new Ground(new double[]{0, 2, 4, 40, 50, 63, 100}, new double[]{10, 13, 12, 3, 8, 24, 10});
+    //Ground ground = new Ground(new double[]{0, 1, 99, 100}, new double[]{25, 0, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
     Random r = new Random();
@@ -58,7 +55,7 @@ public class Starter {
     }
 
     VoxelCompound vc1 = new VoxelCompound(
-            10, 20,
+            10, 100,
             " **, * , * , * , * , * ,***",
             1,
             new PhaseSin(0.5d, 250d, Grid.create(3, 7, 0d))
@@ -76,7 +73,7 @@ public class Starter {
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
     VoxelCompound vc2 = new VoxelCompound(
-            50, 5,
+            50, 50,
             wormShape,
             1,
             new PhaseSin(1d, 1d, wormController)

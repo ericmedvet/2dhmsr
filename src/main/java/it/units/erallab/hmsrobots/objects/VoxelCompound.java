@@ -120,9 +120,10 @@ public class VoxelCompound implements WorldObject {
     }
   }
 
-  public void control(double t, double dt) {
+  public Grid<Double> control(double t, double dt) {
+    Grid<Double> forceGrid = null;
     if (controller != null) {
-      Grid<Double> forceGrid = controller.control(t, dt, voxels);
+      forceGrid = controller.control(t, dt, voxels);
       for (int x = 0; x < voxels.getW(); x++) {
         for (int y = 0; y < voxels.getH(); y++) {
           Voxel voxel = voxels.get(x, y);
@@ -132,6 +133,7 @@ public class VoxelCompound implements WorldObject {
         }
       }
     }
+    return forceGrid;
   }
 
 }

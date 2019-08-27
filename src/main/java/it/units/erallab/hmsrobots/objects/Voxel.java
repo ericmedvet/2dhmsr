@@ -171,8 +171,24 @@ public class Voxel implements WorldObject {
     return lastAppliedForce;
   }
 
-  public void setLastAppliedForce(double lastAppliedForce) {
-    this.lastAppliedForce = lastAppliedForce;
+  public Vector2 getLinearVelocity() {
+    double x = 0d;
+    double y = 0d;
+    for (Body vertex : vertexBodies) {
+      x = x+vertex.getLinearVelocity().x;
+      y = y+vertex.getLinearVelocity().y;
+    }
+    return new Vector2(x/(double)vertexBodies.length, y/(double)vertexBodies.length);
   }
   
+  public double getAreaRatio() {
+    Poly poly = new Poly(
+            getIndexedVertex(0, 3),
+            getIndexedVertex(1, 2),
+            getIndexedVertex(2, 1),
+            getIndexedVertex(3, 0)
+    );
+    return poly.area()/SIDE_LENGHT/SIDE_LENGHT;
+  }
+    
 }
