@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.objects;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,10 +98,10 @@ public class Voxel implements WorldObject {
     List<Component> components = new ArrayList<>(1 + 1 + vertexBodies.length + joints.length);
     //add enclosing
     Poly poly = new Poly(
-            getIndexedVertex(0, 3),
-            getIndexedVertex(1, 2),
-            getIndexedVertex(2, 1),
-            getIndexedVertex(3, 0)
+            new Point2(getIndexedVertex(0, 3)),
+            new Point2(getIndexedVertex(1, 2)),
+            new Point2(getIndexedVertex(2, 1)),
+            new Point2(getIndexedVertex(3, 0))
     );
     components.add(new VoxelComponent(lastAppliedForce, SIDE_LENGHT*SIDE_LENGHT, poly.area(), poly));
     //add parts
@@ -109,7 +110,7 @@ public class Voxel implements WorldObject {
     }
     //add joints
     for (DistanceJoint joint : joints) {
-      components.add(new Component(Component.Type.CONNECTION, new Poly(joint.getAnchor1(), joint.getAnchor2())));
+      components.add(new Component(Component.Type.CONNECTION, new Poly(new Point2(joint.getAnchor1()), new Point2(joint.getAnchor2()))));
     }
     return new Compound(this.getClass(), components);
   }
@@ -123,13 +124,13 @@ public class Voxel implements WorldObject {
   }
 
   private Poly rectangleToPoly(Body body) {
-    Vector2[] vertices = new Vector2[4];
+    Point2[] vertices = new Point2[4];
     Transform t = body.getTransform();
     Rectangle rectangle = (Rectangle) body.getFixture(0).getShape();
     for (int i = 0; i < 4; i++) {
       Vector2 tV = rectangle.getVertices()[i].copy();
       t.transform(tV);
-      vertices[i] = tV;
+      vertices[i] = new Point2(tV);
     }
     return new Poly(vertices);
   }
@@ -183,10 +184,10 @@ public class Voxel implements WorldObject {
   
   public double getAreaRatio() {
     Poly poly = new Poly(
-            getIndexedVertex(0, 3),
-            getIndexedVertex(1, 2),
-            getIndexedVertex(2, 1),
-            getIndexedVertex(3, 0)
+            new Point2(getIndexedVertex(0, 3)),
+            new Point2(getIndexedVertex(1, 2)),
+            new Point2(getIndexedVertex(2, 1)),
+            new Point2(getIndexedVertex(3, 0))
     );
     return poly.area()/SIDE_LENGHT/SIDE_LENGHT;
   }

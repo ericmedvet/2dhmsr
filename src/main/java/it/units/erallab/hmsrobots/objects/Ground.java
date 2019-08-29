@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.objects;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,9 +83,9 @@ public class Ground implements WorldObject {
   @Override
   public Compound getSnapshot() {
     //TODO will not reflect ground movements
-    Vector2[] vertices = new Vector2[polygon.size()];
+    Point2[] vertices = new Point2[polygon.size()];
     for (int i = 0; i<vertices.length; i++) {
-      vertices[i] = polygon.get(i);
+      vertices[i] = new Point2(polygon.get(i));
     }
     return new Compound(this.getClass(), new Component(Component.Type.ENCLOSING, new Poly(vertices)));
   }

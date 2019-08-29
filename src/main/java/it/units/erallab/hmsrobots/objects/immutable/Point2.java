@@ -14,17 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.controllers;
+package it.units.erallab.hmsrobots.objects.immutable;
 
-import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.objects.Voxel;
+import java.io.Serializable;
+import org.dyn4j.geometry.Vector2;
 
 /**
  *
  * @author eric
  */
-public interface Controller {
+public class Point2 implements Serializable {
   
-  public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid);
+  public final double x;
+  public final double y;
+
+  public Point2(double x, double y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  public Point2(Vector2 v) {
+    x = v.x;
+    y = v.y;
+  }
+  
+  
   
 }

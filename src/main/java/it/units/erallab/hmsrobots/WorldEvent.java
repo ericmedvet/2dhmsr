@@ -17,13 +17,14 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent {
+public class WorldEvent implements Serializable, Comparable<WorldEvent> {
   
   private final double time;
   private final Collection<Compound> compounds;
@@ -39,6 +40,11 @@ public class WorldEvent {
 
   public Collection<Compound> getCompounds() {
     return compounds;
+  }
+
+  @Override
+  public int compareTo(WorldEvent other) {
+    return Double.compare(time, other.time);
   }
   
 }

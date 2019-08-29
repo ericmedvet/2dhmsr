@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.Grid;
+import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;

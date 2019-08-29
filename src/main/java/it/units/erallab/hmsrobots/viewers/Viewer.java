@@ -14,13 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
+package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
+import it.units.erallab.hmsrobots.WorldEvent;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
@@ -209,7 +211,7 @@ public class Viewer extends JFrame {
         if (component.getType().equals(Component.Type.ENCLOSING)) {
           final double lastArea = ((VoxelComponent) component).getLastArea();
           final double restArea = ((VoxelComponent) component).getRestArea();
-          final Vector2 c = component.getPoly().center();
+          final Point2 c = component.getPoly().center();
           final double f = ((VoxelComponent) component).getLastAppliedForce();
           final double l = Math.sqrt(restArea);
           if (vizModeCheckBoxes.get(VoxelVizMode.FILL_AREA).isSelected()) {

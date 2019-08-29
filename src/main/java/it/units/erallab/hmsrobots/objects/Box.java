@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.objects;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
@@ -47,13 +48,13 @@ public class Box implements WorldObject {
 
   @Override
   public Compound getSnapshot() {
-    Vector2[] vertices = new Vector2[4];
+    Point2[] vertices = new Point2[4];
     Transform t = body.getTransform();
     Rectangle rectangle = (Rectangle)body.getFixture(0).getShape();
     for (int i = 0; i<4; i++) {
       Vector2 tV = rectangle.getVertices()[i].copy();
       t.transform(tV);
-      vertices[i] = tV;
+      vertices[i] = new Point2(tV);
     }
     return new Compound(this.getClass(), new Component(Component.Type.ENCLOSING, new Poly(vertices)));
   }

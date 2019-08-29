@@ -18,18 +18,19 @@ package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.viewers.Viewer;
 import it.units.erallab.hmsrobots.controllers.PhaseSin;
-import it.units.erallab.hmsrobots.objects.Box;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.dyn4j.collision.AxisAlignedBounds;
 import org.dyn4j.dynamics.World;
@@ -38,36 +39,19 @@ import org.dyn4j.dynamics.World;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Starter {
+public class Experimenter {
 
-  public static void main(String[] args) {
+  private final static Logger L = Logger.getLogger(Experimenter.class.getName());
+
+  public static void main(String[] args) throws FileNotFoundException {
 
     World world = new World(new AxisAlignedBounds(250, 250));
-    //world.setGravity(new Vector2(0, 0));
     List<WorldObject> worldObjects = new ArrayList<>();
-
-    //Ground ground = new Ground(new double[]{0, 2, 4, 40, 50, 63, 100}, new double[]{10, 13, 12, 3, 8, 24, 10});
     Ground ground = new Ground(new double[]{0, 1, 99, 100}, new double[]{25, 0, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
-    Random r = new Random();
-    for (int i = 0; i < 0; i++) {
-      Box box = new Box(r.nextDouble() * 100, 30 + 30 * r.nextDouble(), 2 + 5 * r.nextDouble(), 2 + 5 * r.nextDouble(), r.nextDouble() * Math.PI, 1);
-      box.addTo(world);
-      worldObjects.add(box);
-    }
-
-    VoxelCompound vc1 = new VoxelCompound(
-            10, 100,
-            " **, * , * , * , * , * ,***",
-            1,
-            new PhaseSin(0.5d, 250d, Grid.create(3, 7, 0d))
-    );
-    //vc1.addTo(world);
-    //worldObjects.add(vc1);
-
-    int wormW = 10;
-    int wormH = 5;
+    int wormW = 7;
+    int wormH = 3;
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
       for (int y = 0; y < wormH; y++) {
@@ -75,40 +59,40 @@ public class Starter {
       }
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
-    for (int x = 2; x<8; x++) {
-      for (int y = 0; y<3; y++) {
-        wormShape.set(x, y, false);
-      }
-    }
     VoxelCompound vc2 = new VoxelCompound(
             50, 10,
             wormShape,
             1,
             new PhaseSin(1d, 1d, wormController)
-            //(double t, double dt, Grid<Voxel> voxelGrid) -> Grid.create(wormW, wormH, -1000d)
     );
     vc2.addTo(world);
     worldObjects.add(vc2);
 
-    ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-    Viewer viewer = new Viewer(executor);
-    viewer.start();
-
-    double dt = 0.025d;
+    List<WorldEvent> events = new ArrayList<>();
+    File file = new File("/home/eric/experiments/2dhmsr/prova10s-small.serial");
+    double dt = 0.01d;
     TimeAccumulator t = new TimeAccumulator();
-    Runnable runnable = () -> {
-      try {
-        t.add(dt);
-        //vc1.control(t.getT(), dt);
-        vc2.control(t.getT(), dt);
-        world.update(dt);
-        viewer.listen(new WorldEvent(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
-      } catch (Throwable ex) {
-        ex.printStackTrace();
-        System.exit(0);
-      }
-    };
-    executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 2d), TimeUnit.MILLISECONDS);
+    while (t.getT()<10) {
+      t.add(dt);
+      vc2.control(t.getT(), dt);
+      world.update(dt);
+      events.add(new WorldEvent(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
+    }
+    writeAll(events, file);
+    System.out.println("done");
   }
+
+  private static void writeAll(List<WorldEvent> events, File file) {
+    try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file, false))) {
+      L.fine(String.format("Writing %d events on %s", events.size(), file));
+      oos.writeObject(events);
+      events.clear();
+    } catch (FileNotFoundException ex) {
+      L.log(Level.SEVERE, String.format("Cannot serialize on file %s", file), ex);
+    } catch (IOException ex) {
+      L.log(Level.SEVERE, String.format("Cannot open object stream on file %s", file), ex);
+    }
+  }
+
 
 }

@@ -18,7 +18,6 @@ package it.units.erallab.hmsrobots.objects.immutable;
 
 import java.io.Serializable;
 import java.util.List;
-import org.dyn4j.geometry.Vector2;
 
 /**
  *
@@ -26,20 +25,20 @@ import org.dyn4j.geometry.Vector2;
  */
 public class Poly implements Serializable {
 
-  private final Vector2[] vertexes;
+  private final Point2[] vertexes;
 
-  public Poly(List<Vector2> vertexes) {
-    this.vertexes = new Vector2[vertexes.size()];
+  public Poly(List<Point2> vertexes) {
+    this.vertexes = new Point2[vertexes.size()];
     for (int i = 0; i < vertexes.size(); i++) {
       this.vertexes[i] = vertexes.get(i);
     }
   }
 
-  public Poly(Vector2... vertexes) {
+  public Poly(Point2... vertexes) {
     this.vertexes = vertexes;
   }
 
-  public Vector2[] getVertexes() {
+  public Point2[] getVertexes() {
     return vertexes;
   }
 
@@ -53,14 +52,14 @@ public class Poly implements Serializable {
     return a;
   }
 
-  public Vector2 center() {
+  public Point2 center() {
     double x = 0d;
     double y= 0d;
-    for (Vector2 v : vertexes) {
+    for (Point2 v : vertexes) {
       x = x+v.x;
       y = y+v.y;
     }
-    return new Vector2(x/(double)vertexes.length, y/(double)vertexes.length);
+    return new Point2(x/(double)vertexes.length, y/(double)vertexes.length);
   }
 
 }
