@@ -65,7 +65,7 @@ public class CanvasDrawer {
     g.setTransform(at);
     g.setStroke(new BasicStroke(1f / (float) ratio));
     //draw
-    g.setColor(Color.WHITE);
+    g.setColor(Color.BLACK);
     g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
     for (Compound object : event.getCompounds()) {
       draw(object, g, vizModes);

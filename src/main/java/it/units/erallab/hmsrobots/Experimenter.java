@@ -45,12 +45,12 @@ public class Experimenter {
 
   public static void main(String[] args) throws FileNotFoundException {
 
-    World world = new World(new AxisAlignedBounds(250, 250));
+    World world = new World();
     List<WorldObject> worldObjects = new ArrayList<>();
-    Ground ground = new Ground(new double[]{0, 1, 99, 100}, new double[]{25, 0, 0, 25});
+    Ground ground = new Ground(new double[]{0, 1, 999, 1000}, new double[]{25, 0, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
-    int wormW = 7;
+    int wormW = 8;
     int wormH = 3;
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
@@ -69,10 +69,10 @@ public class Experimenter {
     worldObjects.add(vc2);
 
     List<WorldEvent> events = new ArrayList<>();
-    File file = new File("/home/eric/experiments/2dhmsr/prova10s-small.serial");
-    double dt = 0.01d;
+    File file = new File("/home/eric/experiments/2dhmsr/prova30s-small.serial");
+    double dt = 0.05d;
     TimeAccumulator t = new TimeAccumulator();
-    while (t.getT()<10) {
+    while (t.getT()<30) {
       t.add(dt);
       vc2.control(t.getT(), dt);
       world.update(dt);

@@ -21,14 +21,14 @@ import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,11 +40,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
 
 /**
  *
@@ -55,28 +57,31 @@ public class MultiViewer extends JFrame {
   private final static Logger L = Logger.getLogger(MultiViewer.class.getName());
 
   private final static int TARGET_FPS = 25;
-  private final static boolean VERTICAL = true;
-  private final static int CANVAS_W = 500;
+  private final static int CANVAS_W = 800;
   private final static int CANVAS_H = 400;
+  private static final int TIME_SLIDER_MAX = 1000;
 
   private final Map<String, Canvas> namedCanvases;
   private final JLabel infoLabel;
-  private final JSlider timeScaleSlider;
-  private final JCheckBox playCheckBox;
   private final Map<CanvasDrawer.VoxelVizMode, JCheckBox> vizModeCheckBoxes;
+  private final JSlider timeSlider;
+  private final JButton playButton;
+  private final JButton pauseButton;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final Map<String, List<WorldEvent>> namedSimulations;
+  private final double startTime;
+  private final double endTime;
 
   private double timeScale = 1d;
-  private double worldTime = 0d;
-  private double localTime = 0d;
+  private double time = 0d;
+  private boolean paused = false;
 
   public static void main(String[] args) {
     Map<String, List<WorldEvent>> namedSimulations = new LinkedHashMap<>();
     String[] fileNames = new String[]{
-      "/home/eric/experiments/2dhmsr/prova10s.serial",
-      "/home/eric/experiments/2dhmsr/prova10s-small.serial"
+      //"/home/eric/experiments/2dhmsr/prova10s.serial",
+      "/home/eric/experiments/2dhmsr/prova30s-small.serial"
     };
     for (String fileName : fileNames) {
       try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
@@ -98,47 +103,74 @@ public class MultiViewer extends JFrame {
     super("World viewer");
     //create data to be visualized
     this.namedSimulations = new LinkedHashMap<>();
+    double localStartTime = Double.POSITIVE_INFINITY;
+    double localEndTime = Double.NEGATIVE_INFINITY;
     for (Map.Entry<String, List<WorldEvent>> simulationEntry : namedSimulations.entrySet()) {
       Collections.sort(simulationEntry.getValue());
+      if (simulationEntry.getValue().get(0).getTime() < localStartTime) {
+        localStartTime = simulationEntry.getValue().get(0).getTime();
+      }
+      if (simulationEntry.getValue().get(simulationEntry.getValue().size()-1).getTime() > localEndTime) {
+        localEndTime = simulationEntry.getValue().get(simulationEntry.getValue().size()-1).getTime();
+      }
       this.namedSimulations.put(simulationEntry.getKey(), simulationEntry.getValue());
     }
+    startTime = localStartTime;
+    endTime = localEndTime;
+    time = startTime;
     //create things
     scheduledExecutorService = Executors.newScheduledThreadPool(1);
     vizModeCheckBoxes = new EnumMap<>(CanvasDrawer.VoxelVizMode.class);
     namedCanvases = new LinkedHashMap<>();
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    JPanel centralPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+    JPanel centralPanel = new JPanel(new GridLayout(namedSimulations.keySet().size(), 1));
+    JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    //add canvases
     for (String name : namedSimulations.keySet()) {
       Canvas canvas = new Canvas();
       Dimension dimension = new Dimension(CANVAS_W, CANVAS_H);
       canvas.setPreferredSize(dimension);
-      canvas.setMinimumSize(dimension);
-      canvas.setMaximumSize(dimension);
       namedCanvases.put(name, canvas);
-      JPanel panel = new JPanel();
+      JPanel panel = new JPanel(new BorderLayout());
       panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLoweredBevelBorder(), name));
-      panel.add(canvas);
+      panel.add(canvas, BorderLayout.CENTER);
       centralPanel.add(panel);
     }
+    //components
     infoLabel = new JLabel();
-    timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
-    playCheckBox = new JCheckBox("Play", true);
+    timeSlider = new JSlider(JSlider.HORIZONTAL, 0, TIME_SLIDER_MAX, 0);
+    timeSlider.addChangeListener((ChangeEvent e) -> {
+      time = startTime+(endTime-startTime)*(double)timeSlider.getValue()/(double)TIME_SLIDER_MAX;
+    });
+    playButton = new JButton("Play");
+    pauseButton = new JButton("Pause");
+    playButton.setEnabled(paused);
+    pauseButton.setEnabled(!paused);
+    playButton.addActionListener((ActionEvent e) -> {
+      paused = !paused;
+      playButton.setEnabled(paused);
+      pauseButton.setEnabled(!paused);
+    });
+    pauseButton.addActionListener((ActionEvent e) -> {
+      paused = !paused;
+      playButton.setEnabled(paused);
+      pauseButton.setEnabled(!paused);
+    });
+    bottomPanel.add(playButton);
+    bottomPanel.add(pauseButton);
+    bottomPanel.add(timeSlider);
+    bottomPanel.add(infoLabel);
     for (CanvasDrawer.VoxelVizMode mode : CanvasDrawer.VoxelVizMode.values()) {
       final JCheckBox checkBox = new JCheckBox(mode.name().toLowerCase().replace('_', ' '), true);
       vizModeCheckBoxes.put(mode, checkBox);
       topPanel.add(checkBox);
     }
     //set layout and put components
-    bottomPanel.add(infoLabel);
-    bottomPanel.add(timeScaleSlider);
-    bottomPanel.add(playCheckBox);
     getContentPane().add(centralPanel, BorderLayout.CENTER);
     getContentPane().add(bottomPanel, BorderLayout.PAGE_END);
     getContentPane().add(topPanel, BorderLayout.PAGE_START);
-    //add(label);
     //pack
     pack();
   }
@@ -156,27 +188,24 @@ public class MultiViewer extends JFrame {
       public void run() {
         try {
           //get ui params
-          timeScale = (double) timeScaleSlider.getValue() / 10d;
           Set<CanvasDrawer.VoxelVizMode> vizModes = getVizModes();
+          timeSlider.setValue((int)Math.round((time-startTime)/(endTime-startTime)*(double)TIME_SLIDER_MAX));
           //draw
           long elapsedMillis = System.currentTimeMillis() - lastUpdateMillis;
           lastUpdateMillis = System.currentTimeMillis();
-          if (playCheckBox.isSelected()) {
-            localTime = localTime + (double) (elapsedMillis) / 1000d;
-            worldTime = worldTime + (double) (elapsedMillis) / 1000d * timeScale;
+          if (!paused&&(time<endTime)) {
+            time = time + (double) (elapsedMillis) / 1000d * timeScale;            
             for (Map.Entry<String, List<WorldEvent>> entry : namedSimulations.entrySet()) {
-              WorldEvent event = findEvent(worldTime, entry.getValue());
+              WorldEvent event = findEvent(time, entry.getValue());
               if (event != null) {
                 CanvasDrawer.draw(event, namedCanvases.get(entry.getKey()), -5, -5, 100, 75, vizModes);
               }
             }
           }
           //print info
-          WorldEvent firstEvent, lastEvent;
-          int queueSize;
           infoLabel.setText(String.format(
-                  "t.w=%.3fs [%3.1fx] FPS=%4.1f",
-                  worldTime,
+                  "t=%.3fs [%3.1fx] FPS=%4.1f",
+                  time,
                   timeScale,
                   (double) (1000d / (double) (elapsedMillis))
           ));
@@ -192,11 +221,18 @@ public class MultiViewer extends JFrame {
 
   private WorldEvent findEvent(double time, List<WorldEvent> events) {
     WorldEvent event = null;
-    while (!events.isEmpty()) {
-      event = events.get(0);
-      events.remove(0);
-      if (events.isEmpty() || (events.get(0).getTime() > time)) {
+    double startT = events.get(0).getTime();
+    double endT = events.get(events.size()-1).getTime();
+    int index = (int)Math.min(Math.round((time-startT)/(endT-startT)*events.size()), events.size()-1);
+    while ((index>=0)&&(index+1<events.size())) {
+      if ((events.get(index).getTime()<=time)&&(events.get(index+1).getTime()>time)) {
+        event = events.get(index);
         break;
+      }
+      if (events.get(index).getTime()>time) {
+        index = index-1;
+      } else {
+        index = index+1;
       }
     }
     return event;
