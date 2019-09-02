@@ -50,8 +50,8 @@ public class Experimenter {
     Ground ground = new Ground(new double[]{0, 1, 999, 1000}, new double[]{25, 0, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
-    int wormW = 8;
-    int wormH = 3;
+    int wormW = 5;
+    int wormH = 5;
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
       for (int y = 0; y < wormH; y++) {
@@ -68,21 +68,21 @@ public class Experimenter {
     vc2.addTo(world);
     worldObjects.add(vc2);
 
-    List<WorldEvent> events = new ArrayList<>();
-    File file = new File("/home/eric/experiments/2dhmsr/prova30s-small.serial");
-    double dt = 0.05d;
+    List<Snapshot> events = new ArrayList<>();
+    File file = new File("/home/eric/experiments/2dhmsr/prova30s-dense.serial");
+    double dt = 0.01d;
     TimeAccumulator t = new TimeAccumulator();
     while (t.getT()<30) {
       t.add(dt);
       vc2.control(t.getT(), dt);
       world.update(dt);
-      events.add(new WorldEvent(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
+      events.add(new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
     }
     writeAll(events, file);
     System.out.println("done");
   }
 
-  private static void writeAll(List<WorldEvent> events, File file) {
+  private static void writeAll(List<Snapshot> events, File file) {
     try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file, false))) {
       L.fine(String.format("Writing %d events on %s", events.size(), file));
       oos.writeObject(events);

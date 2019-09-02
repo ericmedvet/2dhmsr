@@ -39,7 +39,7 @@ import org.dyn4j.geometry.Vector2;
 public class Voxel implements WorldObject {
 
   public final static double SIDE_LENGHT = 3d;
-  
+
   private final static double V_L = SIDE_LENGHT / 3d * 1d;
   private final static double SPRING_F = 25d;
   private final static double SPRING_D = 1d;
@@ -50,7 +50,7 @@ public class Voxel implements WorldObject {
 
   private final double externalJointDistance;
   private final double diagonalJointDistance;
-  
+
   private double lastAppliedForce = 0d;
 
   public Voxel(double x, double y, double mass) {
@@ -103,7 +103,7 @@ public class Voxel implements WorldObject {
             new Point2(getIndexedVertex(2, 1)),
             new Point2(getIndexedVertex(3, 0))
     );
-    components.add(new VoxelComponent(lastAppliedForce, SIDE_LENGHT*SIDE_LENGHT, poly.area(), poly));
+    components.add(new VoxelComponent(lastAppliedForce, SIDE_LENGHT * SIDE_LENGHT, poly.area(), poly));
     //add parts
     for (Body body : vertexBodies) {
       components.add(new Component(Component.Type.RIGID, rectangleToPoly(body)));
@@ -150,7 +150,7 @@ public class Voxel implements WorldObject {
   }
 
   public void applyForce(double f) {
-    if (Math.abs(f)>1d) {
+    if (Math.abs(f) > 1d) {
       f = Math.signum(f);
     }
     double xc = 0d;
@@ -162,7 +162,7 @@ public class Voxel implements WorldObject {
     xc = xc / (double) vertexBodies.length;
     yc = yc / (double) vertexBodies.length;
     for (Body body : vertexBodies) {
-      Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f*MAX_ABS_FORCE);
+      Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * MAX_ABS_FORCE);
       body.applyForce(force);
     }
     lastAppliedForce = f;
@@ -176,12 +176,12 @@ public class Voxel implements WorldObject {
     double x = 0d;
     double y = 0d;
     for (Body vertex : vertexBodies) {
-      x = x+vertex.getLinearVelocity().x;
-      y = y+vertex.getLinearVelocity().y;
+      x = x + vertex.getLinearVelocity().x;
+      y = y + vertex.getLinearVelocity().y;
     }
-    return new Vector2(x/(double)vertexBodies.length, y/(double)vertexBodies.length);
+    return new Vector2(x / (double) vertexBodies.length, y / (double) vertexBodies.length);
   }
-  
+
   public double getAreaRatio() {
     Poly poly = new Poly(
             new Point2(getIndexedVertex(0, 3)),
@@ -189,7 +189,17 @@ public class Voxel implements WorldObject {
             new Point2(getIndexedVertex(2, 1)),
             new Point2(getIndexedVertex(3, 0))
     );
-    return poly.area()/SIDE_LENGHT/SIDE_LENGHT;
+    return poly.area() / SIDE_LENGHT / SIDE_LENGHT;
   }
-    
+
+  public Vector2 getCenter() {
+    double xc = 0d;
+    double yc = 0d;
+    for (Body vertex : vertexBodies) {
+      xc = xc + vertex.getWorldCenter().x;
+      yc = yc + vertex.getWorldCenter().y;
+    }
+    return new Vector2(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
+  }
+
 }

@@ -24,12 +24,12 @@ import java.util.Collection;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class WorldEvent implements Serializable, Comparable<WorldEvent> {
+public class Snapshot implements Serializable, Comparable<Snapshot> {
   
   private final double time;
   private final Collection<Compound> compounds;
 
-  public WorldEvent(double time, Collection<Compound> compounds) {
+  public Snapshot(double time, Collection<Compound> compounds) {
     this.time = time;
     this.compounds = compounds;
   }
@@ -43,7 +43,7 @@ public class WorldEvent implements Serializable, Comparable<WorldEvent> {
   }
 
   @Override
-  public int compareTo(WorldEvent other) {
+  public int compareTo(Snapshot other) {
     return Double.compare(time, other.time);
   }
   

@@ -16,13 +16,16 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.WorldEvent;
+import it.units.erallab.hmsrobots.Snapshot;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferStrategy;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,20 +59,20 @@ public class MultiViewer extends JFrame {
 
   private final static Logger L = Logger.getLogger(MultiViewer.class.getName());
 
-  private final static int TARGET_FPS = 25;
+  private final static int TARGET_FPS = 50;
   private final static int CANVAS_W = 800;
   private final static int CANVAS_H = 400;
   private static final int TIME_SLIDER_MAX = 1000;
 
   private final Map<String, Canvas> namedCanvases;
   private final JLabel infoLabel;
-  private final Map<CanvasDrawer.VoxelVizMode, JCheckBox> vizModeCheckBoxes;
+  private final Map<GraphicsDrawer.VoxelVizMode, JCheckBox> vizModeCheckBoxes;
   private final JSlider timeSlider;
   private final JButton playButton;
   private final JButton pauseButton;
 
   private final ScheduledExecutorService scheduledExecutorService;
-  private final Map<String, List<WorldEvent>> namedSimulations;
+  private final Map<String, List<Snapshot>> namedSimulations;
   private final double startTime;
   private final double endTime;
 
@@ -78,14 +81,14 @@ public class MultiViewer extends JFrame {
   private boolean paused = false;
 
   public static void main(String[] args) {
-    Map<String, List<WorldEvent>> namedSimulations = new LinkedHashMap<>();
+    Map<String, List<Snapshot>> namedSimulations = new LinkedHashMap<>();
     String[] fileNames = new String[]{
       //"/home/eric/experiments/2dhmsr/prova10s.serial",
-      "/home/eric/experiments/2dhmsr/prova30s-small.serial"
+      "/home/eric/experiments/2dhmsr/prova30s-dense.serial"
     };
     for (String fileName : fileNames) {
       try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-        List<WorldEvent> events = (List<WorldEvent>) ois.readObject();
+        List<Snapshot> events = (List<Snapshot>) ois.readObject();
         namedSimulations.put(fileName, events);
       } catch (FileNotFoundException ex) {
         L.log(Level.SEVERE, String.format("Cannot find file %s", fileName), ex);
@@ -99,19 +102,19 @@ public class MultiViewer extends JFrame {
     multiViewer.start();
   }
 
-  public MultiViewer(Map<String, List<WorldEvent>> namedSimulations) {
+  public MultiViewer(Map<String, List<Snapshot>> namedSimulations) {
     super("World viewer");
     //create data to be visualized
     this.namedSimulations = new LinkedHashMap<>();
     double localStartTime = Double.POSITIVE_INFINITY;
     double localEndTime = Double.NEGATIVE_INFINITY;
-    for (Map.Entry<String, List<WorldEvent>> simulationEntry : namedSimulations.entrySet()) {
+    for (Map.Entry<String, List<Snapshot>> simulationEntry : namedSimulations.entrySet()) {
       Collections.sort(simulationEntry.getValue());
       if (simulationEntry.getValue().get(0).getTime() < localStartTime) {
         localStartTime = simulationEntry.getValue().get(0).getTime();
       }
-      if (simulationEntry.getValue().get(simulationEntry.getValue().size()-1).getTime() > localEndTime) {
-        localEndTime = simulationEntry.getValue().get(simulationEntry.getValue().size()-1).getTime();
+      if (simulationEntry.getValue().get(simulationEntry.getValue().size() - 1).getTime() > localEndTime) {
+        localEndTime = simulationEntry.getValue().get(simulationEntry.getValue().size() - 1).getTime();
       }
       this.namedSimulations.put(simulationEntry.getKey(), simulationEntry.getValue());
     }
@@ -120,7 +123,7 @@ public class MultiViewer extends JFrame {
     time = startTime;
     //create things
     scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    vizModeCheckBoxes = new EnumMap<>(CanvasDrawer.VoxelVizMode.class);
+    vizModeCheckBoxes = new EnumMap<>(GraphicsDrawer.VoxelVizMode.class);
     namedCanvases = new LinkedHashMap<>();
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -142,7 +145,7 @@ public class MultiViewer extends JFrame {
     infoLabel = new JLabel();
     timeSlider = new JSlider(JSlider.HORIZONTAL, 0, TIME_SLIDER_MAX, 0);
     timeSlider.addChangeListener((ChangeEvent e) -> {
-      time = startTime+(endTime-startTime)*(double)timeSlider.getValue()/(double)TIME_SLIDER_MAX;
+      time = startTime + (endTime - startTime) * (double) timeSlider.getValue() / (double) TIME_SLIDER_MAX;
     });
     playButton = new JButton("Play");
     pauseButton = new JButton("Pause");
@@ -162,8 +165,11 @@ public class MultiViewer extends JFrame {
     bottomPanel.add(pauseButton);
     bottomPanel.add(timeSlider);
     bottomPanel.add(infoLabel);
-    for (CanvasDrawer.VoxelVizMode mode : CanvasDrawer.VoxelVizMode.values()) {
-      final JCheckBox checkBox = new JCheckBox(mode.name().toLowerCase().replace('_', ' '), true);
+    for (GraphicsDrawer.VoxelVizMode mode : GraphicsDrawer.VoxelVizMode.values()) {
+      final JCheckBox checkBox = new JCheckBox(
+              mode.name().toLowerCase().replace('_', ' '),
+              mode.equals(GraphicsDrawer.VoxelVizMode.FILL_AREA)
+      );
       vizModeCheckBoxes.put(mode, checkBox);
       topPanel.add(checkBox);
     }
@@ -188,17 +194,24 @@ public class MultiViewer extends JFrame {
       public void run() {
         try {
           //get ui params
-          Set<CanvasDrawer.VoxelVizMode> vizModes = getVizModes();
-          timeSlider.setValue((int)Math.round((time-startTime)/(endTime-startTime)*(double)TIME_SLIDER_MAX));
+          Set<GraphicsDrawer.VoxelVizMode> vizModes = getVizModes();
+          timeSlider.setValue((int) Math.round((time - startTime) / (endTime - startTime) * (double) TIME_SLIDER_MAX));
           //draw
           long elapsedMillis = System.currentTimeMillis() - lastUpdateMillis;
           lastUpdateMillis = System.currentTimeMillis();
-          if (!paused&&(time<endTime)) {
-            time = time + (double) (elapsedMillis) / 1000d * timeScale;            
-            for (Map.Entry<String, List<WorldEvent>> entry : namedSimulations.entrySet()) {
-              WorldEvent event = findEvent(time, entry.getValue());
+          if (!paused && (time < endTime)) {
+            time = time + (double) (elapsedMillis) / 1000d * timeScale;
+            for (Map.Entry<String, List<Snapshot>> entry : namedSimulations.entrySet()) {
+              Snapshot event = findEvent(time, entry.getValue());
               if (event != null) {
-                CanvasDrawer.draw(event, namedCanvases.get(entry.getKey()), -5, -5, 100, 75, vizModes);
+                Canvas canvas = namedCanvases.get(entry.getKey());
+                Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
+                GraphicsDrawer.draw(event, g, canvas.getWidth(), canvas.getHeight(), -5, -5, 100, 75, vizModes);
+                BufferStrategy strategy = canvas.getBufferStrategy();
+                if (!strategy.contentsLost()) {
+                  strategy.show();
+                }
+                Toolkit.getDefaultToolkit().sync();
               }
             }
           }
@@ -219,28 +232,28 @@ public class MultiViewer extends JFrame {
     scheduledExecutorService.scheduleAtFixedRate(drawer, 0, Math.round(1000d / (double) TARGET_FPS), TimeUnit.MILLISECONDS);
   }
 
-  private WorldEvent findEvent(double time, List<WorldEvent> events) {
-    WorldEvent event = null;
+  private Snapshot findEvent(double time, List<Snapshot> events) {
+    Snapshot event = null;
     double startT = events.get(0).getTime();
-    double endT = events.get(events.size()-1).getTime();
-    int index = (int)Math.min(Math.round((time-startT)/(endT-startT)*events.size()), events.size()-1);
-    while ((index>=0)&&(index+1<events.size())) {
-      if ((events.get(index).getTime()<=time)&&(events.get(index+1).getTime()>time)) {
+    double endT = events.get(events.size() - 1).getTime();
+    int index = (int) Math.min(Math.round((time - startT) / (endT - startT) * events.size()), events.size() - 1);
+    while ((index >= 0) && (index + 1 < events.size())) {
+      if ((events.get(index).getTime() <= time) && (events.get(index + 1).getTime() > time)) {
         event = events.get(index);
         break;
       }
-      if (events.get(index).getTime()>time) {
-        index = index-1;
+      if (events.get(index).getTime() > time) {
+        index = index - 1;
       } else {
-        index = index+1;
+        index = index + 1;
       }
     }
     return event;
   }
 
-  private Set<CanvasDrawer.VoxelVizMode> getVizModes() {
-    Set<CanvasDrawer.VoxelVizMode> vizModes = new HashSet<>(); //TODO replace with EnumSet
-    for (Map.Entry<CanvasDrawer.VoxelVizMode, JCheckBox> entry : vizModeCheckBoxes.entrySet()) {
+  private Set<GraphicsDrawer.VoxelVizMode> getVizModes() {
+    Set<GraphicsDrawer.VoxelVizMode> vizModes = new HashSet<>();
+    for (Map.Entry<GraphicsDrawer.VoxelVizMode, JCheckBox> entry : vizModeCheckBoxes.entrySet()) {
       if (entry.getValue().isSelected()) {
         vizModes.add(entry.getKey());
       }

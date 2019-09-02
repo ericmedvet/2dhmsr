@@ -75,7 +75,7 @@ public class Starter {
       }
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
-    for (int x = 2; x<8; x++) {
+    for (int x = 4; x<6; x++) {
       for (int y = 0; y<3; y++) {
         wormShape.set(x, y, false);
       }
@@ -84,7 +84,7 @@ public class Starter {
             50, 10,
             wormShape,
             1,
-            new PhaseSin(1d, 1d, wormController)
+            new PhaseSin(-1d, 1d, wormController)
             //(double t, double dt, Grid<Voxel> voxelGrid) -> Grid.create(wormW, wormH, -1000d)
     );
     vc2.addTo(world);
@@ -94,7 +94,7 @@ public class Starter {
     Viewer viewer = new Viewer(executor);
     viewer.start();
 
-    double dt = 0.025d;
+    double dt = 0.01d;
     TimeAccumulator t = new TimeAccumulator();
     Runnable runnable = () -> {
       try {
@@ -102,7 +102,7 @@ public class Starter {
         //vc1.control(t.getT(), dt);
         vc2.control(t.getT(), dt);
         world.update(dt);
-        viewer.listen(new WorldEvent(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
+        viewer.listen(new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
       } catch (Throwable ex) {
         ex.printStackTrace();
         System.exit(0);

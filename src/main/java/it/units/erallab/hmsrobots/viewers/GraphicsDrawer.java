@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.WorldEvent;
+import it.units.erallab.hmsrobots.Snapshot;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
@@ -24,64 +24,113 @@ import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.awt.BasicStroke;
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
+import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferStrategy;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author eric
  */
-public class CanvasDrawer {
+public class GraphicsDrawer {
 
   private final static double FORCE_CIRCLE_RANGE = 0.5d;
   private final static float VOXEL_FILL_ALPHA = 0.75f;
   private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
+  private final static boolean GRID_MAJOR = true;
+  private final static boolean GRID_MINOR = false;
+  private final static Color GRID_COLOR = Color.GRAY;
+  private final static Color INFO_COLOR = Color.GRAY.darker();
+  private final static Color BACKGROUND_COLOR = Color.WHITE;
+  private final static double[] GRID_SIZES = new double[]{2, 5, 10};
 
   public static enum VoxelVizMode {
     POLY, FILL_AREA, SPRINGS, COMPONENTS, FORCE
   }
 
-  public static void draw(WorldEvent event, Canvas canvas, double x1, double y1, double x2, double y2, Set<VoxelVizMode> vizModes) {
-    Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
+  public static void draw(Snapshot snapshot, Graphics2D g, int w, int h, double x1, double y1, double x2, double y2, Set<VoxelVizMode> vizModes) {
     //reset screen
     g.setColor(Color.GRAY);
-    g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    g.fillRect(0, 0, w, h);
     AffineTransform oAt = g.getTransform();
-    //transform
-    double xRatio = (double) canvas.getWidth() / (x2 - x1);
-    double yRatio = (double) canvas.getHeight() / (y2 - y1);
+    //prepare transformation
+    double xRatio = (double) w / (x2 - x1);
+    double yRatio = (double) h / (y2 - y1);
     double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
     at.scale(ratio, -ratio);
     at.translate(-x1, -y2);
+    //draw background
+    g.setColor(BACKGROUND_COLOR);
+    g.fill(new Rectangle2D.Double(0, 0, w, h));
+    //draw grid
     g.setTransform(at);
-    g.setStroke(new BasicStroke(1f / (float) ratio));
-    //draw
-    g.setColor(Color.BLACK);
-    g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
-    for (Compound object : event.getCompounds()) {
+    if (GRID_MAJOR || GRID_MINOR) {
+      g.setColor(GRID_COLOR);
+      g.setStroke(new BasicStroke(1f / (float) ratio));
+      double gridSize = computeGridSize(x1, x2);
+      if (GRID_MAJOR) {
+        for (double gridX = Math.floor(x1 / gridSize) * gridSize; gridX < x2; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, y1, gridX, y2));
+        }
+        for (double gridY = Math.floor(y1 / gridSize) * gridSize; gridY < y2; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(x1, gridY, x2, gridY));
+        }
+      }
+      if (GRID_MINOR) {
+        gridSize = gridSize / 5d;
+        g.setStroke(new BasicStroke(
+                1f / (float) ratio,
+                BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_ROUND,
+                1.0f,
+                new float[]{2f / (float) ratio, 0f, 2f / (float) ratio},
+                0f));
+        for (double gridX = Math.floor(x1 / gridSize) * gridSize; gridX < x2; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, y1, gridX, y2));
+        }
+        for (double gridY = Math.floor(y1 / gridSize) * gridSize; gridY < y2; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(x1, gridY, x2, gridY));
+        }
+      }
+    }
+    //draw components
+    g.setStroke(new BasicStroke(2f / (float) ratio));
+    for (Compound object : snapshot.getCompounds()) {
       draw(object, g, vizModes);
     }
     //inverse transform    
     g.setTransform(oAt);
     //info
-    g.setColor(Color.BLACK);
+    g.setColor(INFO_COLOR);
     g.drawString(String.format("(%.0f;%.0f)->(%.0f;%.0f)", x1, y1, x2, y2), 1, 1 + g.getFontMetrics().getMaxAscent());
     //finalize
     g.dispose();
-    BufferStrategy strategy = canvas.getBufferStrategy();
-    if (!strategy.contentsLost()) {
-      strategy.show();
+  }
+
+  private static double computeGridSize(double x1, double x2) {
+    double gridSize = (x2 - x1) / 10d;
+    double exp = Math.floor(Math.log10(gridSize));
+    double guess = GRID_SIZES[0];
+    double err = Math.abs(gridSize / Math.pow(10d, exp) - guess);
+    for (int i = 1; i < GRID_SIZES.length; i++) {
+      if (Math.abs(gridSize / Math.pow(10d, exp) - GRID_SIZES[i]) < err) {
+        err = Math.abs(gridSize / Math.pow(10d, exp) - GRID_SIZES[i]);
+        guess = GRID_SIZES[i];
+      }
     }
-    Toolkit.getDefaultToolkit().sync();
+    gridSize = guess * Math.pow(10d, exp);
+    return gridSize;
   }
 
   private static void draw(Compound compound, Graphics2D g, Set<VoxelVizMode> vizModes) {

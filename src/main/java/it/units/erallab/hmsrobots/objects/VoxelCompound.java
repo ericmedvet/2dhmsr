@@ -136,4 +136,21 @@ public class VoxelCompound implements WorldObject {
     return forceGrid;
   }
 
+  public Vector2 getCenter() {
+    double xc = 0d;
+    double yc = 0d;
+    double n = 0;
+    for (int x = 0; x < voxels.getW(); x++) {
+      for (int y = 0; y < voxels.getH(); y++) {
+        if (voxels.get(x, y) != null) {
+          final Vector2 center = voxels.get(x, y).getCenter();
+          xc = xc + center.x;
+          yc = yc + center.y;
+          n = n + 1;
+        }
+      }
+    }
+    return new Vector2(xc / n, yc / n);
+  }
+
 }
