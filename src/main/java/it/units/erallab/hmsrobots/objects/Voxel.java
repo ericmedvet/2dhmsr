@@ -40,7 +40,7 @@ public class Voxel implements WorldObject {
 
   public final static double SIDE_LENGHT = 3d;
 
-  private final static double V_L = SIDE_LENGHT / 3d * 1d;
+  private final static double V_L = SIDE_LENGHT / 3d * 1.15d;
   private final static double SPRING_F = 25d;
   private final static double SPRING_D = 1d;
   private final static double MAX_ABS_FORCE = 400d;

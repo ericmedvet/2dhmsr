@@ -67,7 +67,7 @@ public class Starter {
     //worldObjects.add(vc1);
 
     int wormW = 10;
-    int wormH = 5;
+    int wormH = 4;
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
       for (int y = 0; y < wormH; y++) {
@@ -76,7 +76,7 @@ public class Starter {
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
     for (int x = 4; x<6; x++) {
-      for (int y = 0; y<3; y++) {
+      for (int y = 0; y<2; y++) {
         wormShape.set(x, y, false);
       }
     }

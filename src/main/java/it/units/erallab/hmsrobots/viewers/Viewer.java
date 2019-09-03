@@ -113,7 +113,7 @@ public class Viewer extends JFrame {
     canvas.setIgnoreRepaint(true);
     canvas.createBufferStrategy(2);
 
-    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(100, 1d);
+    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(50, 1d);
 
     Runnable drawer = new Runnable() {
       private long lastUpdateMillis = System.currentTimeMillis();
