@@ -102,7 +102,7 @@ public class VoxelCompound implements WorldObject {
         }
       }
     }
-    return new Compound(Voxel.class, components);
+    return new Compound(VoxelCompound.class, components);
   }
 
   @Override

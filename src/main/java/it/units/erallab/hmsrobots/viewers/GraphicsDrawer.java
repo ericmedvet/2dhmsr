@@ -16,8 +16,10 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.Snapshot;
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
@@ -26,17 +28,12 @@ import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -44,50 +41,162 @@ import java.util.logging.Logger;
  */
 public class GraphicsDrawer {
 
-  private final static double FORCE_CIRCLE_RANGE = 0.5d;
-  private final static float VOXEL_FILL_ALPHA = 0.75f;
-  private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
-  private final static boolean GRID_MAJOR = true;
-  private final static boolean GRID_MINOR = false;
-  private final static Color GRID_COLOR = Color.GRAY;
-  private final static Color INFO_COLOR = Color.GRAY.darker();
-  private final static Color BACKGROUND_COLOR = Color.WHITE;
-  private final static double[] GRID_SIZES = new double[]{2, 5, 10};
-
   public static enum VoxelVizMode {
     POLY, FILL_AREA, SPRINGS, COMPONENTS, FORCE
   }
 
-  public static void draw(Snapshot snapshot, Graphics2D g, int w, int h, double x1, double y1, double x2, double y2, Set<VoxelVizMode> vizModes) {
+  public static class Builder {
+
+    private final static double FORCE_CIRCLE_RANGE = 0.5d;
+    private final static float VOXEL_FILL_ALPHA = 0.75f;
+    private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
+    private final static boolean GRID_MAJOR = true;
+    private final static boolean GRID_MINOR = true;
+    private final static Color GRID_COLOR = Color.GRAY;
+    private final static Color INFO_COLOR = Color.GRAY.darker();
+    private final static Color BACKGROUND_COLOR = Color.WHITE;
+    private final static double[] GRID_SIZES = new double[]{2, 5, 10};
+
+    private double forceCircleRange = FORCE_CIRCLE_RANGE;
+    private float voxelFillAlpha = VOXEL_FILL_ALPHA;
+    private float voxelComponentAlpha = VOXEL_COMPONENT_ALPHA;
+    private boolean gridMajor = GRID_MAJOR;
+    private boolean gridMinor = GRID_MINOR;
+    private Color gridColor = GRID_COLOR;
+    private Color infoColor = INFO_COLOR;
+    private Color backgroundColor = BACKGROUND_COLOR;
+    private double[] gridSizes = GRID_SIZES;
+
+    public static Builder create() {
+      return new Builder();
+    }
+
+    public Builder forceCircleRange(double forceCircleRange) {
+      this.forceCircleRange = forceCircleRange;
+      return this;
+    }
+
+    public Builder voxelFillAlpha(float voxelFillAlpha) {
+      this.voxelFillAlpha = voxelFillAlpha;
+      return this;
+    }
+
+    public Builder voxelComponentAlpha(float voxelComponentAlpha) {
+      this.voxelComponentAlpha = voxelComponentAlpha;
+      return this;
+    }
+
+    public Builder gridMajor(boolean gridMajor) {
+      this.gridMajor = gridMajor;
+      return this;
+    }
+
+    public Builder gridMinor(boolean gridMinor) {
+      this.gridMinor = gridMinor;
+      return this;
+    }
+
+    public Builder gridColor(Color gridColor) {
+      this.gridColor = gridColor;
+      return this;
+    }
+
+    public Builder infoColor(Color infoColor) {
+      this.infoColor = infoColor;
+      return this;
+    }
+
+    public Builder backgroundColor(Color backgroundColor) {
+      this.backgroundColor = backgroundColor;
+      return this;
+    }
+
+    public Builder gridSizes(double[] gridSizes) {
+      this.gridSizes = gridSizes;
+      return this;
+    }
+
+    public double getForceCircleRange() {
+      return forceCircleRange;
+    }
+
+    public float getVoxelFillAlpha() {
+      return voxelFillAlpha;
+    }
+
+    public float getVoxelComponentAlpha() {
+      return voxelComponentAlpha;
+    }
+
+    public boolean isGridMajor() {
+      return gridMajor;
+    }
+
+    public boolean isGridMinor() {
+      return gridMinor;
+    }
+
+    public Color getGridColor() {
+      return gridColor;
+    }
+
+    public Color getInfoColor() {
+      return infoColor;
+    }
+
+    public Color getBackgroundColor() {
+      return backgroundColor;
+    }
+
+    public double[] getGridSizes() {
+      return gridSizes;
+    }
+
+    public GraphicsDrawer build() {
+      return new GraphicsDrawer(this);
+    }
+  }
+
+  private final Builder builder;
+
+  private GraphicsDrawer() {
+    builder = Builder.create();
+  }
+
+  private GraphicsDrawer(Builder builder) {
+    this.builder = builder;
+  }
+
+  public void draw(Snapshot snapshot, Graphics2D g, int w, int h, Frame frame, Set<VoxelVizMode> vizModes) {
     //reset screen
     g.setColor(Color.GRAY);
     g.fillRect(0, 0, w, h);
     AffineTransform oAt = g.getTransform();
     //prepare transformation
-    double xRatio = (double) w / (x2 - x1);
-    double yRatio = (double) h / (y2 - y1);
+    double xRatio = (double) w / (frame.x2 - frame.x1);
+    double yRatio = (double) h / (frame.y2 - frame.y1);
     double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
     at.scale(ratio, -ratio);
-    at.translate(-x1, -y2);
+    at.translate(-frame.x1, -frame.y2);
     //draw background
-    g.setColor(BACKGROUND_COLOR);
+    g.setColor(builder.getBackgroundColor());
     g.fill(new Rectangle2D.Double(0, 0, w, h));
     //draw grid
     g.setTransform(at);
-    if (GRID_MAJOR || GRID_MINOR) {
-      g.setColor(GRID_COLOR);
+    if (builder.isGridMajor() || builder.isGridMinor()) {
+      g.setColor(builder.getGridColor());
       g.setStroke(new BasicStroke(1f / (float) ratio));
-      double gridSize = computeGridSize(x1, x2);
-      if (GRID_MAJOR) {
-        for (double gridX = Math.floor(x1 / gridSize) * gridSize; gridX < x2; gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, y1, gridX, y2));
+      double gridSize = computeGridSize(frame.x1, frame.x2);
+      if (builder.isGridMajor()) {
+        for (double gridX = Math.floor(frame.x1 / gridSize) * gridSize; gridX < frame.x2; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, frame.y1, gridX, frame.y2));
         }
-        for (double gridY = Math.floor(y1 / gridSize) * gridSize; gridY < y2; gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(x1, gridY, x2, gridY));
+        for (double gridY = Math.floor(frame.y1 / gridSize) * gridSize; gridY < frame.y2; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(frame.x1, gridY, frame.x2, gridY));
         }
       }
-      if (GRID_MINOR) {
+      if (builder.isGridMinor()) {
         gridSize = gridSize / 5d;
         g.setStroke(new BasicStroke(
                 1f / (float) ratio,
@@ -96,11 +205,11 @@ public class GraphicsDrawer {
                 1.0f,
                 new float[]{2f / (float) ratio, 0f, 2f / (float) ratio},
                 0f));
-        for (double gridX = Math.floor(x1 / gridSize) * gridSize; gridX < x2; gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, y1, gridX, y2));
+        for (double gridX = Math.floor(frame.x1 / gridSize) * gridSize; gridX < frame.x2; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, frame.y1, gridX, frame.y2));
         }
-        for (double gridY = Math.floor(y1 / gridSize) * gridSize; gridY < y2; gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(x1, gridY, x2, gridY));
+        for (double gridY = Math.floor(frame.y1 / gridSize) * gridSize; gridY < frame.y2; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(frame.x1, gridY, frame.x2, gridY));
         }
       }
     }
@@ -112,29 +221,29 @@ public class GraphicsDrawer {
     //inverse transform    
     g.setTransform(oAt);
     //info
-    g.setColor(INFO_COLOR);
-    g.drawString(String.format("(%.0f;%.0f)->(%.0f;%.0f)", x1, y1, x2, y2), 1, 1 + g.getFontMetrics().getMaxAscent());
+    g.setColor(builder.getInfoColor());
+    g.drawString(String.format("(%.0f;%.0f)->(%.0f;%.0f)", frame.x1, frame.y1, frame.x2, frame.y2), 1, 1 + g.getFontMetrics().getMaxAscent());
     //finalize
     g.dispose();
   }
 
-  private static double computeGridSize(double x1, double x2) {
+  private double computeGridSize(double x1, double x2) {
     double gridSize = (x2 - x1) / 10d;
     double exp = Math.floor(Math.log10(gridSize));
-    double guess = GRID_SIZES[0];
+    double guess = builder.getGridSizes()[0];
     double err = Math.abs(gridSize / Math.pow(10d, exp) - guess);
-    for (int i = 1; i < GRID_SIZES.length; i++) {
-      if (Math.abs(gridSize / Math.pow(10d, exp) - GRID_SIZES[i]) < err) {
-        err = Math.abs(gridSize / Math.pow(10d, exp) - GRID_SIZES[i]);
-        guess = GRID_SIZES[i];
+    for (int i = 1; i < builder.getGridSizes().length; i++) {
+      if (Math.abs(gridSize / Math.pow(10d, exp) - builder.getGridSizes()[i]) < err) {
+        err = Math.abs(gridSize / Math.pow(10d, exp) - builder.getGridSizes()[i]);
+        guess = builder.getGridSizes()[i];
       }
     }
     gridSize = guess * Math.pow(10d, exp);
     return gridSize;
   }
 
-  private static void draw(Compound compound, Graphics2D g, Set<VoxelVizMode> vizModes) {
-    if (compound.getObjectClass().equals(Voxel.class)) {
+  private void draw(Compound compound, Graphics2D g, Set<VoxelVizMode> vizModes) {
+    if (compound.getObjectClass().equals(VoxelCompound.class)) {
       for (Component component : compound.getComponents()) {
         if (component.getType().equals(Component.Type.ENCLOSING)) {
           final double lastArea = ((VoxelComponent) component).getLastArea();
@@ -147,18 +256,18 @@ public class GraphicsDrawer {
                     Color.RED, Color.GREEN, Color.YELLOW,
                     .75d, 1d, 1.25d,
                     lastArea / restArea,
-                    VOXEL_FILL_ALPHA
+                    builder.getVoxelFillAlpha()
             );
             g.setColor(color);
             g.fill(toPath(component.getPoly(), true));
           }
           if (vizModes.contains(VoxelVizMode.POLY)) {
-            g.setColor(new Color(0f, 0f, 1f, VOXEL_COMPONENT_ALPHA));
+            g.setColor(new Color(0f, 0f, 1f, builder.getVoxelComponentAlpha()));
             g.draw(toPath(component.getPoly(), true));
           }
           if (vizModes.contains(VoxelVizMode.FORCE)) {
             g.setColor(Color.BLUE);
-            double r = (l * (1 - FORCE_CIRCLE_RANGE * f)) / 2d;
+            double r = (l * (1d - builder.getForceCircleRange() * f)) / 2d;
             Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
             g.draw(circle);
           }
@@ -166,7 +275,7 @@ public class GraphicsDrawer {
           g.setColor(Color.BLUE);
           g.draw(toPath(component.getPoly(), false));
         } else if (component.getType().equals(Component.Type.RIGID) && vizModes.contains(VoxelVizMode.COMPONENTS)) {
-          g.setColor(new Color(0f, 0f, 1f, VOXEL_COMPONENT_ALPHA));
+          g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()));
           g.fill(toPath(component.getPoly(), true));
         }
       }
@@ -177,7 +286,7 @@ public class GraphicsDrawer {
     }
   }
 
-  private static void drawComponent(Component component, Graphics2D g) {
+  private void drawComponent(Component component, Graphics2D g) {
     switch (component.getType()) {
       case CONNECTION:
         g.setColor(Color.GREEN);
@@ -194,14 +303,14 @@ public class GraphicsDrawer {
     }
   }
 
-  private static Color linear(final Color c1, final Color c2, final Color c3, double x1, double x2, double x3, double x, float alpha) {
+  private Color linear(final Color c1, final Color c2, final Color c3, double x1, double x2, double x3, double x, float alpha) {
     if (x < x2) {
       return mid(c1, c2, x1, x2, x, alpha);
     }
     return mid(c2, c3, x2, x3, x, alpha);
   }
 
-  private static Color mid(final Color c1, final Color c2, double min, double max, double x, float alpha) {
+  private Color mid(final Color c1, final Color c2, double min, double max, double x, float alpha) {
     x = (x - min) / (max - min);
     x = Math.max(0d, Math.min(1d, x));
     final double r1 = c1.getRed() / 255d;
@@ -216,7 +325,7 @@ public class GraphicsDrawer {
     return new Color((float) r, (float) g, (float) b, alpha);
   }
 
-  private static Path2D toPath(Poly poly, boolean close) {
+  private Path2D toPath(Poly poly, boolean close) {
     Path2D path = new Path2D.Double();
     path.moveTo(poly.getVertexes()[0].x, poly.getVertexes()[0].y);
     for (int i = 1; i < poly.getVertexes().length; i++) {
@@ -226,6 +335,90 @@ public class GraphicsDrawer {
       path.closePath();
     }
     return path;
+  }
+
+  public static class Frame {
+
+    private final double x1;
+    private final double x2;
+    private final double y1;
+    private final double y2;
+
+    public Frame(double x1, double x2, double y1, double y2) {
+      this.x1 = x1;
+      this.x2 = x2;
+      this.y1 = y1;
+      this.y2 = y2;
+    }
+
+    public double getX1() {
+      return x1;
+    }
+
+    public double getX2() {
+      return x2;
+    }
+
+    public double getY1() {
+      return y1;
+    }
+
+    public double getY2() {
+      return y2;
+    }
+
+  }
+
+  public static class FrameFollower {
+    
+    private final double sizeRelativeMargin;
+    
+    private final EvictingQueue<Double> centerYQueue;
+    private final EvictingQueue<Double> minXQueue;
+    private final EvictingQueue<Double> maxXQueue;
+
+    public FrameFollower(int windowSize, double sizeRelativeMargin) {
+      this.sizeRelativeMargin = sizeRelativeMargin;
+      centerYQueue = EvictingQueue.create(windowSize);
+      minXQueue = EvictingQueue.create(windowSize);
+      maxXQueue = EvictingQueue.create(windowSize);
+    }
+    
+    public Frame getFrame(Compound compound, double ratio) {
+      //get center and width
+      double cy = 0d;
+      double minX = Double.POSITIVE_INFINITY;
+      double maxX = Double.NEGATIVE_INFINITY;
+      for (Component component : compound.getComponents()) {
+        cy = cy+component.getPoly().center().y;
+        for (Point2 point : component.getPoly().getVertexes()) {
+          if (point.x<minX) {
+            minX = point.x;
+          }
+          if (point.x>maxX) {
+            maxX = point.x;
+          }
+        }
+      }
+      centerYQueue.offer(cy/(double)compound.getComponents().size());
+      minXQueue.offer(minX);
+      maxXQueue.offer(maxX);
+      //get moving average
+      double x1 = minXQueue.stream().mapToDouble(Double::doubleValue).average().orElse(0d);
+      double x2 = maxXQueue.stream().mapToDouble(Double::doubleValue).average().orElse(1d);
+      double yc = centerYQueue.stream().mapToDouble(Double::doubleValue).average().orElse(0d);
+      //enlarge width
+      double w = x2-x1;
+      x1 = x1-w*sizeRelativeMargin;
+      x2 = x2+w*sizeRelativeMargin;
+      //compute y1 and y2
+      double h = (x2-x1)/ratio;
+      double y1 = yc-h/2;
+      double y2 = yc+h/2;
+      //return
+      return new Frame(x1, x2, y1, y2);
+    }
+    
   }
 
 }

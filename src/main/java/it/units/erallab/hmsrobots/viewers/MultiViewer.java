@@ -75,6 +75,7 @@ public class MultiViewer extends JFrame {
   private final Map<String, List<Snapshot>> namedSimulations;
   private final double startTime;
   private final double endTime;
+  private final GraphicsDrawer graphicsDrawer;
 
   private double timeScale = 1d;
   private double time = 0d;
@@ -104,6 +105,8 @@ public class MultiViewer extends JFrame {
 
   public MultiViewer(Map<String, List<Snapshot>> namedSimulations) {
     super("World viewer");
+    //create drawer
+    graphicsDrawer = GraphicsDrawer.Builder.create().build();
     //create data to be visualized
     this.namedSimulations = new LinkedHashMap<>();
     double localStartTime = Double.POSITIVE_INFINITY;
@@ -206,7 +209,7 @@ public class MultiViewer extends JFrame {
               if (event != null) {
                 Canvas canvas = namedCanvases.get(entry.getKey());
                 Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
-                GraphicsDrawer.draw(event, g, canvas.getWidth(), canvas.getHeight(), -5, -5, 100, 75, vizModes);
+                graphicsDrawer.draw(event, g, canvas.getWidth(), canvas.getHeight(), new GraphicsDrawer.Frame(-5, -5, 100, 75), vizModes);
                 BufferStrategy strategy = canvas.getBufferStrategy();
                 if (!strategy.contentsLost()) {
                   strategy.show();

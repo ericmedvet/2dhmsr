@@ -18,6 +18,9 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.VoxelCompound;
+import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Dimension;
@@ -56,12 +59,12 @@ public class Viewer extends JFrame {
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final EvictingQueue<Snapshot> queue;
+  private final GraphicsDrawer graphicsDrawer;
 
   private double timeScale;
 
   private double worldTime = 0d;
   private double localTime = 0d;
-  private double worldX1 = -5d, worldY1 = -5d, worldX2 = 105d, worldY2 = 75d;
 
   public Viewer(ScheduledExecutorService scheduledExecutorService) {
     super("World viewer");
@@ -69,6 +72,8 @@ public class Viewer extends JFrame {
     this.scheduledExecutorService = scheduledExecutorService;
     queue = EvictingQueue.create(MAX_QUEUE_SIZE);
     vizModeCheckBoxes = new EnumMap<>(GraphicsDrawer.VoxelVizMode.class);
+    //create drawer
+    graphicsDrawer = GraphicsDrawer.Builder.create().build();
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     Dimension dimension = new Dimension(1000, 800);
@@ -107,6 +112,9 @@ public class Viewer extends JFrame {
     setVisible(true);
     canvas.setIgnoreRepaint(true);
     canvas.createBufferStrategy(2);
+
+    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(100, 1d);
+
     Runnable drawer = new Runnable() {
       private long lastUpdateMillis = System.currentTimeMillis();
 
@@ -121,11 +129,21 @@ public class Viewer extends JFrame {
           if (playCheckBox.isSelected()) {
             localTime = localTime + (double) (elapsedMillis) / 1000d;
             double newWorldTime = worldTime + (double) (elapsedMillis) / 1000d * timeScale;
-            Snapshot event = findEvent(newWorldTime);
-            if (event != null) {
+            Snapshot snapshot = findSnapshot(newWorldTime);
+            if (snapshot != null) {
               worldTime = newWorldTime;
               Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
-              GraphicsDrawer.draw(event, g, canvas.getWidth(), canvas.getHeight(), worldX1, worldY1, worldX2, worldY2, getVizModes());
+              //get voxel compound
+              Compound voxelCompound = null;
+              for (Compound compound : snapshot.getCompounds()) {
+                if (compound.getObjectClass().equals(VoxelCompound.class)) {
+                  voxelCompound = compound;
+                  break;
+                }
+              }
+              GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double)canvas.getWidth()/(double)canvas.getHeight());
+              //draw
+              graphicsDrawer.draw(snapshot, g, canvas.getWidth(), canvas.getHeight(), frame, getVizModes());
               BufferStrategy strategy = canvas.getBufferStrategy();
               if (!strategy.contentsLost()) {
                 strategy.show();
@@ -161,7 +179,7 @@ public class Viewer extends JFrame {
     scheduledExecutorService.scheduleAtFixedRate(drawer, 0, Math.round(1000d / (double) TARGET_FPS), TimeUnit.MILLISECONDS);
   }
 
-  private Snapshot findEvent(double time) {
+  private Snapshot findSnapshot(double time) {
     Snapshot event = null;
     synchronized (queue) {
       while (!queue.isEmpty()) {

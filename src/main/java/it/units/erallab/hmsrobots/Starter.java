@@ -42,12 +42,12 @@ public class Starter {
 
   public static void main(String[] args) {
 
-    World world = new World(new AxisAlignedBounds(250, 250));
+    World world = new World();
     //world.setGravity(new Vector2(0, 0));
     List<WorldObject> worldObjects = new ArrayList<>();
 
     //Ground ground = new Ground(new double[]{0, 2, 4, 40, 50, 63, 100}, new double[]{10, 13, 12, 3, 8, 24, 10});
-    Ground ground = new Ground(new double[]{0, 1, 99, 100}, new double[]{25, 0, 0, 25});
+    Ground ground = new Ground(new double[]{0, 1, 999, 1000}, new double[]{25, 0, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
     Random r = new Random();
