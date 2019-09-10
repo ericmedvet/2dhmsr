@@ -16,22 +16,26 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
+import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.viewers.Viewer;
+import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.controllers.PhaseSin;
 import it.units.erallab.hmsrobots.objects.Box;
 import it.units.erallab.hmsrobots.objects.Ground;
+import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.dyn4j.collision.AxisAlignedBounds;
 import org.dyn4j.dynamics.World;
 
 /**
@@ -68,6 +72,7 @@ public class Starter {
 
     int wormW = 10;
     int wormH = 4;
+    Random random = new Random(1);
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
       for (int y = 0; y < wormH; y++) {
@@ -75,23 +80,35 @@ public class Starter {
       }
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
-    for (int x = 4; x<6; x++) {
-      for (int y = 0; y<2; y++) {
+    for (int x = 2; x < 8; x++) {
+      for (int y = 0; y < 1; y++) {
         wormShape.set(x, y, false);
       }
     }
+
+    Controller controller = new PhaseSin(-1d, 1d, wormController);
+
+    EnumSet<CentralizedMLP.Input> inputs = EnumSet.of(CentralizedMLP.Input.AREA_RATIO);
+    int[] innerNeurons = new int[]{20};
+    int params = CentralizedMLP.countParams(wormShape, inputs, innerNeurons);
+    double[] weights = new double[params];
+    for (int i = 0; i < weights.length; i++) {
+      weights[i] = random.nextDouble();
+    }
+    controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, (Double t) -> Math.sin(2d * Math.PI * -1d * t) * 0d);
+
+    //controller = null;
     VoxelCompound vc2 = new VoxelCompound(
-            50, 10,
+            50, 5,
             wormShape,
             1,
-            new PhaseSin(-1d, 1d, wormController)
-            //(double t, double dt, Grid<Voxel> voxelGrid) -> Grid.create(wormW, wormH, -1000d)
+            controller
     );
     vc2.addTo(world);
     worldObjects.add(vc2);
 
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-    Viewer viewer = new Viewer(executor);
+    OnlineViewer viewer = new OnlineViewer(executor);
     viewer.start();
 
     double dt = 0.01d;
@@ -109,6 +126,7 @@ public class Starter {
       }
     };
     executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 2d), TimeUnit.MILLISECONDS);
+
   }
 
 }

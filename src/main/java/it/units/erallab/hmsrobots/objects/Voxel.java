@@ -40,10 +40,13 @@ public class Voxel implements WorldObject {
 
   public final static double SIDE_LENGHT = 3d;
 
-  private final static double V_L = SIDE_LENGHT / 3d * 1.15d;
+  private final static double V_L_RATIO = .35d;
+  private final static double V_L = SIDE_LENGHT * V_L_RATIO;
   private final static double SPRING_F = 25d;
   private final static double SPRING_D = 1d;
   private final static double MAX_ABS_FORCE = 400d;
+  private final static double FRICTION = 0.5d;
+  private final static double RESTITUTION = 0.1d;
 
   private final Body[] vertexBodies;
   private final DistanceJoint[] joints;
@@ -63,14 +66,14 @@ public class Voxel implements WorldObject {
     vertexBodies[1] = new Body(1);
     vertexBodies[2] = new Body(1);
     vertexBodies[3] = new Body(1);
-    vertexBodies[0].addFixture(new Rectangle(V_L, V_L), density);
-    vertexBodies[1].addFixture(new Rectangle(V_L, V_L), density);
-    vertexBodies[2].addFixture(new Rectangle(V_L, V_L), density);
-    vertexBodies[3].addFixture(new Rectangle(V_L, V_L), density);
-    vertexBodies[0].translate(-(SIDE_LENGHT / 2 - V_L / 2), +(SIDE_LENGHT / 2 - V_L / 2));
-    vertexBodies[1].translate(+(SIDE_LENGHT / 2 - V_L / 2), +(SIDE_LENGHT / 2 - V_L / 2));
-    vertexBodies[2].translate(+(SIDE_LENGHT / 2 - V_L / 2), -(SIDE_LENGHT / 2 - V_L / 2));
-    vertexBodies[3].translate(-(SIDE_LENGHT / 2 - V_L / 2), -(SIDE_LENGHT / 2 - V_L / 2));
+    vertexBodies[0].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
+    vertexBodies[1].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
+    vertexBodies[2].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
+    vertexBodies[3].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
+    vertexBodies[0].translate(-(SIDE_LENGHT / 2d - V_L / 2d), +(SIDE_LENGHT / 2d - V_L / 2d));
+    vertexBodies[1].translate(+(SIDE_LENGHT / 2d - V_L / 2d), +(SIDE_LENGHT / 2d - V_L / 2d));
+    vertexBodies[2].translate(+(SIDE_LENGHT / 2d - V_L / 2d), -(SIDE_LENGHT / 2d - V_L / 2d));
+    vertexBodies[3].translate(-(SIDE_LENGHT / 2d - V_L / 2d), -(SIDE_LENGHT / 2d - V_L / 2d));
     for (Body body : vertexBodies) {
       body.setMass(MassType.NORMAL);
       body.translate(x, y);
@@ -117,7 +120,7 @@ public class Voxel implements WorldObject {
 
   private Vector2 getIndexedVertex(int i, int j) {
     Transform t = vertexBodies[i].getTransform();
-    Rectangle rectangle = (Rectangle) vertexBodies[i].getFixture(0).getShape();
+    Rectangle rectangle = (Rectangle) vertexBodies[i].getFixture(0).getShape();    
     Vector2 tV = rectangle.getVertices()[j].copy();
     t.transform(tV);
     return tV;

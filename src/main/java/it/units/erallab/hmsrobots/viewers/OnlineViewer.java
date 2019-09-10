@@ -45,7 +45,7 @@ import javax.swing.JSlider;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Viewer extends JFrame {
+public class OnlineViewer extends JFrame implements Listener {
 
   private final static int TARGET_FPS = 50;
   private final static int MAX_QUEUE_SIZE = 10000;
@@ -66,7 +66,7 @@ public class Viewer extends JFrame {
   private double worldTime = 0d;
   private double localTime = 0d;
 
-  public Viewer(ScheduledExecutorService scheduledExecutorService) {
+  public OnlineViewer(ScheduledExecutorService scheduledExecutorService) {
     super("World viewer");
     //create things
     this.scheduledExecutorService = scheduledExecutorService;
@@ -192,9 +192,9 @@ public class Viewer extends JFrame {
     return event;
   }
 
-  public void listen(Snapshot event) {
+  public void listen(Snapshot snapshot) {
     synchronized (queue) {
-      queue.add(event);
+      queue.add(snapshot);
     }
   }
 

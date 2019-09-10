@@ -14,18 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.controllers;
+package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.Snapshot;
 
 /**
  *
  * @author eric
  */
-@FunctionalInterface
-public interface Controller {
+public interface Listener {
   
-  public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid);
+  public void listen(Snapshot snapshot);
   
 }

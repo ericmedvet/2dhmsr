@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.controllers;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.function.Function;
 
 /**
@@ -40,7 +41,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
       return Math.tanh(x);
     });
 
-    private Function<Double, Double> f;
+    private final Function<Double, Double> f;
 
     private ActivationFunction(Function<Double, Double> f) {
       this.f = f;
@@ -76,7 +77,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   protected static double[] flat(double[][][] unflatWeights, int[] neurons) {
     int n = 0;
     for (int i = 0; i < neurons.length - 1; i++) {
-      n = n + neurons[i] * neurons[i + 1]; //+1 is the bias
+      n = n + neurons[i] * neurons[i + 1];
     }
     double[] flatWeights = new double[n];
     int c = 0;
@@ -89,6 +90,15 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
       }
     }
     return flatWeights;
+  }
+  
+  public static int countWeights(int[] neurons) {
+    int largestLayerSize = Arrays.stream(neurons).max().orElse(0);
+    double[][][] fakeWeights = new double[neurons.length][][];
+    double[][] fakeLayerWeights = new double[largestLayerSize][];
+    Arrays.fill(fakeLayerWeights, new double[largestLayerSize]);
+    Arrays.fill(fakeWeights, fakeLayerWeights);
+    return flat(fakeWeights, neurons).length;
   }
 
   @Override
