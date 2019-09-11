@@ -22,9 +22,9 @@ import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.controllers.PhaseSin;
+import it.units.erallab.hmsrobots.controllers.TimeFunction;
 import it.units.erallab.hmsrobots.objects.Box;
 import it.units.erallab.hmsrobots.objects.Ground;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import java.util.ArrayList;
@@ -47,31 +47,14 @@ public class Starter {
   public static void main(String[] args) {
 
     World world = new World();
-    //world.setGravity(new Vector2(0, 0));
     List<WorldObject> worldObjects = new ArrayList<>();
 
-    //Ground ground = new Ground(new double[]{0, 2, 4, 40, 50, 63, 100}, new double[]{10, 13, 12, 3, 8, 24, 10});
     Ground ground = new Ground(new double[]{0, 1, 999, 1000}, new double[]{25, 0, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
-    Random r = new Random();
-    for (int i = 0; i < 0; i++) {
-      Box box = new Box(r.nextDouble() * 100, 30 + 30 * r.nextDouble(), 2 + 5 * r.nextDouble(), 2 + 5 * r.nextDouble(), r.nextDouble() * Math.PI, 1);
-      box.addTo(world);
-      worldObjects.add(box);
-    }
 
-    VoxelCompound vc1 = new VoxelCompound(
-            10, 100,
-            " **, * , * , * , * , * ,***",
-            1,
-            new PhaseSin(0.5d, 250d, Grid.create(3, 7, 0d))
-    );
-    //vc1.addTo(world);
-    //worldObjects.add(vc1);
-
-    int wormW = 1;
-    int wormH = 1;
+    int wormW = 10;
+    int wormH = 4;
     Random random = new Random(1);
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
@@ -80,12 +63,11 @@ public class Starter {
       }
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
-    /*
     for (int x = 2; x < 8; x++) {
-      for (int y = 0; y < 1; y++) {
+      for (int y = 0; y < 2; y++) {
         wormShape.set(x, y, false);
       }
-    }*/
+    }
 
     Controller controller = new PhaseSin(-1d, 1d, wormController);
 
@@ -96,11 +78,12 @@ public class Starter {
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble();
     }
-    //controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, (Double t) -> Math.sin(2d * Math.PI * -1d * t) * 0d);
-    //controller = null;
-    
+    controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
+    //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> Math.sin(2d * Math.PI * 0.2d * t)));
+    //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> -1d + 2 * (Math.round(t / 2d) % 2)));
+
     VoxelCompound vc2 = new VoxelCompound(
-            50, 5,
+            50, 1,
             wormShape,
             1,
             controller

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 eric
+ * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,29 +16,36 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Grid;
 import java.util.function.Function;
 
 /**
  *
- * @author eric
+ * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class PhaseSin extends TimeFunction {
+public class TimeFunction implements Controller {
   
-  public PhaseSin(double frequency, double amplitude, Grid<Double> phases) {
-    super(getFunctions(frequency, amplitude, phases));
+  private final Grid<Function<Double, Double>> functions;
+
+  public TimeFunction(Grid<Function<Double, Double>> functions) {
+    this.functions = functions;
   }
-  
-  private static Grid<Function<Double,Double>> getFunctions(final double frequency, final double amplitude, final Grid<Double> phases) {
-    Grid<Function<Double,Double>> functions = Grid.create(phases);
-    for (int x = 0; x<functions.getW(); x++) {
-      for (int y = 0; y<functions.getH(); y++) {
-        final double phase = phases.get(x, y);
-        functions.set(x, y, t -> Math.sin(2d*Math.PI*frequency*t+phase)*amplitude);
+
+  @Override
+  public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid) {
+    Grid<Double> forces = Grid.create(voxelGrid);
+    for (int x = 0; x<voxelGrid.getW(); x++) {
+      for (int y = 0; y<voxelGrid.getH(); y++) {
+        forces.set(x, y, functions.get(x, y).apply(t));
       }
     }
+    return forces;
+  }
+
+  public Grid<Function<Double, Double>> getFunctions() {
     return functions;
   }
+  
   
 }

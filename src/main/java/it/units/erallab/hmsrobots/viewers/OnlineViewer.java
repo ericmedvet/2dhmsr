@@ -20,7 +20,6 @@ import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.Snapshot;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
-import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Dimension;
@@ -86,7 +85,7 @@ public class OnlineViewer extends JFrame implements Listener {
     infoLabel = new JLabel();
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
-    playCheckBox = new JCheckBox("Play", true);
+    playCheckBox = new JCheckBox("Play", false);
     for (GraphicsDrawer.VoxelVizMode mode : GraphicsDrawer.VoxelVizMode.values()) {
       final JCheckBox checkBox = new JCheckBox(
               mode.name().toLowerCase().replace('_', ' '),

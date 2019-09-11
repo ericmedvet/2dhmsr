@@ -17,6 +17,8 @@
 package it.units.erallab.hmsrobots.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,19 +59,19 @@ public class Grid<T> {
   public int getH() {
     return h;
   }
-  
+
   public static <K> Grid<K> create(int w, int h, K k) {
     Grid<K> grid = new Grid<>(w, h, null);
-    for (int x = 0; x<grid.getW(); x++) {
-      for (int y = 0; y<grid.getH(); y++) {
+    for (int x = 0; x < grid.getW(); x++) {
+      for (int y = 0; y < grid.getH(); y++) {
         grid.set(x, y, k);
       }
     }
     return grid;
   }
-  
+
   public static <K> Grid<K> create(int w, int h) {
-    return create(w, h, (K)null);
+    return create(w, h, (K) null);
   }
 
   public static <K> Grid<K> create(Grid<?> other) {
