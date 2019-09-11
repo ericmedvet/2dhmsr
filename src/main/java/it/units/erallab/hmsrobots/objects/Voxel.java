@@ -48,6 +48,8 @@ public class Voxel implements WorldObject {
   private final static double FRICTION = 0.5d;
   private final static double RESTITUTION = 0.1d;
 
+  private final static String FORCE_METHOD = "distance"; //"distance", "force"
+
   private final Body[] vertexBodies;
   private final DistanceJoint[] joints;
 
@@ -120,7 +122,7 @@ public class Voxel implements WorldObject {
 
   private Vector2 getIndexedVertex(int i, int j) {
     Transform t = vertexBodies[i].getTransform();
-    Rectangle rectangle = (Rectangle) vertexBodies[i].getFixture(0).getShape();    
+    Rectangle rectangle = (Rectangle) vertexBodies[i].getFixture(0).getShape();
     Vector2 tV = rectangle.getVertices()[j].copy();
     t.transform(tV);
     return tV;
@@ -156,19 +158,27 @@ public class Voxel implements WorldObject {
     if (Math.abs(f) > 1d) {
       f = Math.signum(f);
     }
-    double xc = 0d;
-    double yc = 0d;
-    for (Body body : vertexBodies) {
-      xc = xc + body.getWorldCenter().x;
-      yc = yc + body.getWorldCenter().y;
-    }
-    xc = xc / (double) vertexBodies.length;
-    yc = yc / (double) vertexBodies.length;
-    for (Body body : vertexBodies) {
-      Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * MAX_ABS_FORCE);
-      body.applyForce(force);
-    }
     lastAppliedForce = f;
+    if (FORCE_METHOD.equals("force")) {
+      double xc = 0d;
+      double yc = 0d;
+      for (Body body : vertexBodies) {
+        xc = xc + body.getWorldCenter().x;
+        yc = yc + body.getWorldCenter().y;
+      }
+      xc = xc / (double) vertexBodies.length;
+      yc = yc / (double) vertexBodies.length;
+      for (Body body : vertexBodies) {
+        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * MAX_ABS_FORCE);
+        body.applyForce(force);
+      }
+    } else if (FORCE_METHOD.equals("distance")) {
+      double distanceOffset = 0.5d;
+      joints[0].setDistance((SIDE_LENGHT-V_L*2d)*(1d-distanceOffset*f));
+      joints[1].setDistance((SIDE_LENGHT-V_L*2d)*(1d-distanceOffset*f));
+      joints[2].setDistance((SIDE_LENGHT-V_L*2d)*(1d-distanceOffset*f));
+      joints[3].setDistance((SIDE_LENGHT-V_L*2d)*(1d-distanceOffset*f));
+    }
   }
 
   public double getLastAppliedForce() {

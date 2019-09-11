@@ -70,8 +70,8 @@ public class Starter {
     //vc1.addTo(world);
     //worldObjects.add(vc1);
 
-    int wormW = 10;
-    int wormH = 4;
+    int wormW = 1;
+    int wormH = 1;
     Random random = new Random(1);
     Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
     for (int x = 0; x < wormW; x++) {
@@ -80,11 +80,12 @@ public class Starter {
       }
     }
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
+    /*
     for (int x = 2; x < 8; x++) {
       for (int y = 0; y < 1; y++) {
         wormShape.set(x, y, false);
       }
-    }
+    }*/
 
     Controller controller = new PhaseSin(-1d, 1d, wormController);
 
@@ -95,9 +96,9 @@ public class Starter {
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble();
     }
-    controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, (Double t) -> Math.sin(2d * Math.PI * -1d * t) * 0d);
-
+    //controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, (Double t) -> Math.sin(2d * Math.PI * -1d * t) * 0d);
     //controller = null;
+    
     VoxelCompound vc2 = new VoxelCompound(
             50, 5,
             wormShape,
