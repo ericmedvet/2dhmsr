@@ -25,10 +25,9 @@ import java.util.function.Function;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class DistributedMLP implements Controller {
+public class DistributedMLP extends ClosedLoopController {
 
   private final Grid<Function<Double, Double>> drivingFunctions;
-  private final EnumSet<CentralizedMLP.Input> inputs;
   private final Grid<MultiLayerPerceptron> mlps;
   private final int signals;
 
@@ -57,10 +56,10 @@ public class DistributedMLP implements Controller {
   }
 
   public DistributedMLP(Grid<Boolean> structure, Grid<Function<Double, Double>> drivingFunctions, EnumSet<CentralizedMLP.Input> inputs, int signals, int[] innerNeurons, double[] weights) {
+    super(inputs);
     if ((drivingFunctions.getW() != structure.getW()) || (drivingFunctions.getH() != structure.getH())) {
       throw new IllegalArgumentException("Grids of driving functions and structure should have the same shape");
     }
-    this.inputs = inputs;
     this.signals = signals;
     this.drivingFunctions = drivingFunctions;
     //count voxels
@@ -156,15 +155,8 @@ public class DistributedMLP implements Controller {
     double[] inputValues = new double[mlp.getNeurons()[0]];
     int c = 0;
     //collect inputs
-    for (CentralizedMLP.Input input : inputs) {
-      if (input.equals(CentralizedMLP.Input.AREA_RATIO)) {
-        inputValues[c] = voxel.getAreaRatio();
-        c = c + 1;
-      } else if (input.equals(CentralizedMLP.Input.ABS_LINEAR_VELOCITY)) {
-        inputValues[c] = voxel.getLinearVelocity().getMagnitude();
-        c = c + 1;
-      }
-    }
+    collectInputs(voxel, inputValues, c);
+    c = c+getInputs().size();
     //collect driving function (or bias)
     inputValues[c] = drivingValue;
     c = c + 1;

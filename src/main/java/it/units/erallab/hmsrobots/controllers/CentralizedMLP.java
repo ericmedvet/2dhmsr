@@ -25,13 +25,8 @@ import java.util.function.Function;
  *
  * @author eric
  */
-public class CentralizedMLP implements Controller {
+public class CentralizedMLP extends ClosedLoopController{
 
-  public enum Input {
-    AREA_RATIO, ABS_LINEAR_VELOCITY;
-  }
-
-  private final EnumSet<Input> inputs;
   private final MultiLayerPerceptron mlp;
   private final Function<Double, Double> drivingFunction;
 
@@ -55,7 +50,7 @@ public class CentralizedMLP implements Controller {
   }
 
   public CentralizedMLP(Grid<Boolean> structure, EnumSet<Input> inputs, int[] innerNeurons, double[] weights, Function<Double, Double> drivingFunction) {
-    this.inputs = inputs;
+    super(inputs);
     //count active voxels
     int c = 0;
     for (int x = 0; x < structure.getW(); x++) {
@@ -87,15 +82,8 @@ public class CentralizedMLP implements Controller {
       for (int y = 0; y < voxelGrid.getH(); y++) {
         final Voxel voxel = voxelGrid.get(x, y);
         if (voxel != null) {
-          for (Input input : inputs) {
-            if (input.equals(Input.AREA_RATIO)) {
-              inputValues[c] = voxel.getAreaRatio();
-              c = c + 1;
-            } else if (input.equals(Input.ABS_LINEAR_VELOCITY)) {
-              inputValues[c] = voxel.getLinearVelocity().getMagnitude();
-              c = c + 1;
-            }
-          }
+          collectInputs(voxel, inputValues, c);
+          c = c+getInputs().size();
         }
       }
     }
