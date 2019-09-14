@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.controllers.PhaseSin;
 import it.units.erallab.hmsrobots.controllers.TimeFunction;
 import it.units.erallab.hmsrobots.objects.Box;
 import it.units.erallab.hmsrobots.objects.Ground;
+import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class Starter {
     World world = new World();
     List<WorldObject> worldObjects = new ArrayList<>();
 
-    Ground ground = new Ground(new double[]{0, 1, 999, 1000}, new double[]{25, 0, 0, 25});
+    Ground ground = new Ground(new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25});
     ground.addTo(world);
     worldObjects.add(ground);
 
@@ -78,15 +79,15 @@ public class Starter {
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble();
     }
-    controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
+    //controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> Math.sin(2d * Math.PI * 0.2d * t)));
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> -1d + 2 * (Math.round(t / 2d) % 2)));
 
     VoxelCompound vc2 = new VoxelCompound(
-            50, 1,
+            50, 10,
             wormShape,
-            1,
-            controller
+            controller,
+            Voxel.Builder.create()
     );
     vc2.addTo(world);
     worldObjects.add(vc2);
@@ -100,7 +101,6 @@ public class Starter {
     Runnable runnable = () -> {
       try {
         t.add(dt);
-        //vc1.control(t.getT(), dt);
         vc2.control(t.getT(), dt);
         world.update(dt);
         viewer.listen(new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
@@ -109,7 +109,7 @@ public class Starter {
         System.exit(0);
       }
     };
-    executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 2d), TimeUnit.MILLISECONDS);
+    executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 1.1d), TimeUnit.MILLISECONDS);
 
   }
 

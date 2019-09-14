@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 eric
+ * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
@@ -36,7 +37,7 @@ import java.util.Set;
 
 /**
  *
- * @author eric
+ * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GraphicsDrawer {
 
@@ -54,6 +55,7 @@ public class GraphicsDrawer {
     private final static Color GRID_COLOR = Color.GRAY;
     private final static Color INFO_COLOR = Color.GRAY.darker();
     private final static Color BACKGROUND_COLOR = Color.WHITE;
+    private final static Color GROUND_COLOR = Color.BLACK;
     private final static double[] GRID_SIZES = new double[]{2, 5, 10};
 
     private double forceCircleRange = FORCE_CIRCLE_RANGE;
@@ -64,6 +66,7 @@ public class GraphicsDrawer {
     private Color gridColor = GRID_COLOR;
     private Color infoColor = INFO_COLOR;
     private Color backgroundColor = BACKGROUND_COLOR;
+    private Color groundColor = GROUND_COLOR;
     private double[] gridSizes = GRID_SIZES;
 
     public static Builder create() {
@@ -110,6 +113,11 @@ public class GraphicsDrawer {
       return this;
     }
 
+    public Builder groundColor(Color groundColor) {
+      this.groundColor = groundColor;
+      return this;
+    }
+
     public Builder gridSizes(double[] gridSizes) {
       this.gridSizes = gridSizes;
       return this;
@@ -145,6 +153,10 @@ public class GraphicsDrawer {
 
     public Color getBackgroundColor() {
       return backgroundColor;
+    }
+
+    public Color getGroundColor() {
+      return groundColor;
     }
 
     public double[] getGridSizes() {
@@ -278,6 +290,20 @@ public class GraphicsDrawer {
           g.fill(toPath(component.getPoly(), true));
         }
       }
+    } else if (compound.getObjectClass().equals(Ground.class)) {
+      for (Component component : compound.getComponents()) {
+        Color fillColor = new Color(
+                builder.getGroundColor().getRed(),
+                builder.getGroundColor().getGreen(),
+                builder.getGroundColor().getBlue(),
+                builder.getGroundColor().getAlpha()/2
+        );
+        final Path2D path = toPath(component.getPoly(), true);
+        g.setColor(Color.BLACK);
+        g.draw(path);
+        g.setColor(fillColor);
+        g.fill(path);
+      }
     } else {
       for (Component component : compound.getComponents()) {
         drawComponent(component, g);
@@ -288,15 +314,15 @@ public class GraphicsDrawer {
   private void drawComponent(Component component, Graphics2D g) {
     switch (component.getType()) {
       case CONNECTION:
-        g.setColor(Color.GREEN);
+        g.setColor(Color.BLUE);
         g.draw(toPath(component.getPoly(), false));
         break;
       case RIGID:
-        g.setColor(Color.YELLOW);
+        g.setColor(Color.BLUE);
         g.draw(toPath(component.getPoly(), true));
         break;
       default:
-        g.setColor(Color.RED);
+        g.setColor(Color.BLUE);
         g.draw(toPath(component.getPoly(), true));
         break;
     }
@@ -369,9 +395,9 @@ public class GraphicsDrawer {
   }
 
   public static class FrameFollower {
-    
+
     private final double sizeRelativeMargin;
-    
+
     private final EvictingQueue<Double> centerYQueue;
     private final EvictingQueue<Double> minXQueue;
     private final EvictingQueue<Double> maxXQueue;
@@ -382,24 +408,24 @@ public class GraphicsDrawer {
       minXQueue = EvictingQueue.create(windowSize);
       maxXQueue = EvictingQueue.create(windowSize);
     }
-    
+
     public Frame getFrame(Compound compound, double ratio) {
       //get center and width
       double cy = 0d;
       double minX = Double.POSITIVE_INFINITY;
       double maxX = Double.NEGATIVE_INFINITY;
       for (Component component : compound.getComponents()) {
-        cy = cy+component.getPoly().center().y;
+        cy = cy + component.getPoly().center().y;
         for (Point2 point : component.getPoly().getVertexes()) {
-          if (point.x<minX) {
+          if (point.x < minX) {
             minX = point.x;
           }
-          if (point.x>maxX) {
+          if (point.x > maxX) {
             maxX = point.x;
           }
         }
       }
-      centerYQueue.offer(cy/(double)compound.getComponents().size());
+      centerYQueue.offer(cy / (double) compound.getComponents().size());
       minXQueue.offer(minX);
       maxXQueue.offer(maxX);
       //get moving average
@@ -407,17 +433,17 @@ public class GraphicsDrawer {
       double x2 = maxXQueue.stream().mapToDouble(Double::doubleValue).average().orElse(1d);
       double yc = centerYQueue.stream().mapToDouble(Double::doubleValue).average().orElse(0d);
       //enlarge width
-      double w = x2-x1;
-      x1 = x1-w*sizeRelativeMargin;
-      x2 = x2+w*sizeRelativeMargin;
+      double w = x2 - x1;
+      x1 = x1 - w * sizeRelativeMargin;
+      x2 = x2 + w * sizeRelativeMargin;
       //compute y1 and y2
-      double h = (x2-x1)/ratio;
-      double y1 = yc-h/2;
-      double y2 = yc+h/2;
+      double h = (x2 - x1) / ratio;
+      double y1 = yc - h / 2;
+      double y2 = yc + h / 2;
       //return
       return new Frame(x1, x2, y1, y2);
     }
-    
+
   }
 
 }

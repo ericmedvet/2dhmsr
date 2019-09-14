@@ -54,7 +54,7 @@ public class Voxel implements WorldObject {
     public final double max;
 
     public SpringRange(double min, double rest, double max) {
-      if ((min>rest)||(max<rest)||(min<0)) {
+      if ((min > rest) || (max < rest) || (min < 0)) {
         throw new IllegalArgumentException(String.format("Wrong spring range [%f, %f, %f]", min, rest, max));
       }
       this.min = min;
@@ -64,143 +64,294 @@ public class Voxel implements WorldObject {
 
   }
 
-  public final static double SIDE_LENGHT = 3d;
+  public static class Builder {
 
-  private final static double V_L_RATIO = .35d;
-  private final static double V_L = SIDE_LENGHT * V_L_RATIO;
-  private final static double SPRING_F = 25d;
-  private final static double SPRING_D = 1d;
-  private final static double MAX_ABS_FORCE = 1000d; //not used in forceMethod=DISTANCE
-  private final static double AREA_RATIO_OFFSET = 0.25d; //not used in forceMethod=FORCE
-  private final static double FRICTION = 0.5d;
-  private final static double RESTITUTION = 0.1d;
-  private final static ForceMethod FORCE_METHOD = ForceMethod.DISTANCE;
-  private final static EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.of(
-          SpringScaffolding.SIDE_EXTERNAL,
-          SpringScaffolding.SIDE_INTERNAL,
-          SpringScaffolding.SIDE_CROSS,
-          SpringScaffolding.CENTRAL_CROSS
-  );
+    private final static double SIDE_LENGTH = 3d;
+    private final static double MASS_SIDE_LENGTH_RATIO = .35d;
+    private final static double SPRING_F = 25d;
+    private final static double SPRING_D = 1d;
+    private final static double MAX_FORCE = 1000d; //not used in forceMethod=DISTANCE
+    private final static double AREA_RATIO_OFFSET = 0.25d; //not used in forceMethod=FORCE
+    private final static double FRICTION = 0.5d;
+    private final static double RESTITUTION = 0.1d;
+    private final static double MASS = 1d;
+    private final static ForceMethod FORCE_METHOD = ForceMethod.DISTANCE;
+    private final static EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.of(
+            SpringScaffolding.SIDE_EXTERNAL,
+            SpringScaffolding.SIDE_INTERNAL,
+            SpringScaffolding.SIDE_CROSS,
+            SpringScaffolding.CENTRAL_CROSS
+    );
+    
+    private double sideLength = SIDE_LENGTH;
+    private double massSideLengthRatio = MASS_SIDE_LENGTH_RATIO;
+    private double springF = SPRING_F;
+    private double springD = SPRING_D;
+    private double maxForce = MAX_FORCE;
+    private double areaRatioOffset = AREA_RATIO_OFFSET;
+    private double friction = FRICTION;
+    private double restitution = RESTITUTION;
+    private double mass = MASS;
+    private ForceMethod forceMethod = FORCE_METHOD;
+    private EnumSet<SpringScaffolding> springScaffoldings = SPRING_SCAFFOLDINGS;
+    
+    public static Builder create() {
+      return new Builder();
+    }
+    
+    public Builder sideLength(double sideLength) {
+      this.sideLength = sideLength;
+      return this;
+    }
+    
+    public Builder massSideLengthRatio(double massSideLengthRatio) {
+      this.massSideLengthRatio = massSideLengthRatio;
+      return this;
+    }
+    
+    public Builder springF(double springF) {
+      this.springF = springF;
+      return this;
+    }
+
+    public Builder springD(double springD) {
+      this.springD = springD;
+      return this;
+    }
+    
+    public Builder maxForce(double maxForce) {
+      this.maxForce = maxForce;
+      return this;
+    }
+    
+    public Builder areaRatioOffset(double areaRatioOffset) {
+      this.areaRatioOffset = areaRatioOffset;
+      return this;
+    }
+    
+    public Builder friction(double friction) {
+      this.friction = friction;
+      return this;
+    }
+    
+    public Builder restitution(double restitution) {
+      this.restitution = restitution;
+      return this;
+    }
+    
+    public Builder mass(double mass) {
+      this.mass = mass;
+      return this;
+    }
+    
+    public Builder forceMethod(ForceMethod forceMethod) {
+      this.forceMethod = forceMethod;
+      return this;
+    }
+    
+    public Builder springScaffoldings(EnumSet<SpringScaffolding> springScaffoldings) {
+      this.springScaffoldings = springScaffoldings;
+      return this;
+    }
+
+    public double getSideLength() {
+      return sideLength;
+    }
+
+    public double getMassSideLengthRatio() {
+      return massSideLengthRatio;
+    }
+
+    public double getSpringF() {
+      return springF;
+    }
+
+    public double getSpringD() {
+      return springD;
+    }
+
+    public double getMaxForce() {
+      return maxForce;
+    }
+
+    public double getAreaRatioOffset() {
+      return areaRatioOffset;
+    }
+
+    public double getFriction() {
+      return friction;
+    }
+
+    public double getRestitution() {
+      return restitution;
+    }
+    
+    public double getMass() {
+      return mass;
+    }
+
+    public ForceMethod getForceMethod() {
+      return forceMethod;
+    }
+
+    public EnumSet<SpringScaffolding> getSpringScaffoldings() {
+      return springScaffoldings;
+    }
+
+    public Voxel build(double x, double y) {
+      return new Voxel(this, x, y);
+    }
+
+  }
+
+  private final double sideLength;
+  private final double massSideLengthRatio;
+  private final double springF;
+  private final double springD;
+  private final double maxForce;
+  private final double areaRatioOffset;
+  private final double friction;
+  private final double restitution;
+  private final double mass;
+  private final ForceMethod forceMethod;
+  private final EnumSet<SpringScaffolding> springScaffoldings;
 
   private final Body[] vertexBodies;
   private final DistanceJoint[] joints;
 
   private double lastAppliedForce = 0d;
-
-  public Voxel(double x, double y, double mass) {
-    vertexBodies = new Body[4];
+  
+  private Voxel() {
+    this(Builder.create(), 0d, 0d);
+  }
+  
+  private Voxel(Builder builder, double x, double y) {
+    //set fields
+    sideLength = builder.getSideLength();
+    massSideLengthRatio = builder.getMassSideLengthRatio();
+    springF = builder.getSpringF();
+    springD = builder.getSpringD();
+    maxForce = builder.getMaxForce();
+    areaRatioOffset = builder.getAreaRatioOffset();
+    friction = builder.getFriction();
+    restitution = builder.getRestitution();
+    mass = builder.getMass();
+    forceMethod = builder.getForceMethod();
+    springScaffoldings = builder.getSpringScaffoldings();
     //compute densities
-    double density = mass * V_L / V_L / 4;
+    double massSideLength = sideLength*massSideLengthRatio;
+    double density = mass * massSideLength / massSideLength / 4;
     //build bodies
+    vertexBodies = new Body[4];
     vertexBodies[0] = new Body(1);
     vertexBodies[1] = new Body(1);
     vertexBodies[2] = new Body(1);
     vertexBodies[3] = new Body(1);
-    vertexBodies[0].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
-    vertexBodies[1].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
-    vertexBodies[2].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
-    vertexBodies[3].addFixture(new Rectangle(V_L, V_L), density, FRICTION, RESTITUTION);
-    vertexBodies[0].translate(-(SIDE_LENGHT / 2d - V_L / 2d), +(SIDE_LENGHT / 2d - V_L / 2d));
-    vertexBodies[1].translate(+(SIDE_LENGHT / 2d - V_L / 2d), +(SIDE_LENGHT / 2d - V_L / 2d));
-    vertexBodies[2].translate(+(SIDE_LENGHT / 2d - V_L / 2d), -(SIDE_LENGHT / 2d - V_L / 2d));
-    vertexBodies[3].translate(-(SIDE_LENGHT / 2d - V_L / 2d), -(SIDE_LENGHT / 2d - V_L / 2d));
+    vertexBodies[0].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[1].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[2].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[3].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[0].translate(-(sideLength / 2d - massSideLength / 2d), +(sideLength / 2d - massSideLength / 2d));
+    vertexBodies[1].translate(+(sideLength / 2d - massSideLength / 2d), +(sideLength / 2d - massSideLength / 2d));
+    vertexBodies[2].translate(+(sideLength / 2d - massSideLength / 2d), -(sideLength / 2d - massSideLength / 2d));
+    vertexBodies[3].translate(-(sideLength / 2d - massSideLength / 2d), -(sideLength / 2d - massSideLength / 2d));
     for (Body body : vertexBodies) {
       body.setMass(MassType.NORMAL);
       body.translate(x, y);
     }
     //build joints
     List<DistanceJoint> allJoints = new ArrayList<>();
-    double minSideLenght = Math.sqrt(SIDE_LENGHT * SIDE_LENGHT * (1d - AREA_RATIO_OFFSET));
-    double maxSideLenght = Math.sqrt(SIDE_LENGHT * SIDE_LENGHT * (1d + AREA_RATIO_OFFSET));
-    SpringRange sideParallelRange = new SpringRange(minSideLenght - 2d * V_L, SIDE_LENGHT - 2d * V_L, maxSideLenght - 2d * V_L);
-    SpringRange sideCrossRange = new SpringRange(Math.sqrt(V_L * V_L + sideParallelRange.min * sideParallelRange.min), Math.sqrt(V_L * V_L + sideParallelRange.rest * sideParallelRange.rest), Math.sqrt(V_L * V_L + sideParallelRange.max * sideParallelRange.max));
-    SpringRange centralCrossRange = new SpringRange((minSideLenght - V_L) * Math.sqrt(2d), (SIDE_LENGHT - V_L) * Math.sqrt(2d), (maxSideLenght - V_L) * Math.sqrt(2d));
-    if (SPRING_SCAFFOLDINGS.contains(SpringScaffolding.SIDE_INTERNAL)) {
+    double minSideLenght = Math.sqrt(sideLength * sideLength * (1d - areaRatioOffset));
+    double maxSideLenght = Math.sqrt(sideLength * sideLength * (1d + areaRatioOffset));
+    SpringRange sideParallelRange = new SpringRange(minSideLenght - 2d * massSideLength, sideLength - 2d * massSideLength, maxSideLenght - 2d * massSideLength);
+    SpringRange sideCrossRange = new SpringRange(Math.sqrt(massSideLength * massSideLength + sideParallelRange.min * sideParallelRange.min), Math.sqrt(massSideLength * massSideLength + sideParallelRange.rest * sideParallelRange.rest), Math.sqrt(massSideLength * massSideLength + sideParallelRange.max * sideParallelRange.max));
+    SpringRange centralCrossRange = new SpringRange((minSideLenght - massSideLength) * Math.sqrt(2d), (sideLength - massSideLength) * Math.sqrt(2d), (maxSideLenght - massSideLength) * Math.sqrt(2d));
+    if (springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
       List<DistanceJoint> localJoints = new ArrayList<>();
       localJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d)
+              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d)
+              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d)
+              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d)
+              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint joint : localJoints) {
         joint.setUserData(sideParallelRange);
       }
       allJoints.addAll(localJoints);
     }
-    if (SPRING_SCAFFOLDINGS.contains(SpringScaffolding.SIDE_EXTERNAL)) {
+    if (springScaffoldings.contains(SpringScaffolding.SIDE_EXTERNAL)) {
       List<DistanceJoint> localJoints = new ArrayList<>();
       localJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d)
+              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d)
+              vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d)
+              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d)
+              vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint joint : localJoints) {
         joint.setUserData(sideParallelRange);
       }
       allJoints.addAll(localJoints);
     }
-    if (SPRING_SCAFFOLDINGS.contains(SpringScaffolding.SIDE_CROSS)) {
+    if (springScaffoldings.contains(SpringScaffolding.SIDE_CROSS)) {
       List<DistanceJoint> localJoints = new ArrayList<>();
       localJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d)
+              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d)
+              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d)
+              vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d)
+              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d)
+              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d)
+              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(-V_L / 2d, +V_L / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(+V_L / 2d, -V_L / 2d)
+              vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       localJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(+V_L / 2d, +V_L / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(-V_L / 2d, -V_L / 2d)
+              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+              vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint joint : localJoints) {
         joint.setUserData(sideCrossRange);
       }
       allJoints.addAll(localJoints);
     }
-    if (SPRING_SCAFFOLDINGS.contains(SpringScaffolding.CENTRAL_CROSS)) {
+    if (springScaffoldings.contains(SpringScaffolding.CENTRAL_CROSS)) {
       List<DistanceJoint> localJoints = new ArrayList<>();
       localJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[2],
               vertexBodies[0].getWorldCenter(),
@@ -218,8 +369,8 @@ public class Voxel implements WorldObject {
     //setup joints
     for (DistanceJoint joint : allJoints) {
       joint.setDistance(((SpringRange) joint.getUserData()).rest);
-      joint.setFrequency(SPRING_F);
-      joint.setDampingRatio(SPRING_D);
+      joint.setFrequency(springF);
+      joint.setDampingRatio(springD);
     }
     joints = (DistanceJoint[]) allJoints.toArray(new DistanceJoint[0]);
   }
@@ -234,7 +385,7 @@ public class Voxel implements WorldObject {
             new Point2(getIndexedVertex(2, 1)),
             new Point2(getIndexedVertex(3, 0))
     );
-    components.add(new VoxelComponent(lastAppliedForce, SIDE_LENGHT * SIDE_LENGHT, poly.area(), poly));
+    components.add(new VoxelComponent(lastAppliedForce, sideLength * sideLength, poly.area(), poly));
     //add parts
     for (Body body : vertexBodies) {
       components.add(new Component(Component.Type.RIGID, rectangleToPoly(body)));
@@ -285,7 +436,7 @@ public class Voxel implements WorldObject {
       f = Math.signum(f);
     }
     lastAppliedForce = f;
-    if (FORCE_METHOD.equals(ForceMethod.FORCE)) {
+    if (forceMethod.equals(ForceMethod.FORCE)) {
       double xc = 0d;
       double yc = 0d;
       for (Body body : vertexBodies) {
@@ -295,10 +446,10 @@ public class Voxel implements WorldObject {
       xc = xc / (double) vertexBodies.length;
       yc = yc / (double) vertexBodies.length;
       for (Body body : vertexBodies) {
-        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * MAX_ABS_FORCE);
+        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);
         body.applyForce(force);
       }
-    } else if (FORCE_METHOD.equals(ForceMethod.DISTANCE)) {
+    } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
       for (DistanceJoint joint : joints) {
         SpringRange range = (SpringRange) joint.getUserData();
         if (f > 0) {
@@ -331,7 +482,7 @@ public class Voxel implements WorldObject {
             new Point2(getIndexedVertex(2, 1)),
             new Point2(getIndexedVertex(3, 0))
     );
-    return poly.area() / SIDE_LENGHT / SIDE_LENGHT;
+    return poly.area() / sideLength / sideLength;
   }
 
   public Vector2 getCenter() {

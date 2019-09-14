@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 eric
+ * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,13 +17,11 @@
 package it.units.erallab.hmsrobots.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
  *
- * @author eric
+ * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Grid<T> {
 
@@ -45,6 +43,12 @@ public class Grid<T> {
   }
 
   public T get(int x, int y) {
+    if ((x<0)||(x>=w)) {
+      return null;
+    }
+    if ((y<0)||(y>=h)) {
+      return null;
+    }
     return ts.get((y * w) + x);
   }
 

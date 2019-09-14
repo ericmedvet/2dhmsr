@@ -20,6 +20,7 @@ import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.PhaseSin;
 import it.units.erallab.hmsrobots.objects.Ground;
+import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import java.io.File;
@@ -62,8 +63,8 @@ public class Experimenter {
     VoxelCompound vc2 = new VoxelCompound(
             50, 10,
             wormShape,
-            1,
-            new PhaseSin(1d, 1d, wormController)
+            new PhaseSin(1d, 1d, wormController),
+            Voxel.Builder.create()
     );
     vc2.addTo(world);
     worldObjects.add(vc2);

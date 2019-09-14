@@ -44,7 +44,7 @@ import javax.swing.JSlider;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class OnlineViewer extends JFrame implements Listener {
+public class OnlineViewer extends JFrame {
 
   private final static int TARGET_FPS = 50;
   private final static int MAX_QUEUE_SIZE = 10000;
@@ -85,11 +85,11 @@ public class OnlineViewer extends JFrame implements Listener {
     infoLabel = new JLabel();
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
-    playCheckBox = new JCheckBox("Play", false);
+    playCheckBox = new JCheckBox("Play", true);
     for (GraphicsDrawer.VoxelVizMode mode : GraphicsDrawer.VoxelVizMode.values()) {
       final JCheckBox checkBox = new JCheckBox(
               mode.name().toLowerCase().replace('_', ' '),
-              mode.equals(GraphicsDrawer.VoxelVizMode.FILL_AREA)
+              mode.equals(GraphicsDrawer.VoxelVizMode.FILL_AREA)||mode.equals(GraphicsDrawer.VoxelVizMode.POLY)
       );
       vizModeCheckBoxes.put(mode, checkBox);
       topPanel.add(checkBox);

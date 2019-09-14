@@ -38,7 +38,7 @@ public class VoxelCompound implements WorldObject {
   private final Controller controller;
   private final Grid<Voxel> voxels;
 
-  public VoxelCompound(double x, double y, Grid<Boolean> grid, double mass, Controller controller) {
+  public VoxelCompound(double x, double y, Grid<Boolean> grid, Controller controller, Voxel.Builder builder) {
     this.controller = controller;
     joints = new ArrayList<>();
     //construct voxels
@@ -46,7 +46,7 @@ public class VoxelCompound implements WorldObject {
     for (int gx = 0; gx < grid.getW(); gx++) {
       for (int gy = 0; gy < grid.getH(); gy++) {
         if (grid.get(gx, gy)) {
-          Voxel voxel = new Voxel(x + (double) gx * Voxel.SIDE_LENGHT, y + gy * Voxel.SIDE_LENGHT, mass);
+          Voxel voxel = builder.build(x + (double) gx * builder.getSideLength(), y + gy * builder.getSideLength());
           voxels.set(gx, gy, voxel);
           //check for adjacent voxels
           if ((gx > 0) && (voxels.get(gx - 1, gy) != null)) {
@@ -64,8 +64,8 @@ public class VoxelCompound implements WorldObject {
     }
   }
 
-  public VoxelCompound(double x, double y, String grid, double mass, Controller controller) {
-    this(x, y, fromString(grid), mass, controller);
+  public VoxelCompound(double x, double y, String grid, Controller controller, Voxel.Builder builder) {
+    this(x, y, fromString(grid), controller, builder);
   }
 
   private static Joint join(Body body1, Body body2) {
