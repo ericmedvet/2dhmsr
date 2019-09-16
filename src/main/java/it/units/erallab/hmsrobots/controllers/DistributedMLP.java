@@ -91,7 +91,7 @@ public class DistributedMLP extends ClosedLoopController {
         if (structure.get(x, y)) {
           double[] mlpWeights = new double[mlpNOfWeights];
           System.arraycopy(weights, c * mlpNOfWeights, mlpWeights, 0, mlpNOfWeights);
-          MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.SIGMOID, neurons, mlpWeights);
+          MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH, neurons, mlpWeights);
           mlps.set(x, y, mlp);
           c = c + 1;
         }

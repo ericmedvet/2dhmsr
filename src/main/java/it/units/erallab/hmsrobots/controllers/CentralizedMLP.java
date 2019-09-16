@@ -66,7 +66,7 @@ public class CentralizedMLP extends ClosedLoopController{
     neurons[neurons.length - 1] = c;
     System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
     //build perceptron
-    mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.SIGMOID, neurons, weights);
+    mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH, neurons, weights);
     //set driving function
     this.drivingFunction = drivingFunction;
   }
