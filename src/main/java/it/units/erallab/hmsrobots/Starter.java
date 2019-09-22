@@ -28,6 +28,9 @@ import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -36,6 +39,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.World;
 
@@ -92,7 +97,24 @@ public class Starter {
     vc2.addTo(world);
     worldObjects.add(vc2);
 
-    ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+    ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
+
+    try {
+      VideoFileWriter videoFileWriter = new VideoFileWriter(new File("/home/eric/experiments/video1.mp4"));
+      double dt = 0.01d;
+      TimeAccumulator t = new TimeAccumulator();
+      while (t.getT()<30) {
+        t.add(dt);
+        vc2.control(t.getT(), dt);
+        world.update(dt);
+        videoFileWriter.listen(new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
+      }
+      videoFileWriter.flush();
+      System.exit(0);
+    } catch (IOException ex) {
+      Logger.getLogger(Starter.class.getName()).log(Level.SEVERE, "Exception!", ex);
+    }
+
     OnlineViewer viewer = new OnlineViewer(executor);
     viewer.start();
 

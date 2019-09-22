@@ -66,7 +66,7 @@ public class MultiViewer extends JFrame {
 
   private final Map<String, Canvas> namedCanvases;
   private final JLabel infoLabel;
-  private final Map<GraphicsDrawer.VoxelVizMode, JCheckBox> vizModeCheckBoxes;
+  private final Map<GraphicsDrawer.RenderingMode, JCheckBox> vizModeCheckBoxes;
   private final JSlider timeSlider;
   private final JButton playButton;
   private final JButton pauseButton;
@@ -126,7 +126,7 @@ public class MultiViewer extends JFrame {
     time = startTime;
     //create things
     scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    vizModeCheckBoxes = new EnumMap<>(GraphicsDrawer.VoxelVizMode.class);
+    vizModeCheckBoxes = new EnumMap<>(GraphicsDrawer.RenderingMode.class);
     namedCanvases = new LinkedHashMap<>();
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -168,10 +168,10 @@ public class MultiViewer extends JFrame {
     bottomPanel.add(pauseButton);
     bottomPanel.add(timeSlider);
     bottomPanel.add(infoLabel);
-    for (GraphicsDrawer.VoxelVizMode mode : GraphicsDrawer.VoxelVizMode.values()) {
+    for (GraphicsDrawer.RenderingMode mode : GraphicsDrawer.RenderingMode.values()) {
       final JCheckBox checkBox = new JCheckBox(
               mode.name().toLowerCase().replace('_', ' '),
-              mode.equals(GraphicsDrawer.VoxelVizMode.FILL_AREA)
+              mode.equals(GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA)
       );
       vizModeCheckBoxes.put(mode, checkBox);
       topPanel.add(checkBox);
@@ -197,7 +197,7 @@ public class MultiViewer extends JFrame {
       public void run() {
         try {
           //get ui params
-          Set<GraphicsDrawer.VoxelVizMode> vizModes = getVizModes();
+          Set<GraphicsDrawer.RenderingMode> vizModes = getVizModes();
           timeSlider.setValue((int) Math.round((time - startTime) / (endTime - startTime) * (double) TIME_SLIDER_MAX));
           //draw
           long elapsedMillis = System.currentTimeMillis() - lastUpdateMillis;
@@ -254,9 +254,9 @@ public class MultiViewer extends JFrame {
     return event;
   }
 
-  private Set<GraphicsDrawer.VoxelVizMode> getVizModes() {
-    Set<GraphicsDrawer.VoxelVizMode> vizModes = new HashSet<>();
-    for (Map.Entry<GraphicsDrawer.VoxelVizMode, JCheckBox> entry : vizModeCheckBoxes.entrySet()) {
+  private Set<GraphicsDrawer.RenderingMode> getVizModes() {
+    Set<GraphicsDrawer.RenderingMode> vizModes = new HashSet<>();
+    for (Map.Entry<GraphicsDrawer.RenderingMode, JCheckBox> entry : vizModeCheckBoxes.entrySet()) {
       if (entry.getValue().isSelected()) {
         vizModes.add(entry.getKey());
       }

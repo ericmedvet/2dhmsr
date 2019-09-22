@@ -44,7 +44,7 @@ import javax.swing.JSlider;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class OnlineViewer extends JFrame {
+public class OnlineViewer extends JFrame implements Listener {
 
   private final static int TARGET_FPS = 50;
   private final static int MAX_QUEUE_SIZE = 10000;
@@ -54,7 +54,7 @@ public class OnlineViewer extends JFrame {
   private final JSlider timeScaleSlider;
   private final JCheckBox playCheckBox;
   private final JProgressBar queueProgressBar;
-  private final Map<GraphicsDrawer.VoxelVizMode, JCheckBox> vizModeCheckBoxes;
+  private final Map<GraphicsDrawer.RenderingMode, JCheckBox> renderingModeCheckBoxes;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final EvictingQueue<Snapshot> queue;
@@ -70,7 +70,7 @@ public class OnlineViewer extends JFrame {
     //create things
     this.scheduledExecutorService = scheduledExecutorService;
     queue = EvictingQueue.create(MAX_QUEUE_SIZE);
-    vizModeCheckBoxes = new EnumMap<>(GraphicsDrawer.VoxelVizMode.class);
+    renderingModeCheckBoxes = new EnumMap<>(GraphicsDrawer.RenderingMode.class);
     //create drawer
     graphicsDrawer = GraphicsDrawer.Builder.create().build();
     //create/set ui components
@@ -86,12 +86,12 @@ public class OnlineViewer extends JFrame {
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
     playCheckBox = new JCheckBox("Play", true);
-    for (GraphicsDrawer.VoxelVizMode mode : GraphicsDrawer.VoxelVizMode.values()) {
+    for (GraphicsDrawer.RenderingMode mode : GraphicsDrawer.RenderingMode.values()) {
       final JCheckBox checkBox = new JCheckBox(
               mode.name().toLowerCase().replace('_', ' '),
-              mode.equals(GraphicsDrawer.VoxelVizMode.FILL_AREA)||mode.equals(GraphicsDrawer.VoxelVizMode.POLY)
+              mode.equals(GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA)||mode.equals(GraphicsDrawer.RenderingMode.VOXEL_POLY)
       );
-      vizModeCheckBoxes.put(mode, checkBox);
+      renderingModeCheckBoxes.put(mode, checkBox);
       topPanel.add(checkBox);
     }
     //set layout and put components
@@ -142,7 +142,7 @@ public class OnlineViewer extends JFrame {
               }
               GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double)canvas.getWidth()/(double)canvas.getHeight());
               //draw
-              graphicsDrawer.draw(snapshot, g, canvas.getWidth(), canvas.getHeight(), frame, getVizModes());
+              graphicsDrawer.draw(snapshot, g, canvas.getWidth(), canvas.getHeight(), frame, getRenderingModes());
               BufferStrategy strategy = canvas.getBufferStrategy();
               if (!strategy.contentsLost()) {
                 strategy.show();
@@ -191,20 +191,21 @@ public class OnlineViewer extends JFrame {
     return event;
   }
 
+  @Override
   public void listen(Snapshot snapshot) {
     synchronized (queue) {
       queue.add(snapshot);
     }
   }
 
-  private Set<GraphicsDrawer.VoxelVizMode> getVizModes() {
-    Set<GraphicsDrawer.VoxelVizMode> vizModes = new HashSet<>();
-    for (Map.Entry<GraphicsDrawer.VoxelVizMode, JCheckBox> entry : vizModeCheckBoxes.entrySet()) {
+  private Set<GraphicsDrawer.RenderingMode> getRenderingModes() {
+    Set<GraphicsDrawer.RenderingMode> renderingModes = new HashSet<>();
+    for (Map.Entry<GraphicsDrawer.RenderingMode, JCheckBox> entry : renderingModeCheckBoxes.entrySet()) {
       if (entry.getValue().isSelected()) {
-        vizModes.add(entry.getKey());
+        renderingModes.add(entry.getKey());
       }
     }
-    return vizModes;
+    return renderingModes;
   }
 
 }
