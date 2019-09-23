@@ -43,10 +43,10 @@ public class Grid<T> {
   }
 
   public T get(int x, int y) {
-    if ((x<0)||(x>=w)) {
+    if ((x < 0) || (x >= w)) {
       return null;
     }
-    if ((y<0)||(y>=h)) {
+    if ((y < 0) || (y >= h)) {
       return null;
     }
     return ts.get((y * w) + x);
@@ -80,6 +80,16 @@ public class Grid<T> {
 
   public static <K> Grid<K> create(Grid<?> other) {
     return create(other.getW(), other.getH());
+  }
+
+  public static <K> Grid<K> copy(Grid<K> other) {
+    Grid<K> grid = Grid.create(other);
+    for (int x = 0; x < grid.w; x++) {
+      for (int y = 0; y < grid.h; y++) {
+        grid.set(x, y, other.get(x, y));
+      }
+    }
+    return grid;
   }
 
 }

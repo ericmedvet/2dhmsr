@@ -26,7 +26,7 @@ import java.util.EnumSet;
 public abstract class ClosedLoopController implements Controller {
 
   public enum Input {
-    AREA_RATIO, ABS_LINEAR_VELOCITY;
+    AREA_RATIO, ABS_LINEAR_VELOCITY; //TODO add X_ Y_ VELOCITY and/or ACCELERATION
   }
 
   private final EnumSet<Input> inputs;

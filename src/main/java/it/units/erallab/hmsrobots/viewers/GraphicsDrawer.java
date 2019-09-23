@@ -157,33 +157,40 @@ public class GraphicsDrawer {
     this.builder = builder;
   }
 
-  public void draw(Snapshot snapshot, Graphics2D g, int w, int h, Frame frame, Set<RenderingMode> renderingModes) {
-    //reset screen
-    g.setColor(Color.GRAY);
-    g.fillRect(0, 0, w, h);
+  public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, Set<RenderingMode> renderingModes, String... otherInfos) {
+    //set clipping area
+    g.setClip(
+            (int) graphicsFrame.x1, (int) graphicsFrame.y1,
+            (int) (graphicsFrame.x2 - graphicsFrame.x1), (int) (graphicsFrame.y2 - graphicsFrame.y1)
+    );
+    //save original transform
     AffineTransform oAt = g.getTransform();
     //prepare transformation
-    double xRatio = (double) w / (frame.x2 - frame.x1);
-    double yRatio = (double) h / (frame.y2 - frame.y1);
+    double xRatio = (graphicsFrame.x2 - graphicsFrame.x1) / (worldFrame.x2 - worldFrame.x1);
+    double yRatio = (graphicsFrame.y2 - graphicsFrame.y1) / (worldFrame.y2 - worldFrame.y1);
     double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
+    at.translate(graphicsFrame.x1, graphicsFrame.y1);
     at.scale(ratio, -ratio);
-    at.translate(-frame.x1, -frame.y2);
+    at.translate(-worldFrame.x1, -worldFrame.y2);
     //draw background
     g.setColor(builder.getBackgroundColor());
-    g.fill(new Rectangle2D.Double(0, 0, w, h));
+    g.fillRect(
+            (int) graphicsFrame.x1, (int) graphicsFrame.y1,
+            (int) (graphicsFrame.x2 - graphicsFrame.x1), (int) (graphicsFrame.y2 - graphicsFrame.y1)
+    );
     //draw grid
     g.setTransform(at);
     if (renderingModes.contains(RenderingMode.GRID_MAJOR) || renderingModes.contains(RenderingMode.GRID_MINOR)) {
       g.setColor(builder.getGridColor());
       g.setStroke(new BasicStroke(1f / (float) ratio));
-      double gridSize = computeGridSize(frame.x1, frame.x2);
+      double gridSize = computeGridSize(worldFrame.x1, worldFrame.x2);
       if (renderingModes.contains(RenderingMode.GRID_MAJOR)) {
-        for (double gridX = Math.floor(frame.x1 / gridSize) * gridSize; gridX < frame.x2; gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, frame.y1, gridX, frame.y2));
+        for (double gridX = Math.floor(worldFrame.x1 / gridSize) * gridSize; gridX < worldFrame.x2; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, worldFrame.y1, gridX, worldFrame.y2));
         }
-        for (double gridY = Math.floor(frame.y1 / gridSize) * gridSize; gridY < frame.y2; gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(frame.x1, gridY, frame.x2, gridY));
+        for (double gridY = Math.floor(worldFrame.y1 / gridSize) * gridSize; gridY < worldFrame.y2; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(worldFrame.x1, gridY, worldFrame.x2, gridY));
         }
       }
       if (renderingModes.contains(RenderingMode.GRID_MINOR)) {
@@ -195,11 +202,11 @@ public class GraphicsDrawer {
                 1.0f,
                 new float[]{2f / (float) ratio, 0f, 2f / (float) ratio},
                 0f));
-        for (double gridX = Math.floor(frame.x1 / gridSize) * gridSize; gridX < frame.x2; gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, frame.y1, gridX, frame.y2));
+        for (double gridX = Math.floor(worldFrame.x1 / gridSize) * gridSize; gridX < worldFrame.x2; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, worldFrame.y1, gridX, worldFrame.y2));
         }
-        for (double gridY = Math.floor(frame.y1 / gridSize) * gridSize; gridY < frame.y2; gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(frame.x1, gridY, frame.x2, gridY));
+        for (double gridY = Math.floor(worldFrame.y1 / gridSize) * gridSize; gridY < worldFrame.y2; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(worldFrame.x1, gridY, worldFrame.x2, gridY));
         }
       }
     }
@@ -208,28 +215,23 @@ public class GraphicsDrawer {
     for (Compound object : snapshot.getCompounds()) {
       draw(object, g, renderingModes);
     }
-    //inverse transform    
+    //restore transform    
     g.setTransform(oAt);
     //info
-    if (renderingModes.contains(RenderingMode.VIEWPORT_INFO)||renderingModes.contains(RenderingMode.TIME_INFO)) {
-      StringBuilder sb = new StringBuilder();
-      if (renderingModes.contains(RenderingMode.VIEWPORT_INFO)) {
-        if (sb.length()>0) {
-          sb.append(" ");
-        }
-        sb.append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", frame.x1, frame.y1, frame.x2, frame.y2));
-      }
-      if (renderingModes.contains(RenderingMode.TIME_INFO)) {
-        if (sb.length()>0) {
-          sb.append(" ");
-        }
-        sb.append(String.format("t=%.2f", snapshot.getTime()));
-      }
-      g.setColor(builder.getInfoColor());
-      g.drawString(sb.toString(), 1, 1 + g.getFontMetrics().getMaxAscent());
+    StringBuilder sb = new StringBuilder();
+    if (renderingModes.contains(RenderingMode.VIEWPORT_INFO)) {
+      sb.append(((sb.length() > 0) ? " " : "") + String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.x1, worldFrame.y1, worldFrame.x2, worldFrame.y2));
     }
-    //finalize
-    g.dispose();
+    if (renderingModes.contains(RenderingMode.TIME_INFO)) {
+      sb.append(((sb.length() > 0) ? " " : "") + String.format("t=%.2f", snapshot.getTime()));
+    }
+    for (String otherInfo : otherInfos) {
+      sb.append(((sb.length() > 0) ? " " : "") + otherInfo);
+    }
+    if (sb.length()>0) {
+      g.setColor(builder.getInfoColor());
+      g.drawString(sb.toString(), (int) graphicsFrame.x1 + 1, (int) graphicsFrame.y1 + 1 + g.getFontMetrics().getMaxAscent());
+    }
   }
 
   private double computeGridSize(double x1, double x2) {

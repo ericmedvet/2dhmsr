@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.viewers;
 import it.units.erallab.hmsrobots.Snapshot;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.util.Grid;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -26,11 +27,10 @@ import java.io.FileNotFoundException;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jcodec.api.awt.AWTSequenceEncoder;
@@ -42,11 +42,13 @@ import org.jcodec.common.model.Rational;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VideoFileWriter implements Listener, Flushable {
+public class VideoFileWriter implements Flushable {
 
-  private final int w = 600;
-  private final int h = 300;
-  private final double frameRate = 24;
+  private final int ffMemory = 50;
+  private final double ffMargin = 1d;
+  private final int w = 1200;
+  private final int h = 600;
+  private final double frameRate = 25;
   private final Set<GraphicsDrawer.RenderingMode> renderingModes = EnumSet.of(
           GraphicsDrawer.RenderingMode.VOXEL_POLY,
           GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA,
@@ -55,67 +57,177 @@ public class VideoFileWriter implements Listener, Flushable {
           GraphicsDrawer.RenderingMode.TIME_INFO
   );
 
-  private final File file;
-  private final BlockingQueue<Snapshot> queue;
+  private final Grid<String> namesGrid;
+  private final Queue<Grid<Snapshot>> gridQueue;
+  private final Grid<Queue<Snapshot>> queueGrid;
 
-  public VideoFileWriter(File file) throws FileNotFoundException, IOException {
-    this.file = file;
-    queue = new LinkedBlockingQueue<>();
+  private final SeekableByteChannel channel;
+  private final AWTSequenceEncoder encoder;
+  private final GraphicsDrawer graphicsDrawer;
+  private final Grid<GraphicsDrawer.FrameFollower> ffGrid;
+
+  private double t;
+  private boolean running;
+  private int drawnCount;
+
+  private static final Logger L = Logger.getLogger(VideoFileWriter.class.getName());
+
+  public VideoFileWriter(File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
+    this.namesGrid = namesGrid;
+    ffGrid = Grid.create(namesGrid);
+    gridQueue = new LinkedList<>();
+    queueGrid = Grid.create(namesGrid);
+    //prepare things
+    channel = NIOUtils.writableChannel(file);
+    encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
+    graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    for (int x = 0; x < ffGrid.getW(); x++) {
+      for (int y = 0; y < ffGrid.getH(); y++) {
+        ffGrid.set(x, y, new GraphicsDrawer.FrameFollower(ffMemory, ffMargin));
+        queueGrid.set(x, y, new LinkedList<>());
+      }
+    }
+    //init time and grid
+    t = 0d;
+    running = true;
+    drawnCount = 0;
+    //start consumer of composed frames
+    executor.submit(() -> {
+      while (running) {
+        Grid<Snapshot> localSnapshotGrid;
+        localSnapshotGrid = gridQueue.poll();
+        if (localSnapshotGrid != null) {
+          renderFrame(localSnapshotGrid);
+          synchronized (gridQueue) {
+            gridQueue.notifyAll();
+          }
+        } else {
+          synchronized (gridQueue) {
+            try {
+              gridQueue.wait();
+            } catch (InterruptedException ex) {
+              //ignore
+            }
+          }
+        }
+      }
+    });
+    //start consumer of single frames
+    executor.submit(() -> {
+      while (running) {
+        //check if ready
+        Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
+        synchronized (queueGrid) {
+          for (int x = 0; x < queueGrid.getW(); x++) {
+            for (int y = 0; y < queueGrid.getH(); y++) {
+              Queue<Snapshot> queue = queueGrid.get(x, y);
+              Snapshot snapshot;
+              while ((snapshot = queue.peek()) != null) {
+                if (snapshot.getTime() < t) {
+                  queue.poll();
+                } else {
+                  break;
+                }
+              }
+              snapshotGrid.set(x, y, snapshot);
+            }
+          }
+        }
+        boolean ready = true;
+        for (int x = 0; x < queueGrid.getW(); x++) {
+          for (int y = 0; y < queueGrid.getH(); y++) {
+            ready = ready && ((namesGrid.get(x, y) == null) || (snapshotGrid.get(x, y) != null));
+          }
+        }
+        if (ready) {
+          //update time
+          t = t + 1d / frameRate;
+          //render asynchronously
+          synchronized (gridQueue) {
+            gridQueue.offer(Grid.copy(snapshotGrid));
+            gridQueue.notifyAll();
+          }
+        } else {
+          synchronized (queueGrid) {
+            try {
+              queueGrid.wait();
+            } catch (InterruptedException ex) {
+              //ignore
+            }
+          }
+        }
+      }
+    }
+    );
   }
 
-  @Override
-  public void listen(Snapshot snapshot) {
-    queue.offer(snapshot);
+  public Listener listener(final int lX, final int lY) {
+    return (Snapshot snapshot) -> {
+      synchronized (queueGrid) {
+        queueGrid.get(lX, lY).offer(snapshot);
+        queueGrid.notifyAll();
+      }
+    };
+  }
+
+  private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
+    L.info(String.format("Writing frame %d/%d%n", drawnCount, drawnCount+gridQueue.size()));
+    //set local clip size
+    double localW = (double) w / (double) namesGrid.getW();
+    double localH = (double) h / (double) namesGrid.getH();
+    //build image and graphics
+    BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
+    Graphics2D g = image.createGraphics();
+    //iterate over snapshot grid
+    for (int x = 0; x < localSnapshotGrid.getW(); x++) {
+      for (int y = 0; y < localSnapshotGrid.getH(); y++) {
+        Snapshot s = localSnapshotGrid.get(x, y);
+        if (s != null) {
+          //obtain viewport
+          Compound voxelCompound = null;
+          for (Compound compound : s.getCompounds()) {
+            if (compound.getObjectClass().equals(VoxelCompound.class
+            )) {
+              voxelCompound = compound;
+
+              break;
+            }
+          }
+          GraphicsDrawer.Frame frame = ffGrid.get(x, y).getFrame(voxelCompound, localW / localH);
+          //draw
+          graphicsDrawer.draw(s, g,
+                  new GraphicsDrawer.Frame(localW * x, localW * (x + 1), localH * y, localH * (y + 1)),
+                  frame, renderingModes, namesGrid.get(x, y)
+          );
+        }
+      }
+    }
+    //dispose and encode
+    g.dispose();
+    //encode
+    try {
+      encoder.encodeImage(image);
+    } catch (IOException ex) {
+      L.severe(String.format("Cannot encode image due to %s", ex));
+    }
+    drawnCount = drawnCount+1;
   }
 
   @Override
   public void flush() throws IOException {
-    //prepare things
-    SeekableByteChannel channel = NIOUtils.writableChannel(file);
-    AWTSequenceEncoder encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
-    GraphicsDrawer graphicsDrawer = GraphicsDrawer.Builder.create().build();
-    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(50, 1d);
-    //iterate over queue
-    double targetTime = 0d;
-    while (!queue.isEmpty()) {
-      Snapshot snapshot;
-      while (true) {
-        snapshot = queue.poll();
-        if (snapshot==null) {
-          break;
+    while (!gridQueue.isEmpty()) {
+      synchronized (gridQueue) {
+        try {
+          gridQueue.wait();
+        } catch (InterruptedException ex) {
+          //ignore
         }
-        if (snapshot.getTime() >= targetTime) {
-          break;
-        }
-      }
-      if (snapshot==null) {
-        break;
-      }
-      //update next time
-      targetTime = targetTime + 1d / frameRate;
-      //obtain viewport
-      Compound voxelCompound = null;
-      for (Compound compound : snapshot.getCompounds()) {
-        if (compound.getObjectClass().equals(VoxelCompound.class)) {
-          voxelCompound = compound;
-          break;
-        }
-      }
-      GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double) w / h);
-      //build image and graphics
-      BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
-      Graphics2D g = image.createGraphics();
-      //draw
-      graphicsDrawer.draw(snapshot, g, w, h, frame, renderingModes);
-      //encode
-      try {
-        encoder.encodeImage(image);
-      } catch (IOException ex) {
-        Logger.getLogger(VideoFileWriter.class.getName()).log(Level.SEVERE, String.format("Cannot encode image due to %s", ex), ex);
       }
     }
+    L.info("Flushing data");
     encoder.finish();
     NIOUtils.closeQuietly(channel);
+    running = false;
   }
 
 }

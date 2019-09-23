@@ -142,7 +142,8 @@ public class OnlineViewer extends JFrame implements Listener {
               }
               GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double)canvas.getWidth()/(double)canvas.getHeight());
               //draw
-              graphicsDrawer.draw(snapshot, g, canvas.getWidth(), canvas.getHeight(), frame, getRenderingModes());
+              graphicsDrawer.draw(snapshot, g, new GraphicsDrawer.Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes());
+              g.dispose();
               BufferStrategy strategy = canvas.getBufferStrategy();
               if (!strategy.contentsLost()) {
                 strategy.show();
