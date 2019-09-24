@@ -20,8 +20,10 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
@@ -29,7 +31,6 @@ import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class VoxelCompound implements WorldObject {
@@ -151,6 +152,17 @@ public class VoxelCompound implements WorldObject {
       }
     }
     return new Vector2(xc / n, yc / n);
+  }
+
+  public void translate(Vector2 v) {
+    for (int x = 0; x < voxels.getW(); x++) {
+      for (int y = 0; y < voxels.getH(); y++) {
+        Voxel voxel = voxels.get(x, y);
+        if (voxel != null) {
+          voxel.translate(v);
+        }
+      }
+    }
   }
 
 }

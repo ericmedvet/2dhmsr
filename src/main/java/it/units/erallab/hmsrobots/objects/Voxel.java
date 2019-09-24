@@ -495,4 +495,10 @@ public class Voxel implements WorldObject {
     return new Vector2(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
   }
 
+  public void translate(Vector2 v) {
+    for (Body body : vertexBodies) {
+      body.translate(v);
+    }
+  }
+
 }

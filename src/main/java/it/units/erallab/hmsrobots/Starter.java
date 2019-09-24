@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
 import it.units.erallab.hmsrobots.controllers.Controller;
+import it.units.erallab.hmsrobots.problems.Locomotion;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
@@ -30,10 +31,7 @@ import it.units.erallab.hmsrobots.viewers.Listener;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,15 +51,8 @@ public class Starter {
 
   public static void main(String[] args) throws IOException {
 
-    //gridStarter(30d, 0.01d);
-    //System.exit(0);
-
-    World world = new World();
-    List<WorldObject> worldObjects = new ArrayList<>();
-
-    Ground ground = new Ground(new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25});
-    ground.addTo(world);
-    worldObjects.add(ground);
+    gridStarter(30d, 0.01d);
+    System.exit(0);
 
     int wormW = 10;
     int wormH = 4;
@@ -93,27 +84,24 @@ public class Starter {
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> -1d + 2 * (Math.round(t / 2d) % 2)));
 
     VoxelCompound vc2 = new VoxelCompound(
-            50, 10,
+            0, 0,
             wormShape,
             controller,
             Voxel.Builder.create()
     );
-    vc2.addTo(world);
-    worldObjects.add(vc2);
 
+    Locomotion locomotion = new Locomotion(60, new double[][]{new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25}}, Locomotion.Metric.values());
+    locomotion.init(vc2);
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
 
     OnlineViewer viewer = new OnlineViewer(executor);
     viewer.start();
 
     double dt = 0.01d;
-    TimeAccumulator t = new TimeAccumulator();
     Runnable runnable = () -> {
       try {
-        t.add(dt);
-        vc2.control(t.getT(), dt);
-        world.update(dt);
-        viewer.listen(new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
+        Snapshot snapshot = locomotion.step(dt, true);
+        viewer.listen(snapshot);
       } catch (Throwable ex) {
         ex.printStackTrace();
         System.exit(0);
@@ -152,12 +140,6 @@ public class Starter {
         final String name = names.get(x, y);
         futures.add(executor.submit(() -> {
           try {
-            //prepare world
-            World world = new World();
-            List<WorldObject> worldObjects = new ArrayList<>();
-            Ground ground = new Ground(new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25});
-            ground.addTo(world);
-            worldObjects.add(ground);
             //prepare controller
             Grid<Double> wormController = Grid.create(shape.getW(), shape.getH(), 0d);
             for (int lx = 0; lx < shape.getW(); lx++) {
@@ -167,21 +149,20 @@ public class Starter {
             }
             //prepare robot
             VoxelCompound robot = new VoxelCompound(
-                    50, 10,
+                    0, 0,
                     shape,
                     new PhaseSin(frequency, 1d, wormController),
                     Voxel.Builder.create()
             );
-            robot.addTo(world);
-            worldObjects.add(robot);
+            Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0,1,999,1000},new double[]{50,0,0,50}}, new Locomotion.Metric[]{Locomotion.Metric.CENTER_FINAL_X});
             //execute
-            double t = 0;
-            while (t < finalT) {
-              t = t + dt;
-              robot.control(t, dt);
-              world.update(dt);
-              listener.listen(new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
+            locomotion.init(robot);
+            while (!locomotion.isDone()) {
+              Snapshot snapshot = locomotion.step(dt, true);
+              listener.listen(snapshot);
             }
+            double[] metrics = locomotion.getMetrics();
+            System.out.printf("Result is %s%n", Arrays.toString(metrics));
           } catch (Throwable t) {
             t.printStackTrace();
           }
