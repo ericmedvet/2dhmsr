@@ -53,8 +53,8 @@ public class Starter {
 
   public static void main(String[] args) throws IOException {
 
-    gridStarter(30d, 0.01d);
-    System.exit(0);
+    //gridStarter(30d, 0.01d);
+    //System.exit(0);
 
     World world = new World();
     List<WorldObject> worldObjects = new ArrayList<>();
