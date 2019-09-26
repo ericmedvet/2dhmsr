@@ -109,7 +109,7 @@ public class Locomotion implements Episode<VoxelCompound> {
         values[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
       }
     }
-    return new double[0];
+    return values;
   }
 
   private Point2[] boundingBox(VoxelCompound voxelCompound) {
