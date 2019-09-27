@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 
 public class Locomotion implements Episode<VoxelCompound> {
 
+  private final static double INITIAL_PLACEMENT_X_GAP = 1d;
+  private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
+
   public static enum Metric {
     CENTER_FINAL_X, CENTER_AVG_Y
   }
@@ -67,12 +70,12 @@ public class Locomotion implements Episode<VoxelCompound> {
     //position robot: x of rightmost point is on 2nd point of profile
     this.voxelCompound = voxelCompound;
     Point2[] boundingBox = boundingBox(voxelCompound);
-    double xLeft = groundProfile[0][1];
+    double xLeft = groundProfile[0][1]+INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
     double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
     double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft)/(groundProfile[0][2]-xLeft);
     double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
-    Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + 1d);
+    Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
     Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
     Vector2 movement = targetPoint.subtract(currentPoint);
     voxelCompound.translate(movement);
