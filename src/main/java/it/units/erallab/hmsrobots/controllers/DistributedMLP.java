@@ -32,7 +32,7 @@ public class DistributedMLP extends ClosedLoopController {
   private final int signals;
 
   private final Grid<double[][]> lastSignals; //1st index: 0=N, 1=E, 2=S, 3=W
-  
+
   public static int countParams(Grid<Boolean> structure, EnumSet<Input> inputs, int signals, int[] innerNeurons) {
     //count voxels
     int nOfVoxels = 0;
@@ -44,7 +44,7 @@ public class DistributedMLP extends ClosedLoopController {
       }
     }
     //compute mlp topology
-    int voxelInputs = inputs.size() + 1 + signals * 4;
+    int voxelInputs = inputs.size() + 1 + 1 + signals * 4; //+1 for bias, +1 for driving function
     int voxelOutputs = 1 + signals * 4;
     int[] neurons = new int[innerNeurons.length + 2];
     neurons[0] = voxelInputs;
@@ -72,7 +72,7 @@ public class DistributedMLP extends ClosedLoopController {
       }
     }
     //compute mlp topology
-    int voxelInputs = inputs.size() + 1 + signals * 4;
+    int voxelInputs = inputs.size() + 1 + 1 + signals * 4;
     int voxelOutputs = 1 + signals * 4;
     int[] neurons = new int[innerNeurons.length + 2];
     neurons[0] = voxelInputs;
@@ -120,18 +120,18 @@ public class DistributedMLP extends ClosedLoopController {
         final Function<Double, Double> drivingFunction = drivingFunctions.get(x, y);
         if (voxel != null) {
           //compute driving value
-          double drivingValue = (drivingFunction!=null)?drivingFunction.apply(t):1d;          
+          double drivingValue = (drivingFunction != null) ? drivingFunction.apply(t) : 1d;
           //build input signals
           double[][] localSignals = new double[4][];
           double[] nullSignals = new double[signals];
-          double[][] northSignals = lastSignals.get(x, y-1);
-          double[][] eastSignals = lastSignals.get(x+1, y);
-          double[][] southSignals = lastSignals.get(x, y+1);
-          double[][] westSignals = lastSignals.get(x-1, y);
-          localSignals[0] = (northSignals!=null)?northSignals[2]:nullSignals;
-          localSignals[1] = (eastSignals!=null)?eastSignals[3]:nullSignals;
-          localSignals[2] = (southSignals!=null)?southSignals[0]:nullSignals;
-          localSignals[3] = (westSignals!=null)?westSignals[1]:nullSignals;
+          double[][] northSignals = lastSignals.get(x, y - 1);
+          double[][] eastSignals = lastSignals.get(x + 1, y);
+          double[][] southSignals = lastSignals.get(x, y + 1);
+          double[][] westSignals = lastSignals.get(x - 1, y);
+          localSignals[0] = (northSignals != null) ? northSignals[2] : nullSignals;
+          localSignals[1] = (eastSignals != null) ? eastSignals[3] : nullSignals;
+          localSignals[2] = (southSignals != null) ? southSignals[0] : nullSignals;
+          localSignals[3] = (westSignals != null) ? westSignals[1] : nullSignals;
           //compute and set output
           double[] outputValues = computeLocalOutput(voxel, mlps.get(x, y), drivingValue, localSignals);
           outputs.set(x, y, outputValues[0]);
@@ -143,7 +143,7 @@ public class DistributedMLP extends ClosedLoopController {
     //update last signals
     for (int x = 0; x < localLastSignals.getW(); x++) {
       for (int y = 0; y < localLastSignals.getH(); y++) {
-        if (localLastSignals.get(x, y)!=null) {
+        if (localLastSignals.get(x, y) != null) {
           lastSignals.set(x, y, localLastSignals.get(x, y));
         }
       }
@@ -152,11 +152,11 @@ public class DistributedMLP extends ClosedLoopController {
   }
 
   private double[] computeLocalOutput(Voxel voxel, MultiLayerPerceptron mlp, double drivingValue, double[][] localSignals) {
-    double[] inputValues = new double[mlp.getNeurons()[0]];
+    double[] inputValues = new double[mlp.getNeurons()[0]-1];
     int c = 0;
     //collect inputs
     collectInputs(voxel, inputValues, c);
-    c = c+getInputs().size();
+    c = c + getInputs().size();
     //collect driving function (or bias)
     inputValues[c] = drivingValue;
     c = c + 1;
@@ -169,12 +169,12 @@ public class DistributedMLP extends ClosedLoopController {
     }
     return mlp.apply(inputValues);
   }
-  
+
   private double[][] unflatSignals(double[] values, int srcOffset) {
     double[][] signalValues = new double[4][];
-    for (int i = 0; i<4; i++) {
+    for (int i = 0; i < 4; i++) {
       signalValues[i] = new double[signals];
-      System.arraycopy(values, i*signals+srcOffset, signalValues[i], 0, signals);
+      System.arraycopy(values, i * signals + srcOffset, signalValues[i], 0, signals);
     }
     return signalValues;
   }
