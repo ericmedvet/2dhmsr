@@ -33,7 +33,7 @@ public class DistributedMLP extends ClosedLoopController {
 
   private final Grid<double[][]> lastSignals; //1st index: 0=N, 1=E, 2=S, 3=W
 
-  public static int countParams(Grid<Boolean> structure, EnumSet<Input> inputs, int signals, int[] innerNeurons) {
+  public static int countParams(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int signals, int[] innerNeurons) {
     //count voxels
     int nOfVoxels = 0;
     for (int x = 0; x < structure.getW(); x++) {
@@ -55,7 +55,7 @@ public class DistributedMLP extends ClosedLoopController {
     return nOfWeights;
   }
 
-  public DistributedMLP(Grid<Boolean> structure, Grid<Function<Double, Double>> drivingFunctions, EnumSet<Input> inputs, int signals, int[] innerNeurons, double[] weights) {
+  public DistributedMLP(Grid<Boolean> structure, Grid<Function<Double, Double>> drivingFunctions, EnumSet<Voxel.Sensor> inputs, int signals, int[] innerNeurons, double[] weights) {
     super(inputs);
     if ((drivingFunctions.getW() != structure.getW()) || (drivingFunctions.getH() != structure.getH())) {
       throw new IllegalArgumentException("Grids of driving functions and structure should have the same shape");

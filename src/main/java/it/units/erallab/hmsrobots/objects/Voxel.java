@@ -22,6 +22,7 @@ import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import org.dyn4j.dynamics.Body;
@@ -38,6 +39,14 @@ import org.dyn4j.geometry.Vector2;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Voxel implements WorldObject {
+
+  public static enum Sensor {
+    AREA_RATIO,
+    VELOCITY_MAGNITUDE,
+    X_VELOCITY, Y_VELOCITY,
+    X_ROT_VELOCITY, Y_ROT_VELOCITY,
+    ANGLE;
+  }
 
   public static enum ForceMethod {
     DISTANCE, FORCE
@@ -82,7 +91,7 @@ public class Voxel implements WorldObject {
             SpringScaffolding.SIDE_CROSS,
             SpringScaffolding.CENTRAL_CROSS
     );
-    
+
     private double sideLength = SIDE_LENGTH;
     private double massSideLengthRatio = MASS_SIDE_LENGTH_RATIO;
     private double springF = SPRING_F;
@@ -94,21 +103,21 @@ public class Voxel implements WorldObject {
     private double mass = MASS;
     private ForceMethod forceMethod = FORCE_METHOD;
     private EnumSet<SpringScaffolding> springScaffoldings = SPRING_SCAFFOLDINGS;
-    
+
     public static Builder create() {
       return new Builder();
     }
-    
+
     public Builder sideLength(double sideLength) {
       this.sideLength = sideLength;
       return this;
     }
-    
+
     public Builder massSideLengthRatio(double massSideLengthRatio) {
       this.massSideLengthRatio = massSideLengthRatio;
       return this;
     }
-    
+
     public Builder springF(double springF) {
       this.springF = springF;
       return this;
@@ -118,37 +127,37 @@ public class Voxel implements WorldObject {
       this.springD = springD;
       return this;
     }
-    
+
     public Builder maxForce(double maxForce) {
       this.maxForce = maxForce;
       return this;
     }
-    
+
     public Builder areaRatioOffset(double areaRatioOffset) {
       this.areaRatioOffset = areaRatioOffset;
       return this;
     }
-    
+
     public Builder friction(double friction) {
       this.friction = friction;
       return this;
     }
-    
+
     public Builder restitution(double restitution) {
       this.restitution = restitution;
       return this;
     }
-    
+
     public Builder mass(double mass) {
       this.mass = mass;
       return this;
     }
-    
+
     public Builder forceMethod(ForceMethod forceMethod) {
       this.forceMethod = forceMethod;
       return this;
     }
-    
+
     public Builder springScaffoldings(EnumSet<SpringScaffolding> springScaffoldings) {
       this.springScaffoldings = springScaffoldings;
       return this;
@@ -185,7 +194,7 @@ public class Voxel implements WorldObject {
     public double getRestitution() {
       return restitution;
     }
-    
+
     public double getMass() {
       return mass;
     }
@@ -220,11 +229,11 @@ public class Voxel implements WorldObject {
   private final DistanceJoint[] joints;
 
   private double lastAppliedForce = 0d;
-  
+
   private Voxel() {
     this(Builder.create(), 0d, 0d);
   }
-  
+
   private Voxel(Builder builder, double x, double y) {
     //set fields
     sideLength = builder.getSideLength();
@@ -239,7 +248,7 @@ public class Voxel implements WorldObject {
     forceMethod = builder.getForceMethod();
     springScaffoldings = builder.getSpringScaffoldings();
     //compute densities
-    double massSideLength = sideLength*massSideLengthRatio;
+    double massSideLength = sideLength * massSideLengthRatio;
     double density = mass * massSideLength / massSideLength / 4;
     //build bodies
     vertexBodies = new Body[4];
@@ -385,7 +394,11 @@ public class Voxel implements WorldObject {
             new Point2(getIndexedVertex(2, 1)),
             new Point2(getIndexedVertex(3, 0))
     );
-    components.add(new VoxelComponent(lastAppliedForce, sideLength * sideLength, poly.area(), poly));
+    EnumMap<Voxel.Sensor, Double> sensorReadings = new EnumMap<>(Voxel.Sensor.class);
+    for (Voxel.Sensor sensor : Voxel.Sensor.values()) {
+      sensorReadings.put(sensor, getSensorReading(sensor));
+    }
+    components.add(new VoxelComponent(sideLength, lastAppliedForce, sensorReadings, poly));
     //add parts
     for (Body body : vertexBodies) {
       components.add(new Component(Component.Type.RIGID, rectangleToPoly(body)));
@@ -495,9 +508,36 @@ public class Voxel implements WorldObject {
     return new Vector2(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
   }
 
+  public double getAngle() {
+    Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
+    Vector2 downSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
+    return (upSide.getDirection() + downSide.getDirection()) / 2d;
+  }
+
   public void translate(Vector2 v) {
     for (Body body : vertexBodies) {
       body.translate(v);
+    }
+  }
+
+  public double getSensorReading(Sensor sensor) {
+    switch (sensor) {
+      case AREA_RATIO:
+        return getAreaRatio();
+      case VELOCITY_MAGNITUDE:
+        return getLinearVelocity().getMagnitude();
+      case ANGLE:
+        return getAngle();
+      case X_VELOCITY:
+        return getLinearVelocity().x;
+      case Y_VELOCITY:
+        return getLinearVelocity().y;
+      case X_ROT_VELOCITY:
+        return getLinearVelocity().copy().dot(new Vector2(getAngle()));
+      case Y_ROT_VELOCITY:
+        return getLinearVelocity().copy().dot(new Vector2(getAngle()+Math.PI/2d));
+      default:
+        return 0d;
     }
   }
 

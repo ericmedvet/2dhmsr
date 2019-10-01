@@ -17,8 +17,10 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
+import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
+import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
@@ -32,8 +34,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
+import java.util.EnumMap;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  *
@@ -42,7 +45,7 @@ import java.util.Set;
 public class GraphicsDrawer {
 
   public static enum RenderingMode {
-    VOXEL_POLY, VOXEL_FILL_AREA, VOXEL_SPRINGS, VOXEL_COMPONENTS, VOXEL_FORCE,
+    VOXEL_POLY, VOXEL_FILL_AREA, VOXEL_SPRINGS, VOXEL_COMPONENTS, VOXEL_FORCE, VOXEL_SENSORS,
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO
   }
 
@@ -148,6 +151,21 @@ public class GraphicsDrawer {
   }
 
   private final Builder builder;
+  
+  private final static EnumMap<Voxel.Sensor, Function<VoxelComponent, Range<Double>>> SENSOR_DOMAIN_FUNCTIONS;
+  
+  static {
+    final double sideRatio = 1.5d;
+    SENSOR_DOMAIN_FUNCTIONS = new EnumMap<>(Voxel.Sensor.class);
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.ANGLE, (v) -> Range.closed(-Math.PI, Math.PI));
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.AREA_RATIO, (v) -> Range.closed(0.5d, 1.5d));
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.VELOCITY_MAGNITUDE, (v) -> Range.closed(0d, v.getSideLength()*sideRatio*sideRatio*Math.sqrt(2d)));
+    Function<VoxelComponent, Range<Double>> vDomainFunction = (v) -> Range.closed(-v.getSideLength()*sideRatio, v.getSideLength()*sideRatio);
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.X_VELOCITY, vDomainFunction);
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.Y_VELOCITY, vDomainFunction);
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.X_ROT_VELOCITY, vDomainFunction);
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.Y_ROT_VELOCITY, vDomainFunction);    
+  }
 
   private GraphicsDrawer() {
     builder = Builder.create();
@@ -157,7 +175,7 @@ public class GraphicsDrawer {
     this.builder = builder;
   }
 
-  public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, Set<RenderingMode> renderingModes, String... otherInfos) {
+  public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, Set<RenderingMode> renderingModes, Set<Voxel.Sensor> voxelSensors, String... otherInfos) {
     //set clipping area
     g.setClip(
             (int) graphicsFrame.x1, (int) graphicsFrame.y1,
@@ -213,20 +231,20 @@ public class GraphicsDrawer {
     //draw components
     g.setStroke(new BasicStroke(2f / (float) ratio));
     for (Compound object : snapshot.getCompounds()) {
-      draw(object, g, renderingModes);
+      draw(object, g, renderingModes, voxelSensors);
     }
     //restore transform    
     g.setTransform(oAt);
     //info
     StringBuilder sb = new StringBuilder();
     if (renderingModes.contains(RenderingMode.VIEWPORT_INFO)) {
-      sb.append(((sb.length() > 0) ? " " : "") + String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.x1, worldFrame.y1, worldFrame.x2, worldFrame.y2));
+      sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.x1, worldFrame.y1, worldFrame.x2, worldFrame.y2));
     }
     if (renderingModes.contains(RenderingMode.TIME_INFO)) {
-      sb.append(((sb.length() > 0) ? " " : "") + String.format("t=%.2f", snapshot.getTime()));
+      sb.append((sb.length() > 0) ? " " : "").append(String.format("t=%.2f", snapshot.getTime()));
     }
     for (String otherInfo : otherInfos) {
-      sb.append(((sb.length() > 0) ? " " : "") + otherInfo);
+      sb.append((sb.length() > 0) ? " " : "").append(otherInfo);
     }
     if (sb.length()>0) {
       g.setColor(builder.getInfoColor());
@@ -249,39 +267,54 @@ public class GraphicsDrawer {
     return gridSize;
   }
 
-  private void draw(Compound compound, Graphics2D g, Set<RenderingMode> vizModes) {
+  private void draw(Compound compound, Graphics2D g, Set<RenderingMode> renderingModes, Set<Voxel.Sensor> voxelSensors) {
     if (compound.getObjectClass().equals(VoxelCompound.class)) {
       for (Component component : compound.getComponents()) {
         if (component.getType().equals(Component.Type.ENCLOSING)) {
-          final double lastArea = ((VoxelComponent) component).getLastArea();
-          final double restArea = ((VoxelComponent) component).getRestArea();
+          VoxelComponent voxelComponent = (VoxelComponent) component;
           final Point2 c = component.getPoly().center();
-          final double f = ((VoxelComponent) component).getLastAppliedForce();
-          final double l = Math.sqrt(restArea);
-          if (vizModes.contains(RenderingMode.VOXEL_FILL_AREA)) {
+          if (renderingModes.contains(RenderingMode.VOXEL_FILL_AREA)) {
             final Color color = linear(
                     Color.RED, Color.GREEN, Color.YELLOW,
                     .75d, 1d, 1.25d,
-                    lastArea / restArea,
+                    voxelComponent.getSensorReadings().get(Voxel.Sensor.AREA_RATIO),
                     builder.getVoxelFillAlpha()
             );
             g.setColor(color);
             g.fill(toPath(component.getPoly(), true));
           }
-          if (vizModes.contains(RenderingMode.VOXEL_POLY)) {
+          if (renderingModes.contains(RenderingMode.VOXEL_POLY)) {
             g.setColor(new Color(0f, 0f, 1f, builder.getVoxelComponentAlpha()));
             g.draw(toPath(component.getPoly(), true));
           }
-          if (vizModes.contains(RenderingMode.VOXEL_FORCE)) {
+          if (renderingModes.contains(RenderingMode.VOXEL_FORCE)) {
             g.setColor(Color.BLUE);
-            double r = (l * (1d - builder.getForceCircleRange() * f)) / 2d;
+            double r = (voxelComponent.getSideLength() * (1d - builder.getForceCircleRange() * voxelComponent.getLastAppliedForce())) / 2d;
             Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
             g.draw(circle);
           }
-        } else if (component.getType().equals(Component.Type.CONNECTION) && vizModes.contains(RenderingMode.VOXEL_SPRINGS)) {
+          if (renderingModes.contains(RenderingMode.VOXEL_SENSORS)) {
+            for (Voxel.Sensor sensor : voxelSensors) {
+              g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()/2));
+              double v = voxelComponent.getSensorReadings().get(sensor);
+              Function<VoxelComponent, Range<Double>> domainFunction = SENSOR_DOMAIN_FUNCTIONS.get(sensor);
+              Range<Double> domain = Range.closedOpen(-1d, 1d);
+              if (domainFunction!=null) {
+                domain = domainFunction.apply(voxelComponent);
+              }
+              //map domain to [0,1]
+              double r = (Math.min(Math.max(domain.lowerEndpoint(), v), domain.upperEndpoint())-domain.lowerEndpoint())/(domain.upperEndpoint()-domain.lowerEndpoint());
+              //mapp to [0, l/2]
+              r = r*voxelComponent.getSideLength()/2d;
+              Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
+              g.fill(circle);
+              
+            }
+          }
+        } else if (component.getType().equals(Component.Type.CONNECTION) && renderingModes.contains(RenderingMode.VOXEL_SPRINGS)) {
           g.setColor(Color.BLUE);
           g.draw(toPath(component.getPoly(), false));
-        } else if (component.getType().equals(Component.Type.RIGID) && vizModes.contains(RenderingMode.VOXEL_COMPONENTS)) {
+        } else if (component.getType().equals(Component.Type.RIGID) && renderingModes.contains(RenderingMode.VOXEL_COMPONENTS)) {
           g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()));
           g.fill(toPath(component.getPoly(), true));
         }

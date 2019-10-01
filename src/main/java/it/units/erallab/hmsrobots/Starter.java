@@ -71,7 +71,7 @@ public class Starter {
 
     Controller controller = new PhaseSin(-1d, 1d, wormController);
 
-    EnumSet<CentralizedMLP.Input> inputs = EnumSet.of(CentralizedMLP.Input.AREA_RATIO);
+    EnumSet<Voxel.Sensor> inputs = EnumSet.of(Voxel.Sensor.AREA_RATIO);
     int[] innerNeurons = new int[]{20};
     int params = CentralizedMLP.countParams(wormShape, inputs, innerNeurons);
     double[] weights = new double[params];
@@ -86,12 +86,12 @@ public class Starter {
     functions.set(0, 0, t -> Math.sin(2d * Math.PI * -1d * t));
     int signals = 1;
     innerNeurons = new int[0];
-    int ws = DistributedMLP.countParams(wormShape, EnumSet.of(ClosedLoopController.Input.AREA_RATIO), signals, innerNeurons);
+    int ws = DistributedMLP.countParams(wormShape, EnumSet.of(Voxel.Sensor.AREA_RATIO), signals, innerNeurons);
     weights = new double[ws];
     for (int i = 0; i<weights.length; i++) {
       weights[i] = random.nextDouble()*2d-1d;
     }
-    controller = new DistributedMLP(wormShape, functions, EnumSet.of(ClosedLoopController.Input.AREA_RATIO), signals, innerNeurons, weights);
+    controller = new DistributedMLP(wormShape, functions, EnumSet.of(Voxel.Sensor.AREA_RATIO), signals, innerNeurons, weights);
 
     VoxelCompound vc2 = new VoxelCompound(
             0, 0,

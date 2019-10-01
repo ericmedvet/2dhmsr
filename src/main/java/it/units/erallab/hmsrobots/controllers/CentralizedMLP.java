@@ -30,7 +30,7 @@ public class CentralizedMLP extends ClosedLoopController {
   private final MultiLayerPerceptron mlp;
   private final Function<Double, Double> drivingFunction;
 
-  public static int countParams(Grid<Boolean> structure, EnumSet<Input> inputs, int[] innerNeurons) {
+  public static int countParams(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons) {
     //count active voxels
     int c = 0;
     for (int x = 0; x < structure.getW(); x++) {
@@ -49,7 +49,7 @@ public class CentralizedMLP extends ClosedLoopController {
     return MultiLayerPerceptron.countWeights(neurons);
   }
 
-  public CentralizedMLP(Grid<Boolean> structure, EnumSet<Input> inputs, int[] innerNeurons, double[] weights, Function<Double, Double> drivingFunction) {
+  public CentralizedMLP(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons, double[] weights, Function<Double, Double> drivingFunction) {
     super(inputs);
     //count active voxels
     int c = 0;

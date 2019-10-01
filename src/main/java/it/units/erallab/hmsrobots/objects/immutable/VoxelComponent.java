@@ -16,33 +16,36 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
+import it.units.erallab.hmsrobots.objects.Voxel;
+import java.util.EnumMap;
+
 /**
  *
  * @author eric
  */
 public class VoxelComponent extends Component {
-  
-  private final double lastAppliedForce;
-  private final double restArea;
-  private final double lastArea;
 
-  public VoxelComponent(double lastAppliedForce, double restArea, double lastArea, Poly poly) {
+  private final double sideLength;
+  private final double lastAppliedForce;
+  private final EnumMap<Voxel.Sensor, Double> sensorReadings;
+
+  public VoxelComponent(double sideLength, double lastAppliedForce, EnumMap<Voxel.Sensor, Double> sensorReadings, Poly poly) {
     super(Type.ENCLOSING, poly);
+    this.sideLength = sideLength;
     this.lastAppliedForce = lastAppliedForce;
-    this.restArea = restArea;
-    this.lastArea = lastArea;
+    this.sensorReadings = sensorReadings;
+  }
+
+  public double getSideLength() {
+    return sideLength;
   }
 
   public double getLastAppliedForce() {
     return lastAppliedForce;
   }
 
-  public double getRestArea() {
-    return restArea;
+  public EnumMap<Voxel.Sensor, Double> getSensorReadings() {
+    return sensorReadings;
   }
 
-  public double getLastArea() {
-    return lastArea;
-  }
-  
 }

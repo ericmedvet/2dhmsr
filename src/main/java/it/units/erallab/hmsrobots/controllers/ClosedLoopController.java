@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
 import java.util.EnumSet;
+import org.dyn4j.geometry.Vector2;
 
 /**
  *
@@ -25,13 +26,9 @@ import java.util.EnumSet;
  */
 public abstract class ClosedLoopController implements Controller {
 
-  public enum Input {
-    AREA_RATIO, ABS_LINEAR_VELOCITY; //TODO add X_ Y_ VELOCITY and/or ACCELERATION
-  }
+  private final EnumSet<Voxel.Sensor> inputs;
 
-  private final EnumSet<Input> inputs;
-
-  public ClosedLoopController(EnumSet<Input> inputs) {
+  public ClosedLoopController(EnumSet<Voxel.Sensor> inputs) {
     this.inputs = inputs;
   }
 
@@ -42,18 +39,13 @@ public abstract class ClosedLoopController implements Controller {
   }
   
   protected void collectInputs(Voxel voxel, double[] values, int c) {
-    for (Input input : inputs) {
-      if (input.equals(Input.AREA_RATIO)) {
-        values[c] = voxel.getAreaRatio();
-        c = c + 1;
-      } else if (input.equals(Input.ABS_LINEAR_VELOCITY)) {
-        values[c] = voxel.getLinearVelocity().getMagnitude();
-        c = c + 1;
-      }
+    for (Voxel.Sensor sensor : inputs) {
+      values[c] = voxel.getSensorReading(sensor);
+      c = c + 1;
     }
   }
 
-  public EnumSet<Input> getInputs() {
+  public EnumSet<Voxel.Sensor> getInputs() {
     return inputs;
   }
 

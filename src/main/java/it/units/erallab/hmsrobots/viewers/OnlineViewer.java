@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import java.awt.BorderLayout;
@@ -55,6 +56,7 @@ public class OnlineViewer extends JFrame implements Listener {
   private final JCheckBox playCheckBox;
   private final JProgressBar queueProgressBar;
   private final Map<GraphicsDrawer.RenderingMode, JCheckBox> renderingModeCheckBoxes;
+  private final Map<Voxel.Sensor, JCheckBox> voxelSensorCheckBoxes;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final EvictingQueue<Snapshot> queue;
@@ -71,6 +73,7 @@ public class OnlineViewer extends JFrame implements Listener {
     this.scheduledExecutorService = scheduledExecutorService;
     queue = EvictingQueue.create(MAX_QUEUE_SIZE);
     renderingModeCheckBoxes = new EnumMap<>(GraphicsDrawer.RenderingMode.class);
+    voxelSensorCheckBoxes = new EnumMap<>(Voxel.Sensor.class);
     //create drawer
     graphicsDrawer = GraphicsDrawer.Builder.create().build();
     //create/set ui components
@@ -81,7 +84,8 @@ public class OnlineViewer extends JFrame implements Listener {
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+    JPanel topTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));    
+    JPanel bottomTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));    
     infoLabel = new JLabel();
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
@@ -92,13 +96,24 @@ public class OnlineViewer extends JFrame implements Listener {
               mode.equals(GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA)||mode.equals(GraphicsDrawer.RenderingMode.VOXEL_POLY)
       );
       renderingModeCheckBoxes.put(mode, checkBox);
-      topPanel.add(checkBox);
+      topTopPanel.add(checkBox);
+    }
+    for (Voxel.Sensor sensor : Voxel.Sensor.values()) {
+      final JCheckBox checkBox = new JCheckBox(
+              sensor.name().toLowerCase().replace('_', ' '),
+              false
+      );
+      voxelSensorCheckBoxes.put(sensor, checkBox);
+      bottomTopPanel.add(checkBox);
     }
     //set layout and put components
     bottomPanel.add(infoLabel);
     bottomPanel.add(queueProgressBar);
     bottomPanel.add(timeScaleSlider);
     bottomPanel.add(playCheckBox);
+    JPanel topPanel = new JPanel(new BorderLayout());
+    topPanel.add(topTopPanel, BorderLayout.PAGE_START);
+    topPanel.add(bottomTopPanel, BorderLayout.PAGE_END);
     getContentPane().add(canvas, BorderLayout.CENTER);
     getContentPane().add(bottomPanel, BorderLayout.PAGE_END);
     getContentPane().add(topPanel, BorderLayout.PAGE_START);
@@ -142,7 +157,7 @@ public class OnlineViewer extends JFrame implements Listener {
               }
               GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double)canvas.getWidth()/(double)canvas.getHeight());
               //draw
-              graphicsDrawer.draw(snapshot, g, new GraphicsDrawer.Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes());
+              graphicsDrawer.draw(snapshot, g, new GraphicsDrawer.Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes(), getSensors());
               g.dispose();
               BufferStrategy strategy = canvas.getBufferStrategy();
               if (!strategy.contentsLost()) {
@@ -207,6 +222,16 @@ public class OnlineViewer extends JFrame implements Listener {
       }
     }
     return renderingModes;
+  }
+
+  private Set<Voxel.Sensor> getSensors() {
+    Set<Voxel.Sensor> sensors = new HashSet<>();
+    for (Map.Entry<Voxel.Sensor, JCheckBox> entry : voxelSensorCheckBoxes.entrySet()) {
+      if (entry.getValue().isSelected()) {
+        sensors.add(entry.getKey());
+      }
+    }
+    return sensors;
   }
 
 }

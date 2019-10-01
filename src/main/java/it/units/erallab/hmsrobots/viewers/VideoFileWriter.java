@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -31,7 +32,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jcodec.api.awt.AWTSequenceEncoder;
 import org.jcodec.common.io.NIOUtils;
@@ -56,6 +56,7 @@ public class VideoFileWriter implements Flushable {
           GraphicsDrawer.RenderingMode.VIEWPORT_INFO,
           GraphicsDrawer.RenderingMode.TIME_INFO
   );
+  private final Set<Voxel.Sensor> sensors = EnumSet.of(Voxel.Sensor.Y_ROT_VELOCITY);
 
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
@@ -197,7 +198,7 @@ public class VideoFileWriter implements Flushable {
           //draw
           graphicsDrawer.draw(s, g,
                   new GraphicsDrawer.Frame(localW * x, localW * (x + 1), localH * y, localH * (y + 1)),
-                  frame, renderingModes, namesGrid.get(x, y)
+                  frame, renderingModes, sensors, namesGrid.get(x, y)
           );
         }
       }
