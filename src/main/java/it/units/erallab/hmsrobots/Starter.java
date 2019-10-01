@@ -16,13 +16,11 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
-import it.units.erallab.hmsrobots.controllers.Controller;
+import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.problems.Locomotion;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
-import it.units.erallab.hmsrobots.controllers.PhaseSin;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
@@ -38,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -51,8 +50,8 @@ public class Starter {
 
   public static void main(String[] args) throws IOException {
 
-    gridStarter(30d, 0.01d);
-    System.exit(0);
+    //gridStarter(30d, 0.01d);
+    //System.exit(0);
 
     int wormW = 10;
     int wormH = 4;
@@ -82,6 +81,17 @@ public class Starter {
     //controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> Math.sin(2d * Math.PI * 0.2d * t)));
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> -1d + 2 * (Math.round(t / 2d) % 2)));
+
+    Grid<Function<Double, Double>> functions = Grid.create(wormShape);
+    functions.set(0, 0, t -> Math.sin(2d * Math.PI * -1d * t));
+    int signals = 1;
+    innerNeurons = new int[0];
+    int ws = DistributedMLP.countParams(wormShape, EnumSet.of(ClosedLoopController.Input.AREA_RATIO), signals, innerNeurons);
+    weights = new double[ws];
+    for (int i = 0; i<weights.length; i++) {
+      weights[i] = random.nextDouble()*2d-1d;
+    }
+    controller = new DistributedMLP(wormShape, functions, EnumSet.of(ClosedLoopController.Input.AREA_RATIO), signals, innerNeurons, weights);
 
     VoxelCompound vc2 = new VoxelCompound(
             0, 0,

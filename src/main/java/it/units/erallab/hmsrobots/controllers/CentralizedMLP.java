@@ -18,14 +18,14 @@ package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
+
 import java.util.EnumSet;
 import java.util.function.Function;
 
 /**
- *
  * @author eric
  */
-public class CentralizedMLP extends ClosedLoopController{
+public class CentralizedMLP extends ClosedLoopController {
 
   private final MultiLayerPerceptron mlp;
   private final Function<Double, Double> drivingFunction;
@@ -83,11 +83,11 @@ public class CentralizedMLP extends ClosedLoopController{
         final Voxel voxel = voxelGrid.get(x, y);
         if (voxel != null) {
           collectInputs(voxel, inputValues, c);
-          c = c+getInputs().size();
+          c = c + getInputs().size();
         }
       }
     }
-    inputValues[inputValues.length-1] = v;
+    inputValues[inputValues.length - 1] = v;
     //compute output
     double[] outputValues = mlp.apply(inputValues);
     //fill grid
