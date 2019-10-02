@@ -131,14 +131,21 @@ public class Locomotion implements Episode<VoxelCompound> {
   public double[] getMetrics() {
     double[] values = new double[metrics.length];
     for (int i = 0; i<metrics.length; i++) {
-      if (metrics[i].equals(Metric.CENTER_FINAL_X)) {
-        values[i] = voxelCompound.getCenter().x;
-      } else if (metrics[i].equals(Metric.CENTER_AVG_Y)) {
-        values[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
-      } else if (metrics[i].equals(Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS)) {
-        values[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
-      } else if (metrics[i].equals(Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS)) {
-        values[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
+      switch (metrics[i]) {
+        case CENTER_FINAL_X:
+          values[i] = voxelCompound.getCenter().x;
+          break;
+        case CENTER_AVG_Y:
+          values[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
+          break;
+        case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
+          values[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
+          break;
+        case AVG_SUM_OF_SQUARED__DIFF_OF_CONTROL_SIGNALS:
+          values[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
+          break;
+        default:
+          break;
       }
     }
     return values;
