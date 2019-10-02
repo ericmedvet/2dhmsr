@@ -119,26 +119,21 @@ public class VideoFileWriter implements Flushable {
         //check if ready
         Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
         synchronized (queueGrid) {
-          for (int x = 0; x < queueGrid.getW(); x++) {
-            for (int y = 0; y < queueGrid.getH(); y++) {
-              Queue<Snapshot> queue = queueGrid.get(x, y);
-              Snapshot snapshot;
-              while ((snapshot = queue.peek()) != null) {
-                if (snapshot.getTime() < t) {
-                  queue.poll();
-                } else {
-                  break;
-                }
+          for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+            Snapshot snapshot;
+            while ((snapshot = entry.getValue().peek()) != null) {
+              if (snapshot.getTime() < t) {
+                entry.getValue().poll();
+              } else {
+                break;
               }
-              snapshotGrid.set(x, y, snapshot);
             }
+            snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
           }
         }
         boolean ready = true;
-        for (int x = 0; x < queueGrid.getW(); x++) {
-          for (int y = 0; y < queueGrid.getH(); y++) {
-            ready = ready && ((namesGrid.get(x, y) == null) || (snapshotGrid.get(x, y) != null));
-          }
+        for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+          ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
         }
         if (ready) {
           //update time
@@ -172,7 +167,7 @@ public class VideoFileWriter implements Flushable {
   }
 
   private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
-    L.info(String.format("Writing frame %d/%d%n", drawnCount, drawnCount+gridQueue.size()));
+    L.info(String.format("Writing frame %d/%d%n", drawnCount, drawnCount + gridQueue.size()));
     //set local clip size
     double localW = (double) w / (double) namesGrid.getW();
     double localH = (double) h / (double) namesGrid.getH();
@@ -180,13 +175,11 @@ public class VideoFileWriter implements Flushable {
     BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
     Graphics2D g = image.createGraphics();
     //iterate over snapshot grid
-    for (int x = 0; x < localSnapshotGrid.getW(); x++) {
-      for (int y = 0; y < localSnapshotGrid.getH(); y++) {
-        Snapshot s = localSnapshotGrid.get(x, y);
-        if (s != null) {
+    for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
+        if (entry.getValue() != null) {
           //obtain viewport
           Compound voxelCompound = null;
-          for (Compound compound : s.getCompounds()) {
+          for (Compound compound : entry.getValue().getCompounds()) {
             if (compound.getObjectClass().equals(VoxelCompound.class
             )) {
               voxelCompound = compound;
@@ -194,14 +187,14 @@ public class VideoFileWriter implements Flushable {
               break;
             }
           }
-          GraphicsDrawer.Frame frame = ffGrid.get(x, y).getFrame(voxelCompound, localW / localH);
+          GraphicsDrawer.Frame frame = ffGrid.get(entry.getX(), entry.getY()).getFrame(voxelCompound, localW / localH);
           //draw
-          graphicsDrawer.draw(s, g,
-                  new GraphicsDrawer.Frame(localW * x, localW * (x + 1), localH * y, localH * (y + 1)),
-                  frame, renderingModes, sensors, namesGrid.get(x, y)
+          graphicsDrawer.draw(entry.getValue(), g,
+                  new GraphicsDrawer.Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
+                  frame, renderingModes, sensors, namesGrid.get(entry.getX(), entry.getY())
           );
         }
-      }
+      
     }
     //dispose and encode
     g.dispose();
@@ -211,7 +204,7 @@ public class VideoFileWriter implements Flushable {
     } catch (IOException ex) {
       L.severe(String.format("Cannot encode image due to %s", ex));
     }
-    drawnCount = drawnCount+1;
+    drawnCount = drawnCount + 1;
   }
 
   @Override

@@ -32,11 +32,8 @@ public class PhaseSin extends TimeFunction {
   
   private static Grid<Function<Double,Double>> getFunctions(final double frequency, final double amplitude, final Grid<Double> phases) {
     Grid<Function<Double,Double>> functions = Grid.create(phases);
-    for (int x = 0; x<functions.getW(); x++) {
-      for (int y = 0; y<functions.getH(); y++) {
-        final double phase = phases.get(x, y);
-        functions.set(x, y, t -> Math.sin(2d*Math.PI*frequency*t+phase)*amplitude);
-      }
+    for (Grid.Entry<Double> entry : phases) {
+      functions.set(entry.getX(), entry.getY(), t -> Math.sin(2d*Math.PI*frequency*t+entry.getValue())*amplitude);
     }
     return functions;
   }

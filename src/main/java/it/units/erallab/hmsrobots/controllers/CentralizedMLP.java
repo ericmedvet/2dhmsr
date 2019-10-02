@@ -32,14 +32,7 @@ public class CentralizedMLP extends ClosedLoopController {
 
   public static int countParams(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons) {
     //count active voxels
-    int c = 0;
-    for (int x = 0; x < structure.getW(); x++) {
-      for (int y = 0; y < structure.getH(); y++) {
-        if (structure.get(x, y)) {
-          c = c + 1;
-        }
-      }
-    }
+    int c = (int) structure.values().stream().filter((b) -> b).count();
     //set neurons count
     int[] neurons = new int[innerNeurons.length + 2];
     neurons[0] = c * inputs.size() + 1 + 1; //+1 is bias, +1 is the driving function;
@@ -52,14 +45,7 @@ public class CentralizedMLP extends ClosedLoopController {
   public CentralizedMLP(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons, double[] weights, Function<Double, Double> drivingFunction) {
     super(inputs);
     //count active voxels
-    int c = 0;
-    for (int x = 0; x < structure.getW(); x++) {
-      for (int y = 0; y < structure.getH(); y++) {
-        if (structure.get(x, y)) {
-          c = c + 1;
-        }
-      }
-    }
+    int c = (int) structure.values().stream().filter((b) -> b).count();
     //set neurons count
     int[] neurons = new int[innerNeurons.length + 2];
     neurons[0] = c * inputs.size() + 1 + 1; //+1 is bias, +1 is the driving function
@@ -78,13 +64,10 @@ public class CentralizedMLP extends ClosedLoopController {
     //collect input
     double[] inputValues = new double[mlp.getNeurons()[0] - 1];
     int c = 0;
-    for (int x = 0; x < voxelGrid.getW(); x++) {
-      for (int y = 0; y < voxelGrid.getH(); y++) {
-        final Voxel voxel = voxelGrid.get(x, y);
-        if (voxel != null) {
-          collectInputs(voxel, inputValues, c);
-          c = c + getInputs().size();
-        }
+    for (Voxel voxel : voxelGrid.values()) {
+      if (voxel != null) {
+        collectInputs(voxel, inputValues, c);
+        c = c + getInputs().size();
       }
     }
     inputValues[inputValues.length - 1] = v;
@@ -93,13 +76,10 @@ public class CentralizedMLP extends ClosedLoopController {
     //fill grid
     Grid<Double> control = Grid.create(voxelGrid.getW(), voxelGrid.getH(), 0d);
     c = 0;
-    for (int x = 0; x < voxelGrid.getW(); x++) {
-      for (int y = 0; y < voxelGrid.getH(); y++) {
-        final Voxel voxel = voxelGrid.get(x, y);
-        if (voxel != null) {
-          control.set(x, y, outputValues[c]);
-          c = c + 1;
-        }
+    for (Grid.Entry<Voxel> entry : voxelGrid) {
+      if (entry.getValue() != null) {
+        control.set(entry.getX(), entry.getY(), outputValues[c]);
+        c = c + 1;
       }
     }
     return control;

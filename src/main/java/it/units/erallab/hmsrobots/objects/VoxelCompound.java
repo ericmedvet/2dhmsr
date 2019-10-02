@@ -95,12 +95,9 @@ public class VoxelCompound implements WorldObject {
   @Override
   public Compound getSnapshot() {
     List<Component> components = new ArrayList<>();
-    for (int x = 0; x < voxels.getW(); x++) {
-      for (int y = 0; y < voxels.getH(); y++) {
-        Voxel voxel = voxels.get(x, y);
-        if (voxel != null) {
-          components.addAll(voxel.getSnapshot().getComponents());
-        }
+    for (Voxel voxel : voxels.values()) {
+      if (voxel != null) {
+        components.addAll(voxel.getSnapshot().getComponents());
       }
     }
     return new Compound(VoxelCompound.class, components);
@@ -108,12 +105,9 @@ public class VoxelCompound implements WorldObject {
 
   @Override
   public void addTo(World world) {
-    for (int x = 0; x < voxels.getW(); x++) {
-      for (int y = 0; y < voxels.getH(); y++) {
-        Voxel voxel = voxels.get(x, y);
-        if (voxel != null) {
-          voxel.addTo(world);
-        }
+    for (Voxel voxel : voxels.values()) {
+      if (voxel != null) {
+        voxel.addTo(world);
       }
     }
     for (Joint joint : joints) {
@@ -125,12 +119,9 @@ public class VoxelCompound implements WorldObject {
     Grid<Double> forceGrid = null;
     if (controller != null) {
       forceGrid = controller.control(t, dt, voxels);
-      for (int x = 0; x < voxels.getW(); x++) {
-        for (int y = 0; y < voxels.getH(); y++) {
-          Voxel voxel = voxels.get(x, y);
-          if (voxel != null) {
-            voxels.get(x, y).applyForce(forceGrid.get(x, y));
-          }
+      for (Grid.Entry<Double> entry : forceGrid) {
+        if (voxels.get(entry.getX(), entry.getY()) != null) {
+          voxels.get(entry.getX(), entry.getY()).applyForce(entry.getValue());
         }
       }
     }
@@ -141,26 +132,21 @@ public class VoxelCompound implements WorldObject {
     double xc = 0d;
     double yc = 0d;
     double n = 0;
-    for (int x = 0; x < voxels.getW(); x++) {
-      for (int y = 0; y < voxels.getH(); y++) {
-        if (voxels.get(x, y) != null) {
-          final Vector2 center = voxels.get(x, y).getCenter();
-          xc = xc + center.x;
-          yc = yc + center.y;
-          n = n + 1;
-        }
+    for (Voxel voxel : voxels.values()) {
+      if (voxel != null) {
+        final Vector2 center = voxel.getCenter();
+        xc = xc + center.x;
+        yc = yc + center.y;
+        n = n + 1;
       }
     }
     return new Vector2(xc / n, yc / n);
   }
 
   public void translate(Vector2 v) {
-    for (int x = 0; x < voxels.getW(); x++) {
-      for (int y = 0; y < voxels.getH(); y++) {
-        Voxel voxel = voxels.get(x, y);
-        if (voxel != null) {
-          voxel.translate(v);
-        }
+    for (Voxel voxel : voxels.values()) {
+      if (voxel != null) {
+        voxel.translate(v);
       }
     }
   }

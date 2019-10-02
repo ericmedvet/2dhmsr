@@ -18,13 +18,10 @@ package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.problems.Locomotion;
-import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
-import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.viewers.Listener;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
 import java.io.File;
@@ -39,8 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import org.dyn4j.dynamics.World;
 
 /**
  *
@@ -48,7 +43,7 @@ import org.dyn4j.dynamics.World;
  */
 public class Starter {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException {    
 
     //gridStarter(30d, 0.01d);
     //System.exit(0);

@@ -35,14 +35,7 @@ public class DistributedMLP extends ClosedLoopController {
 
   public static int countParams(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int signals, int[] innerNeurons) {
     //count voxels
-    int nOfVoxels = 0;
-    for (int x = 0; x < structure.getW(); x++) {
-      for (int y = 0; y < structure.getH(); y++) {
-        if (structure.get(x, y)) {
-          nOfVoxels = nOfVoxels + 1;
-        }
-      }
-    }
+    int nOfVoxels = (int) structure.values().stream().filter((b) -> b).count();
     //compute mlp topology
     int voxelInputs = inputs.size() + 1 + 1 + signals * 4; //+1 for bias, +1 for driving function
     int voxelOutputs = 1 + signals * 4;
@@ -63,14 +56,7 @@ public class DistributedMLP extends ClosedLoopController {
     this.signals = signals;
     this.drivingFunctions = drivingFunctions;
     //count voxels
-    int nOfVoxels = 0;
-    for (int x = 0; x < structure.getW(); x++) {
-      for (int y = 0; y < structure.getH(); y++) {
-        if (structure.get(x, y)) {
-          nOfVoxels = nOfVoxels + 1;
-        }
-      }
-    }
+    int nOfVoxels = (int) structure.values().stream().filter((b) -> b).count();
     //compute mlp topology
     int voxelInputs = inputs.size() + 1 + 1 + signals * 4;
     int voxelOutputs = 1 + signals * 4;
@@ -86,34 +72,30 @@ public class DistributedMLP extends ClosedLoopController {
     //set mlps
     mlps = Grid.create(structure);
     int c = 0;
-    for (int x = 0; x < structure.getW(); x++) {
-      for (int y = 0; y < structure.getH(); y++) {
-        if (structure.get(x, y)) {
-          double[] mlpWeights = new double[mlpNOfWeights];
-          System.arraycopy(weights, c * mlpNOfWeights, mlpWeights, 0, mlpNOfWeights);
-          MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH, neurons, mlpWeights);
-          mlps.set(x, y, mlp);
-          c = c + 1;
-        }
+    for (Grid.Entry<Boolean> entry : structure) {
+      if (entry.getValue()) {
+        double[] mlpWeights = new double[mlpNOfWeights];
+        System.arraycopy(weights, c * mlpNOfWeights, mlpWeights, 0, mlpNOfWeights);
+        MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH, neurons, mlpWeights);
+        mlps.set(entry.getX(), entry.getY(), mlp);
+        c = c + 1;
       }
     }
     //set last signals
     lastSignals = Grid.create(structure);
-    for (int x = 0; x < structure.getW(); x++) {
-      for (int y = 0; y < structure.getH(); y++) {
-        double[][] localSignals = new double[4][];
-        for (int i = 0; i < 4; i++) {
-          localSignals[i] = new double[signals];
-        }
-        lastSignals.set(x, y, localSignals);
+    for (Grid.Entry<Boolean> entry : structure) {
+      double[][] localSignals = new double[4][];
+      for (int i = 0; i < 4; i++) {
+        localSignals[i] = new double[signals];
       }
+      lastSignals.set(entry.getX(), entry.getY(), localSignals);
     }
   }
 
   @Override
   public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid) {
     Grid<Double> outputs = Grid.create(voxelGrid);
-    Grid<double[][]> localLastSignals = Grid.create(lastSignals);
+    Grid<double[][]> localLastSignals = Grid.create(lastSignals);    
     for (int x = 0; x < voxelGrid.getW(); x++) {
       for (int y = 0; y < voxelGrid.getH(); y++) {
         final Voxel voxel = voxelGrid.get(x, y);
@@ -141,18 +123,16 @@ public class DistributedMLP extends ClosedLoopController {
       }
     }
     //update last signals
-    for (int x = 0; x < localLastSignals.getW(); x++) {
-      for (int y = 0; y < localLastSignals.getH(); y++) {
-        if (localLastSignals.get(x, y) != null) {
-          lastSignals.set(x, y, localLastSignals.get(x, y));
-        }
+    for (Grid.Entry<double[][]> entry : localLastSignals) {
+      if (entry.getValue()!=null) {
+        lastSignals.set(entry.getX(), entry.getY(), localLastSignals.get(entry.getX(), entry.getY()));
       }
     }
     return outputs;
   }
 
   private double[] computeLocalOutput(Voxel voxel, MultiLayerPerceptron mlp, double drivingValue, double[][] localSignals) {
-    double[] inputValues = new double[mlp.getNeurons()[0]-1];
+    double[] inputValues = new double[mlp.getNeurons()[0] - 1];
     int c = 0;
     //collect inputs
     collectInputs(voxel, inputValues, c);

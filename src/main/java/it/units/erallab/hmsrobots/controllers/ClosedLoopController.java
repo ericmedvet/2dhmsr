@@ -18,7 +18,6 @@ package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
 import java.util.EnumSet;
-import org.dyn4j.geometry.Vector2;
 
 /**
  *

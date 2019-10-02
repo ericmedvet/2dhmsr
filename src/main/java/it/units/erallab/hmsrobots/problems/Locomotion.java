@@ -24,6 +24,7 @@ import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
@@ -37,7 +38,10 @@ public class Locomotion implements Episode<VoxelCompound> {
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
 
   public static enum Metric {
-    CENTER_FINAL_X, CENTER_AVG_Y
+    CENTER_FINAL_X,
+    CENTER_AVG_Y,
+    AVG_SUM_OF_SQUARED_CONTROL_SIGNALS,
+    AVG_SUM_OF_SQUARED__DIFF_OF_CONTROL_SIGNALS
   }
 
   private final double finalT;
@@ -47,6 +51,9 @@ public class Locomotion implements Episode<VoxelCompound> {
   private World world;
   private List<WorldObject> worldObjects;
   private List<Point2> centerPositions;
+  private Grid<Double> lastControlSignals;
+  private Grid<Double> sumOfSquaredControlSignals;
+  private Grid<Double> sumOfSquaredDeltaControlSignals;
   private double t;
   private VoxelCompound voxelCompound;
 
@@ -87,9 +94,27 @@ public class Locomotion implements Episode<VoxelCompound> {
   @Override
   public Snapshot step(double dt, boolean withSnapshot) {
     t = t + dt;
-    voxelCompound.control(t, dt);
+    //control
+    Grid<Double> controlSignals = voxelCompound.control(t, dt);
     world.update(dt);
+    //update control signals metrics
+    if (lastControlSignals == null) {
+      lastControlSignals = Grid.copy(controlSignals);
+      sumOfSquaredControlSignals = Grid.create(controlSignals);
+      sumOfSquaredDeltaControlSignals = Grid.create(controlSignals);
+    }
+    for (Grid.Entry<Double> entry : controlSignals) {
+      final int x = entry.getX();
+      final int y = entry.getY();
+      final double v = entry.getValue();
+      sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y)+v*v*dt);
+      double dV = v-lastControlSignals.get(x, y);
+      sumOfSquaredDeltaControlSignals.set(x, y, dV*dV*dt);
+      lastControlSignals.set(x, y, entry.getValue());
+    }    
+    //update center position metrics
     centerPositions.add(new Point2(voxelCompound.getCenter()));
+    //possibly output snapshot
     Snapshot snapshot = null;
     if (withSnapshot) {
       snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
@@ -110,6 +135,10 @@ public class Locomotion implements Episode<VoxelCompound> {
         values[i] = voxelCompound.getCenter().x;
       } else if (metrics[i].equals(Metric.CENTER_AVG_Y)) {
         values[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
+      } else if (metrics[i].equals(Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS)) {
+        values[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
+      } else if (metrics[i].equals(Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS)) {
+        values[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
       }
     }
     return values;

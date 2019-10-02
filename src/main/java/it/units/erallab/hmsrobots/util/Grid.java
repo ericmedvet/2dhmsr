@@ -17,13 +17,100 @@
 package it.units.erallab.hmsrobots.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Grid<T> {
+public class Grid<T> implements Iterable<Grid.Entry<T>> {
+
+  public static final class Entry<K> {
+
+    private final int x;
+    private final int y;
+    private final K value;
+
+    public Entry(int x, int y, K value) {
+      this.x = x;
+      this.y = y;
+      this.value = value;
+    }
+
+    public int getX() {
+      return x;
+    }
+
+    public int getY() {
+      return y;
+    }
+
+    public K getValue() {
+      return value;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 53 * hash + this.x;
+      hash = 53 * hash + this.y;
+      hash = 53 * hash + Objects.hashCode(this.value);
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final Entry<?> other = (Entry<?>) obj;
+      if (this.x != other.x) {
+        return false;
+      }
+      if (this.y != other.y) {
+        return false;
+      }
+      if (!Objects.equals(this.value, other.value)) {
+        return false;
+      }
+      return true;
+    }
+
+  }
+
+  private static final class GridIterator<K> implements Iterator<Entry<K>> {
+
+    private int c = 0;
+    private final Grid<K> grid;
+
+    public GridIterator(Grid<K> grid) {
+      this.grid = grid;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return c < grid.w * grid.h;
+    }
+
+    @Override
+    public Entry<K> next() {
+      int y = Math.floorDiv(c, grid.w);
+      int x = c % grid.w;
+      c = c + 1;
+      return new Entry<>(x, y, grid.get(x, y));
+    }
+
+  }
 
   private final List<T> ts;
   private final int w;
@@ -90,6 +177,15 @@ public class Grid<T> {
       }
     }
     return grid;
+  }
+
+  @Override
+  public Iterator<Entry<T>> iterator() {
+    return new GridIterator<>(this);
+  }
+  
+  public Collection<T> values() {
+    return Collections.unmodifiableList(ts);
   }
 
 }
