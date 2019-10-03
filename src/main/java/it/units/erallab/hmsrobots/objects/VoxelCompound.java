@@ -150,5 +150,9 @@ public class VoxelCompound implements WorldObject {
       }
     }
   }
+  
+  public Grid<Voxel> getVoxels() {
+    return voxels;
+  }
 
 }

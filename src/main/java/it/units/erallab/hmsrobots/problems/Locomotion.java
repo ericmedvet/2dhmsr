@@ -175,5 +175,9 @@ public class Locomotion implements Episode<VoxelCompound> {
     }
     return new Point2[]{new Point2(minX, minY), new Point2(maxX, maxY)};
   }
+  
+  public double getFinalT() {
+    return finalT;
+  }
 
 }
