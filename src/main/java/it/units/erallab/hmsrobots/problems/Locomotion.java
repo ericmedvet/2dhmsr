@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package it.units.erallab.hmsrobots.problems;
 
 import it.units.erallab.hmsrobots.Snapshot;
@@ -77,10 +76,10 @@ public class Locomotion implements Episode<VoxelCompound> {
     //position robot: x of rightmost point is on 2nd point of profile
     this.voxelCompound = voxelCompound;
     Point2[] boundingBox = boundingBox(voxelCompound);
-    double xLeft = groundProfile[0][1]+INITIAL_PLACEMENT_X_GAP;
+    double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
     double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
-    double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft)/(groundProfile[0][2]-xLeft);
+    double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
     double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
     Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
     Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
@@ -106,12 +105,22 @@ public class Locomotion implements Episode<VoxelCompound> {
     for (Grid.Entry<Double> entry : controlSignals) {
       final int x = entry.getX();
       final int y = entry.getY();
-      final double v = entry.getValue();
-      sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y)+v*v*dt);
-      double dV = v-lastControlSignals.get(x, y);
-      sumOfSquaredDeltaControlSignals.set(x, y, dV*dV*dt);
-      lastControlSignals.set(x, y, entry.getValue());
-    }    
+      if (entry.getValue()!=null) {
+        final double v = entry.getValue();
+        if (sumOfSquaredControlSignals.get(x, y)!=null) {
+          sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y) + v * v * dt);
+        } else {
+          sumOfSquaredControlSignals.set(x, y, v * v * dt);
+        }
+        double dV = v - lastControlSignals.get(x, y);
+        if (sumOfSquaredDeltaControlSignals.get(x, y)!=null) {
+          sumOfSquaredDeltaControlSignals.set(x, y, sumOfSquaredDeltaControlSignals.get(x, y) + dV * dV * dt);
+        } else {
+          sumOfSquaredDeltaControlSignals.set(x, y, dV * dV * dt);
+        }
+        lastControlSignals.set(x, y, entry.getValue());
+      }
+    }
     //update center position metrics
     centerPositions.add(new Point2(voxelCompound.getCenter()));
     //possibly output snapshot
@@ -130,7 +139,7 @@ public class Locomotion implements Episode<VoxelCompound> {
   @Override
   public double[] getMetrics() {
     double[] values = new double[metrics.length];
-    for (int i = 0; i<metrics.length; i++) {
+    for (int i = 0; i < metrics.length; i++) {
       switch (metrics[i]) {
         case CENTER_FINAL_X:
           values[i] = voxelCompound.getCenter().x;
@@ -139,10 +148,10 @@ public class Locomotion implements Episode<VoxelCompound> {
           values[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          values[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
+          values[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
         case AVG_SUM_OF_SQUARED__DIFF_OF_CONTROL_SIGNALS:
-          values[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d!=null).mapToDouble(Double::doubleValue).average().getAsDouble()/((double)centerPositions.size());
+          values[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
         default:
           break;
@@ -175,7 +184,7 @@ public class Locomotion implements Episode<VoxelCompound> {
     }
     return new Point2[]{new Point2(minX, minY), new Point2(maxX, maxY)};
   }
-  
+
   public double getFinalT() {
     return finalT;
   }

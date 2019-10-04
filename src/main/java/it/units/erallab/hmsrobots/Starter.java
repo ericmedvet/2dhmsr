@@ -71,9 +71,9 @@ public class Starter {
     int params = CentralizedMLP.countParams(wormShape, inputs, innerNeurons);
     double[] weights = new double[params];
     for (int i = 0; i < weights.length; i++) {
-      weights[i] = random.nextDouble();
+      weights[i] = random.nextDouble()*2d-1d;
     }
-    //controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
+    controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> Math.sin(2d * Math.PI * 0.2d * t)));
     //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> -1d + 2 * (Math.round(t / 2d) % 2)));
 
@@ -81,12 +81,12 @@ public class Starter {
     functions.set(0, 0, t -> Math.sin(2d * Math.PI * -1d * t));
     int signals = 1;
     innerNeurons = new int[0];
-    int ws = DistributedMLP.countParams(wormShape, EnumSet.of(Voxel.Sensor.AREA_RATIO), signals, innerNeurons);
+    int ws = DistributedMLP.countParams(wormShape, EnumSet.of(Voxel.Sensor.AREA_RATIO, Voxel.Sensor.Y_ROT_VELOCITY), signals, innerNeurons);
     weights = new double[ws];
     for (int i = 0; i<weights.length; i++) {
       weights[i] = random.nextDouble()*2d-1d;
     }
-    controller = new DistributedMLP(wormShape, functions, EnumSet.of(Voxel.Sensor.AREA_RATIO), signals, innerNeurons, weights);
+    //controller = new DistributedMLP(wormShape, functions, EnumSet.of(Voxel.Sensor.AREA_RATIO, Voxel.Sensor.Y_ROT_VELOCITY), signals, innerNeurons, weights);
 
     VoxelCompound vc2 = new VoxelCompound(
             0, 0,
@@ -97,6 +97,10 @@ public class Starter {
 
     Locomotion locomotion = new Locomotion(60, new double[][]{new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25}}, Locomotion.Metric.values());
     locomotion.init(vc2);
+    
+    
+    
+    
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
 
     OnlineViewer viewer = new OnlineViewer(executor);

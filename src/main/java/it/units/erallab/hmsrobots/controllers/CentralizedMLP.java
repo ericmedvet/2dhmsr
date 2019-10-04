@@ -74,7 +74,7 @@ public class CentralizedMLP extends ClosedLoopController {
     //compute output
     double[] outputValues = mlp.apply(inputValues);
     //fill grid
-    Grid<Double> control = Grid.create(voxelGrid.getW(), voxelGrid.getH(), 0d);
+    Grid<Double> control = Grid.create(voxelGrid);
     c = 0;
     for (Grid.Entry<Voxel> entry : voxelGrid) {
       if (entry.getValue() != null) {
