@@ -163,7 +163,7 @@ public class Starter {
                     new PhaseSin(frequency, 1d, wormController),
                     Voxel.Builder.create()
             );
-            Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0,1,999,1000},new double[]{50,0,0,50}}, new Locomotion.Metric[]{Locomotion.Metric.CENTER_FINAL_X});
+            Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0,1,999,1000},new double[]{50,0,0,50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVELLED_X_DIST});
             //execute
             locomotion.init(robot);
             while (!locomotion.isDone()) {

@@ -38,8 +38,10 @@ public class VoxelCompound implements WorldObject {
   private final List<Joint> joints;
   private final Controller controller;
   private final Grid<Voxel> voxels;
+  private final Voxel.Builder builder;
 
   public VoxelCompound(double x, double y, Grid<Boolean> grid, Controller controller, Voxel.Builder builder) {
+    this.builder = builder;
     this.controller = controller;
     joints = new ArrayList<>();
     //construct voxels
@@ -154,5 +156,14 @@ public class VoxelCompound implements WorldObject {
   public Grid<Voxel> getVoxels() {
     return voxels;
   }
-
+  
+  @Override
+  public VoxelCompound clone() {
+    Grid<Boolean> grid = Grid.create(voxels);
+    for (Grid.Entry<Voxel> entry : voxels) {
+      grid.set(entry.getX(), entry.getY(), entry.getValue()!=null);
+    }
+    return new VoxelCompound(0, 0, grid, controller, builder);
+  }
+  
 }

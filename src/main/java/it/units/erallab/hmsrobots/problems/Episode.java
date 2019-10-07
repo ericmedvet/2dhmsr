@@ -14,14 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package it.units.erallab.hmsrobots.problems;
 
 import it.units.erallab.hmsrobots.Snapshot;
 
 public interface Episode<T> {
+
   public void init(T t);
+
   public Snapshot step(double dt, boolean withSnapshot);
+
   public boolean isDone();
+
   public double[] getMetrics();
+    
 }

@@ -37,7 +37,7 @@ public class Locomotion implements Episode<VoxelCompound> {
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
 
   public static enum Metric {
-    CENTER_FINAL_X,
+    TRAVELLED_X_DIST,
     CENTER_AVG_Y,
     AVG_SUM_OF_SQUARED_CONTROL_SIGNALS,
     AVG_SUM_OF_SQUARED__DIFF_OF_CONTROL_SIGNALS
@@ -54,7 +54,8 @@ public class Locomotion implements Episode<VoxelCompound> {
   private Grid<Double> sumOfSquaredControlSignals;
   private Grid<Double> sumOfSquaredDeltaControlSignals;
   private double t;
-  private VoxelCompound voxelCompound;
+  private double initCenterX;
+  private VoxelCompound voxelCompound;  
 
   public Locomotion(double finalT, double[][] groundProfile, Metric[] metrics) {
     this.finalT = finalT;
@@ -85,6 +86,8 @@ public class Locomotion implements Episode<VoxelCompound> {
     Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
     Vector2 movement = targetPoint.subtract(currentPoint);
     voxelCompound.translate(movement);
+    //get initial x
+    initCenterX = voxelCompound.getCenter().x;
     //add robot to world
     voxelCompound.addTo(world);
     worldObjects.add(voxelCompound);
@@ -141,8 +144,8 @@ public class Locomotion implements Episode<VoxelCompound> {
     double[] values = new double[metrics.length];
     for (int i = 0; i < metrics.length; i++) {
       switch (metrics[i]) {
-        case CENTER_FINAL_X:
-          values[i] = voxelCompound.getCenter().x;
+        case TRAVELLED_X_DIST:
+          values[i] = (voxelCompound.getCenter().x-initCenterX)/t;
           break;
         case CENTER_AVG_Y:
           values[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
@@ -188,5 +191,13 @@ public class Locomotion implements Episode<VoxelCompound> {
   public double getFinalT() {
     return finalT;
   }
+
+  public Metric[] metrics() {
+    return metrics;
+  }
+
+  public double getT() {
+    return t;
+  }    
 
 }
