@@ -37,7 +37,7 @@ public class Locomotion implements Episode<VoxelCompound> {
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
 
   public static enum Metric {
-    TRAVELLED_X_DIST(false),
+    TRAVEL_X_VELOCITY(false),
     CENTER_AVG_Y(true),
     AVG_SUM_OF_SQUARED_CONTROL_SIGNALS(true),
     AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS(true);
@@ -155,7 +155,7 @@ public class Locomotion implements Episode<VoxelCompound> {
     double[] values = new double[metrics.length];
     for (int i = 0; i < metrics.length; i++) {
       switch (metrics[i]) {
-        case TRAVELLED_X_DIST:
+        case TRAVEL_X_VELOCITY:
           values[i] = (voxelCompound.getCenter().x-initCenterX)/t;
           break;
         case CENTER_AVG_Y:

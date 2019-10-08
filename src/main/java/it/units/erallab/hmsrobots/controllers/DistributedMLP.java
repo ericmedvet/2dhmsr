@@ -92,6 +92,21 @@ public class DistributedMLP extends ClosedLoopController {
     }
   }
 
+  public DistributedMLP(Grid<Function<Double, Double>> drivingFunctions, Grid<MultiLayerPerceptron> mlps, int signals, EnumSet<Voxel.Sensor> inputs) {
+    super(inputs);
+    this.drivingFunctions = drivingFunctions;
+    this.mlps = mlps;
+    this.signals = signals;
+    lastSignals = Grid.create(mlps);
+    for (Grid.Entry<MultiLayerPerceptron> entry : mlps) {
+      double[][] localSignals = new double[4][];
+      for (int i = 0; i < 4; i++) {
+        localSignals[i] = new double[signals];
+      }
+      lastSignals.set(entry.getX(), entry.getY(), localSignals);
+    }
+  }
+    
   @Override
   public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid) {
     Grid<Double> outputs = Grid.create(voxelGrid);
