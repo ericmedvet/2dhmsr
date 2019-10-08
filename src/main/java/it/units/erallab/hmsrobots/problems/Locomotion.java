@@ -37,10 +37,21 @@ public class Locomotion implements Episode<VoxelCompound> {
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
 
   public static enum Metric {
-    TRAVELLED_X_DIST,
-    CENTER_AVG_Y,
-    AVG_SUM_OF_SQUARED_CONTROL_SIGNALS,
-    AVG_SUM_OF_SQUARED__DIFF_OF_CONTROL_SIGNALS
+    TRAVELLED_X_DIST(false),
+    CENTER_AVG_Y(true),
+    AVG_SUM_OF_SQUARED_CONTROL_SIGNALS(true),
+    AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS(true);
+    
+    private final boolean toMinimize;
+
+    private Metric(boolean toMinimize) {
+      this.toMinimize = toMinimize;
+    }
+
+    public boolean isToMinimize() {
+      return toMinimize;
+    }            
+
   }
 
   private final double finalT;
@@ -153,7 +164,7 @@ public class Locomotion implements Episode<VoxelCompound> {
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
           values[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
-        case AVG_SUM_OF_SQUARED__DIFF_OF_CONTROL_SIGNALS:
+        case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
           values[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
         default:
