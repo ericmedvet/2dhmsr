@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.util.function.Function;
@@ -26,9 +27,9 @@ import java.util.function.Function;
  */
 public class TimeFunction implements Controller {
   
-  private final Grid<Function<Double, Double>> functions;
+  private final Grid<SerializableFunction<Double, Double>> functions;
 
-  public TimeFunction(Grid<Function<Double, Double>> functions) {
+  public TimeFunction(Grid<SerializableFunction<Double, Double>> functions) {
     this.functions = functions;
   }
 
@@ -43,7 +44,7 @@ public class TimeFunction implements Controller {
     return forces;
   }
 
-  public Grid<Function<Double, Double>> getFunctions() {
+  public Grid<SerializableFunction<Double, Double>> getFunctions() {
     return functions;
   }
   

@@ -163,16 +163,7 @@ public class VoxelCompound implements WorldObject {
   public Grid<Voxel> getVoxels() {
     return voxels;
   }
-  
-  @Override
-  public VoxelCompound clone() {
-    Grid<Boolean> grid = Grid.create(voxels);
-    for (Grid.Entry<Voxel> entry : voxels) {
-      grid.set(entry.getX(), entry.getY(), entry.getValue()!=null);
-    }
-    return new VoxelCompound(0, 0, new Description(grid, controller, builder));
-  }
-  
+    
   public Description getDescription() {
     Grid<Boolean> grid = Grid.create(voxels);
     for (Grid.Entry<Voxel> entry : voxels) {

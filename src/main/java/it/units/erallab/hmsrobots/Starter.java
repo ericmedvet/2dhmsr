@@ -88,13 +88,9 @@ public class Starter {
     }
     //controller = new DistributedMLP(wormShape, functions, EnumSet.of(Voxel.Sensor.AREA_RATIO, Voxel.Sensor.Y_ROT_VELOCITY), signals, innerNeurons, weights);
 
-    VoxelCompound vc2 = new VoxelCompound(
-            0, 0,
-            new VoxelCompound.Description(wormShape, controller, Voxel.Builder.create())
-    );
 
     Locomotion locomotion = new Locomotion(60, new double[][]{new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25}}, Locomotion.Metric.values());
-    locomotion.init(vc2);
+    locomotion.init(new VoxelCompound.Description(wormShape, controller, Voxel.Builder.create()));
     
     
     
@@ -154,14 +150,10 @@ public class Starter {
                 wormController.set(lx, ly, (double) lx / (double) shape.getW() * 1 * Math.PI);
               }
             }
-            //prepare robot
-            VoxelCompound robot = new VoxelCompound(
-                    0, 0,
-                    new VoxelCompound.Description(shape, new PhaseSin(frequency, 1d, wormController), Voxel.Builder.create())
-            );
+            //prepare
             Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0,1,999,1000},new double[]{50,0,0,50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY});
             //execute
-            locomotion.init(robot);
+            locomotion.init(new VoxelCompound.Description(shape, new PhaseSin(frequency, 1d, wormController), Voxel.Builder.create()));
             while (!locomotion.isDone()) {
               Snapshot snapshot = locomotion.step(dt, true);
               listener.listen(snapshot);

@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.util.EnumSet;
@@ -27,7 +28,7 @@ import java.util.function.Function;
  */
 public class DistributedMLP extends ClosedLoopController {
 
-  private final Grid<Function<Double, Double>> drivingFunctions;
+  private final Grid<SerializableFunction<Double, Double>> drivingFunctions;
   private final Grid<MultiLayerPerceptron> mlps;
   private final int signals;
 
@@ -48,7 +49,7 @@ public class DistributedMLP extends ClosedLoopController {
     return nOfWeights;
   }
 
-  public DistributedMLP(Grid<Boolean> structure, Grid<Function<Double, Double>> drivingFunctions, EnumSet<Voxel.Sensor> inputs, int signals, int[] innerNeurons, double[] weights) {
+  public DistributedMLP(Grid<Boolean> structure, Grid<SerializableFunction<Double, Double>> drivingFunctions, EnumSet<Voxel.Sensor> inputs, int signals, int[] innerNeurons, double[] weights) {
     super(inputs);
     if ((drivingFunctions.getW() != structure.getW()) || (drivingFunctions.getH() != structure.getH())) {
       throw new IllegalArgumentException("Grids of driving functions and structure should have the same shape");
@@ -92,7 +93,7 @@ public class DistributedMLP extends ClosedLoopController {
     }
   }
 
-  public DistributedMLP(Grid<Function<Double, Double>> drivingFunctions, Grid<MultiLayerPerceptron> mlps, int signals, EnumSet<Voxel.Sensor> inputs) {
+  public DistributedMLP(Grid<SerializableFunction<Double, Double>> drivingFunctions, Grid<MultiLayerPerceptron> mlps, int signals, EnumSet<Voxel.Sensor> inputs) {
     super(inputs);
     this.drivingFunctions = drivingFunctions;
     this.mlps = mlps;

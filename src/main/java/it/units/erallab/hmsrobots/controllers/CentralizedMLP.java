@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 
@@ -28,7 +29,7 @@ import java.util.function.Function;
 public class CentralizedMLP extends ClosedLoopController {
 
   private final MultiLayerPerceptron mlp;
-  private final Function<Double, Double> drivingFunction;
+  private final SerializableFunction<Double, Double> drivingFunction;
 
   public static int countParams(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons) {
     //count active voxels
@@ -42,7 +43,7 @@ public class CentralizedMLP extends ClosedLoopController {
     return MultiLayerPerceptron.countWeights(neurons);
   }
 
-  public CentralizedMLP(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons, double[] weights, Function<Double, Double> drivingFunction) {
+  public CentralizedMLP(Grid<Boolean> structure, EnumSet<Voxel.Sensor> inputs, int[] innerNeurons, double[] weights, SerializableFunction<Double, Double> drivingFunction) {
     super(inputs);
     //count active voxels
     int c = (int) structure.values().stream().filter((b) -> b).count();

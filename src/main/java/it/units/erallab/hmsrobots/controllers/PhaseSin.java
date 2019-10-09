@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import java.util.function.Function;
@@ -30,8 +31,8 @@ public class PhaseSin extends TimeFunction {
     super(getFunctions(frequency, amplitude, phases));
   }
   
-  private static Grid<Function<Double,Double>> getFunctions(final double frequency, final double amplitude, final Grid<Double> phases) {
-    Grid<Function<Double,Double>> functions = Grid.create(phases);
+  private static Grid<SerializableFunction<Double,Double>> getFunctions(final double frequency, final double amplitude, final Grid<Double> phases) {
+    Grid<SerializableFunction<Double,Double>> functions = Grid.create(phases);
     for (Grid.Entry<Double> entry : phases) {
       functions.set(entry.getX(), entry.getY(), t -> Math.sin(2d*Math.PI*frequency*t+entry.getValue())*amplitude);
     }

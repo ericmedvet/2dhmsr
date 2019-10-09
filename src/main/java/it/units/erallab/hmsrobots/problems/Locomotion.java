@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Locomotion implements Episode<VoxelCompound> {
+public class Locomotion implements Episode<VoxelCompound.Description> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -75,7 +75,7 @@ public class Locomotion implements Episode<VoxelCompound> {
   }
 
   @Override
-  public void init(VoxelCompound voxelCompound) {
+  public void init(VoxelCompound.Description voxelCompoundDescription) {
     centerPositions = new ArrayList<>();
     //init time
     t = 0;
@@ -86,7 +86,7 @@ public class Locomotion implements Episode<VoxelCompound> {
     ground.addTo(world);
     worldObjects.add(ground);
     //position robot: x of rightmost point is on 2nd point of profile
-    this.voxelCompound = voxelCompound;
+    voxelCompound = new VoxelCompound(0d, 0d, voxelCompoundDescription);
     Point2[] boundingBox = boundingBox(voxelCompound);
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];

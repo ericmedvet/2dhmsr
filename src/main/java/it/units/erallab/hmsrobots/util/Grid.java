@@ -30,7 +30,7 @@ import java.util.Objects;
  */
 public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
-  public static final class Entry<K> {
+  public static final class Entry<K> implements Serializable {
 
     private final int x;
     private final int y;
