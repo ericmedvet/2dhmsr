@@ -36,9 +36,11 @@ public class TimeFunction implements Controller {
   @Override
   public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid) {
     Grid<Double> forces = Grid.create(voxelGrid);
-    for (int x = 0; x<voxelGrid.getW(); x++) {
-      for (int y = 0; y<voxelGrid.getH(); y++) {
-        forces.set(x, y, functions.get(x, y).apply(t));
+    for (Grid.Entry<Voxel> entry : voxelGrid) {
+      Voxel voxel = entry.getValue();
+      SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
+      if ((voxel!=null)&&(function!=null)) {
+        forces.set(entry.getX(), entry.getY(), function.apply(t));
       }
     }
     return forces;
