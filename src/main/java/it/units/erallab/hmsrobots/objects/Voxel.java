@@ -21,6 +21,7 @@ import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -73,7 +74,7 @@ public class Voxel implements WorldObject {
 
   }
 
-  public static class Builder {
+  public static class Builder implements Serializable {
 
     private final static double SIDE_LENGTH = 3d;
     private final static double MASS_SIDE_LENGTH_RATIO = .35d;

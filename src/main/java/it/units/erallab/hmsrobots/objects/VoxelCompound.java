@@ -20,6 +20,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,16 +40,41 @@ public class VoxelCompound implements WorldObject {
   private final Controller controller;
   private final Grid<Voxel> voxels;
   private final Voxel.Builder builder;
+  
+  public static class Description implements Serializable {
+    private final Grid<Boolean> structure;
+    private final Controller controller;
+    private final Voxel.Builder builder;
 
-  public VoxelCompound(double x, double y, Grid<Boolean> grid, Controller controller, Voxel.Builder builder) {
-    this.builder = builder;
-    this.controller = controller;
+    public Description(Grid<Boolean> structure, Controller controller, Voxel.Builder builder) {
+      this.structure = structure;
+      this.controller = controller;
+      this.builder = builder;
+    }
+
+    public Grid<Boolean> getStructure() {
+      return structure;
+    }
+
+    public Controller getController() {
+      return controller;
+    }
+
+    public Voxel.Builder getBuilder() {
+      return builder;
+    }
+    
+  }
+
+  public VoxelCompound(double x, double y, Description description) {
+    this.builder = description.getBuilder();
+    this.controller = description.getController();
     joints = new ArrayList<>();
     //construct voxels
-    voxels = Grid.create(grid);
-    for (int gx = 0; gx < grid.getW(); gx++) {
-      for (int gy = 0; gy < grid.getH(); gy++) {
-        if (grid.get(gx, gy)) {
+    voxels = Grid.create(description.getStructure());
+    for (int gx = 0; gx < description.getStructure().getW(); gx++) {
+      for (int gy = 0; gy < description.getStructure().getH(); gy++) {
+        if (description.getStructure().get(gx, gy)) {
           Voxel voxel = builder.build(x + (double) gx * builder.getSideLength(), y + gy * builder.getSideLength());
           voxels.set(gx, gy, voxel);
           //check for adjacent voxels
@@ -67,31 +93,12 @@ public class VoxelCompound implements WorldObject {
     }
   }
 
-  public VoxelCompound(double x, double y, String grid, Controller controller, Voxel.Builder builder) {
-    this(x, y, fromString(grid), controller, builder);
-  }
-
   private static Joint join(Body body1, Body body2) {
     WeldJoint joint = new WeldJoint(body1, body2, new Vector2(
             (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
             (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
     return joint;
-  }
-
-  private static Grid<Boolean> fromString(String s) {
-    String[] rows = s.split(",");
-    Grid<Boolean> grid = Grid.create(rows[0].length(), rows.length, false);
-    for (int y = 0; y < grid.getH(); y++) {
-      for (int x = 0; x < grid.getW(); x++) {
-        if (x >= rows[y].length()) {
-          grid.set(x, grid.getH() - y - 1, false);
-        } else {
-          grid.set(x, grid.getH() - y - 1, rows[y].charAt(x) != ' ');
-        }
-      }
-    }
-    return grid;
   }
 
   @Override
@@ -163,7 +170,15 @@ public class VoxelCompound implements WorldObject {
     for (Grid.Entry<Voxel> entry : voxels) {
       grid.set(entry.getX(), entry.getY(), entry.getValue()!=null);
     }
-    return new VoxelCompound(0, 0, grid, controller, builder);
+    return new VoxelCompound(0, 0, new Description(grid, controller, builder));
+  }
+  
+  public Description getDescription() {
+    Grid<Boolean> grid = Grid.create(voxels);
+    for (Grid.Entry<Voxel> entry : voxels) {
+      grid.set(entry.getX(), entry.getY(), entry.getValue()!=null);
+    }
+    return new Description(grid, controller, builder);
   }
   
 }

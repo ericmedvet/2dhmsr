@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,7 +28,7 @@ import java.util.Objects;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Grid<T> implements Iterable<Grid.Entry<T>> {
+public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
   public static final class Entry<K> {
 

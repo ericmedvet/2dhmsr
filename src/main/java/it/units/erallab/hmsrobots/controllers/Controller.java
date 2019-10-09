@@ -18,13 +18,14 @@ package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
+import java.io.Serializable;
 
 /**
  *
  * @author eric
  */
 @FunctionalInterface
-public interface Controller {
+public interface Controller extends Serializable {
   
   public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid);
   

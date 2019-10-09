@@ -90,9 +90,7 @@ public class Starter {
 
     VoxelCompound vc2 = new VoxelCompound(
             0, 0,
-            wormShape,
-            controller,
-            Voxel.Builder.create()
+            new VoxelCompound.Description(wormShape, controller, Voxel.Builder.create())
     );
 
     Locomotion locomotion = new Locomotion(60, new double[][]{new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25}}, Locomotion.Metric.values());
@@ -159,9 +157,7 @@ public class Starter {
             //prepare robot
             VoxelCompound robot = new VoxelCompound(
                     0, 0,
-                    shape,
-                    new PhaseSin(frequency, 1d, wormController),
-                    Voxel.Builder.create()
+                    new VoxelCompound.Description(shape, new PhaseSin(frequency, 1d, wormController), Voxel.Builder.create())
             );
             Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0,1,999,1000},new double[]{50,0,0,50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY});
             //execute
