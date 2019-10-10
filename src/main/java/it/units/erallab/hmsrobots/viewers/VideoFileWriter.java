@@ -44,7 +44,7 @@ import org.jcodec.common.model.Rational;
  */
 public class VideoFileWriter implements Flushable {
 
-  private final int ffMemory = 50;
+  private final int ffMemory = 25;
   private final double ffMargin = 1d;
   private final int w = 1200;
   private final int h = 600;
@@ -157,7 +157,7 @@ public class VideoFileWriter implements Flushable {
     );
   }
 
-  public Listener listener(final int lX, final int lY) {
+  public SnapshotListener listener(final int lX, final int lY) {
     return (Snapshot snapshot) -> {
       synchronized (queueGrid) {
         queueGrid.get(lX, lY).offer(snapshot);
@@ -167,7 +167,7 @@ public class VideoFileWriter implements Flushable {
   }
 
   private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
-    L.info(String.format("Writing frame %d/%d%n", drawnCount, drawnCount + gridQueue.size()));
+    L.info(String.format("Writing frame %d/%d", drawnCount, drawnCount + gridQueue.size()));
     //set local clip size
     double localW = (double) w / (double) namesGrid.getW();
     double localH = (double) h / (double) namesGrid.getH();

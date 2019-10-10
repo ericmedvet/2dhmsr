@@ -22,7 +22,7 @@ import it.units.erallab.hmsrobots.Snapshot;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public interface Listener {
+public interface SnapshotListener {
 
   public void listen(Snapshot snapshot);
 

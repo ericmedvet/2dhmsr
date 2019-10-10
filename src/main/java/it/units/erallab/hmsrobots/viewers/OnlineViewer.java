@@ -45,7 +45,7 @@ import javax.swing.JSlider;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class OnlineViewer extends JFrame implements Listener {
+public class OnlineViewer extends JFrame implements SnapshotListener {
 
   private final static int TARGET_FPS = 50;
   private final static int MAX_QUEUE_SIZE = 10000;

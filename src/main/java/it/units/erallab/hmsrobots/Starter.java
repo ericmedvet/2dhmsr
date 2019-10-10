@@ -22,7 +22,6 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.viewers.Listener;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 
 /**
  *
@@ -139,7 +139,7 @@ public class Starter {
       for (int y = 0; y < names.getH(); y++) {
         final Grid<Boolean> shape = shapes.get(x);
         final double frequency = frequencies.get(y);
-        final Listener listener = videoFileWriter.listener(x, y);
+        final SnapshotListener listener = videoFileWriter.listener(x, y);
         final String name = names.get(x, y);
         futures.add(executor.submit(() -> {
           try {
