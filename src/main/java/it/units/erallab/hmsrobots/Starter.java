@@ -17,11 +17,15 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.controllers.*;
+import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.problems.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
+import it.units.erallab.hmsrobots.objects.WorldObject;
+import it.units.erallab.hmsrobots.util.SerializableFunction;
+import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
 import java.io.File;
 import java.io.IOException;
@@ -36,74 +40,51 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import java.util.stream.Collectors;
+import org.dyn4j.dynamics.World;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Starter {
-
-  public static void main(String[] args) throws IOException {    
-
-    //gridStarter(30d, 0.01d);
-    //System.exit(0);
-
-    int wormW = 10;
-    int wormH = 4;
-    Random random = new Random(1);
-    Grid<Double> wormController = Grid.create(wormW, wormH, 0d);
-    for (int x = 0; x < wormW; x++) {
-      for (int y = 0; y < wormH; y++) {
-        wormController.set(x, y, (double) x / (double) wormH * 1 * Math.PI);
-      }
-    }
-    Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
-    for (int x = 2; x < 8; x++) {
-      for (int y = 0; y < 2; y++) {
-        wormShape.set(x, y, false);
-      }
-    }
-
-    Controller controller = new PhaseSin(-1d, 1d, wormController);
-
-    EnumSet<Voxel.Sensor> inputs = EnumSet.of(Voxel.Sensor.AREA_RATIO);
-    int[] innerNeurons = new int[]{20};
-    int params = CentralizedMLP.countParams(wormShape, inputs, innerNeurons);
-    double[] weights = new double[params];
-    for (int i = 0; i < weights.length; i++) {
-      weights[i] = random.nextDouble()*2d-1d;
-    }
-    controller = new CentralizedMLP(wormShape, inputs, innerNeurons, weights, t -> Math.sin(2d * Math.PI * -1d * t));
-    //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> Math.sin(2d * Math.PI * 0.2d * t)));
-    //controller = new TimeFunction(Grid.create(wormShape.getW(), wormShape.getH(), t -> -1d + 2 * (Math.round(t / 2d) % 2)));
-
-    Grid<Function<Double, Double>> functions = Grid.create(wormShape);
-    functions.set(0, 0, t -> Math.sin(2d * Math.PI * -1d * t));
-    int signals = 1;
-    innerNeurons = new int[0];
-    int ws = DistributedMLP.countParams(wormShape, EnumSet.of(Voxel.Sensor.AREA_RATIO, Voxel.Sensor.Y_ROT_VELOCITY), signals, innerNeurons);
-    weights = new double[ws];
-    for (int i = 0; i<weights.length; i++) {
-      weights[i] = random.nextDouble()*2d-1d;
-    }
-    //controller = new DistributedMLP(wormShape, functions, EnumSet.of(Voxel.Sensor.AREA_RATIO, Voxel.Sensor.Y_ROT_VELOCITY), signals, innerNeurons, weights);
-
-
-    Locomotion locomotion = new Locomotion(60, new double[][]{new double[]{0, 1, 100, 400, 999, 1000}, new double[]{25, 0, 4, 10, 0, 25}}, Locomotion.Metric.values());
-    locomotion.init(new VoxelCompound.Description(wormShape, controller, Voxel.Builder.create()));
+  
+  public static void main(String[] args) throws IOException {
     
-    
-    
-    
+    List<WorldObject> worldObjects = new ArrayList<>();
+    VoxelCompound vc1 = new VoxelCompound(110, 10, new VoxelCompound.Description(
+            Grid.create(5, 5, true),
+            new TimeFunction(Grid.create(5, 5, t -> {return Math.signum(Math.sin(2d*Math.PI*t*0.5d));})),
+            Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE)
+    ));
+    VoxelCompound vc2 = new VoxelCompound(140, 10, new VoxelCompound.Description(
+            Grid.create(2, 10, true),
+            null,
+            Voxel.Builder.create().mass(25d).springScaffoldings(EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS))
+    ));
+    Ground ground = new Ground(new double[]{0, 300}, new double[]{0, 0});
+    //worldObjects.add(vc1);
+    worldObjects.add(vc2);
+    worldObjects.add(ground);
+    World world = new World();
+    worldObjects.forEach((worldObject) -> {
+      worldObject.addTo(world);
+    });
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
-
     OnlineViewer viewer = new OnlineViewer(executor);
     viewer.start();
-
-    double dt = 0.01d;
+    final double dt = 0.01d;
+    final TimeAccumulator t = new TimeAccumulator();
     Runnable runnable = () -> {
       try {
-        Snapshot snapshot = locomotion.step(dt, true);
+        t.add(dt);
+        worldObjects.forEach((worldObject) -> {
+          if (worldObject instanceof VoxelCompound) {
+            ((VoxelCompound) worldObject).control(t.getT(), dt);
+          }          
+        });
+        world.update(dt);
+        Snapshot snapshot = snapshot = new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
         viewer.listen(snapshot);
       } catch (Throwable ex) {
         ex.printStackTrace();
@@ -111,9 +92,9 @@ public class Starter {
       }
     };
     executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 1.1d), TimeUnit.MILLISECONDS);
-
+    
   }
-
+  
   private static void gridStarter(double finalT, double dt) throws IOException {
     final List<Grid<Boolean>> shapes = new ArrayList<>();
     shapes.add(Grid.create(10, 5, true));
@@ -151,7 +132,7 @@ public class Starter {
               }
             }
             //prepare
-            Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0,1,999,1000},new double[]{50,0,0,50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY});
+            Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0, 1, 999, 1000}, new double[]{50, 0, 0, 50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY});
             //execute
             locomotion.init(new VoxelCompound.Description(shape, new PhaseSin(frequency, 1d, wormController), Voxel.Builder.create()));
             while (!locomotion.isDone()) {
@@ -177,5 +158,5 @@ public class Starter {
     }
     videoFileWriter.flush();
   }
-
+  
 }

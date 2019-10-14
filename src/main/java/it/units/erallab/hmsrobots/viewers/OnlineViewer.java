@@ -117,7 +117,6 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     getContentPane().add(canvas, BorderLayout.CENTER);
     getContentPane().add(bottomPanel, BorderLayout.PAGE_END);
     getContentPane().add(topPanel, BorderLayout.PAGE_START);
-    //add(label);
     //pack
     pack();
   }
@@ -126,9 +125,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     setVisible(true);
     canvas.setIgnoreRepaint(true);
     canvas.createBufferStrategy(2);
-
-    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(50, 1d);
-
+    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(25, 1d);
     Runnable drawer = new Runnable() {
       private long lastUpdateMillis = System.currentTimeMillis();
 
