@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
+import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.problems.Locomotion;
@@ -24,7 +25,6 @@ import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
 import java.io.File;
@@ -36,7 +36,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
@@ -48,23 +47,71 @@ import org.dyn4j.dynamics.World;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Starter {
-  
+
   public static void main(String[] args) throws IOException {
-    
     List<WorldObject> worldObjects = new ArrayList<>();
-    VoxelCompound vc1 = new VoxelCompound(110, 10, new VoxelCompound.Description(
-            Grid.create(5, 5, true),
-            new TimeFunction(Grid.create(5, 5, t -> {return Math.signum(Math.sin(2d*Math.PI*t*0.5d));})),
-            Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE)
+    Grid<Boolean> structure = Grid.create(7, 5, (x, y) -> (x < 2) || (x >= 5) || (y > 2));
+    //simple
+    VoxelCompound vc1 = new VoxelCompound(10, 10, new VoxelCompound.Description(
+            structure,
+            new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
+              return Math.signum(Math.sin(2d * Math.PI * t * 0.5d));
+            })),
+            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
     ));
-    VoxelCompound vc2 = new VoxelCompound(140, 10, new VoxelCompound.Description(
-            Grid.create(2, 10, true),
-            null,
-            Voxel.Builder.create().mass(25d).springScaffoldings(EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS))
+    //centralized mlp
+    Grid<List<Voxel.Sensor>> sensorGrid = Grid.create(structure.getW(), structure.getH(),
+            (x, y) -> {
+              List<Voxel.Sensor> sensors = new ArrayList<>();
+              if (y > 2) {
+                sensors.add(Voxel.Sensor.Y_ROT_VELOCITY);
+              }
+              if (y == 0) {
+                sensors.add(Voxel.Sensor.AREA_RATIO);
+              }
+              return sensors;
+            }
+    );
+    int[] innerNeurons = new int[]{10};
+    int nOfWeights = CentralizedMLP.countParams(structure, sensorGrid, innerNeurons);
+    double[] weights = new double[nOfWeights];
+    Random random = new Random();
+    for (int i = 0; i < weights.length; i++) {
+      weights[i] = random.nextDouble();
+    }
+    VoxelCompound vc2 = new VoxelCompound(10, 10, new VoxelCompound.Description(
+            structure,
+            new CentralizedMLP(structure, sensorGrid, innerNeurons, weights, t -> Math.sin(2d * Math.PI * t * 0.5d)),
+            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
     ));
-    Ground ground = new Ground(new double[]{0, 300}, new double[]{0, 0});
-    //worldObjects.add(vc1);
-    worldObjects.add(vc2);
+    //distributed mlp
+    innerNeurons = new int[0];
+    nOfWeights = DistributedMLP.countParams(structure, sensorGrid, 1, innerNeurons);
+    weights = new double[nOfWeights];
+    for (int i = 0; i < weights.length; i++) {
+      weights[i] = random.nextDouble();
+    }
+    VoxelCompound vc3 = new VoxelCompound(10, 10, new VoxelCompound.Description(
+            structure,
+            new DistributedMLP(
+                    structure,
+                    Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+                      if (x==3) {
+                        return t -> Math.sin(2d * Math.PI * t * 0.5d);
+                      } else {
+                        return t -> 0d;
+                      }
+                    }),
+                    sensorGrid,
+                    1,
+                    innerNeurons,
+                    weights
+            ),
+            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
+    ));
+    //world
+    Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
+    worldObjects.add(vc3);
     worldObjects.add(ground);
     World world = new World();
     worldObjects.forEach((worldObject) -> {
@@ -81,7 +128,7 @@ public class Starter {
         worldObjects.forEach((worldObject) -> {
           if (worldObject instanceof VoxelCompound) {
             ((VoxelCompound) worldObject).control(t.getT(), dt);
-          }          
+          }
         });
         world.update(dt);
         Snapshot snapshot = snapshot = new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
@@ -92,9 +139,9 @@ public class Starter {
       }
     };
     executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 1.1d), TimeUnit.MILLISECONDS);
-    
+
   }
-  
+
   private static void gridStarter(double finalT, double dt) throws IOException {
     final List<Grid<Boolean>> shapes = new ArrayList<>();
     shapes.add(Grid.create(10, 5, true));
@@ -134,7 +181,11 @@ public class Starter {
             //prepare
             Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0, 1, 999, 1000}, new double[]{50, 0, 0, 50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY});
             //execute
-            locomotion.init(new VoxelCompound.Description(shape, new PhaseSin(frequency, 1d, wormController), Voxel.Builder.create()));
+            locomotion.init(new VoxelCompound.Description(
+                    shape,
+                    new PhaseSin(frequency, 1d, wormController),
+                    Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create()))
+            );
             while (!locomotion.isDone()) {
               Snapshot snapshot = locomotion.step(dt, true);
               listener.listen(snapshot);
@@ -158,5 +209,5 @@ public class Starter {
     }
     videoFileWriter.flush();
   }
-  
+
 }

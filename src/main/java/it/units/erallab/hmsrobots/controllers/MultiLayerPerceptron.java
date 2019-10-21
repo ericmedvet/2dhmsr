@@ -104,7 +104,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   @Override
   public double[] apply(double[] input) {
     if (input.length != neurons[0] - 1) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d", neurons.length - 1));
+      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons.length - 1, input.length));
     }
     double[][] values = new double[neurons.length][];
     values[0] = new double[neurons[0]];
