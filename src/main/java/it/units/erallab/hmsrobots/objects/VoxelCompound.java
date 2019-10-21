@@ -39,18 +39,18 @@ public class VoxelCompound implements WorldObject {
   private final List<Joint> joints;
   private final Controller controller;
   private final Grid<Voxel> voxels;
-  private final Voxel.Builder builder;
+  private final Description description;
 
   public static class Description implements Serializable {
 
     private final Grid<Boolean> structure;
     private final Controller controller;
-    private final Voxel.Builder builder;
+    private final Grid<Voxel.Builder> builderGrid;
 
-    public Description(Grid<Boolean> structure, Controller controller, Voxel.Builder builder) {
+    public Description(Grid<Boolean> structure, Controller controller, Grid<Voxel.Builder> builderGrid) {
       this.structure = structure;
       this.controller = controller;
-      this.builder = builder;
+      this.builderGrid = builderGrid;
     }
 
     public Grid<Boolean> getStructure() {
@@ -61,14 +61,14 @@ public class VoxelCompound implements WorldObject {
       return controller;
     }
 
-    public Voxel.Builder getBuilder() {
-      return builder;
+    public Grid<Voxel.Builder> getBuilderGrid() {
+      return builderGrid;
     }
 
   }
 
   public VoxelCompound(double x, double y, Description description) {
-    this.builder = description.getBuilder();
+    this.description = description;
     this.controller = description.getController();
     joints = new ArrayList<>();
     //construct voxels
@@ -76,7 +76,11 @@ public class VoxelCompound implements WorldObject {
     for (int gx = 0; gx < description.getStructure().getW(); gx++) {
       for (int gy = 0; gy < description.getStructure().getH(); gy++) {
         if (description.getStructure().get(gx, gy)) {
-          Voxel voxel = builder.build(x + (double) gx * builder.getSideLength(), y + gy * builder.getSideLength(), this);
+          Voxel voxel = description.getBuilderGrid().get(gx, gy).build(
+                  x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
+                  y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),
+                  this
+          );
           voxels.set(gx, gy, voxel);
           //check for adjacent voxels
           if ((gx > 0) && (voxels.get(gx - 1, gy) != null)) {
@@ -168,11 +172,7 @@ public class VoxelCompound implements WorldObject {
   }
 
   public Description getDescription() {
-    Grid<Boolean> grid = Grid.create(voxels);
-    for (Grid.Entry<Voxel> entry : voxels) {
-      grid.set(entry.getX(), entry.getY(), entry.getValue() != null);
-    }
-    return new Description(grid, controller, builder);
+    return description;
   }
 
 }

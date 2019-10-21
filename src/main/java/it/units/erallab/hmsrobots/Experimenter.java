@@ -61,7 +61,11 @@ public class Experimenter {
     Grid<Boolean> wormShape = Grid.create(wormW, wormH, true);
     VoxelCompound vc2 = new VoxelCompound(
             50, 10,
-            new VoxelCompound.Description(wormShape, new PhaseSin(1d, 1d, wormController), Voxel.Builder.create())
+            new VoxelCompound.Description(
+                    wormShape,
+                    new PhaseSin(1d, 1d, wormController),
+                    Grid.create(wormShape.getW(), wormShape.getH(), Voxel.Builder.create())
+            )
     );
     vc2.addTo(world);
     worldObjects.add(vc2);
