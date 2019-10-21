@@ -17,7 +17,9 @@
 package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Grid;
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  *
@@ -25,27 +27,27 @@ import java.util.EnumSet;
  */
 public abstract class ClosedLoopController implements Controller {
 
-  private final EnumSet<Voxel.Sensor> inputs;
+  private final Grid<List<Voxel.Sensor>> sensorsGrid;
 
-  public ClosedLoopController(EnumSet<Voxel.Sensor> inputs) {
-    this.inputs = inputs;
+  public ClosedLoopController(Grid<List<Voxel.Sensor>> sensorsGrid) {
+    this.sensorsGrid = sensorsGrid;
   }
 
-  protected double[] collectInputs(Voxel voxel) {
-    double[] values = new double[inputs.size()];
-    collectInputs(voxel, values, 0);
+  public Grid<List<Voxel.Sensor>> getSensorsGrid() {
+    return sensorsGrid;
+  }
+
+  protected double[] collectInputs(Voxel voxel, List<Voxel.Sensor> sensors) {
+    double[] values = new double[sensors.size()];
+    collectInputs(voxel, sensors, values, 0);
     return values;
   }
   
-  protected void collectInputs(Voxel voxel, double[] values, int c) {
-    for (Voxel.Sensor sensor : inputs) {
+  protected void collectInputs(Voxel voxel, List<Voxel.Sensor> sensors, double[] values, int c) {
+    for (Voxel.Sensor sensor : sensors) {
       values[c] = voxel.getSensorReading(sensor);
       c = c + 1;
     }
-  }
-
-  public EnumSet<Voxel.Sensor> getInputs() {
-    return inputs;
   }
 
 }

@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 /**
  *
@@ -153,15 +155,20 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   public static <K> Grid<K> create(int w, int h, K k) {
+    return create(w, h, (x, y) -> k);
+  }
+
+  public static <K> Grid<K> create(int w, int h, BiFunction<Integer, Integer, K> fillerFunction) {
     Grid<K> grid = new Grid<>(w, h, null);
     for (int x = 0; x < grid.getW(); x++) {
       for (int y = 0; y < grid.getH(); y++) {
-        grid.set(x, y, k);
+        grid.set(x, y, fillerFunction.apply(x, y));
       }
     }
     return grid;
   }
-
+  
+  
   public static <K> Grid<K> create(int w, int h) {
     return create(w, h, (K) null);
   }
@@ -187,6 +194,10 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   
   public Collection<T> values() {
     return Collections.unmodifiableList(ts);
+  }
+  
+  public long count(Predicate<T> predicate) {
+    return values().stream().filter(predicate).count();
   }
 
 }
