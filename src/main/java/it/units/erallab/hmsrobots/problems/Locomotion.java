@@ -87,7 +87,7 @@ public class Locomotion implements Episode<VoxelCompound.Description> {
     worldObjects.add(ground);
     //position robot: x of rightmost point is on 2nd point of profile
     voxelCompound = new VoxelCompound(0d, 0d, voxelCompoundDescription);
-    Point2[] boundingBox = boundingBox(voxelCompound);
+    Point2[] boundingBox = voxelCompound.boundingBox();
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
     double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
@@ -172,31 +172,6 @@ public class Locomotion implements Episode<VoxelCompound.Description> {
       }
     }
     return values;
-  }
-
-  private Point2[] boundingBox(VoxelCompound voxelCompound) {
-    double minX = Double.POSITIVE_INFINITY;
-    double minY = Double.POSITIVE_INFINITY;
-    double maxX = Double.NEGATIVE_INFINITY;
-    double maxY = Double.NEGATIVE_INFINITY;
-    Compound compound = voxelCompound.getSnapshot();
-    for (Component component : compound.getComponents()) {
-      for (Point2 p : component.getPoly().getVertexes()) {
-        if (p.x < minX) {
-          minX = p.x;
-        }
-        if (p.y < minY) {
-          minY = p.y;
-        }
-        if (p.x > maxX) {
-          maxX = p.x;
-        }
-        if (p.y > maxY) {
-          maxY = p.y;
-        }
-      }
-    }
-    return new Point2[]{new Point2(minX, minY), new Point2(maxX, maxY)};
   }
 
   public double getFinalT() {

@@ -40,8 +40,6 @@ public class Ground implements WorldObject {
   private final List<Body> bodies;
   private final List<Vector2> polygon;
   
-  private Compound snapshot;
-
   public Ground(double[] xs, double[] ys) {
     if (xs.length != ys.length) {
       throw new IllegalArgumentException("xs[] and ys[] must have the same length");
@@ -82,7 +80,6 @@ public class Ground implements WorldObject {
 
   @Override
   public Compound getSnapshot() {
-    //TODO will not reflect ground movements
     Point2[] vertices = new Point2[polygon.size()];
     for (int i = 0; i<vertices.length; i++) {
       vertices[i] = new Point2(polygon.get(i));
@@ -90,12 +87,15 @@ public class Ground implements WorldObject {
     return new Compound(this.getClass(), new Component(Component.Type.ENCLOSING, new Poly(vertices)));
   }
 
-
   @Override
   public void addTo(World world) {
     for (Body body : bodies) {
       world.addBody(body);
     }
+  }
+
+  public List<Body> getBodies() {
+    return bodies;
   }
 
 }

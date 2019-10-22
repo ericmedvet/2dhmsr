@@ -37,7 +37,10 @@ public class Point2 implements Serializable {
     x = v.x;
     y = v.y;
   }
-  
-  
+
+  @Override
+  public String toString() {
+    return String.format("(%5.3f, %5.3f)", x, y);
+  }
   
 }

@@ -131,7 +131,7 @@ public class Starter {
           }
         });
         world.update(dt);
-        Snapshot snapshot = snapshot = new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
+        Snapshot snapshot = new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
         viewer.listen(snapshot);
       } catch (Throwable ex) {
         ex.printStackTrace();
