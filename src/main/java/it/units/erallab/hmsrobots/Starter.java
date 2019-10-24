@@ -107,7 +107,7 @@ public class Starter {
                     innerNeurons,
                     weights
             ),
-            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
+            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().massCollisionFlag(true))
     ));
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});

@@ -83,6 +83,8 @@ public class Voxel implements WorldObject {
     private final static double MASS_SIDE_LENGTH_RATIO = .35d;
     private final static double SPRING_F = 25d;
     private final static double SPRING_D = 1d;
+    private final static double MASS_LINEAR_DUMPING = 0.5d;
+    private final static double MASS_ANGULAR_DUMPING = 0.5d;
     private final static double MAX_FORCE = 1000d; //not used in forceMethod=DISTANCE
     private final static double AREA_RATIO_OFFSET = 0.25d; //not used in forceMethod=FORCE
     private final static double FRICTION = 0.5d;
@@ -102,6 +104,8 @@ public class Voxel implements WorldObject {
     private double massSideLengthRatio = MASS_SIDE_LENGTH_RATIO;
     private double springF = SPRING_F;
     private double springD = SPRING_D;
+    private double massLinearDamping = MASS_LINEAR_DUMPING;
+    private double massAngularDamping = MASS_ANGULAR_DUMPING;
     private double maxForce = MAX_FORCE;
     private double areaRatioOffset = AREA_RATIO_OFFSET;
     private double friction = FRICTION;
@@ -133,6 +137,16 @@ public class Voxel implements WorldObject {
 
     public Builder springD(double springD) {
       this.springD = springD;
+      return this;
+    }
+
+    public Builder massLinearDamping(double massLinearDamping) {
+      this.massLinearDamping = massLinearDamping;
+      return this;
+    }
+
+    public Builder massAngularDamping(double massAngularDamping) {
+      this.massAngularDamping = massAngularDamping;
       return this;
     }
 
@@ -195,6 +209,14 @@ public class Voxel implements WorldObject {
 
     public double getSpringD() {
       return springD;
+    }
+
+    public double getMassLinearDamping() {
+      return massLinearDamping;
+    }
+
+    public double getMassAngularDamping() {
+      return massAngularDamping;
     }
 
     public double getMaxForce() {
@@ -261,6 +283,8 @@ public class Voxel implements WorldObject {
   private final double massSideLengthRatio;
   private final double springF;
   private final double springD;
+  private final double massLinearDamping;
+  private final double massAngularDamping;
   private final double maxForce;
   private final double areaRatioOffset;
   private final double friction;
@@ -287,6 +311,8 @@ public class Voxel implements WorldObject {
     massSideLengthRatio = builder.getMassSideLengthRatio();
     springF = builder.getSpringF();
     springD = builder.getSpringD();
+    massLinearDamping = builder.getMassLinearDamping();
+    massAngularDamping = builder.getMassAngularDamping();
     maxForce = builder.getMaxForce();
     areaRatioOffset = builder.getAreaRatioOffset();
     friction = builder.getFriction();
@@ -316,6 +342,8 @@ public class Voxel implements WorldObject {
     ParentFilter filter = new ParentFilter(parent);
     for (Body body : vertexBodies) {
       body.setMass(MassType.NORMAL);
+      body.setLinearDamping(massLinearDamping);
+      body.setAngularDamping(massAngularDamping);
       body.translate(x, y);
       if (massCollisionFlag) {
         body.getFixture(0).setFilter(filter);
