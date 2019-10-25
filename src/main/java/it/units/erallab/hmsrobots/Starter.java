@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.objects.Ground;
@@ -40,6 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.stream.Collectors;
+import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 
 /**
@@ -96,7 +98,7 @@ public class Starter {
             new DistributedMLP(
                     structure,
                     Grid.create(structure.getW(), structure.getH(), (x, y) -> {
-                      if (x==3) {
+                      if (x == 3) {
                         return t -> Math.sin(2d * Math.PI * t * 0.5d);
                       } else {
                         return t -> 0d;
@@ -120,7 +122,7 @@ public class Starter {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
     OnlineViewer viewer = new OnlineViewer(executor);
     viewer.start();
-    final double dt = 0.01d;
+    final double dt = world.getSettings().getStepFrequency();
     final TimeAccumulator t = new TimeAccumulator();
     Runnable runnable = () -> {
       try {
@@ -130,7 +132,7 @@ public class Starter {
             ((VoxelCompound) worldObject).control(t.getT(), dt);
           }
         });
-        world.update(dt);
+        world.step(1);
         Snapshot snapshot = new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
         viewer.listen(snapshot);
       } catch (Throwable ex) {
@@ -179,19 +181,20 @@ public class Starter {
               }
             }
             //prepare
-            Locomotion locomotion = new Locomotion(finalT, new double[][]{new double[]{0, 1, 999, 1000}, new double[]{50, 0, 0, 50}}, new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY});
+            Locomotion locomotion = new Locomotion(
+                    finalT,
+                    new double[][]{new double[]{0, 1, 999, 1000},
+                    new double[]{50, 0, 0, 50}},
+                    new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY},
+                    listener,
+                    new Settings()
+            );
             //execute
-            locomotion.init(new VoxelCompound.Description(
+            Map<String, Double> results = locomotion.apply(new VoxelCompound.Description(
                     shape,
                     new PhaseSin(frequency, 1d, wormController),
-                    Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create()))
-            );
-            while (!locomotion.isDone()) {
-              Snapshot snapshot = locomotion.step(dt, true);
-              listener.listen(snapshot);
-            }
-            double[] metrics = locomotion.getMetrics();
-            System.out.printf("Result is %s%n", Arrays.toString(metrics));
+                    Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create())));
+            System.out.printf("Result is %s%n", results);
           } catch (Throwable t) {
             t.printStackTrace();
           }

@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Range;
-import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;

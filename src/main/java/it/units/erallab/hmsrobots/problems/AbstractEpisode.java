@@ -14,37 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots;
+package it.units.erallab.hmsrobots.problems;
 
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
-import java.io.Serializable;
-import java.util.Collection;
+import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.dyn4j.dynamics.Settings;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Snapshot implements Serializable, Comparable<Snapshot> {
+public abstract class AbstractEpisode<T> implements Episode<T> {
   
-  private final double time;
-  private final Collection<Compound> compounds;
+  protected final SnapshotListener listener;
+  protected final Settings settings;
 
-  public Snapshot(double time, Collection<Compound> compounds) {
-    this.time = time;
-    this.compounds = compounds;
+  public AbstractEpisode(SnapshotListener listener, Settings settings) {
+    this.listener = listener;
+    this.settings = settings;
   }
 
-  public double getTime() {
-    return time;
+  public SnapshotListener getListener() {
+    return listener;
   }
 
-  public Collection<Compound> getCompounds() {
-    return compounds;
+  public Settings getSettings() {
+    return settings;
   }
-
-  @Override
-  public int compareTo(Snapshot other) {
-    return Double.compare(time, other.time);
-  }
-  
+    
 }

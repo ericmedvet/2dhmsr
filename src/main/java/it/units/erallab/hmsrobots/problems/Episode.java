@@ -16,16 +16,9 @@
  */
 package it.units.erallab.hmsrobots.problems;
 
-import it.units.erallab.hmsrobots.Snapshot;
+import java.util.Map;
+import java.util.function.Function;
 
-public interface Episode<T> {
-
-  public void init(T t);
-
-  public Snapshot step(double dt, boolean withSnapshot);
-
-  public boolean isDone();
-
-  public double[] getMetrics();
+public interface Episode<T> extends Function<T, Map<String, Double>> {
     
 }

@@ -17,27 +17,24 @@
 package it.units.erallab.hmsrobots.validation;
 
 import com.google.common.base.Stopwatch;
-import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.problems.AbstractEpisode;
+import it.units.erallab.hmsrobots.problems.Episode;
 import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 
-import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -46,13 +43,12 @@ import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.WeldJoint;
-import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<String, Object>> {
+public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>> {
 
   private final static double WALL_MARGIN = 10d;
 
@@ -60,20 +56,17 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
   private final double forceDuration;
   private final double maxT;
   private final double epsilon;
-  private final Settings settings;
-  private final SnapshotListener listener;
 
   public CantileverBending(double force, double forceDuration, double maxT, double epsilon, Settings settings, SnapshotListener listener) {
+    super(listener, settings);
     this.force = force;
     this.forceDuration = forceDuration;
     this.maxT = maxT;
     this.epsilon = epsilon;
-    this.settings = settings;
-    this.listener = listener;
   }
 
   @Override
-  public Map<String, Object> apply(Grid<Voxel.Builder> builderGrid) {
+  public Map<String, Double> apply(Grid<Voxel.Builder> builderGrid) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
@@ -149,7 +142,7 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
     double elapsedSeconds = (double) stopwatch.elapsed(TimeUnit.MICROSECONDS) / 1000000d;
     double voxelCalcsPerSecond = (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex);
     //fill
-    Map<String, Object> results = new LinkedHashMap<>();
+    Map<String, Double> results = new LinkedHashMap<>();
     results.put("dampingSimTime", dampingTime);
     results.put("elapsedRealTime", elapsedSeconds);
     results.put("dampingRealTime", realTs.get(dampingIndex));
@@ -173,9 +166,9 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
     OnlineViewer viewer = new OnlineViewer(Executors.newScheduledThreadPool(2));
     viewer.start();
     Settings settings = new Settings();
-    settings.setStepFrequency(0.025);
+    settings.setStepFrequency(0.015);
     CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 30d, 0.01d, settings, viewer);
-    Map<String, Object> results = cb.apply(Grid.create(10, 4, Voxel.Builder.create()));
+    Map<String, Double> results = cb.apply(Grid.create(10, 4, Voxel.Builder.create()));
     System.out.println(results);
   }
 

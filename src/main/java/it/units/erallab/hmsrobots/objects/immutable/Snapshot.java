@@ -14,16 +14,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.objects.immutable;
 
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import java.io.Serializable;
+import java.util.Collection;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public interface SnapshotListener {
+public class Snapshot implements Serializable, Comparable<Snapshot> {
+  
+  private final double time;
+  private final Collection<Compound> compounds;
 
-  public void listen(Snapshot snapshot);
+  public Snapshot(double time, Collection<Compound> compounds) {
+    this.time = time;
+    this.compounds = compounds;
+  }
 
+  public double getTime() {
+    return time;
+  }
+
+  public Collection<Compound> getCompounds() {
+    return compounds;
+  }
+
+  @Override
+  public int compareTo(Snapshot other) {
+    return Double.compare(time, other.time);
+  }
+  
 }
