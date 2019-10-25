@@ -27,6 +27,7 @@ import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -41,13 +42,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<String, Object>> {
@@ -57,16 +59,16 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
   private final double force;
   private final double forceDuration;
   private final double maxT;
-  private final double dT;
   private final double epsilon;
+  private final Settings settings;
   private final SnapshotListener listener;
 
-  public CantileverBending(double force, double forceDuration, double maxT, double dT, double epsilon, SnapshotListener listener) {
+  public CantileverBending(double force, double forceDuration, double maxT, double epsilon, Settings settings, SnapshotListener listener) {
     this.force = force;
     this.forceDuration = forceDuration;
     this.maxT = maxT;
-    this.dT = dT;
     this.epsilon = epsilon;
+    this.settings = settings;
     this.listener = listener;
   }
 
@@ -84,6 +86,7 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
     worldObjects.add(ground);
     //build world w/o gravity
     World world = new World();
+    world.setSettings(settings);
     world.setGravity(new Vector2(0d, 0d));
     for (WorldObject worldObject : worldObjects) {
       worldObject.addTo(world);
@@ -101,9 +104,9 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
       }
     }
     //prepare data
-    List<Double> ys = new ArrayList<>((int) Math.round(maxT / dT));
-    List<Double> realTs = new ArrayList<>((int) Math.round(maxT / dT));
-    List<Double> simTs = new ArrayList<>((int) Math.round(maxT / dT));
+    List<Double> ys = new ArrayList<>((int) Math.round(maxT / settings.getStepFrequency()));
+    List<Double> realTs = new ArrayList<>((int) Math.round(maxT / settings.getStepFrequency()));
+    List<Double> simTs = new ArrayList<>((int) Math.round(maxT / settings.getStepFrequency()));
     double y0 = vc.getVoxels().get(vc.getVoxels().getW() - 1, vc.getVoxels().getH() / 2).getCenter().y;
     //simulate
     Stopwatch stopwatch = Stopwatch.createStarted();
@@ -118,10 +121,10 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
         }
       }
       //do step
-      t = t + dT;
-      world.update(dT);
+      t = t + settings.getStepFrequency();
+      world.step(1);
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
+        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //get position
@@ -132,9 +135,9 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
     }
     stopwatch.stop();
     //compute things
-    int dampingIndex = ys.size() - 1;
-    while (dampingIndex >= 0) {
-      if (ys.get(dampingIndex) > epsilon) {
+    int dampingIndex = ys.size() - 2;
+    while (dampingIndex > 0) {
+      if (Math.abs(ys.get(dampingIndex) - ys.get(dampingIndex + 1)) > epsilon) {
         break;
       }
       dampingIndex--;
@@ -147,8 +150,9 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
     double voxelCalcsPerSecond = (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex);
     //fill
     Map<String, Object> results = new LinkedHashMap<>();
-    results.put("dampingTime", dampingTime);
-    results.put("elapsedTime", elapsedSeconds);
+    results.put("dampingSimTime", dampingTime);
+    results.put("elapsedRealTime", elapsedSeconds);
+    results.put("dampingRealTime", realTs.get(dampingIndex));
     results.put("voxelCalcsPerSecond", voxelCalcsPerSecond);
 
     Map<String, List<?>> data = new LinkedHashMap<>();
@@ -166,9 +170,11 @@ public class CantileverBending implements Function<Grid<Voxel.Builder>, Map<Stri
   }
 
   public static void main(String[] args) {
-    //OnlineViewer viewer = new OnlineViewer(Executors.newScheduledThreadPool(2));
-    //viewer.start();
-    CantileverBending cb = new CantileverBending(150d, 1d, 30d, 0.01d, 0.001d, null);
+    OnlineViewer viewer = new OnlineViewer(Executors.newScheduledThreadPool(2));
+    viewer.start();
+    Settings settings = new Settings();
+    settings.setStepFrequency(0.025);
+    CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 30d, 0.01d, settings, viewer);
     Map<String, Object> results = cb.apply(Grid.create(10, 4, Voxel.Builder.create()));
     System.out.println(results);
   }
