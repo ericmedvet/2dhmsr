@@ -23,7 +23,7 @@ import org.dyn4j.dynamics.Settings;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public abstract class AbstractEpisode<T> implements Episode<T> {
+public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
   
   protected final SnapshotListener listener;
   protected final Settings settings;

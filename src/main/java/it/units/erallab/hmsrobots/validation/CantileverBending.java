@@ -35,7 +35,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,7 +52,87 @@ import org.dyn4j.geometry.Vector2;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>> {
+public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, CantileverBending.Result> {
+
+  public static class Result {
+
+    private final double realTime;
+    private final double dampingRealTime;
+    private final double dampingSimTime;
+    private final long steps;
+    private final long dampingSteps;
+    private final double minVoxelStepPerSecond;
+    private final double minStepPerSecond;
+    private final double overallVoxelStepPerSecond;
+    private final double overallStepPerSecond;
+    private final double yDisplacement;
+    private final Map<String, List<Double>> timeEvolution;
+    private final List<Point2> finalTopPositions;
+
+    public Result(double realTime, double dampingRealTime, double dampingSimTime, long steps, long dampingSteps, double minVoxelStepPerSecond, double minStepPerSecond, double overallVoxelStepPerSecond, double overallStepPerSecond, double yDisplacement, Map<String, List<Double>> timeEvolution, List<Point2> finalTopPositions) {
+      this.realTime = realTime;
+      this.dampingRealTime = dampingRealTime;
+      this.dampingSimTime = dampingSimTime;
+      this.steps = steps;
+      this.dampingSteps = dampingSteps;
+      this.minVoxelStepPerSecond = minVoxelStepPerSecond;
+      this.minStepPerSecond = minStepPerSecond;
+      this.overallVoxelStepPerSecond = overallVoxelStepPerSecond;
+      this.overallStepPerSecond = overallStepPerSecond;
+      this.yDisplacement = yDisplacement;
+      this.timeEvolution = timeEvolution;
+      this.finalTopPositions = finalTopPositions;
+    }
+
+    public double getRealTime() {
+      return realTime;
+    }
+
+    public double getDampingRealTime() {
+      return dampingRealTime;
+    }
+
+    public double getDampingSimTime() {
+      return dampingSimTime;
+    }
+
+    public long getSteps() {
+      return steps;
+    }
+
+    public long getDampingSteps() {
+      return dampingSteps;
+    }
+
+    public double getMinVoxelStepPerSecond() {
+      return minVoxelStepPerSecond;
+    }
+
+    public double getMinStepPerSecond() {
+      return minStepPerSecond;
+    }
+
+    public double getOverallVoxelStepPerSecond() {
+      return overallVoxelStepPerSecond;
+    }
+
+    public double getOverallStepPerSecond() {
+      return overallStepPerSecond;
+    }
+
+    public double getYDisplacement() {
+      return yDisplacement;
+    }
+
+    public Map<String, List<Double>> getTimeEvolution() {
+      return timeEvolution;
+    }
+
+    public List<Point2> getFinalTopPositions() {
+      return finalTopPositions;
+    }
+
+  }
 
   private final static double WALL_MARGIN = 10d;
 
@@ -66,7 +150,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>> {
   }
 
   @Override
-  public Map<String, Double> apply(Grid<Voxel.Builder> builderGrid) {
+  public Result apply(Grid<Voxel.Builder> builderGrid) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
@@ -142,34 +226,70 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>> {
     double elapsedSeconds = (double) stopwatch.elapsed(TimeUnit.MICROSECONDS) / 1000000d;
     double voxelCalcsPerSecond = (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex);
     //fill
-    Map<String, Double> results = new LinkedHashMap<>();
-    results.put("dampingSimTime", dampingTime);
-    results.put("elapsedRealTime", elapsedSeconds);
-    results.put("dampingRealTime", realTs.get(dampingIndex));
-    results.put("voxelCalcsPerSecond", voxelCalcsPerSecond);
-
-    Map<String, List<?>> data = new LinkedHashMap<>();
-    data.put("st", simTs);
-    data.put("rt", realTs);
-    data.put("y", ys);
-
-    try {
-      CSVWriter.write(CSVWriter.Table.create(data), new PrintStream("/home/eric/experiments/2dhmsr/damping.txt"));
-    } catch (Exception e) {
-      e.printStackTrace();
+    Map<String, List<Double>> timeEvolution = new LinkedHashMap<>();
+    timeEvolution.put("st", simTs);
+    timeEvolution.put("rt", realTs);
+    timeEvolution.put("y", ys);
+    List<Point2> finalTopPositions = new ArrayList<>();
+    for (int x = 0; x < vc.getVoxels().getW(); x++) {
+      Vector2 center = vc.getVoxels().get(x, 0).getCenter();
+      finalTopPositions.add(new Point2(center.x, center.y - y0));
     }
-
-    return results;
+    return new Result(
+            elapsedSeconds,
+            realTs.get(dampingIndex),
+            simTs.get(dampingIndex),
+            realTs.size(),
+            dampingIndex,
+            (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex),
+            (double) dampingIndex / realTs.get(dampingIndex),
+            (double) vc.getVoxels().count(v -> v != null) * (double) realTs.size() / elapsedSeconds,
+            (double) realTs.size() / elapsedSeconds,
+            finalTopPositions.get(finalTopPositions.size() - 1).y,
+            timeEvolution,
+            finalTopPositions
+    );
   }
 
   public static void main(String[] args) {
-    OnlineViewer viewer = new OnlineViewer(Executors.newScheduledThreadPool(2));
-    viewer.start();
-    Settings settings = new Settings();
-    settings.setStepFrequency(0.015);
-    CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 30d, 0.01d, settings, viewer);
-    Map<String, Double> results = cb.apply(Grid.create(10, 4, Voxel.Builder.create()));
-    System.out.println(results);
+    ExecutorService executor = Executors.newFixedThreadPool(3);
+    double[] stepFrequencies = new double[]{0.005, 0.01}; //0.015, 0.02, 0.025};
+    List<Future<Map<String, Object>>> futures = new ArrayList<>();
+    for (double stepFrequency : stepFrequencies) {
+      final Map<String, Object> staticKeys = new LinkedHashMap<>();
+      staticKeys.put("stepFrequency", stepFrequency);
+      futures.add(executor.submit(() -> {
+        System.out.printf("Started\t%s%n", staticKeys);
+        Settings settings = new Settings();
+        settings.setStepFrequency(stepFrequency);
+        CantileverBending cb = new CantileverBending(250d, 0d, 10d, 0.01d, settings, null);
+        Result result = cb.apply(Grid.create(10, 4, Voxel.Builder.create()));
+        System.out.printf("Ended\t%s%n", staticKeys);
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.putAll(staticKeys);
+        row.put("realTime", result.getRealTime());
+        row.put("steps", result.getSteps());
+        row.put("dampingSteps", result.getDampingSteps());
+        row.put("dampingSimTime", result.getDampingSimTime());
+        row.put("dampingRealTime", result.getDampingRealTime());
+        row.put("minStepPerSecond", result.getMinStepPerSecond());
+        row.put("minVoxelStepPerSecond", result.getMinVoxelStepPerSecond());
+        row.put("overallStepPerSecond", result.getOverallStepPerSecond());
+        row.put("overallVoxelStepPerSecond", result.getOverallVoxelStepPerSecond());
+        row.put("yDisplacement", result.getYDisplacement());
+        return row;
+      }));
+    }
+    List<Map<String, Object>> rows = futures.stream().map(f -> {
+      try {
+        return f.get();
+      } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
+      }
+      return null;
+    }).collect(Collectors.toList());
+    CSVWriter.write(CSVWriter.Table.create(rows), System.out);
+    executor.shutdown();
   }
 
 }

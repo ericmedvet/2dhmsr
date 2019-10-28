@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 
-public class Locomotion extends AbstractEpisode<VoxelCompound.Description> {
+public class Locomotion extends AbstractEpisode<VoxelCompound.Description, Double[]> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -59,16 +59,18 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description> {
   private final double finalT;
   private final double[][] groundProfile;
   private final Metric[] metrics;
+  private final int controlStepInterval;
 
-  public Locomotion(double finalT, double[][] groundProfile, Metric[] metrics, SnapshotListener listener, Settings settings) {
+  public Locomotion(double finalT, double[][] groundProfile, Metric[] metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
     super(listener, settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.metrics = metrics;
+    this.controlStepInterval = controlStepInterval;
   }
 
   @Override
-  public Map<String, Double> apply(VoxelCompound.Description description) {
+  public Double[] apply(VoxelCompound.Description description) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -100,24 +102,27 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description> {
     Grid<Double> sumOfSquaredDeltaControlSignals = Grid.create(voxelCompound.getVoxels().getW(), voxelCompound.getVoxels().getH(), 0d);
     //run
     double t = 0d;
+    long steps = 0;
     while (t < finalT) {
       t = t + settings.getStepFrequency();
-      //control
-      Grid<Double> controlSignals = voxelCompound.control(t, settings.getStepFrequency());
       world.step(1);
-      //update control signals metrics
-      if (lastControlSignals == null) {
-        lastControlSignals = Grid.copy(controlSignals);
-      }
-      for (Grid.Entry<Double> entry : controlSignals) {
-        final int x = entry.getX();
-        final int y = entry.getY();
-        if (entry.getValue() != null) {
-          final double v = entry.getValue();
-          sumOfSquaredControlSignals.set(x, y, v * v * settings.getStepFrequency());
-          double dV = v - lastControlSignals.get(x, y);
-          sumOfSquaredDeltaControlSignals.set(x, y, dV * dV * settings.getStepFrequency());
-          lastControlSignals.set(x, y, entry.getValue());
+      steps = steps + 1;
+      //control and update control signals metrics
+      if ((steps % (controlStepInterval + 1)) == 0) {
+        Grid<Double> controlSignals = voxelCompound.control(t, settings.getStepFrequency());
+        if (lastControlSignals == null) {
+          lastControlSignals = Grid.copy(controlSignals);
+        }
+        for (Grid.Entry<Double> entry : controlSignals) {
+          final int x = entry.getX();
+          final int y = entry.getY();
+          if (entry.getValue() != null) {
+            final double v = entry.getValue();
+            sumOfSquaredControlSignals.set(x, y, v * v * settings.getStepFrequency());
+            double dV = v - lastControlSignals.get(x, y);
+            sumOfSquaredDeltaControlSignals.set(x, y, dV * dV * settings.getStepFrequency());
+            lastControlSignals.set(x, y, entry.getValue());
+          }
         }
       }
       //update center position metrics
@@ -129,24 +134,22 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description> {
       }
     }
     //compute metrics
-    Map<String, Double> results = new LinkedHashMap<>();
-    for (Metric metric : metrics) {
-      Double val = null;
-      switch (metric) {
+    Double[] results = new Double[metrics.length];
+    for (int i = 0; i < metrics.length; i++) {
+      switch (metrics[i]) {
         case TRAVEL_X_VELOCITY:
-          val = (voxelCompound.getCenter().x - initCenterX) / t;
+          results[i] = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
         case CENTER_AVG_Y:
-          val = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
+          results[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          val = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          results[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
         case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
-          val = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          results[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
       }
-      results.put(metric.toString().toLowerCase(), val);
     }
     return results;
   }
