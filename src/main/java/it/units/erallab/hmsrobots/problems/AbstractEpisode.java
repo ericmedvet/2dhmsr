@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 eric
+ * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,33 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.objects.immutable;
+package it.units.erallab.hmsrobots.problems;
 
-import java.io.Serializable;
-import org.dyn4j.geometry.Vector2;
+import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.dyn4j.dynamics.Settings;
 
 /**
  *
- * @author eric
+ * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Point2 implements Serializable {
+public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
   
-  public final double x;
-  public final double y;
+  protected final SnapshotListener listener;
+  protected final Settings settings;
 
-  public Point2(double x, double y) {
-    this.x = x;
-    this.y = y;
+  public AbstractEpisode(SnapshotListener listener, Settings settings) {
+    this.listener = listener;
+    this.settings = settings;
   }
 
-  public Point2(Vector2 v) {
-    x = v.x;
-    y = v.y;
+  public SnapshotListener getListener() {
+    return listener;
   }
 
-  @Override
-  public String toString() {
-    return String.format("(%5.3f, %5.3f)", x, y);
+  public Settings getSettings() {
+    return settings;
   }
-  
+    
 }

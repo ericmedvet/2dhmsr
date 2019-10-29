@@ -17,7 +17,7 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
-import it.units.erallab.hmsrobots.Snapshot;
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
@@ -84,8 +84,8 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    JPanel topTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));    
-    JPanel bottomTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));    
+    JPanel topTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+    JPanel bottomTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
     infoLabel = new JLabel();
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
@@ -93,7 +93,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     for (GraphicsDrawer.RenderingMode mode : GraphicsDrawer.RenderingMode.values()) {
       final JCheckBox checkBox = new JCheckBox(
               mode.name().toLowerCase().replace('_', ' '),
-              mode.equals(GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA)||mode.equals(GraphicsDrawer.RenderingMode.VOXEL_POLY)
+              mode.equals(GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA) || mode.equals(GraphicsDrawer.RenderingMode.VOXEL_POLY)
       );
       renderingModeCheckBoxes.put(mode, checkBox);
       topTopPanel.add(checkBox);
@@ -142,7 +142,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
             double newWorldTime = worldTime + (double) (elapsedMillis) / 1000d * timeScale;
             Snapshot snapshot = findSnapshot(newWorldTime);
             if (snapshot != null) {
-              worldTime = newWorldTime;
+              worldTime = snapshot.getTime();
               Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
               //get voxel compound
               Compound voxelCompound = null;
@@ -152,7 +152,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
                   break;
                 }
               }
-              GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double)canvas.getWidth()/(double)canvas.getHeight());
+              GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double) canvas.getWidth() / (double) canvas.getHeight());
               //draw
               graphicsDrawer.draw(snapshot, g, new GraphicsDrawer.Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes(), getSensors());
               g.dispose();
@@ -174,7 +174,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
           }
           infoLabel.setText(String.format(
                   "t.w=%.2fs [%.1fs--%.1fs] [%3.1fx] FPS=%4.1f",
-                  worldTime,
+                  worldTime, //TODO FIXME: world time still seems to run faster at scale 1x
                   (firstSnapshot == null) ? null : firstSnapshot.getTime(),
                   (lastSnapshot == null) ? null : lastSnapshot.getTime(),
                   timeScale,

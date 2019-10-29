@@ -20,6 +20,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -173,6 +174,31 @@ public class VoxelCompound implements WorldObject {
 
   public Description getDescription() {
     return description;
+  }
+
+  public Point2[] boundingBox() {
+    double minX = Double.POSITIVE_INFINITY;
+    double minY = Double.POSITIVE_INFINITY;
+    double maxX = Double.NEGATIVE_INFINITY;
+    double maxY = Double.NEGATIVE_INFINITY;
+    Compound compound = getSnapshot();
+    for (Component component : compound.getComponents()) {
+      for (Point2 p : component.getPoly().getVertexes()) {
+        if (p.x < minX) {
+          minX = p.x;
+        }
+        if (p.y < minY) {
+          minY = p.y;
+        }
+        if (p.x > maxX) {
+          maxX = p.x;
+        }
+        if (p.y > maxY) {
+          maxY = p.y;
+        }
+      }
+    }
+    return new Point2[]{new Point2(minX, minY), new Point2(maxX, maxY)};
   }
 
 }
