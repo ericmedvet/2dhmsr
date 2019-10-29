@@ -185,17 +185,17 @@ public class Starter {
                     finalT,
                     new double[][]{new double[]{0, 1, 999, 1000},
                     new double[]{50, 0, 0, 50}},
-                    new Locomotion.Metric[]{Locomotion.Metric.TRAVEL_X_VELOCITY},
+                    Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
                     2,
                     listener,
                     new Settings()
             );
             //execute
-            Double[] results = locomotion.apply(new VoxelCompound.Description(
+            List<Double> results = locomotion.apply(new VoxelCompound.Description(
                     shape,
                     new PhaseSin(frequency, 1d, wormController),
                     Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create())));
-            System.out.printf("Result is %s%n", Arrays.toString(results));
+            System.out.printf("Result is %s%n", results);
           } catch (Throwable t) {
             t.printStackTrace();
           }

@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 
-public class Locomotion extends AbstractEpisode<VoxelCompound.Description, Double[]> {
+public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<Double>> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -58,10 +58,10 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, Doubl
 
   private final double finalT;
   private final double[][] groundProfile;
-  private final Metric[] metrics;
+  private final List<Metric> metrics;
   private final int controlStepInterval;
 
-  public Locomotion(double finalT, double[][] groundProfile, Metric[] metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
+  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
     super(listener, settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
@@ -70,7 +70,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, Doubl
   }
 
   @Override
-  public Double[] apply(VoxelCompound.Description description) {
+  public List<Double> apply(VoxelCompound.Description description) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -134,22 +134,24 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, Doubl
       }
     }
     //compute metrics
-    Double[] results = new Double[metrics.length];
-    for (int i = 0; i < metrics.length; i++) {
-      switch (metrics[i]) {
+    List<Double> results = new ArrayList<>(metrics.size());
+    for (Metric metric : metrics) {
+      double value = Double.NaN;
+      switch (metric) {
         case TRAVEL_X_VELOCITY:
-          results[i] = (voxelCompound.getCenter().x - initCenterX) / t;
+          value = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
         case CENTER_AVG_Y:
-          results[i] = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
+          value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          results[i] = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
         case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
-          results[i] = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
           break;
       }
+      results.add(value);
     }
     return results;
   }

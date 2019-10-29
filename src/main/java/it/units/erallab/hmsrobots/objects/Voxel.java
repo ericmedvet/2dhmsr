@@ -255,8 +255,73 @@ public class Voxel implements WorldObject {
       return springScaffoldings;
     }
 
+    public void setSideLength(double sideLength) {
+      this.sideLength = sideLength;
+    }
+
+    public void setMassSideLengthRatio(double massSideLengthRatio) {
+      this.massSideLengthRatio = massSideLengthRatio;
+    }
+
+    public void setSpringF(double springF) {
+      this.springF = springF;
+    }
+
+    public void setSpringD(double springD) {
+      this.springD = springD;
+    }
+
+    public void setMassLinearDamping(double massLinearDamping) {
+      this.massLinearDamping = massLinearDamping;
+    }
+
+    public void setMassAngularDamping(double massAngularDamping) {
+      this.massAngularDamping = massAngularDamping;
+    }
+
+    public void setMaxForce(double maxForce) {
+      this.maxForce = maxForce;
+    }
+
+    public void setAreaRatioOffset(double areaRatioOffset) {
+      this.areaRatioOffset = areaRatioOffset;
+    }
+
+    public void setFriction(double friction) {
+      this.friction = friction;
+    }
+
+    public void setRestitution(double restitution) {
+      this.restitution = restitution;
+    }
+
+    public void setMass(double mass) {
+      this.mass = mass;
+    }
+
+    public void setLimitContractionFlag(boolean limitContractionFlag) {
+      this.limitContractionFlag = limitContractionFlag;
+    }
+
+    public void setMassCollisionFlag(boolean massCollisionFlag) {
+      this.massCollisionFlag = massCollisionFlag;
+    }
+
+    public void setForceMethod(ForceMethod forceMethod) {
+      this.forceMethod = forceMethod;
+    }
+
+    public void setSpringScaffoldings(EnumSet<SpringScaffolding> springScaffoldings) {
+      this.springScaffoldings = springScaffoldings;
+    }
+
     public Voxel build(double x, double y, Object parent) {
       return new Voxel(this, x, y, parent);
+    }
+
+    @Override
+    public String toString() {
+      return "Builder{" + "sideLength=" + sideLength + ", massSideLengthRatio=" + massSideLengthRatio + ", springF=" + springF + ", springD=" + springD + ", massLinearDamping=" + massLinearDamping + ", massAngularDamping=" + massAngularDamping + ", maxForce=" + maxForce + ", areaRatioOffset=" + areaRatioOffset + ", friction=" + friction + ", restitution=" + restitution + ", mass=" + mass + ", limitContractionFlag=" + limitContractionFlag + ", massCollisionFlag=" + massCollisionFlag + ", forceMethod=" + forceMethod + ", springScaffoldings=" + springScaffoldings + '}';
     }
 
   }
