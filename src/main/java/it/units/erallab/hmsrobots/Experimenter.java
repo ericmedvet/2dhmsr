@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.PhaseSin;
@@ -72,12 +73,12 @@ public class Experimenter {
 
     List<Snapshot> events = new ArrayList<>();
     File file = new File("/home/eric/experiments/2dhmsr/prova30s-dense.serial");
-    double dt = 0.01d;
+    double dt = world.getSettings().getStepFrequency();
     TimeAccumulator t = new TimeAccumulator();
     while (t.getT()<30) {
       t.add(dt);
       vc2.control(t.getT(), dt);
-      world.update(dt);
+      world.step(1);
       events.add(new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList())));
     }
     writeAll(events, file);

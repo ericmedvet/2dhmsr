@@ -14,16 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.problems;
 
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.dyn4j.dynamics.Settings;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public interface SnapshotListener {
+public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
+  
+  protected final SnapshotListener listener;
+  protected final Settings settings;
 
-  public void listen(Snapshot snapshot);
+  public AbstractEpisode(SnapshotListener listener, Settings settings) {
+    this.listener = listener;
+    this.settings = settings;
+  }
 
+  public SnapshotListener getListener() {
+    return listener;
+  }
+
+  public Settings getSettings() {
+    return settings;
+  }
+    
 }

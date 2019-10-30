@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class CSVWriter {
-  
+
   public final static String SEPARATOR = ";";
   public final static String NULL = "NA";
 
@@ -51,7 +51,7 @@ public class CSVWriter {
     public Object[][] getData() {
       return data;
     }
-    
+
     public List<String> getColumnNames() {
       return columns.keySet().stream().collect(Collectors.toList());
     }
@@ -73,7 +73,21 @@ public class CSVWriter {
         for (String name : columns.keySet()) {
           List<?> values = unshapedData.get(name);
           data[i][j] = (i < values.size()) ? values.get(i) : null;
-          j = j+1;
+          j = j + 1;
+        }
+      }
+      return new Table(columns, data);
+    }
+
+    public static Table create(List<Map<String, Object>> rows) {
+      LinkedHashMap<String, String> columns = new LinkedHashMap<>(rows.get(0).keySet().stream().collect(Collectors.toMap(s -> s, s -> "%s")));
+      Object[][] data = new Object[rows.size()][];
+      for (int i = 0; i < rows.size(); i++) {
+        data[i] = new Object[columns.size()];
+        int j = 0;
+        for (String columnName : columns.keySet()) {
+          data[i][j] = rows.get(i).get(columnName);
+          j = j + 1;
         }
       }
       return new Table(columns, data);
@@ -83,24 +97,24 @@ public class CSVWriter {
 
   public static void write(Table table, PrintStream ps) {
     //header
-    for (int i = 0; i<table.getColumnNames().size(); i++) {
+    for (int i = 0; i < table.getColumnNames().size(); i++) {
       ps.print(table.getColumnNames().get(i));
-        if (i<table.getColumnNames().size()-1) {
-          ps.print(SEPARATOR);
-        } else {
-          ps.println();
-        }
+      if (i < table.getColumnNames().size() - 1) {
+        ps.print(SEPARATOR);
+      } else {
+        ps.println();
+      }
     }
     List<String> formats = table.getColumnFormats();
     //data
     for (Object[] row : table.getData()) {
-      for (int i = 0; i<row.length; i++) {
-        if (row[i]==null) {
+      for (int i = 0; i < row.length; i++) {
+        if (row[i] == null) {
           ps.print(NULL);
         } else {
           ps.printf(formats.get(i), row[i]);
         }
-        if (i<row.length-1) {
+        if (i < row.length - 1) {
           ps.print(SEPARATOR);
         } else {
           ps.println();
@@ -108,5 +122,5 @@ public class CSVWriter {
       }
     }
   }
-  
+
 }
