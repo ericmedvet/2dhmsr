@@ -256,13 +256,12 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
   }
 
   public static void main(String[] args) {
-    ExecutorService executor = Executors.newFixedThreadPool(3);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     List<Grid<Boolean>> shapes = Lists.newArrayList(
             Grid.create(5, 1),
             Grid.create(5, 2),
             Grid.create(10, 4),
-            Grid.create(50, 10),
-            Grid.create(100, 40)
+            Grid.create(50, 10)
     );
     Map<String, List<Object>> params = new LinkedHashMap<>();
     params.put("settings.stepFrequency", Lists.newArrayList(0.015, 0.005, 0.01, 0.02, 0.025));
@@ -323,7 +322,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 5d, 0.01d, (Settings) configurations.get("settings"), null);
+            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"), null);
             Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();
