@@ -45,7 +45,7 @@ import javax.swing.JSlider;
  */
 public class OnlineViewer extends JFrame implements SnapshotListener {
 
-  private final static int TARGET_FPS = 50;
+  private final static int TARGET_FPS = 30;
   private final static int MAX_QUEUE_SIZE = 10000;
   private final static Framer FRAMER = new VoxelCompoundFollower(TARGET_FPS*3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX);
 

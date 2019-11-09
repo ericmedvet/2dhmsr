@@ -28,7 +28,7 @@ public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
   protected final SnapshotListener listener;
   protected final Settings settings;
 
-  public AbstractEpisode(SnapshotListener listener, Settings settings) {
+  public AbstractEpisode(Settings settings, SnapshotListener listener) {
     this.listener = listener;
     this.settings = settings;
   }

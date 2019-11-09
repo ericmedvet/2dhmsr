@@ -60,7 +60,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   private final int controlStepInterval;
 
   public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
-    super(listener, settings);
+    super(settings, listener);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.metrics = metrics;
