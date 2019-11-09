@@ -16,7 +16,6 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
@@ -179,37 +178,37 @@ public class GraphicsDrawer {
   public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, Set<RenderingMode> renderingModes, Set<Voxel.Sensor> voxelSensors, String... otherInfos) {
     //set clipping area
     g.setClip(
-            (int) graphicsFrame.x1, (int) graphicsFrame.y1,
-            (int) (graphicsFrame.x2 - graphicsFrame.x1), (int) (graphicsFrame.y2 - graphicsFrame.y1)
+            (int) graphicsFrame.getX1(), (int) graphicsFrame.getY1(),
+            (int) (graphicsFrame.getX2() - graphicsFrame.getX1()), (int) (graphicsFrame.getY2() - graphicsFrame.getY1())
     );
     //save original transform
     AffineTransform oAt = g.getTransform();
     //prepare transformation
-    double xRatio = (graphicsFrame.x2 - graphicsFrame.x1) / (worldFrame.x2 - worldFrame.x1);
-    double yRatio = (graphicsFrame.y2 - graphicsFrame.y1) / (worldFrame.y2 - worldFrame.y1);
+    double xRatio = (graphicsFrame.getX2() - graphicsFrame.getX1()) / (worldFrame.getX2() - worldFrame.getX1());
+    double yRatio = (graphicsFrame.getY2() - graphicsFrame.getY1()) / (worldFrame.getY2() - worldFrame.getY1());
     double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
-    at.translate(graphicsFrame.x1, graphicsFrame.y1);
+    at.translate(graphicsFrame.getX1(), graphicsFrame.getY1());
     at.scale(ratio, -ratio);
-    at.translate(-worldFrame.x1, -worldFrame.y2);
+    at.translate(-worldFrame.getX1(), -worldFrame.getY2());
     //draw background
     g.setColor(builder.getBackgroundColor());
     g.fillRect(
-            (int) graphicsFrame.x1, (int) graphicsFrame.y1,
-            (int) (graphicsFrame.x2 - graphicsFrame.x1), (int) (graphicsFrame.y2 - graphicsFrame.y1)
+            (int) graphicsFrame.getX1(), (int) graphicsFrame.getY1(),
+            (int) (graphicsFrame.getX2() - graphicsFrame.getX1()), (int) (graphicsFrame.getY2() - graphicsFrame.getY1())
     );
     //draw grid
     g.setTransform(at);
     if (renderingModes.contains(RenderingMode.GRID_MAJOR) || renderingModes.contains(RenderingMode.GRID_MINOR)) {
       g.setColor(builder.getGridColor());
       g.setStroke(new BasicStroke(1f / (float) ratio));
-      double gridSize = computeGridSize(worldFrame.x1, worldFrame.x2);
+      double gridSize = computeGridSize(worldFrame.getX1(), worldFrame.getX2());
       if (renderingModes.contains(RenderingMode.GRID_MAJOR)) {
-        for (double gridX = Math.floor(worldFrame.x1 / gridSize) * gridSize; gridX < worldFrame.x2; gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, worldFrame.y1, gridX, worldFrame.y2));
+        for (double gridX = Math.floor(worldFrame.getX1() / gridSize) * gridSize; gridX < worldFrame.getX2(); gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, worldFrame.getY1(), gridX, worldFrame.getY2()));
         }
-        for (double gridY = Math.floor(worldFrame.y1 / gridSize) * gridSize; gridY < worldFrame.y2; gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(worldFrame.x1, gridY, worldFrame.x2, gridY));
+        for (double gridY = Math.floor(worldFrame.getY1() / gridSize) * gridSize; gridY < worldFrame.getY2(); gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(worldFrame.getX1(), gridY, worldFrame.getX2(), gridY));
         }
       }
       if (renderingModes.contains(RenderingMode.GRID_MINOR)) {
@@ -221,11 +220,11 @@ public class GraphicsDrawer {
                 1.0f,
                 new float[]{2f / (float) ratio, 0f, 2f / (float) ratio},
                 0f));
-        for (double gridX = Math.floor(worldFrame.x1 / gridSize) * gridSize; gridX < worldFrame.x2; gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, worldFrame.y1, gridX, worldFrame.y2));
+        for (double gridX = Math.floor(worldFrame.getX1() / gridSize) * gridSize; gridX < worldFrame.getX2(); gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, worldFrame.getY1(), gridX, worldFrame.getY2()));
         }
-        for (double gridY = Math.floor(worldFrame.y1 / gridSize) * gridSize; gridY < worldFrame.y2; gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(worldFrame.x1, gridY, worldFrame.x2, gridY));
+        for (double gridY = Math.floor(worldFrame.getY1() / gridSize) * gridSize; gridY < worldFrame.getY2(); gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(worldFrame.getX1(), gridY, worldFrame.getX2(), gridY));
         }
       }
     }
@@ -239,7 +238,7 @@ public class GraphicsDrawer {
     //info
     StringBuilder sb = new StringBuilder();
     if (renderingModes.contains(RenderingMode.VIEWPORT_INFO)) {
-      sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.x1, worldFrame.y1, worldFrame.x2, worldFrame.y2));
+      sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.getX1(), worldFrame.getY1(), worldFrame.getX2(), worldFrame.getY2()));
     }
     if (renderingModes.contains(RenderingMode.TIME_INFO)) {
       sb.append((sb.length() > 0) ? " " : "").append(String.format("t=%.2f", snapshot.getTime()));
@@ -249,7 +248,7 @@ public class GraphicsDrawer {
     }
     if (sb.length()>0) {
       g.setColor(builder.getInfoColor());
-      g.drawString(sb.toString(), (int) graphicsFrame.x1 + 1, (int) graphicsFrame.y1 + 1 + g.getFontMetrics().getMaxAscent());
+      g.drawString(sb.toString(), (int) graphicsFrame.getX1() + 1, (int) graphicsFrame.getY1() + 1 + g.getFontMetrics().getMaxAscent());
     }
   }
 
@@ -390,90 +389,6 @@ public class GraphicsDrawer {
       path.closePath();
     }
     return path;
-  }
-
-  public static class Frame {
-
-    private final double x1;
-    private final double x2;
-    private final double y1;
-    private final double y2;
-
-    public Frame(double x1, double x2, double y1, double y2) {
-      this.x1 = x1;
-      this.x2 = x2;
-      this.y1 = y1;
-      this.y2 = y2;
-    }
-
-    public double getX1() {
-      return x1;
-    }
-
-    public double getX2() {
-      return x2;
-    }
-
-    public double getY1() {
-      return y1;
-    }
-
-    public double getY2() {
-      return y2;
-    }
-
-  }
-
-  public static class FrameFollower {
-
-    private final double sizeRelativeMargin;
-
-    private final EvictingQueue<Double> centerYQueue;
-    private final EvictingQueue<Double> minXQueue;
-    private final EvictingQueue<Double> maxXQueue;
-
-    public FrameFollower(int windowSize, double sizeRelativeMargin) {
-      this.sizeRelativeMargin = sizeRelativeMargin;
-      centerYQueue = EvictingQueue.create(windowSize);
-      minXQueue = EvictingQueue.create(windowSize);
-      maxXQueue = EvictingQueue.create(windowSize);
-    }
-
-    public Frame getFrame(Compound compound, double ratio) {
-      //get center and width
-      double cy = 0d;
-      double minX = Double.POSITIVE_INFINITY;
-      double maxX = Double.NEGATIVE_INFINITY;
-      for (Component component : compound.getComponents()) {
-        cy = cy + component.getPoly().center().y;
-        for (Point2 point : component.getPoly().getVertexes()) {
-          if (point.x < minX) {
-            minX = point.x;
-          }
-          if (point.x > maxX) {
-            maxX = point.x;
-          }
-        }
-      }
-      centerYQueue.offer(cy / (double) compound.getComponents().size());
-      minXQueue.offer(minX);
-      maxXQueue.offer(maxX);
-      //get moving average
-      double x1 = minXQueue.stream().mapToDouble(Double::doubleValue).average().orElse(0d);
-      double x2 = maxXQueue.stream().mapToDouble(Double::doubleValue).average().orElse(1d);
-      double yc = centerYQueue.stream().mapToDouble(Double::doubleValue).average().orElse(0d);
-      //enlarge width
-      double w = x2 - x1;
-      x1 = x1 - w * sizeRelativeMargin;
-      x2 = x2 + w * sizeRelativeMargin;
-      //compute y1 and y2
-      double h = (x2 - x1) / ratio;
-      double y1 = yc - h / 2;
-      double y2 = yc + h / 2;
-      //return
-      return new Frame(x1, x2, y1, y2);
-    }
-
   }
 
 }

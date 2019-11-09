@@ -18,8 +18,6 @@ package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -44,11 +42,9 @@ import org.jcodec.common.model.Rational;
  */
 public class VideoFileWriter implements Flushable {
 
-  private final int ffMemory = 25;
-  private final double ffMargin = 1d;
-  private final int w = 1200;
-  private final int h = 600;
-  private final double frameRate = 25;
+  private final int w;
+  private final int h;
+  private final double frameRate;
   private final Set<GraphicsDrawer.RenderingMode> renderingModes = EnumSet.of(
           GraphicsDrawer.RenderingMode.VOXEL_POLY,
           GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA,
@@ -61,30 +57,33 @@ public class VideoFileWriter implements Flushable {
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
   private final Grid<Queue<Snapshot>> queueGrid;
+  private final Grid<Framer> framerGrid;
 
   private final SeekableByteChannel channel;
   private final AWTSequenceEncoder encoder;
   private final GraphicsDrawer graphicsDrawer;
-  private final Grid<GraphicsDrawer.FrameFollower> ffGrid;
 
   private double t;
   private boolean running;
   private int drawnCount;
 
-  private static final Logger L = Logger.getLogger(VideoFileWriter.class.getName());
+  private static final Logger L = Logger.getLogger(VideoFileWriter.class.getName());  
 
-  public VideoFileWriter(File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
+  public VideoFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
+    this.w = w;
+    this.h = h;
+    this.frameRate = frameRate;
     this.namesGrid = namesGrid;
-    ffGrid = Grid.create(namesGrid);
+    framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
     //prepare things
     channel = NIOUtils.writableChannel(file);
     encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
     graphicsDrawer = GraphicsDrawer.Builder.create().build();
-    for (int x = 0; x < ffGrid.getW(); x++) {
-      for (int y = 0; y < ffGrid.getH(); y++) {
-        ffGrid.set(x, y, new GraphicsDrawer.FrameFollower(ffMemory, ffMargin));
+    for (int x = 0; x < namesGrid.getW(); x++) {
+      for (int y = 0; y < namesGrid.getH(); y++) {
+        framerGrid.set(x, y, new VoxelCompoundFollower((int)frameRate*3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
         queueGrid.set(x, y, new LinkedList<>());
       }
     }
@@ -178,19 +177,10 @@ public class VideoFileWriter implements Flushable {
     for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
         if (entry.getValue() != null) {
           //obtain viewport
-          Compound voxelCompound = null;
-          for (Compound compound : entry.getValue().getCompounds()) {
-            if (compound.getObjectClass().equals(VoxelCompound.class
-            )) {
-              voxelCompound = compound;
-
-              break;
-            }
-          }
-          GraphicsDrawer.Frame frame = ffGrid.get(entry.getX(), entry.getY()).getFrame(voxelCompound, localW / localH);
+          Frame frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
           //draw
           graphicsDrawer.draw(entry.getValue(), g,
-                  new GraphicsDrawer.Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
+                  new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
                   frame, renderingModes, sensors, namesGrid.get(entry.getX(), entry.getY())
           );
         }

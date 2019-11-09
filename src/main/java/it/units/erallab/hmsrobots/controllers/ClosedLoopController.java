@@ -18,7 +18,6 @@ package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
-import java.util.EnumSet;
 import java.util.List;
 
 /**

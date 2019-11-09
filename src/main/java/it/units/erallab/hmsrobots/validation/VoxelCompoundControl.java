@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.validation;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import it.units.erallab.hmsrobots.controllers.TimeFunction;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
@@ -27,6 +28,8 @@ import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.problems.AbstractEpisode;
 import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.SerializableFunction;
+import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 
 import java.lang.reflect.InvocationTargetException;
@@ -36,6 +39,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,197 +56,154 @@ import org.dyn4j.geometry.Vector2;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, CantileverBending.Result> {
+public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, VoxelCompoundControl.Result> {
 
   public static class Result {
 
     private final double realTime;
-    private final double dampingRealTime;
-    private final double dampingSimTime;
     private final long steps;
-    private final long dampingSteps;
-    private final double dampingVoxelStepsPerSecond;
-    private final double dampingStepsPerSecond;
     private final double overallVoxelStepsPerSecond;
     private final double overallStepsPerSecond;
-    private final double yDisplacement;
-    private final Map<String, List<Double>> timeEvolution;
-    private final List<Point2> finalTopPositions;
+    private final double avgBrokenRatio;
+    private final double maxVelocityMagnitude;
 
-    public Result(double realTime, double dampingRealTime, double dampingSimTime, long steps, long dampingSteps, double dampingVoxelStepsPerSecond, double dampingStepsPerSecond, double overallVoxelStepsPerSecond, double overallStepsPerSecond, double yDisplacement, Map<String, List<Double>> timeEvolution, List<Point2> finalTopPositions) {
+    public Result(double realTime, long steps, double overallVoxelStepsPerSecond, double overallStepsPerSecond, double avgBrokenRatio, double maxVelocityMagnitude) {
       this.realTime = realTime;
-      this.dampingRealTime = dampingRealTime;
-      this.dampingSimTime = dampingSimTime;
       this.steps = steps;
-      this.dampingSteps = dampingSteps;
-      this.dampingVoxelStepsPerSecond = dampingVoxelStepsPerSecond;
-      this.dampingStepsPerSecond = dampingStepsPerSecond;
       this.overallVoxelStepsPerSecond = overallVoxelStepsPerSecond;
       this.overallStepsPerSecond = overallStepsPerSecond;
-      this.yDisplacement = yDisplacement;
-      this.timeEvolution = timeEvolution;
-      this.finalTopPositions = finalTopPositions;
+      this.avgBrokenRatio = avgBrokenRatio;
+      this.maxVelocityMagnitude = maxVelocityMagnitude;
     }
 
     public double getRealTime() {
       return realTime;
     }
 
-    public double getDampingRealTime() {
-      return dampingRealTime;
-    }
-
-    public double getDampingSimTime() {
-      return dampingSimTime;
-    }
-
     public long getSteps() {
       return steps;
     }
 
-    public long getDampingSteps() {
-      return dampingSteps;
-    }
-
-    public double getMinVoxelStepPerSecond() {
-      return dampingVoxelStepsPerSecond;
-    }
-
-    public double getMinStepPerSecond() {
-      return dampingStepsPerSecond;
-    }
-
-    public double getOverallVoxelStepPerSecond() {
+    public double getOverallVoxelStepsPerSecond() {
       return overallVoxelStepsPerSecond;
     }
 
-    public double getOverallStepPerSecond() {
+    public double getOverallStepsPerSecond() {
       return overallStepsPerSecond;
     }
 
-    public double getYDisplacement() {
-      return yDisplacement;
+    public double getAvgBrokenRatio() {
+      return avgBrokenRatio;
     }
 
-    public Map<String, List<Double>> getTimeEvolution() {
-      return timeEvolution;
-    }
-
-    public List<Point2> getFinalTopPositions() {
-      return finalTopPositions;
+    public double getMaxVelocityMagnitude() {
+      return maxVelocityMagnitude;
     }
 
   }
 
-  private final static double WALL_MARGIN = 10d;
+  private final static int GROUND_HILLS_N = 100;
+  private final static double GROUND_LENGTH = 1000d;
+  private final static double INITIAL_PLACEMENT_X_GAP = 1d;
+  private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
 
-  private final double force;
-  private final double forceDuration;
   private final double finalT;
-  private final double epsilon;
+  private final double groundHillsHeight;
+  private final int controlStepInterval;
+  private final double freq;
 
-  public CantileverBending(double force, double forceDuration, double finalT, double epsilon, Settings settings, SnapshotListener listener) {
+  public VoxelCompoundControl(double finalT, double groundHillsHeight, int controlStepInterval, double freq, Settings settings, SnapshotListener listener) {
     super(settings, listener);
-    this.force = force;
-    this.forceDuration = forceDuration;
     this.finalT = finalT;
-    this.epsilon = epsilon;
+    this.groundHillsHeight = groundHillsHeight;
+    this.controlStepInterval = controlStepInterval;
+    this.freq = freq;
   }
 
   @Override
   public Result apply(Grid<Voxel.Builder> builderGrid) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
-    VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
-            Grid.create(builderGrid.getW(), builderGrid.getH(), true), null, builderGrid
+    Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(builderGrid);
+    for (Grid.Entry<Voxel.Builder> entry : builderGrid) {
+      functionGrid.set(entry.getX(), entry.getY(), t -> Math.signum(Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) builderGrid.getW())));
+    }
+    VoxelCompound voxelCompound = new VoxelCompound(0, 0, new VoxelCompound.Description(
+            Grid.create(builderGrid.getW(), builderGrid.getH(), true),
+            new TimeFunction(functionGrid),
+            builderGrid
     ));
-    Point2[] boundingBox = vc.boundingBox();
-    worldObjects.add(vc);
+    worldObjects.add(voxelCompound);
     //build ground
-    Ground ground = new Ground(new double[]{0, 1}, new double[]{0, boundingBox[1].y - boundingBox[0].y + 2d * WALL_MARGIN});
+    Random random = new Random(1);
+    double[] groundXs = new double[GROUND_HILLS_N + 2];
+    double[] groundYs = new double[GROUND_HILLS_N + 2];
+    for (int i = 1; i < groundXs.length - 1; i++) {
+      groundXs[i] = 1d + GROUND_LENGTH / (double) (GROUND_HILLS_N) * (double) (i - 1);
+      groundYs[i] = random.nextDouble() * groundHillsHeight;
+    }
+    groundXs[0] = 0d;
+    groundXs[GROUND_HILLS_N + 1] = GROUND_LENGTH;
+    groundYs[0] = GROUND_LENGTH / 10d;
+    groundYs[GROUND_HILLS_N + 1] = GROUND_LENGTH / 10d;
+    Ground ground = new Ground(groundXs, groundYs);
     worldObjects.add(ground);
+    double[][] groundProfile = new double[][]{groundXs, groundYs};
+    //position robot: x of rightmost point is on 2nd point of profile
+    Point2[] boundingBox = voxelCompound.boundingBox();
+    double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
+    double yGroundLeft = groundProfile[1][1];
+    double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
+    double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
+    double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
+    Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
+    Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
+    Vector2 movement = targetPoint.subtract(currentPoint);
+    voxelCompound.translate(movement);
     //build world w/o gravity
     World world = new World();
     world.setSettings(settings);
-    world.setGravity(new Vector2(0d, 0d));
     for (WorldObject worldObject : worldObjects) {
       worldObject.addTo(world);
     }
-    //attach vc to ground
-    vc.translate(new Vector2(-boundingBox[0].x + 1d, (boundingBox[1].y - boundingBox[0].y + 2d * WALL_MARGIN) / 2d - 1d));
-    for (int y = 0; y < vc.getVoxels().getH(); y++) {
-      for (int i : new int[]{0, 3}) {
-        WeldJoint joint = new WeldJoint(
-                ground.getBodies().get(0),
-                vc.getVoxels().get(0, y).getVertexBodies()[i],
-                vc.getVoxels().get(0, y).getVertexBodies()[i].getWorldCenter()
-        );
-        world.addJoint(joint);
-      }
-    }
     //prepare data
-    List<Double> ys = new ArrayList<>((int) Math.round(finalT / settings.getStepFrequency()));
-    List<Double> realTs = new ArrayList<>((int) Math.round(finalT / settings.getStepFrequency()));
-    List<Double> simTs = new ArrayList<>((int) Math.round(finalT / settings.getStepFrequency()));
-    double y0 = vc.getVoxels().get(vc.getVoxels().getW() - 1, vc.getVoxels().getH() / 2).getCenter().y;
+    double maxVelocityMagnitude = Double.NEGATIVE_INFINITY;
+    double sumOfBrokenRatio = 0d;
     //simulate
     Stopwatch stopwatch = Stopwatch.createStarted();
     double t = 0d;
+    long steps = 0;
     while (t < finalT) {
-      //add force
-      if (t <= forceDuration) {
-        for (int y = 0; y < vc.getVoxels().getH(); y++) {
-          for (int i : new int[]{1, 2}) {
-            vc.getVoxels().get(vc.getVoxels().getW() - 1, y).getVertexBodies()[i].applyForce(new Vector2(0d, -force / 2d));
-          }
-        }
-      }
       //do step
       t = t + settings.getStepFrequency();
       world.step(1);
+      steps = steps + 1;
+      //control
+      if ((steps % (controlStepInterval + 1)) == 0) {
+        voxelCompound.control(t, settings.getStepFrequency());
+      }
       if (listener != null) {
         Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
-      //get position
-      double y = vc.getVoxels().get(vc.getVoxels().getW() - 1, vc.getVoxels().getH() / 2).getCenter().y;
-      ys.add(y - y0);
-      realTs.add((double) stopwatch.elapsed(TimeUnit.MICROSECONDS) / 1000000d);
-      simTs.add(t);
+      //collect data
+      for (Grid.Entry<Voxel> entry : voxelCompound.getVoxels()) {
+        if (entry.getValue() != null) {
+          double velocityMagnitude = entry.getValue().getSensorReading(Voxel.Sensor.VELOCITY_MAGNITUDE);
+          double brokenRatio = entry.getValue().getSensorReading(Voxel.Sensor.BROKEN_RATIO);
+          sumOfBrokenRatio = sumOfBrokenRatio + brokenRatio;
+          maxVelocityMagnitude = Math.max(maxVelocityMagnitude, velocityMagnitude);
+        }
+      }
     }
     stopwatch.stop();
-    //compute things
-    int dampingIndex = ys.size() - 2;
-    while (dampingIndex > 0) {
-      if (Math.abs(ys.get(dampingIndex) - ys.get(dampingIndex + 1)) > epsilon) {
-        break;
-      }
-      dampingIndex--;
-    }
     double elapsedSeconds = (double) stopwatch.elapsed(TimeUnit.MICROSECONDS) / 1000000d;
-    //fill
-    Map<String, List<Double>> timeEvolution = new LinkedHashMap<>();
-    timeEvolution.put("st", simTs);
-    timeEvolution.put("rt", realTs);
-    timeEvolution.put("y", ys);
-    List<Point2> finalTopPositions = new ArrayList<>();
-    for (int x = 0; x < vc.getVoxels().getW(); x++) {
-      Vector2 center = vc.getVoxels().get(x, 0).getCenter();
-      finalTopPositions.add(new Point2(center.x, center.y - y0));
-    }
     return new Result(
-            elapsedSeconds,
-            realTs.get(dampingIndex),
-            simTs.get(dampingIndex),
-            realTs.size(),
-            dampingIndex,
-            (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex),
-            (double) dampingIndex / realTs.get(dampingIndex),
-            (double) vc.getVoxels().count(v -> v != null) * (double) realTs.size() / elapsedSeconds,
-            (double) realTs.size() / elapsedSeconds,
-            finalTopPositions.get(finalTopPositions.size() - 1).y,
-            timeEvolution,
-            finalTopPositions
+            elapsedSeconds, steps,
+            (double) voxelCompound.getVoxels().count(v -> v != null) * (double) steps / elapsedSeconds,
+            (double) steps / elapsedSeconds,
+            sumOfBrokenRatio / (double) voxelCompound.getVoxels().count(v -> v != null) / (double) steps,
+            maxVelocityMagnitude
     );
   }
 
@@ -305,7 +266,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
           }
           //set static keys
           final Map<String, Object> staticKeys = new LinkedHashMap<>();
-          staticKeys.put("shape", shape.getW()+"x"+shape.getH());
+          staticKeys.put("shape", shape.getW() + "x" + shape.getH());
           //set static keys to the first value in the list
           staticKeys.putAll(params.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0))));
           //set static key of the current param
@@ -313,8 +274,8 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"), null);
-            Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
+            VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 2, 1d, (Settings) configurations.get("settings"), null);
+            Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();
             row.putAll(staticKeys);

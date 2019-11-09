@@ -14,31 +14,45 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.problems;
-
-import it.units.erallab.hmsrobots.viewers.SnapshotListener;
-import org.dyn4j.dynamics.Settings;
+package it.units.erallab.hmsrobots.viewers;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
-  
-  protected final SnapshotListener listener;
-  protected final Settings settings;
+public class Frame {
 
-  public AbstractEpisode(Settings settings, SnapshotListener listener) {
-    this.listener = listener;
-    this.settings = settings;
+  private final double x1;
+  private final double x2;
+  private final double y1;
+  private final double y2;
+
+  public Frame(double x1, double x2, double y1, double y2) {
+    this.x1 = x1;
+    this.x2 = x2;
+    this.y1 = y1;
+    this.y2 = y2;
   }
 
-  public SnapshotListener getListener() {
-    return listener;
+  public double getX1() {
+    return x1;
   }
 
-  public Settings getSettings() {
-    return settings;
+  public double getX2() {
+    return x2;
   }
-    
+
+  public double getY1() {
+    return y1;
+  }
+
+  public double getY2() {
+    return y2;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Frame{(%6.1f,%6.1f)->(%6.1f,%6.1f)}", x1, y1, x2, y2);
+  }
+
 }

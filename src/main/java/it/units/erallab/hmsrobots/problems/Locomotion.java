@@ -27,9 +27,7 @@ import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 
@@ -62,7 +60,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   private final int controlStepInterval;
 
   public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
-    super(listener, settings);
+    super(settings, listener);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.metrics = metrics;

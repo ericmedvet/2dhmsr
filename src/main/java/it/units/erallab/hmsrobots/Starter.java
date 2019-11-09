@@ -43,13 +43,14 @@ import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
+import org.dyn4j.geometry.Vector2;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Starter {
-
+  
   public static void main(String[] args) throws IOException {
     List<WorldObject> worldObjects = new ArrayList<>();
     Grid<Boolean> structure = Grid.create(7, 5, (x, y) -> (x < 2) || (x >= 5) || (y > 2));
@@ -113,6 +114,10 @@ public class Starter {
     ));
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
+    worldObjects.add(vc1);
+    vc2.translate(new Vector2(25, 0));
+    worldObjects.add(vc2);
+    vc3.translate(new Vector2(50, 0));
     worldObjects.add(vc3);
     worldObjects.add(ground);
     World world = new World();
@@ -141,10 +146,10 @@ public class Starter {
       }
     };
     executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 1.1d), TimeUnit.MILLISECONDS);
-
+    
   }
-
-  private static void gridStarter(double finalT, double dt) throws IOException {
+  
+  private static void gridStarter(double finalT) throws IOException {
     final List<Grid<Boolean>> shapes = new ArrayList<>();
     shapes.add(Grid.create(10, 5, true));
     shapes.add(Grid.create(6, 3, true));
@@ -160,6 +165,7 @@ public class Starter {
     }
     ExecutorService executor = Executors.newFixedThreadPool(3);
     VideoFileWriter videoFileWriter = new VideoFileWriter(
+            800, 600, 25,
             new File("/home/eric/experiments/video-grid.mp4"),
             names,
             executor
@@ -213,5 +219,5 @@ public class Starter {
     }
     videoFileWriter.flush();
   }
-
+  
 }

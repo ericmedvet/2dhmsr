@@ -19,8 +19,6 @@ package it.units.erallab.hmsrobots.viewers;
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Dimension;
@@ -47,8 +45,9 @@ import javax.swing.JSlider;
  */
 public class OnlineViewer extends JFrame implements SnapshotListener {
 
-  private final static int TARGET_FPS = 50;
+  private final static int TARGET_FPS = 30;
   private final static int MAX_QUEUE_SIZE = 10000;
+  private final static Framer FRAMER = new VoxelCompoundFollower(TARGET_FPS*3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX);
 
   private final Canvas canvas;
   private final JLabel infoLabel;
@@ -125,7 +124,6 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     setVisible(true);
     canvas.setIgnoreRepaint(true);
     canvas.createBufferStrategy(2);
-    final GraphicsDrawer.FrameFollower frameFollower = new GraphicsDrawer.FrameFollower(25, 1d);
     Runnable drawer = new Runnable() {
       private long lastUpdateMillis = System.currentTimeMillis();
 
@@ -144,17 +142,10 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
             if (snapshot != null) {
               worldTime = snapshot.getTime();
               Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
-              //get voxel compound
-              Compound voxelCompound = null;
-              for (Compound compound : snapshot.getCompounds()) {
-                if (compound.getObjectClass().equals(VoxelCompound.class)) {
-                  voxelCompound = compound;
-                  break;
-                }
-              }
-              GraphicsDrawer.Frame frame = frameFollower.getFrame(voxelCompound, (double) canvas.getWidth() / (double) canvas.getHeight());
+              //get frame
+              Frame frame = FRAMER.getFrame(snapshot, (double) canvas.getWidth() / (double) canvas.getHeight());
               //draw
-              graphicsDrawer.draw(snapshot, g, new GraphicsDrawer.Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes(), getSensors());
+              graphicsDrawer.draw(snapshot, g, new Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes(), getSensors());
               g.dispose();
               BufferStrategy strategy = canvas.getBufferStrategy();
               if (!strategy.contentsLost()) {
