@@ -167,8 +167,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     }
     return grid;
   }
-  
-  
+
   public static <K> Grid<K> create(int w, int h) {
     return create(w, h, (K) null);
   }
@@ -191,13 +190,69 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   public Iterator<Entry<T>> iterator() {
     return new GridIterator<>(this);
   }
-  
+
   public Collection<T> values() {
     return Collections.unmodifiableList(ts);
   }
-  
+
   public long count(Predicate<T> predicate) {
     return values().stream().filter(predicate).count();
+  }
+
+  public static <K> String toString(Grid<K> grid, String format) {
+    StringBuilder sb = new StringBuilder();
+    for (int y = 0; y < grid.getH(); y++) {
+      for (int x = 0; x < grid.getW(); x++) {
+        sb.append(String.format(format, grid.get(x, y)));
+      }
+      if (y < grid.getH() - 1) {
+        sb.append(String.format("%n"));
+      }
+    }
+    return sb.toString();
+  }
+
+  public static <K> String toString(Grid<K> grid, Predicate<K> p) {
+    StringBuilder sb = new StringBuilder();
+    for (int y = 0; y < grid.getH(); y++) {
+      for (int x = 0; x < grid.getW(); x++) {
+        sb.append(p.test(grid.get(x,y))?"+":"-");
+      }
+      if (y < grid.getH() - 1) {
+        sb.append(String.format("%n"));
+      }
+    }
+    return sb.toString();
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 5;
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final Grid<?> other = (Grid<?>) obj;
+    if (this.w != other.w) {
+      return false;
+    }
+    if (this.h != other.h) {
+      return false;
+    }
+    if (!Objects.equals(this.ts, other.ts)) {
+      return false;
+    }
+    return true;
   }
 
 }
