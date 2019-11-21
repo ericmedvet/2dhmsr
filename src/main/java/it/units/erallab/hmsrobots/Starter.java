@@ -27,6 +27,7 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
+import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +44,6 @@ import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Vector2;
 
 /**
  *
@@ -58,7 +58,7 @@ public class Starter {
     VoxelCompound vc1 = new VoxelCompound(10, 10, new VoxelCompound.Description(
             structure,
             new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
-              return Math.signum(Math.sin(2d * Math.PI * t * 0.5d));
+              return (Math.sin(2d * Math.PI * t * 2d));
             })),
             Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
     ));
@@ -115,10 +115,10 @@ public class Starter {
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
     worldObjects.add(vc1);
-    vc2.translate(new Vector2(25, 0));
-    worldObjects.add(vc2);
-    vc3.translate(new Vector2(50, 0));
-    worldObjects.add(vc3);
+    //vc2.translate(new Vector2(25, 0));
+    //worldObjects.add(vc2);
+    //vc3.translate(new Vector2(50, 0));
+    //worldObjects.add(vc3);
     worldObjects.add(ground);
     World world = new World();
     worldObjects.forEach((worldObject) -> {
@@ -168,7 +168,8 @@ public class Starter {
             800, 600, 25,
             new File("/home/eric/experiments/video-grid.mp4"),
             names,
-            executor
+            executor,
+            GraphicsDrawer.RenderingDirectives.create()
     );
     List<Future<String>> futures = new ArrayList<>();
     for (int x = 0; x < names.getW(); x++) {

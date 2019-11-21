@@ -84,13 +84,10 @@ public class GraphicsDrawer {
     private Set<VoxelRenderingMode> voxelRenderingModes;
     private Set<GeneralRenderingMode> generalRenderingModes;
 
-    private RenderingDirectives(LinkedHashMultimap<VoxelRenderingMean, Voxel.Sensor> meanSensorMap, Set<VoxelRenderingMode> voxelRenderingModes, Set<GeneralRenderingMode> generalRenderingModes) {
+    private RenderingDirectives() {
       this.meanSensorMap = LinkedHashMultimap.create(MEAN_SENSOR_MAP);
       this.voxelRenderingModes = Sets.newHashSet(VOXEL_RENDERING_MODES);
       this.generalRenderingModes = Sets.newHashSet(GENERAL_RENDERING_MODES);
-    }
-    
-    private RenderingDirectives() {
     }
 
     public LinkedHashMultimap<VoxelRenderingMean, Voxel.Sensor> getMeanSensorMap() {

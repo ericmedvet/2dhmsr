@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -25,10 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Flushable;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 import org.jcodec.api.awt.AWTSequenceEncoder;

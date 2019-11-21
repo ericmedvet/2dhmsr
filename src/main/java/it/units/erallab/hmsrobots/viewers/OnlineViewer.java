@@ -18,7 +18,6 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Dimension;
@@ -26,10 +25,6 @@ import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.image.BufferStrategy;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JCheckBox;
@@ -54,12 +49,11 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
   private final JSlider timeScaleSlider;
   private final JCheckBox playCheckBox;
   private final JProgressBar queueProgressBar;
-  private final Map<GraphicsDrawer.RenderingMode, JCheckBox> renderingModeCheckBoxes;
-  private final Map<Voxel.Sensor, JCheckBox> voxelSensorCheckBoxes;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final EvictingQueue<Snapshot> queue;
   private final GraphicsDrawer graphicsDrawer;
+  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
 
   private double timeScale;
 
@@ -71,10 +65,9 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     //create things
     this.scheduledExecutorService = scheduledExecutorService;
     queue = EvictingQueue.create(MAX_QUEUE_SIZE);
-    renderingModeCheckBoxes = new EnumMap<>(GraphicsDrawer.RenderingMode.class);
-    voxelSensorCheckBoxes = new EnumMap<>(Voxel.Sensor.class);
     //create drawer
     graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    renderingDirectives = GraphicsDrawer.RenderingDirectives.create();
     //create/set ui components
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     Dimension dimension = new Dimension(1000, 800);
@@ -82,40 +75,22 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     canvas.setPreferredSize(dimension);
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
+    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    JPanel topTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
-    JPanel bottomTopPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
     infoLabel = new JLabel();
     queueProgressBar = new JProgressBar(0, MAX_QUEUE_SIZE);
     timeScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, 10);
     playCheckBox = new JCheckBox("Play", true);
-    for (GraphicsDrawer.RenderingMode mode : GraphicsDrawer.RenderingMode.values()) {
-      final JCheckBox checkBox = new JCheckBox(
-              mode.name().toLowerCase().replace('_', ' '),
-              mode.equals(GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA) || mode.equals(GraphicsDrawer.RenderingMode.VOXEL_POLY)
-      );
-      renderingModeCheckBoxes.put(mode, checkBox);
-      topTopPanel.add(checkBox);
-    }
-    for (Voxel.Sensor sensor : Voxel.Sensor.values()) {
-      final JCheckBox checkBox = new JCheckBox(
-              sensor.name().toLowerCase().replace('_', ' '),
-              false
-      );
-      voxelSensorCheckBoxes.put(sensor, checkBox);
-      bottomTopPanel.add(checkBox);
-    }
+    //add checkboxes
+    
     //set layout and put components
     bottomPanel.add(infoLabel);
     bottomPanel.add(queueProgressBar);
     bottomPanel.add(timeScaleSlider);
     bottomPanel.add(playCheckBox);
-    JPanel topPanel = new JPanel(new BorderLayout());
-    topPanel.add(topTopPanel, BorderLayout.PAGE_START);
-    topPanel.add(bottomTopPanel, BorderLayout.PAGE_END);
+    getContentPane().add(topPanel, BorderLayout.PAGE_START);
     getContentPane().add(canvas, BorderLayout.CENTER);
     getContentPane().add(bottomPanel, BorderLayout.PAGE_END);
-    getContentPane().add(topPanel, BorderLayout.PAGE_START);
     //pack
     pack();
   }
@@ -145,7 +120,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
               //get frame
               Frame frame = FRAMER.getFrame(snapshot, (double) canvas.getWidth() / (double) canvas.getHeight());
               //draw
-              graphicsDrawer.draw(snapshot, g, new Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, getRenderingModes(), getSensors());
+              graphicsDrawer.draw(snapshot, g, new Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, renderingDirectives);
               g.dispose();
               BufferStrategy strategy = canvas.getBufferStrategy();
               if (!strategy.contentsLost()) {
@@ -200,26 +175,6 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     synchronized (queue) {
       queue.add(snapshot);
     }
-  }
-
-  private Set<GraphicsDrawer.RenderingMode> getRenderingModes() {
-    Set<GraphicsDrawer.RenderingMode> renderingModes = new HashSet<>();
-    for (Map.Entry<GraphicsDrawer.RenderingMode, JCheckBox> entry : renderingModeCheckBoxes.entrySet()) {
-      if (entry.getValue().isSelected()) {
-        renderingModes.add(entry.getKey());
-      }
-    }
-    return renderingModes;
-  }
-
-  private Set<Voxel.Sensor> getSensors() {
-    Set<Voxel.Sensor> sensors = new HashSet<>();
-    for (Map.Entry<Voxel.Sensor, JCheckBox> entry : voxelSensorCheckBoxes.entrySet()) {
-      if (entry.getValue().isSelected()) {
-        sensors.add(entry.getKey());
-      }
-    }
-    return sensors;
   }
 
 }
