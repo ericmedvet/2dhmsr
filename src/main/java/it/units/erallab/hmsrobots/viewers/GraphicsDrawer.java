@@ -16,7 +16,9 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
@@ -34,6 +36,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -42,15 +46,84 @@ import java.util.function.Function;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GraphicsDrawer {
-
-  public static enum RenderingMode {
-    VOXEL_POLY, VOXEL_FILL_AREA, VOXEL_SPRINGS, VOXEL_COMPONENTS, VOXEL_FORCE, VOXEL_SENSORS,
+  
+  public static enum VoxelRenderingMean {
+    FILL_COLOR, FILLED_CIRCLE, CIRCLE
+  }
+  
+  public static enum VoxelRenderingMode {
+    POLY, SPRINGS, COMPONENTS
+  }
+  
+  public static enum GeneralRenderingMode {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO
+  }
+  
+  public static class RenderingDirectives {
+    
+    private final static LinkedHashMultimap<VoxelRenderingMean, Voxel.Sensor> MEAN_SENSOR_MAP;
+    private final static Set<VoxelRenderingMode> VOXEL_RENDERING_MODES;
+    private final static Set<GeneralRenderingMode> GENERAL_RENDERING_MODES;
+    
+    static {
+      MEAN_SENSOR_MAP = LinkedHashMultimap.create();
+      MEAN_SENSOR_MAP.put(VoxelRenderingMean.FILL_COLOR, Voxel.Sensor.AREA_RATIO);
+      VOXEL_RENDERING_MODES = Sets.newHashSet();
+      VOXEL_RENDERING_MODES.add(VoxelRenderingMode.POLY);
+      GENERAL_RENDERING_MODES = Sets.newHashSet();
+      GENERAL_RENDERING_MODES.add(GeneralRenderingMode.GRID_MAJOR);
+      GENERAL_RENDERING_MODES.add(GeneralRenderingMode.TIME_INFO);
+      GENERAL_RENDERING_MODES.add(GeneralRenderingMode.VIEWPORT_INFO);
+    }
+    
+    public static RenderingDirectives create() {
+      return new RenderingDirectives();
+    }
+    
+    private LinkedHashMultimap<VoxelRenderingMean, Voxel.Sensor> meanSensorMap;
+    private Set<VoxelRenderingMode> voxelRenderingModes;
+    private Set<GeneralRenderingMode> generalRenderingModes;
+
+    private RenderingDirectives(LinkedHashMultimap<VoxelRenderingMean, Voxel.Sensor> meanSensorMap, Set<VoxelRenderingMode> voxelRenderingModes, Set<GeneralRenderingMode> generalRenderingModes) {
+      this.meanSensorMap = LinkedHashMultimap.create(MEAN_SENSOR_MAP);
+      this.voxelRenderingModes = Sets.newHashSet(VOXEL_RENDERING_MODES);
+      this.generalRenderingModes = Sets.newHashSet(GENERAL_RENDERING_MODES);
+    }
+    
+    private RenderingDirectives() {
+    }
+
+    public LinkedHashMultimap<VoxelRenderingMean, Voxel.Sensor> getMeanSensorMap() {
+      return meanSensorMap;
+    }
+
+    public Set<VoxelRenderingMode> getVoxelRenderingModes() {
+      return voxelRenderingModes;
+    }
+
+    public Set<GeneralRenderingMode> getGeneralRenderingModes() {
+      return generalRenderingModes;
+    }
+    
+    public RenderingDirectives sensor(VoxelRenderingMean mean, Voxel.Sensor sensor) {
+      meanSensorMap.put(mean, sensor);
+      return this;
+    }
+    
+    public RenderingDirectives voxelRenderingMode(VoxelRenderingMode voxelRenderingMode) {
+      voxelRenderingModes.add(voxelRenderingMode);
+      return this;
+    }
+    
+    public RenderingDirectives generalRenderingMode(GeneralRenderingMode generalRenderingMode) {
+      generalRenderingModes.add(generalRenderingMode);
+      return this;
+    }
+    
   }
 
   public static class Builder {
 
-    private final static double FORCE_CIRCLE_RANGE = 0.5d;
     private final static float VOXEL_FILL_ALPHA = 0.75f;
     private final static float VOXEL_COMPONENT_ALPHA = 0.5f;
     private final static Color GRID_COLOR = Color.GRAY;
@@ -59,7 +132,6 @@ public class GraphicsDrawer {
     private final static Color GROUND_COLOR = Color.BLACK;
     private final static double[] GRID_SIZES = new double[]{2, 5, 10};
 
-    private double forceCircleRange = FORCE_CIRCLE_RANGE;
     private float voxelFillAlpha = VOXEL_FILL_ALPHA;
     private float voxelComponentAlpha = VOXEL_COMPONENT_ALPHA;
     private Color gridColor = GRID_COLOR;
@@ -70,11 +142,6 @@ public class GraphicsDrawer {
 
     public static Builder create() {
       return new Builder();
-    }
-
-    public Builder forceCircleRange(double forceCircleRange) {
-      this.forceCircleRange = forceCircleRange;
-      return this;
     }
 
     public Builder voxelFillAlpha(float voxelFillAlpha) {
@@ -110,10 +177,6 @@ public class GraphicsDrawer {
     public Builder gridSizes(double[] gridSizes) {
       this.gridSizes = gridSizes;
       return this;
-    }
-
-    public double getForceCircleRange() {
-      return forceCircleRange;
     }
 
     public float getVoxelFillAlpha() {
@@ -165,6 +228,7 @@ public class GraphicsDrawer {
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.Y_VELOCITY, vDomainFunction);
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.X_ROT_VELOCITY, vDomainFunction);
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.Y_ROT_VELOCITY, vDomainFunction);    
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.LAST_APPLIED_FORCE, (v) -> Range.closed(-1d, 1d));    
   }
 
   private GraphicsDrawer() {
@@ -175,7 +239,7 @@ public class GraphicsDrawer {
     this.builder = builder;
   }
 
-  public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, Set<RenderingMode> renderingModes, Set<Voxel.Sensor> voxelSensors, String... otherInfos) {
+  public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, RenderingDirectives directives, String... infos) {
     //set clipping area
     g.setClip(
             (int) graphicsFrame.getX1(), (int) graphicsFrame.getY1(),
@@ -199,11 +263,11 @@ public class GraphicsDrawer {
     );
     //draw grid
     g.setTransform(at);
-    if (renderingModes.contains(RenderingMode.GRID_MAJOR) || renderingModes.contains(RenderingMode.GRID_MINOR)) {
+    if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MAJOR) || directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MINOR)) {
       g.setColor(builder.getGridColor());
       g.setStroke(new BasicStroke(1f / (float) ratio));
       double gridSize = computeGridSize(worldFrame.getX1(), worldFrame.getX2());
-      if (renderingModes.contains(RenderingMode.GRID_MAJOR)) {
+      if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MAJOR)) {
         for (double gridX = Math.floor(worldFrame.getX1() / gridSize) * gridSize; gridX < worldFrame.getX2(); gridX = gridX + gridSize) {
           g.draw(new Line2D.Double(gridX, worldFrame.getY1(), gridX, worldFrame.getY2()));
         }
@@ -211,7 +275,7 @@ public class GraphicsDrawer {
           g.draw(new Line2D.Double(worldFrame.getX1(), gridY, worldFrame.getX2(), gridY));
         }
       }
-      if (renderingModes.contains(RenderingMode.GRID_MINOR)) {
+      if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MINOR)) {
         gridSize = gridSize / 5d;
         g.setStroke(new BasicStroke(
                 1f / (float) ratio,
@@ -231,20 +295,20 @@ public class GraphicsDrawer {
     //draw components
     g.setStroke(new BasicStroke(2f / (float) ratio));
     for (Compound object : snapshot.getCompounds()) {
-      draw(object, g, renderingModes, voxelSensors);
+      draw(object, g, directives);
     }
     //restore transform    
     g.setTransform(oAt);
     //info
     StringBuilder sb = new StringBuilder();
-    if (renderingModes.contains(RenderingMode.VIEWPORT_INFO)) {
+    if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VIEWPORT_INFO)) {
       sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.getX1(), worldFrame.getY1(), worldFrame.getX2(), worldFrame.getY2()));
     }
-    if (renderingModes.contains(RenderingMode.TIME_INFO)) {
+    if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.TIME_INFO)) {
       sb.append((sb.length() > 0) ? " " : "").append(String.format("t=%.2f", snapshot.getTime()));
     }
-    for (String otherInfo : otherInfos) {
-      sb.append((sb.length() > 0) ? " " : "").append(otherInfo);
+    for (String info : infos) {
+      sb.append((sb.length() > 0) ? " " : "").append(info);
     }
     if (sb.length()>0) {
       g.setColor(builder.getInfoColor());
@@ -267,54 +331,46 @@ public class GraphicsDrawer {
     return gridSize;
   }
 
-  private void draw(Compound compound, Graphics2D g, Set<RenderingMode> renderingModes, Set<Voxel.Sensor> voxelSensors) {
+  private void draw(Compound compound, Graphics2D g, RenderingDirectives directives) {
     if (compound.getObjectClass().equals(VoxelCompound.class)) {
       for (Component component : compound.getComponents()) {
         if (component.getType().equals(Component.Type.ENCLOSING)) {
           VoxelComponent voxelComponent = (VoxelComponent) component;
           final Point2 c = component.getPoly().center();
-          if (renderingModes.contains(RenderingMode.VOXEL_FILL_AREA)) {
-            final Color color = linear(
-                    Color.RED, Color.GREEN, Color.YELLOW,
-                    .75d, 1d, 1.25d,
-                    voxelComponent.getSensorReadings().get(Voxel.Sensor.AREA_RATIO),
-                    builder.getVoxelFillAlpha()
-            );
-            g.setColor(color);
-            g.fill(toPath(component.getPoly(), true));
+          //iterate over rendering mean
+          for (Map.Entry<VoxelRenderingMean, Voxel.Sensor> entry : directives.getMeanSensorMap().entries()) {
+            double value = voxelComponent.getSensorReadings().get(entry.getValue());
+            double normalizedValue = value;
+            if (SENSOR_DOMAIN_FUNCTIONS.containsKey(entry.getValue())) {
+              Range<Double> domain = SENSOR_DOMAIN_FUNCTIONS.get(entry.getValue()).apply(voxelComponent);
+              normalizedValue = (value-domain.lowerEndpoint())/(domain.upperEndpoint()-domain.lowerEndpoint());
+              normalizedValue = Math.max(0d, normalizedValue);
+              normalizedValue = Math.min(1d, normalizedValue);
+            }
+            if (entry.getKey().equals(VoxelRenderingMean.FILL_COLOR)) {
+              Color color = linear(Color.RED, Color.GREEN, Color.YELLOW, 0d, 0.5d, 1d, normalizedValue, builder.getVoxelFillAlpha());
+              g.setColor(color);
+              g.fill(toPath(component.getPoly(), true));
+            } else if (entry.getKey().equals(VoxelRenderingMean.FILL_COLOR)) {
+              double r = (voxelComponent.getSideLength() * (1d - 0.5d * normalizedValue)) / 2d;
+              g.setColor(Color.BLUE);
+              Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
+              g.draw(circle);              
+            } else if (entry.getKey().equals(VoxelRenderingMean.CIRCLE)) {
+              double r = voxelComponent.getSideLength() * normalizedValue;
+              g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()/2));
+              Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
+              g.fill(circle);              
+            }
           }
-          if (renderingModes.contains(RenderingMode.VOXEL_POLY)) {
+          if (directives.getVoxelRenderingModes().contains(VoxelRenderingMode.POLY)) {
             g.setColor(new Color(0f, 0f, 1f, builder.getVoxelComponentAlpha()));
             g.draw(toPath(component.getPoly(), true));
           }
-          if (renderingModes.contains(RenderingMode.VOXEL_FORCE)) {
-            g.setColor(Color.BLUE);
-            double r = (voxelComponent.getSideLength() * (1d - builder.getForceCircleRange() * voxelComponent.getLastAppliedForce())) / 2d;
-            Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
-            g.draw(circle);
-          }
-          if (renderingModes.contains(RenderingMode.VOXEL_SENSORS)) {
-            for (Voxel.Sensor sensor : voxelSensors) {
-              g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()/2));
-              double v = voxelComponent.getSensorReadings().get(sensor);
-              Function<VoxelComponent, Range<Double>> domainFunction = SENSOR_DOMAIN_FUNCTIONS.get(sensor);
-              Range<Double> domain = Range.closedOpen(-1d, 1d);
-              if (domainFunction!=null) {
-                domain = domainFunction.apply(voxelComponent);
-              }
-              //map domain to [0,1]
-              double r = (Math.min(Math.max(domain.lowerEndpoint(), v), domain.upperEndpoint())-domain.lowerEndpoint())/(domain.upperEndpoint()-domain.lowerEndpoint());
-              //mapp to [0, l/2]
-              r = r*voxelComponent.getSideLength()/2d;
-              Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
-              g.fill(circle);
-              
-            }
-          }
-        } else if (component.getType().equals(Component.Type.CONNECTION) && renderingModes.contains(RenderingMode.VOXEL_SPRINGS)) {
+        } else if (component.getType().equals(Component.Type.CONNECTION) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.SPRINGS)) {
           g.setColor(Color.BLUE);
           g.draw(toPath(component.getPoly(), false));
-        } else if (component.getType().equals(Component.Type.RIGID) && renderingModes.contains(RenderingMode.VOXEL_COMPONENTS)) {
+        } else if (component.getType().equals(Component.Type.RIGID) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.COMPONENTS)) {
           g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()));
           g.fill(toPath(component.getPoly(), true));
         }

@@ -49,7 +49,8 @@ public class Voxel implements WorldObject {
     X_VELOCITY, Y_VELOCITY,
     X_ROT_VELOCITY, Y_ROT_VELOCITY,
     ANGLE,
-    BROKEN_RATIO;
+    BROKEN_RATIO,
+    LAST_APPLIED_FORCE;
   }
 
   public static enum ForceMethod {
@@ -714,6 +715,8 @@ public class Voxel implements WorldObject {
         return getLinearVelocity().copy().dot(new Vector2(getAngle() + Math.PI / 2d));
       case BROKEN_RATIO:
         return ratioOfOverlappingVertexBodies();
+      case LAST_APPLIED_FORCE:
+        return getLastAppliedForce();
       default:
         return 0d;
     }
