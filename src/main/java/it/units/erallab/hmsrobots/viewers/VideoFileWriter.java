@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -25,10 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Flushable;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 import org.jcodec.api.awt.AWTSequenceEncoder;
@@ -44,15 +41,7 @@ public class VideoFileWriter implements Flushable {
 
   private final int w;
   private final int h;
-  private final double frameRate;
-  private final Set<GraphicsDrawer.RenderingMode> renderingModes = EnumSet.of(
-          GraphicsDrawer.RenderingMode.VOXEL_POLY,
-          GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA,
-          GraphicsDrawer.RenderingMode.GRID_MAJOR,
-          GraphicsDrawer.RenderingMode.VIEWPORT_INFO,
-          GraphicsDrawer.RenderingMode.TIME_INFO
-  );
-  private final Set<Voxel.Sensor> sensors = EnumSet.of(Voxel.Sensor.Y_ROT_VELOCITY);
+  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
 
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
@@ -69,10 +58,10 @@ public class VideoFileWriter implements Flushable {
 
   private static final Logger L = Logger.getLogger(VideoFileWriter.class.getName());  
 
-  public VideoFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
+  public VideoFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) throws FileNotFoundException, IOException {
     this.w = w;
     this.h = h;
-    this.frameRate = frameRate;
+    this.renderingDirectives = renderingDirectives;
     this.namesGrid = namesGrid;
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
@@ -181,7 +170,7 @@ public class VideoFileWriter implements Flushable {
           //draw
           graphicsDrawer.draw(entry.getValue(), g,
                   new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
-                  frame, renderingModes, sensors, namesGrid.get(entry.getX(), entry.getY())
+                  frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
           );
         }
       

@@ -35,7 +35,7 @@ public class VoxelCompoundFollower implements Framer {
     MAX, AVG
   };
 
-  private final double sizeRelativeMargin;
+  private double sizeRelativeMargin;
   private final int compounds;
   private final AggregateType aggregateType;
 
@@ -131,9 +131,13 @@ public class VoxelCompoundFollower implements Framer {
             (f1.getY2() + f2.getY2()) / 2d
     );
   }
-  
-  private static double ratio(Frame f) {
-    return (f.getX2()-f.getX1())/(f.getY2()-f.getY1());
+
+  public void setSizeRelativeMargin(double sizeRelativeMargin) {
+    this.sizeRelativeMargin = sizeRelativeMargin;
   }
 
+  public double getSizeRelativeMargin() {
+    return sizeRelativeMargin;
+  }
+  
 }

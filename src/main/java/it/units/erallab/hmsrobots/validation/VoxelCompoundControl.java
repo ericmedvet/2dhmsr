@@ -29,7 +29,6 @@ import it.units.erallab.hmsrobots.problems.AbstractEpisode;
 import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
-import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +49,6 @@ import org.apache.commons.beanutils.PropertyUtils;
 
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
 
 /**
@@ -63,14 +61,16 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
     private final double realTime;
     private final long steps;
     private final double overallVoxelStepsPerSecond;
+    private final double overallVoxelSimSecondsPerSecond;
     private final double overallStepsPerSecond;
     private final double avgBrokenRatio;
     private final double maxVelocityMagnitude;
 
-    public Result(double realTime, long steps, double overallVoxelStepsPerSecond, double overallStepsPerSecond, double avgBrokenRatio, double maxVelocityMagnitude) {
+    public Result(double realTime, long steps, double overallVoxelStepsPerSecond, double overallVoxelSimSecondsPerSecond, double overallStepsPerSecond, double avgBrokenRatio, double maxVelocityMagnitude) {
       this.realTime = realTime;
       this.steps = steps;
       this.overallVoxelStepsPerSecond = overallVoxelStepsPerSecond;
+      this.overallVoxelSimSecondsPerSecond = overallVoxelSimSecondsPerSecond;
       this.overallStepsPerSecond = overallStepsPerSecond;
       this.avgBrokenRatio = avgBrokenRatio;
       this.maxVelocityMagnitude = maxVelocityMagnitude;
@@ -86,6 +86,10 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
 
     public double getOverallVoxelStepsPerSecond() {
       return overallVoxelStepsPerSecond;
+    }
+
+    public double getOverallVoxelSimSecondsPerSecond() {
+      return overallVoxelSimSecondsPerSecond;
     }
 
     public double getOverallStepsPerSecond() {
@@ -201,6 +205,7 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
     return new Result(
             elapsedSeconds, steps,
             (double) voxelCompound.getVoxels().count(v -> v != null) * (double) steps / elapsedSeconds,
+            (double) voxelCompound.getVoxels().count(v -> v != null) * finalT / elapsedSeconds,
             (double) steps / elapsedSeconds,
             sumOfBrokenRatio / (double) voxelCompound.getVoxels().count(v -> v != null) / (double) steps,
             maxVelocityMagnitude
