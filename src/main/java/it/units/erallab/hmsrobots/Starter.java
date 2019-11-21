@@ -58,9 +58,9 @@ public class Starter {
     VoxelCompound vc1 = new VoxelCompound(10, 10, new VoxelCompound.Description(
             structure,
             new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
-              return (Math.sin(2d * Math.PI * t * 2d));
+              return (Math.sin(2d * Math.PI * t * 1d));
             })),
-            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
+            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().springF(5d))
     ));
     //centralized mlp
     Grid<List<Voxel.Sensor>> sensorGrid = Grid.create(structure.getW(), structure.getH(),

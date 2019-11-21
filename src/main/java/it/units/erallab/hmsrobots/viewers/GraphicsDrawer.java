@@ -348,12 +348,12 @@ public class GraphicsDrawer {
               Color color = linear(Color.RED, Color.GREEN, Color.YELLOW, 0d, 0.5d, 1d, normalizedValue, builder.getVoxelFillAlpha());
               g.setColor(color);
               g.fill(toPath(component.getPoly(), true));
-            } else if (entry.getKey().equals(VoxelRenderingMean.FILL_COLOR)) {
+            } else if (entry.getKey().equals(VoxelRenderingMean.CIRCLE)) {
               double r = (voxelComponent.getSideLength() * (1d - 0.5d * normalizedValue)) / 2d;
               g.setColor(Color.BLUE);
               Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
               g.draw(circle);              
-            } else if (entry.getKey().equals(VoxelRenderingMean.CIRCLE)) {
+            } else if (entry.getKey().equals(VoxelRenderingMean.FILLED_CIRCLE)) {
               double r = voxelComponent.getSideLength() * normalizedValue;
               g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()/2));
               Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
