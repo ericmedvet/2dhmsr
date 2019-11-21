@@ -41,6 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -62,22 +63,26 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
     private final long steps;
     private final long dampingSteps;
     private final double dampingVoxelStepsPerSecond;
+    private final double dampingVoxelSimSecondsPerSecond;
     private final double dampingStepsPerSecond;
     private final double overallVoxelStepsPerSecond;
+    private final double overallVoxelSimSecondsPerSecond;
     private final double overallStepsPerSecond;
     private final double yDisplacement;
     private final Map<String, List<Double>> timeEvolution;
     private final List<Point2> finalTopPositions;
 
-    public Result(double realTime, double dampingRealTime, double dampingSimTime, long steps, long dampingSteps, double dampingVoxelStepsPerSecond, double dampingStepsPerSecond, double overallVoxelStepsPerSecond, double overallStepsPerSecond, double yDisplacement, Map<String, List<Double>> timeEvolution, List<Point2> finalTopPositions) {
+    public Result(double realTime, double dampingRealTime, double dampingSimTime, long steps, long dampingSteps, double dampingVoxelStepsPerSecond, double dampingVoxelSimSecondsPerSecond, double dampingStepsPerSecond, double overallVoxelStepsPerSecond, double overallVoxelSimSecondsPerSecond, double overallStepsPerSecond, double yDisplacement, Map<String, List<Double>> timeEvolution, List<Point2> finalTopPositions) {
       this.realTime = realTime;
       this.dampingRealTime = dampingRealTime;
       this.dampingSimTime = dampingSimTime;
       this.steps = steps;
       this.dampingSteps = dampingSteps;
       this.dampingVoxelStepsPerSecond = dampingVoxelStepsPerSecond;
+      this.dampingVoxelSimSecondsPerSecond = dampingVoxelSimSecondsPerSecond;
       this.dampingStepsPerSecond = dampingStepsPerSecond;
       this.overallVoxelStepsPerSecond = overallVoxelStepsPerSecond;
+      this.overallVoxelSimSecondsPerSecond = overallVoxelSimSecondsPerSecond;
       this.overallStepsPerSecond = overallStepsPerSecond;
       this.yDisplacement = yDisplacement;
       this.timeEvolution = timeEvolution;
@@ -104,23 +109,31 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
       return dampingSteps;
     }
 
-    public double getMinVoxelStepPerSecond() {
+    public double getDampingVoxelStepsPerSecond() {
       return dampingVoxelStepsPerSecond;
     }
 
-    public double getMinStepPerSecond() {
+    public double getDampingVoxelSimSecondsPerSecond() {
+      return dampingVoxelSimSecondsPerSecond;
+    }
+
+    public double getDampingStepsPerSecond() {
       return dampingStepsPerSecond;
     }
 
-    public double getOverallVoxelStepPerSecond() {
+    public double getOverallVoxelStepsPerSecond() {
       return overallVoxelStepsPerSecond;
     }
 
-    public double getOverallStepPerSecond() {
+    public double getOverallVoxelSimSecondsPerSecond() {
+      return overallVoxelSimSecondsPerSecond;
+    }
+
+    public double getOverallStepsPerSecond() {
       return overallStepsPerSecond;
     }
 
-    public double getYDisplacement() {
+    public double getyDisplacement() {
       return yDisplacement;
     }
 
@@ -237,8 +250,10 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
             realTs.size(),
             dampingIndex,
             (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex),
+            (double) vc.getVoxels().count(v -> v != null) * simTs.get(dampingIndex) / realTs.get(dampingIndex),
             (double) dampingIndex / realTs.get(dampingIndex),
             (double) vc.getVoxels().count(v -> v != null) * (double) realTs.size() / elapsedSeconds,
+            (double) vc.getVoxels().count(v -> v != null) * simTs.get(simTs.size()-1) / elapsedSeconds,
             (double) realTs.size() / elapsedSeconds,
             finalTopPositions.get(finalTopPositions.size() - 1).y,
             timeEvolution,
