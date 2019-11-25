@@ -63,9 +63,8 @@ public class Experimenter {
     VoxelCompound vc2 = new VoxelCompound(
             50, 10,
             new VoxelCompound.Description(
-                    wormShape,
-                    new PhaseSin(1d, 1d, wormController),
-                    Grid.create(wormShape.getW(), wormShape.getH(), Voxel.Builder.create())
+                    Grid.create(wormShape.getW(), wormShape.getH(), Voxel.Builder.create()),
+                    new PhaseSin(1d, 1d, wormController)
             )
     );
     vc2.addTo(world);
@@ -75,7 +74,7 @@ public class Experimenter {
     File file = new File("/home/eric/experiments/2dhmsr/prova30s-dense.serial");
     double dt = world.getSettings().getStepFrequency();
     TimeAccumulator t = new TimeAccumulator();
-    while (t.getT()<30) {
+    while (t.getT() < 30) {
       t.add(dt);
       vc2.control(t.getT(), dt);
       world.step(1);
@@ -96,6 +95,5 @@ public class Experimenter {
       L.log(Level.SEVERE, String.format("Cannot open object stream on file %s", file), ex);
     }
   }
-
 
 }

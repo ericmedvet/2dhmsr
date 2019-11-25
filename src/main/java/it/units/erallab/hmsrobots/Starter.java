@@ -50,17 +50,16 @@ import org.dyn4j.dynamics.World;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Starter {
-  
+
   public static void main(String[] args) throws IOException {
     List<WorldObject> worldObjects = new ArrayList<>();
     Grid<Boolean> structure = Grid.create(7, 5, (x, y) -> (x < 2) || (x >= 5) || (y > 2));
     //simple
     VoxelCompound vc1 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            structure,
+            Grid.create(structure, b -> b?Voxel.Builder.create().springF(5d):null),
             new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
               return (Math.sin(2d * Math.PI * t * 1d));
-            })),
-            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().springF(5d))
+            }))
     ));
     //centralized mlp
     Grid<List<Voxel.Sensor>> sensorGrid = Grid.create(structure.getW(), structure.getH(),
@@ -83,9 +82,8 @@ public class Starter {
       weights[i] = random.nextDouble();
     }
     VoxelCompound vc2 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            structure,
-            new CentralizedMLP(structure, sensorGrid, innerNeurons, weights, t -> Math.sin(2d * Math.PI * t * 0.5d)),
-            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE))
+            Grid.create(structure, b -> b?Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE):null),
+            new CentralizedMLP(structure, sensorGrid, innerNeurons, weights, t -> Math.sin(2d * Math.PI * t * 0.5d))
     ));
     //distributed mlp
     innerNeurons = new int[0];
@@ -95,7 +93,7 @@ public class Starter {
       weights[i] = random.nextDouble();
     }
     VoxelCompound vc3 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            structure,
+            Grid.create(structure, b -> b?Voxel.Builder.create().massCollisionFlag(true):null),
             new DistributedMLP(
                     structure,
                     Grid.create(structure.getW(), structure.getH(), (x, y) -> {
@@ -109,8 +107,7 @@ public class Starter {
                     1,
                     innerNeurons,
                     weights
-            ),
-            Grid.create(structure.getW(), structure.getH(), Voxel.Builder.create().massCollisionFlag(true))
+            )
     ));
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
@@ -146,9 +143,9 @@ public class Starter {
       }
     };
     executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 1.1d), TimeUnit.MILLISECONDS);
-    
+
   }
-  
+
   private static void gridStarter(double finalT) throws IOException {
     final List<Grid<Boolean>> shapes = new ArrayList<>();
     shapes.add(Grid.create(10, 5, true));
@@ -199,9 +196,9 @@ public class Starter {
             );
             //execute
             List<Double> results = locomotion.apply(new VoxelCompound.Description(
-                    shape,
-                    new PhaseSin(frequency, 1d, wormController),
-                    Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create())));
+                    Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create()),
+                    new PhaseSin(frequency, 1d, wormController)
+            ));
             System.out.printf("Result is %s%n", results);
           } catch (Throwable t) {
             t.printStackTrace();
@@ -220,5 +217,5 @@ public class Starter {
     }
     videoFileWriter.flush();
   }
-  
+
 }
