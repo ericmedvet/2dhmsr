@@ -133,9 +133,8 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
       functionGrid.set(entry.getX(), entry.getY(), t -> Math.signum(Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) builderGrid.getW())));
     }
     VoxelCompound voxelCompound = new VoxelCompound(0, 0, new VoxelCompound.Description(
-            Grid.create(builderGrid.getW(), builderGrid.getH(), true),
-            new TimeFunction(functionGrid),
-            builderGrid
+            builderGrid,
+            new TimeFunction(functionGrid)
     ));
     worldObjects.add(voxelCompound);
     //build ground

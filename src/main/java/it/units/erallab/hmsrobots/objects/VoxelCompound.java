@@ -44,26 +44,20 @@ public class VoxelCompound implements WorldObject {
 
   public static class Description implements Serializable {
 
-    private final Grid<Boolean> structure;
-    private final Controller controller;
     private final Grid<Voxel.Builder> builderGrid;
+    private final Controller controller;
 
-    public Description(Grid<Boolean> structure, Controller controller, Grid<Voxel.Builder> builderGrid) {
-      this.structure = structure;
-      this.controller = controller;
+    public Description(Grid<Voxel.Builder> builderGrid, Controller controller) {
       this.builderGrid = builderGrid;
-    }
-
-    public Grid<Boolean> getStructure() {
-      return structure;
-    }
-
-    public Controller getController() {
-      return controller;
+      this.controller = controller;
     }
 
     public Grid<Voxel.Builder> getBuilderGrid() {
       return builderGrid;
+    }
+
+    public Controller getController() {
+      return controller;
     }
 
   }
@@ -73,10 +67,10 @@ public class VoxelCompound implements WorldObject {
     this.controller = description.getController();
     joints = new ArrayList<>();
     //construct voxels
-    voxels = Grid.create(description.getStructure());
-    for (int gx = 0; gx < description.getStructure().getW(); gx++) {
-      for (int gy = 0; gy < description.getStructure().getH(); gy++) {
-        if (description.getStructure().get(gx, gy)) {
+    voxels = Grid.create(description.getBuilderGrid());
+    for (int gx = 0; gx < description.getBuilderGrid().getW(); gx++) {
+      for (int gy = 0; gy < description.getBuilderGrid().getH(); gy++) {
+        if (description.getBuilderGrid().get(gx, gy)!=null) {
           Voxel voxel = description.getBuilderGrid().get(gx, gy).build(
                   x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
                   y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),

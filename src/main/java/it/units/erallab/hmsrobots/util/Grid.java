@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -154,6 +155,14 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return h;
   }
 
+  public static <S, T> Grid<T> create(Grid<S> source, Function<S, T> transformerFunction) {
+    Grid<T> target = Grid.create(source);
+    for (Grid.Entry<S> entry : source) {
+      target.set(entry.getX(), entry.getY(), transformerFunction.apply(entry.getValue()));
+    }
+    return target;
+  }
+
   public static <K> Grid<K> create(int w, int h, K k) {
     return create(w, h, (x, y) -> k);
   }
@@ -216,7 +225,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     StringBuilder sb = new StringBuilder();
     for (int y = 0; y < grid.getH(); y++) {
       for (int x = 0; x < grid.getW(); x++) {
-        sb.append(p.test(grid.get(x,y))?"+":"-");
+        sb.append(p.test(grid.get(x, y)) ? "+" : "-");
       }
       if (y < grid.getH() - 1) {
         sb.append(String.format("%n"));

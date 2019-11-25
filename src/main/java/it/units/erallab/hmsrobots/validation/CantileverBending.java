@@ -167,7 +167,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
-            Grid.create(builderGrid.getW(), builderGrid.getH(), true), null, builderGrid
+            builderGrid, null
     ));
     Point2[] boundingBox = vc.boundingBox();
     worldObjects.add(vc);
