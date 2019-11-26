@@ -59,8 +59,8 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   private final List<Metric> metrics;
   private final int controlStepInterval;
 
-  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
-    super(settings, listener);
+  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, Settings settings) {
+    super(settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.metrics = metrics;
@@ -68,7 +68,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   }
 
   @Override
-  public List<Double> apply(VoxelCompound.Description description) {
+  public List<Double> apply(VoxelCompound.Description description, SnapshotListener listener) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();

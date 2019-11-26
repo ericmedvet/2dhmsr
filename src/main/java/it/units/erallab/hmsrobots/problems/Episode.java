@@ -16,8 +16,15 @@
  */
 package it.units.erallab.hmsrobots.problems;
 
+import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.function.Function;
 
 public interface Episode<S, R> extends Function<S, R> {
+
+  public R apply(S solution, SnapshotListener listener);
+
+  public default R apply(S solution) {
+    return apply(solution, null);
+  }
 
 }

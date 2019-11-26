@@ -116,8 +116,8 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
   private final int controlStepInterval;
   private final double freq;
 
-  public VoxelCompoundControl(double finalT, double groundHillsHeight, int controlStepInterval, double freq, Settings settings, SnapshotListener listener) {
-    super(settings, listener);
+  public VoxelCompoundControl(double finalT, double groundHillsHeight, int controlStepInterval, double freq, Settings settings) {
+    super(settings);
     this.finalT = finalT;
     this.groundHillsHeight = groundHillsHeight;
     this.controlStepInterval = controlStepInterval;
@@ -125,7 +125,7 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
   }
 
   @Override
-  public Result apply(Grid<Voxel.Builder> builderGrid) {
+  public Result apply(Grid<Voxel.Builder> builderGrid, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(builderGrid);
@@ -278,7 +278,7 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 2, 1d, (Settings) configurations.get("settings"), null);
+            VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 2, 1d, (Settings) configurations.get("settings"));
             Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();

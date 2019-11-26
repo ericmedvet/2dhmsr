@@ -153,8 +153,8 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
   private final double finalT;
   private final double epsilon;
 
-  public CantileverBending(double force, double forceDuration, double finalT, double epsilon, Settings settings, SnapshotListener listener) {
-    super(settings, listener);
+  public CantileverBending(double force, double forceDuration, double finalT, double epsilon, Settings settings) {
+    super(settings);
     this.force = force;
     this.forceDuration = forceDuration;
     this.finalT = finalT;
@@ -162,7 +162,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
   }
 
   @Override
-  public Result apply(Grid<Voxel.Builder> builderGrid) {
+  public Result apply(Grid<Voxel.Builder> builderGrid, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
@@ -327,7 +327,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"), null);
+            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"));
             Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();

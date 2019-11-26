@@ -155,7 +155,7 @@ public class VideoFileWriter implements Flushable {
   }
 
   private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
-    L.info(String.format("Writing frame %d/%d", drawnCount, drawnCount + gridQueue.size()));
+    L.finer(String.format("Writing frame %d/%d", drawnCount, drawnCount + gridQueue.size()));
     //set local clip size
     double localW = (double) w / (double) namesGrid.getW();
     double localH = (double) h / (double) namesGrid.getH();
@@ -197,7 +197,7 @@ public class VideoFileWriter implements Flushable {
         }
       }
     }
-    L.info("Flushing data");
+    L.fine("Flushing data");
     encoder.finish();
     NIOUtils.closeQuietly(channel);
     running = false;

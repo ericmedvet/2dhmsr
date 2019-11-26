@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
@@ -186,18 +187,16 @@ public class Starter {
             //prepare
             Locomotion locomotion = new Locomotion(
                     finalT,
-                    new double[][]{new double[]{0, 1, 999, 1000},
-                    new double[]{50, 0, 0, 50}},
+                    new double[][]{new double[]{0, 1, 999, 1000}, new double[]{50, 0, 0, 50}},
                     Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
                     2,
-                    listener,
                     new Settings()
             );
             //execute
             List<Double> results = locomotion.apply(new VoxelCompound.Description(
                     Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create()),
                     new PhaseSin(frequency, 1d, wormController)
-            ));
+            ), listener);
             System.out.printf("Result is %s%n", results);
           } catch (Throwable t) {
             t.printStackTrace();
