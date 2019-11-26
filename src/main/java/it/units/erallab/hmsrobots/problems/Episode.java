@@ -16,9 +16,8 @@
  */
 package it.units.erallab.hmsrobots.problems;
 
-import java.util.Map;
 import java.util.function.Function;
 
 public interface Episode<S, R> extends Function<S, R> {
-    
+
 }

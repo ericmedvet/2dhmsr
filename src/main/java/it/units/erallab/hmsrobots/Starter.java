@@ -16,7 +16,6 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.objects.Ground;
