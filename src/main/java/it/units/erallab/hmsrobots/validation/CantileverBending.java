@@ -25,9 +25,9 @@ import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.problems.AbstractEpisode;
-import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -41,8 +41,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -352,9 +356,18 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
       }
       return null;
     }).collect(Collectors.toList());
-    //write table and finish
-    CSVWriter.write(CSVWriter.Table.create(rows), System.out);
     executor.shutdown();
+    //write table and finish
+    try {
+      CSVPrinter printer = new CSVPrinter(System.out, CSVFormat.DEFAULT.withHeader(rows.get(0).keySet().toArray(new String[0])));
+      for (Map<String, Object> row : rows) {
+        printer.printRecord(row.values().toArray());
+      }
+      printer.flush();
+      printer.close();
+    } catch (IOException ex) {
+      Logger.getLogger(VoxelCompoundControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
+    }
   }
 
 }

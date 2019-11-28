@@ -23,18 +23,25 @@ import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.problems.Episode;
 import it.units.erallab.hmsrobots.problems.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.Util;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.security.spec.ECField;
+import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -53,7 +60,7 @@ public class VideoGridWriter<S> implements Runnable {
       //ignore
     }
   }
-  
+
   private final Grid<Pair<String, S>> namedSolutionGrid;
   private final Episode<S, ?> episode;
 
@@ -75,9 +82,9 @@ public class VideoGridWriter<S> implements Runnable {
     List<Future<?>> results = new ArrayList<>();
     for (final Grid.Entry<Pair<String, S>> entry : namedSolutionGrid) {
       results.add(executor.submit(() -> {
-        L.info(String.format("Starting %s in position (%d,%d)%n", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
+        L.info(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
         episode.apply(entry.getValue().getRight(), videoFileWriter.listener(entry.getX(), entry.getY()));
-        L.info(String.format("Ended %s in position (%d,%d)%n", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
+        L.info(String.format("Ended %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
       }));
     }
     //wait for results
@@ -96,34 +103,6 @@ public class VideoGridWriter<S> implements Runnable {
     } catch (IOException ex) {
       L.log(Level.SEVERE, String.format("Cannot flush video due to %s", ex), ex);
     }
-  }
-
-  public static void main(String[] args) throws IOException {
-    Grid<Boolean> structure = Grid.create(6, 3, true);
-    Locomotion locomotion = new Locomotion(
-            5,
-            new double[][]{new double[]{0, 1, 999, 1000}, new double[]{50, 0, 0, 50}},
-            Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-            1,
-            new Settings()
-    );
-    Grid<Pair<String, VoxelCompound.Description>> namedDescriptionGrid = Grid.create(1, 2);
-    namedDescriptionGrid.set(0, 0, Pair.of("sin", new VoxelCompound.Description(
-            Grid.create(structure, b -> b ? Voxel.Builder.create() : null),
-            new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> Math.sin(2d * Math.PI * t * 1d))))
-    ));
-    namedDescriptionGrid.set(0, 1, Pair.of("square", new VoxelCompound.Description(
-            Grid.create(structure, b -> b ? Voxel.Builder.create() : null),
-            new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> Math.signum(Math.sin(2d * Math.PI * t * 1d)))))
-    ));
-    VideoGridWriter<VoxelCompound.Description> writer = new VideoGridWriter<>(
-            namedDescriptionGrid, locomotion,
-            800, 600, 25,
-            new File("/home/eric/experiments/2dhmsr/video-grid-new.mp4"),
-            Executors.newFixedThreadPool(3),
-            GraphicsDrawer.RenderingDirectives.create()
-    );
-    writer.run();
   }
 
 }

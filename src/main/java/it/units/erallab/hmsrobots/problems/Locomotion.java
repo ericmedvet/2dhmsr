@@ -38,6 +38,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
 
   public static enum Metric {
     TRAVEL_X_VELOCITY(false),
+    TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
     AVG_SUM_OF_SQUARED_CONTROL_SIGNALS(true),
     AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS(true);
@@ -138,6 +139,9 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
       switch (metric) {
         case TRAVEL_X_VELOCITY:
           value = (voxelCompound.getCenter().x - initCenterX) / t;
+          break;
+        case TRAVEL_X_RELATIVE_VELOCITY:
+          value = (voxelCompound.getCenter().x - initCenterX) / t / (boundingBox[1].x-boundingBox[0].x);
           break;
         case CENTER_AVG_Y:
           value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();

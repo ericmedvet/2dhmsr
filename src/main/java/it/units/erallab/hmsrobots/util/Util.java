@@ -26,6 +26,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Base64;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -57,7 +59,8 @@ public class Util {
     } else {
       ois = new ObjectInputStream(bais);
     }
-    return (T) ois.readObject();
+    Object o =  ois.readObject();
+    return (T) o;
   }
 
   public static <T extends Serializable> String lazilySerialize(T t) {
@@ -65,6 +68,16 @@ public class Util {
       return serialize(t, true);
     } catch (IOException e) {
       return e.getClass().getSimpleName();
+    }
+  }
+
+  public static <T> T lazilyDeserialize(String s) {
+    try {
+      return (T)deserialize(s, true);
+    } catch (IOException e) {
+      return null;
+    } catch (ClassNotFoundException ex) {
+      return null;
     }
   }
 
