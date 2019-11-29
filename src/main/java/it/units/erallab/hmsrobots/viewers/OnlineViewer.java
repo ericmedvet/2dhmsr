@@ -144,7 +144,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
     pack();
   }
 
-  private String name(Enum e) {
+  private String name(Enum<?> e) {
     return e.name().replace("_", " ").toLowerCase();
   }
 

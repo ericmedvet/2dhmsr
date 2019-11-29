@@ -26,13 +26,15 @@ import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.problems.AbstractEpisode;
-import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import java.beans.PropertyDescriptor;
+import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -44,8 +46,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -116,8 +122,8 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
   private final int controlStepInterval;
   private final double freq;
 
-  public VoxelCompoundControl(double finalT, double groundHillsHeight, int controlStepInterval, double freq, Settings settings, SnapshotListener listener) {
-    super(settings, listener);
+  public VoxelCompoundControl(double finalT, double groundHillsHeight, int controlStepInterval, double freq, Settings settings) {
+    super(settings);
     this.finalT = finalT;
     this.groundHillsHeight = groundHillsHeight;
     this.controlStepInterval = controlStepInterval;
@@ -125,7 +131,7 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
   }
 
   @Override
-  public Result apply(Grid<Voxel.Builder> builderGrid) {
+  public Result apply(Grid<Voxel.Builder> builderGrid, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(builderGrid);
@@ -278,7 +284,7 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 2, 1d, (Settings) configurations.get("settings"), null);
+            VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 2, 1d, (Settings) configurations.get("settings"));
             Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();
@@ -303,9 +309,18 @@ public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, V
       }
       return null;
     }).collect(Collectors.toList());
-    //write table and finish
-    CSVWriter.write(CSVWriter.Table.create(rows), System.out);
     executor.shutdown();
+    //write table and finish
+    try {
+      CSVPrinter printer = new CSVPrinter(System.out, CSVFormat.DEFAULT.withHeader(rows.get(0).keySet().toArray(new String[0])));
+      for (Map<String, Object> row : rows) {
+        printer.printRecord(row.values().toArray());
+      }
+      printer.flush();
+      printer.close();
+    } catch (IOException ex) {
+      Logger.getLogger(VoxelCompoundControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
+    }
   }
 
 }

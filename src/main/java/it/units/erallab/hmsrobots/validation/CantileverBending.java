@@ -25,9 +25,9 @@ import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.problems.AbstractEpisode;
-import it.units.erallab.hmsrobots.util.CSVWriter;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -41,9 +41,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -154,8 +157,8 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
   private final double finalT;
   private final double epsilon;
 
-  public CantileverBending(double force, double forceDuration, double finalT, double epsilon, Settings settings, SnapshotListener listener) {
-    super(settings, listener);
+  public CantileverBending(double force, double forceDuration, double finalT, double epsilon, Settings settings) {
+    super(settings);
     this.force = force;
     this.forceDuration = forceDuration;
     this.finalT = finalT;
@@ -163,7 +166,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
   }
 
   @Override
-  public Result apply(Grid<Voxel.Builder> builderGrid) {
+  public Result apply(Grid<Voxel.Builder> builderGrid, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
@@ -328,7 +331,7 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"), null);
+            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"));
             Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();
@@ -353,9 +356,18 @@ public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, Cant
       }
       return null;
     }).collect(Collectors.toList());
-    //write table and finish
-    CSVWriter.write(CSVWriter.Table.create(rows), System.out);
     executor.shutdown();
+    //write table and finish
+    try {
+      CSVPrinter printer = new CSVPrinter(System.out, CSVFormat.DEFAULT.withHeader(rows.get(0).keySet().toArray(new String[0])));
+      for (Map<String, Object> row : rows) {
+        printer.printRecord(row.values().toArray());
+      }
+      printer.flush();
+      printer.close();
+    } catch (IOException ex) {
+      Logger.getLogger(VoxelCompoundControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
+    }
   }
 
 }

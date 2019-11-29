@@ -38,6 +38,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
 
   public static enum Metric {
     TRAVEL_X_VELOCITY(false),
+    TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
     AVG_SUM_OF_SQUARED_CONTROL_SIGNALS(true),
     AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS(true);
@@ -59,8 +60,8 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   private final List<Metric> metrics;
   private final int controlStepInterval;
 
-  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
-    super(settings, listener);
+  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, Settings settings) {
+    super(settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.metrics = metrics;
@@ -68,7 +69,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   }
 
   @Override
-  public List<Double> apply(VoxelCompound.Description description) {
+  public List<Double> apply(VoxelCompound.Description description, SnapshotListener listener) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -116,9 +117,9 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
           final int y = entry.getY();
           if (entry.getValue() != null) {
             final double v = entry.getValue();
-            sumOfSquaredControlSignals.set(x, y, v * v * settings.getStepFrequency());
+            sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y) + v * v * settings.getStepFrequency());
             double dV = v - lastControlSignals.get(x, y);
-            sumOfSquaredDeltaControlSignals.set(x, y, dV * dV * settings.getStepFrequency());
+            sumOfSquaredDeltaControlSignals.set(x, y, sumOfSquaredDeltaControlSignals.get(x, y) + dV * dV * settings.getStepFrequency());
             lastControlSignals.set(x, y, entry.getValue());
           }
         }
@@ -139,14 +140,17 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
         case TRAVEL_X_VELOCITY:
           value = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
+        case TRAVEL_X_RELATIVE_VELOCITY:
+          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox[1].x - boundingBox[0].y, boundingBox[1].x - boundingBox[0].y);
+          break;
         case CENTER_AVG_Y:
           value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
-          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
           break;
       }
       results.add(value);

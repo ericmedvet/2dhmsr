@@ -25,16 +25,10 @@ import org.dyn4j.dynamics.Settings;
  */
 public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
   
-  protected final SnapshotListener listener;
   protected final Settings settings;
 
-  public AbstractEpisode(Settings settings, SnapshotListener listener) {
-    this.listener = listener;
+  public AbstractEpisode(Settings settings) {
     this.settings = settings;
-  }
-
-  public SnapshotListener getListener() {
-    return listener;
   }
 
   public Settings getSettings() {
