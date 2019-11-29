@@ -117,9 +117,9 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
           final int y = entry.getY();
           if (entry.getValue() != null) {
             final double v = entry.getValue();
-            sumOfSquaredControlSignals.set(x, y, v * v * settings.getStepFrequency());
+            sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y) + v * v * settings.getStepFrequency());
             double dV = v - lastControlSignals.get(x, y);
-            sumOfSquaredDeltaControlSignals.set(x, y, dV * dV * settings.getStepFrequency());
+            sumOfSquaredDeltaControlSignals.set(x, y, sumOfSquaredDeltaControlSignals.get(x, y) + dV * dV * settings.getStepFrequency());
             lastControlSignals.set(x, y, entry.getValue());
           }
         }
@@ -141,16 +141,16 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
           value = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
         case TRAVEL_X_RELATIVE_VELOCITY:
-          value = (voxelCompound.getCenter().x - initCenterX) / t / (boundingBox[1].x-boundingBox[0].x);
+          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox[1].x - boundingBox[0].y, boundingBox[1].x - boundingBox[0].y);
           break;
         case CENTER_AVG_Y:
           value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
-          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
           break;
       }
       results.add(value);
