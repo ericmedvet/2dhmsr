@@ -50,7 +50,8 @@ public class Voxel implements WorldObject {
     X_ROT_VELOCITY, Y_ROT_VELOCITY,
     ANGLE,
     BROKEN_RATIO,
-    LAST_APPLIED_FORCE;
+    LAST_APPLIED_FORCE,
+    TOUCHING;
   }
 
   public static enum ForceMethod {
@@ -82,7 +83,7 @@ public class Voxel implements WorldObject {
 
     private final static double SIDE_LENGTH = 3d;
     private final static double MASS_SIDE_LENGTH_RATIO = .35d;
-    private final static double SPRING_F = 25d;
+    private final static double SPRING_F = 15d;
     private final static double SPRING_D = 1d;
     private final static double MASS_LINEAR_DUMPING = 0.5d;
     private final static double MASS_ANGULAR_DUMPING = 0.5d;
@@ -397,6 +398,9 @@ public class Voxel implements WorldObject {
     vertexBodies[1] = new Body(1);
     vertexBodies[2] = new Body(1);
     vertexBodies[3] = new Body(1);
+    for (Body vertexBody : vertexBodies) {
+      vertexBody.setUserData(parent);
+    }
     vertexBodies[0].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[1].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[2].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
@@ -717,9 +721,26 @@ public class Voxel implements WorldObject {
         return ratioOfOverlappingVertexBodies();
       case LAST_APPLIED_FORCE:
         return getLastAppliedForce();
+      case TOUCHING:
+        return isInTouch()?1d:0d;
       default:
         return 0d;
     }
+  }
+  
+  private boolean isInTouch() {
+    for (Body vertexBody : vertexBodies) {
+      List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      for (Body inContactBody : inContactBodies) {
+        Object userData = inContactBody.getUserData();
+        if (userData==null) {
+          return true;
+        } else if (userData!=vertexBody.getUserData()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 }

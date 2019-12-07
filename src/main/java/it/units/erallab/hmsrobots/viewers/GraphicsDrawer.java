@@ -218,6 +218,7 @@ public class GraphicsDrawer {
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.ANGLE, (v) -> Range.closed(-Math.PI, Math.PI));
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.AREA_RATIO, (v) -> Range.closed(0.5d, 1.5d));
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.BROKEN_RATIO, (v) -> Range.closed(0d, 1d));    
+    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.TOUCHING, (v) -> Range.closed(0d, 1d));    
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.VELOCITY_MAGNITUDE, (v) -> Range.closed(0d, v.getSideLength()*sideRatio*Math.sqrt(2d)));
     Function<VoxelComponent, Range<Double>> vDomainFunction = (v) -> Range.closed(-v.getSideLength()*sideRatio, v.getSideLength()*sideRatio);
     SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.X_VELOCITY, vDomainFunction);

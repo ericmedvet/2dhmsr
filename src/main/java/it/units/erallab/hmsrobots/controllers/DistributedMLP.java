@@ -73,7 +73,11 @@ public class DistributedMLP extends ClosedLoopController {
       }
     }
     if (weights.length != sumOfNOfWeights) {
-      throw new IllegalArgumentException(String.format("%d weights expected and %d found", neuronsGrid, weights.length));
+      throw new IllegalArgumentException(String.format(
+              "%d weights expected and %d found",
+              sumOfNOfWeights,
+              weights.length
+      ));
     }
     //set mlps
     mlpGrid = Grid.create(structure);

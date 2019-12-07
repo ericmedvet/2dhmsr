@@ -44,6 +44,7 @@ import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
+import org.dyn4j.geometry.Vector2;
 
 /**
  *
@@ -56,26 +57,27 @@ public class Starter {
     Grid<Boolean> structure = Grid.create(7, 5, (x, y) -> (x < 2) || (x >= 5) || (y > 2));
     //simple
     VoxelCompound vc1 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            Grid.create(structure, b -> b?Voxel.Builder.create().springF(5d):null),
+            Grid.create(structure, b -> b?Voxel.Builder.create().springF(10d):null),
             new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
               return (Math.sin(2d * Math.PI * t * 1d));
             }))
     ));
     //centralized mlp
-    Grid<List<Voxel.Sensor>> sensorGrid = Grid.create(structure.getW(), structure.getH(),
+    Grid<List<Voxel.Sensor>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
             (x, y) -> {
               List<Voxel.Sensor> sensors = new ArrayList<>();
               if (y > 2) {
-                sensors.add(Voxel.Sensor.Y_ROT_VELOCITY);
+                sensors.add(Voxel.Sensor.Y_ROT_VELOCITY);                
               }
               if (y == 0) {
                 sensors.add(Voxel.Sensor.AREA_RATIO);
               }
+              sensors.add(Voxel.Sensor.TOUCHING);
               return sensors;
             }
     );
     int[] innerNeurons = new int[]{10};
-    int nOfWeights = CentralizedMLP.countParams(structure, sensorGrid, innerNeurons);
+    int nOfWeights = CentralizedMLP.countParams(structure, centralizedSensorGrid, innerNeurons);
     double[] weights = new double[nOfWeights];
     Random random = new Random();
     for (int i = 0; i < weights.length; i++) {
@@ -83,11 +85,12 @@ public class Starter {
     }
     VoxelCompound vc2 = new VoxelCompound(10, 10, new VoxelCompound.Description(
             Grid.create(structure, b -> b?Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE):null),
-            new CentralizedMLP(structure, sensorGrid, innerNeurons, weights, t -> Math.sin(2d * Math.PI * t * 0.5d))
+            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> Math.sin(-2d * Math.PI * t * 0.5d))
     ));
     //distributed mlp
+    Grid<List<Voxel.Sensor>> distributedSensorGrid = Grid.create(structure, b -> b?Lists.newArrayList(Voxel.Sensor.X_ROT_VELOCITY, Voxel.Sensor.Y_ROT_VELOCITY, Voxel.Sensor.TOUCHING):Collections.EMPTY_LIST);
     innerNeurons = new int[0];
-    nOfWeights = DistributedMLP.countParams(structure, sensorGrid, 1, innerNeurons);
+    nOfWeights = DistributedMLP.countParams(structure, distributedSensorGrid, 1, innerNeurons);
     weights = new double[nOfWeights];
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble();
@@ -98,12 +101,12 @@ public class Starter {
                     structure,
                     Grid.create(structure.getW(), structure.getH(), (x, y) -> {
                       if (x == 3) {
-                        return t -> Math.sin(2d * Math.PI * t * 0.5d);
+                        return t -> Math.sin(-2d * Math.PI * t * 0.5d);
                       } else {
                         return t -> 0d;
                       }
                     }),
-                    sensorGrid,
+                    distributedSensorGrid,
                     1,
                     innerNeurons,
                     weights
@@ -111,11 +114,11 @@ public class Starter {
     ));
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
-    worldObjects.add(vc1);
+    //worldObjects.add(vc1);
     //vc2.translate(new Vector2(25, 0));
-    //worldObjects.add(vc2);
-    //vc3.translate(new Vector2(50, 0));
-    //worldObjects.add(vc3);
+    worldObjects.add(vc2);
+    vc3.translate(new Vector2(50, 0));
+    worldObjects.add(vc3);
     worldObjects.add(ground);
     World world = new World();
     worldObjects.forEach((worldObject) -> {

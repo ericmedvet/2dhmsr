@@ -141,7 +141,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
           value = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
         case TRAVEL_X_RELATIVE_VELOCITY:
-          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox[1].x - boundingBox[0].y, boundingBox[1].x - boundingBox[0].y);
+          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox[1].x - boundingBox[0].x, boundingBox[1].y - boundingBox[0].y);
           break;
         case CENTER_AVG_Y:
           value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
