@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -55,9 +56,20 @@ public class Starter {
   public static void main(String[] args) throws IOException {
     List<WorldObject> worldObjects = new ArrayList<>();
     Grid<Boolean> structure = Grid.create(7, 5, (x, y) -> (x < 2) || (x >= 5) || (y > 2));
+    Voxel.Builder builder = Voxel.Builder.create()
+            .springF(15d)
+            .massLinearDamping(0.5d)
+            .massAngularDamping(0.5d)
+            .areaRatioOffset(0.2d)
+            .massSideLengthRatio(0.2d)
+            .ropeJointsFlag(false)
+            .springScaffoldings(EnumSet.of(
+                    Voxel.SpringScaffolding.SIDE_EXTERNAL,
+                    Voxel.SpringScaffolding.CENTRAL_CROSS
+            ));
     //simple
     VoxelCompound vc1 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            Grid.create(structure, b -> b?Voxel.Builder.create().springF(10d):null),
+            Grid.create(structure, b -> b ? builder : null),
             new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
               return (Math.sin(2d * Math.PI * t * 1d));
             }))
@@ -67,7 +79,7 @@ public class Starter {
             (x, y) -> {
               List<Voxel.Sensor> sensors = new ArrayList<>();
               if (y > 2) {
-                sensors.add(Voxel.Sensor.Y_ROT_VELOCITY);                
+                sensors.add(Voxel.Sensor.Y_ROT_VELOCITY);
               }
               if (y == 0) {
                 sensors.add(Voxel.Sensor.AREA_RATIO);
@@ -81,14 +93,14 @@ public class Starter {
     double[] weights = new double[nOfWeights];
     Random random = new Random();
     for (int i = 0; i < weights.length; i++) {
-      weights[i] = random.nextDouble();
+      weights[i] = random.nextDouble()*2d-1d;
     }
     VoxelCompound vc2 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            Grid.create(structure, b -> b?Voxel.Builder.create().forceMethod(Voxel.ForceMethod.DISTANCE):null),
-            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> Math.sin(-2d * Math.PI * t * 0.5d))
+            Grid.create(structure, b -> b ? builder : null),
+            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 0d*Math.sin(-2d * Math.PI * t * 0.5d))
     ));
     //distributed mlp
-    Grid<List<Voxel.Sensor>> distributedSensorGrid = Grid.create(structure, b -> b?Lists.newArrayList(Voxel.Sensor.X_ROT_VELOCITY, Voxel.Sensor.Y_ROT_VELOCITY, Voxel.Sensor.TOUCHING):Collections.EMPTY_LIST);
+    Grid<List<Voxel.Sensor>> distributedSensorGrid = Grid.create(structure, b -> b ? Lists.newArrayList(Voxel.Sensor.X_ROT_VELOCITY, Voxel.Sensor.Y_ROT_VELOCITY, Voxel.Sensor.TOUCHING) : Collections.EMPTY_LIST);
     innerNeurons = new int[0];
     nOfWeights = DistributedMLP.countParams(structure, distributedSensorGrid, 1, innerNeurons);
     weights = new double[nOfWeights];
@@ -96,7 +108,7 @@ public class Starter {
       weights[i] = random.nextDouble();
     }
     VoxelCompound vc3 = new VoxelCompound(10, 10, new VoxelCompound.Description(
-            Grid.create(structure, b -> b?Voxel.Builder.create().massCollisionFlag(true):null),
+            Grid.create(structure, b -> b ? Voxel.Builder.create().massCollisionFlag(true) : null),
             new DistributedMLP(
                     structure,
                     Grid.create(structure.getW(), structure.getH(), (x, y) -> {
@@ -114,11 +126,11 @@ public class Starter {
     ));
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
-    //worldObjects.add(vc1);
+    worldObjects.add(vc1);
     //vc2.translate(new Vector2(25, 0));
-    worldObjects.add(vc2);
-    vc3.translate(new Vector2(50, 0));
-    worldObjects.add(vc3);
+    //worldObjects.add(vc2);
+    //vc3.translate(new Vector2(50, 0));
+    //worldObjects.add(vc3);
     worldObjects.add(ground);
     World world = new World();
     worldObjects.forEach((worldObject) -> {
@@ -127,16 +139,20 @@ public class Starter {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(3);
     OnlineViewer viewer = new OnlineViewer(executor);
     viewer.start();
-    final double dt = world.getSettings().getStepFrequency();
+    final double dt = 0.015d;
     final TimeAccumulator t = new TimeAccumulator();
+    final AtomicLong c = new AtomicLong(0);
+    final int controlStepInterval = 1;
     Runnable runnable = () -> {
       try {
         t.add(dt);
-        worldObjects.forEach((worldObject) -> {
-          if (worldObject instanceof VoxelCompound) {
-            ((VoxelCompound) worldObject).control(t.getT(), dt);
-          }
-        });
+        if (c.incrementAndGet() % (1 + controlStepInterval) == 0) {
+          worldObjects.forEach((worldObject) -> {
+            if (worldObject instanceof VoxelCompound) {
+              ((VoxelCompound) worldObject).control(t.getT(), dt);
+            }
+          });
+        }
         world.step(1);
         Snapshot snapshot = new Snapshot(t.getT(), worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));;
         viewer.listen(snapshot);
