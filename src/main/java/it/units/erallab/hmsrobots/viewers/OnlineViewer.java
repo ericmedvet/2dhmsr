@@ -166,7 +166,7 @@ public class OnlineViewer extends JFrame implements SnapshotListener {
             //get frame
             Frame frame = followerFramer.getFrame(snapshot, (double) canvas.getWidth() / (double) canvas.getHeight());
             //draw
-            graphicsDrawer.draw(snapshot, g, new Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, renderingDirectives);
+            graphicsDrawer.draw(snapshot, g, new Frame(0, canvas.getWidth(), 0, canvas.getHeight()), frame, renderingDirectives, "Online!");
             g.dispose();
             BufferStrategy strategy = canvas.getBufferStrategy();
             if (!strategy.contentsLost()) {

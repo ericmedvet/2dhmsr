@@ -127,8 +127,8 @@ public class Starter {
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
     worldObjects.add(vc1);
-    //vc2.translate(new Vector2(25, 0));
-    //worldObjects.add(vc2);
+    vc2.translate(new Vector2(25, 0));
+    worldObjects.add(vc2);
     //vc3.translate(new Vector2(50, 0));
     //worldObjects.add(vc3);
     worldObjects.add(ground);
