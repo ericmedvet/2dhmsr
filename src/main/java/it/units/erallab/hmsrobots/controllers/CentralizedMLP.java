@@ -21,6 +21,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author eric
@@ -30,7 +31,7 @@ public class CentralizedMLP extends ClosedLoopController {
   private final MultiLayerPerceptron mlp;
   private final SerializableFunction<Double, Double> drivingFunction;
 
-  public static int countParams(Grid<Boolean> structure, Grid<List<Voxel.Sensor>> sensorsGrid, int[] innerNeurons) {
+  public static int countParams(Grid<Boolean> structure, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid, int[] innerNeurons) {
     doChecks(structure, sensorsGrid);
     //count sensors
     int sensors = (int) sensorsGrid.values().stream().filter((s) -> s != null).mapToInt(List::size).sum();
@@ -44,7 +45,7 @@ public class CentralizedMLP extends ClosedLoopController {
     return MultiLayerPerceptron.countWeights(neurons);
   }
 
-  public CentralizedMLP(Grid<Boolean> structure, Grid<List<Voxel.Sensor>> sensorsGrid, int[] innerNeurons, double[] weights, SerializableFunction<Double, Double> drivingFunction) {
+  public CentralizedMLP(Grid<Boolean> structure, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid, int[] innerNeurons, double[] weights, SerializableFunction<Double, Double> drivingFunction) {
     super(sensorsGrid);
     doChecks(structure, sensorsGrid);
     //count sensors and voxels
@@ -61,7 +62,7 @@ public class CentralizedMLP extends ClosedLoopController {
     this.drivingFunction = drivingFunction;
   }
 
-  private static void doChecks(Grid<Boolean> structure, Grid<List<Voxel.Sensor>> sensorsGrid) throws IllegalArgumentException {
+  private static void doChecks(Grid<Boolean> structure, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid) throws IllegalArgumentException {
     //checks
     if ((structure.getW() != sensorsGrid.getW()) || (structure.getH() != sensorsGrid.getH())) {
       throw new IllegalArgumentException("Structure and sensors grids should have the same shape");
@@ -77,16 +78,17 @@ public class CentralizedMLP extends ClosedLoopController {
 
   @Override
   public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid) {
+    readSensors(voxelGrid);
     //compute driving function
     double v = drivingFunction.apply(t);
     //collect input
     double[] inputValues = new double[mlp.getNeurons()[0] - 1];
     int c = 0;
-    for (Grid.Entry<Voxel> entry : voxelGrid) {
+    for (Grid.Entry<List<Pair<Voxel.Sensor, Integer>>> entry : getSensorsGrid()) {
       if (entry.getValue() != null) {
-        final List<Voxel.Sensor> sensors = getSensorsGrid().get(entry.getX(), entry.getY());
-        collectInputs(entry.getValue(), sensors, inputValues, c);
-        c = c + sensors.size();
+        double[] readings = getReadings(entry.getX(), entry.getY());
+        System.arraycopy(readings, 0, inputValues, c, readings.length);
+        c = c + readings.length;
       }
     }
     inputValues[inputValues.length - 1] = v;
