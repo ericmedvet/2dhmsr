@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
@@ -59,12 +60,13 @@ public class Starter {
     Voxel.Builder builder = Voxel.Builder.create()
             .springF(15d)
             .massLinearDamping(0.5d)
-            .massAngularDamping(0.5d)
+            .massAngularDamping(0.05d)
             .areaRatioOffset(0.2d)
-            .massSideLengthRatio(0.2d)
+            .massSideLengthRatio(0.3d)
             .ropeJointsFlag(false)
             .springScaffoldings(EnumSet.of(
                     Voxel.SpringScaffolding.SIDE_EXTERNAL,
+                    Voxel.SpringScaffolding.SIDE_INTERNAL,
                     Voxel.SpringScaffolding.CENTRAL_CROSS
             ));
     //simple
@@ -75,16 +77,22 @@ public class Starter {
             }))
     ));
     //centralized mlp
-    Grid<List<Voxel.Sensor>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
+    Grid<List<Pair<Voxel.Sensor, Integer>>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
             (x, y) -> {
-              List<Voxel.Sensor> sensors = new ArrayList<>();
+              if (!structure.get(x, y)) {
+                return null;
+              }
+              List<Pair<Voxel.Sensor, Integer>> sensors = new ArrayList<>();
               if (y > 2) {
-                sensors.add(Voxel.Sensor.Y_ROT_VELOCITY);
+                sensors.add(Pair.of(Voxel.Sensor.Y_ROT_VELOCITY, 0));
+                sensors.add(Pair.of(Voxel.Sensor.Y_ROT_VELOCITY, 1));
+                sensors.add(Pair.of(Voxel.Sensor.X_ROT_VELOCITY, 0));
+                sensors.add(Pair.of(Voxel.Sensor.X_ROT_VELOCITY, 1));
               }
               if (y == 0) {
-                sensors.add(Voxel.Sensor.AREA_RATIO);
+                sensors.add(Pair.of(Voxel.Sensor.TOUCHING, 0));
               }
-              sensors.add(Voxel.Sensor.TOUCHING);
+              sensors.add(Pair.of(Voxel.Sensor.AREA_RATIO, 0));
               return sensors;
             }
     );
@@ -97,22 +105,29 @@ public class Starter {
     }
     VoxelCompound vc2 = new VoxelCompound(10, 10, new VoxelCompound.Description(
             Grid.create(structure, b -> b ? builder : null),
-            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 0d*Math.sin(-2d * Math.PI * t * 0.5d))
+            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 1d*Math.sin(-2d * Math.PI * t * 0.5d))
     ));
     //distributed mlp
-    Grid<List<Voxel.Sensor>> distributedSensorGrid = Grid.create(structure, b -> b ? Lists.newArrayList(Voxel.Sensor.X_ROT_VELOCITY, Voxel.Sensor.Y_ROT_VELOCITY, Voxel.Sensor.TOUCHING) : Collections.EMPTY_LIST);
-    innerNeurons = new int[0];
+    Grid<List<Pair<Voxel.Sensor, Integer>>> distributedSensorGrid = Grid.create(structure, b -> b ? Lists.newArrayList(
+            Pair.of(Voxel.Sensor.X_ROT_VELOCITY, 0),
+            Pair.of(Voxel.Sensor.Y_ROT_VELOCITY, 0),
+            Pair.of(Voxel.Sensor.AREA_RATIO, 0),
+            Pair.of(Voxel.Sensor.AREA_RATIO, 1),
+            Pair.of(Voxel.Sensor.AREA_RATIO, 2),
+            Pair.of(Voxel.Sensor.TOUCHING, 0)
+    ) : null);
+    innerNeurons = new int[] {4};
     nOfWeights = DistributedMLP.countParams(structure, distributedSensorGrid, 1, innerNeurons);
     weights = new double[nOfWeights];
     for (int i = 0; i < weights.length; i++) {
-      weights[i] = random.nextDouble();
+      weights[i] = random.nextDouble()*2d-1d;
     }
     VoxelCompound vc3 = new VoxelCompound(10, 10, new VoxelCompound.Description(
             Grid.create(structure, b -> b ? Voxel.Builder.create().massCollisionFlag(true) : null),
             new DistributedMLP(
                     structure,
                     Grid.create(structure.getW(), structure.getH(), (x, y) -> {
-                      if (x == 3) {
+                      if (x == 300) {
                         return t -> Math.sin(-2d * Math.PI * t * 0.5d);
                       } else {
                         return t -> 0d;
@@ -126,11 +141,11 @@ public class Starter {
     ));
     //world
     Ground ground = new Ground(new double[]{0, 1, 2999, 3000}, new double[]{50, 0, 0, 50});
-    worldObjects.add(vc1);
-    vc2.translate(new Vector2(25, 0));
-    worldObjects.add(vc2);
+    //worldObjects.add(vc1);
+    //vc2.translate(new Vector2(25, 0));
+    //worldObjects.add(vc2);
     //vc3.translate(new Vector2(50, 0));
-    //worldObjects.add(vc3);
+    worldObjects.add(vc3);
     worldObjects.add(ground);
     World world = new World();
     worldObjects.forEach((worldObject) -> {
@@ -162,77 +177,6 @@ public class Starter {
       }
     };
     executor.scheduleAtFixedRate(runnable, 0, Math.round(dt * 1000d / 1.1d), TimeUnit.MILLISECONDS);
-
-  }
-
-  private static void gridStarter(double finalT) throws IOException {
-    final List<Grid<Boolean>> shapes = new ArrayList<>();
-    shapes.add(Grid.create(10, 5, true));
-    shapes.add(Grid.create(6, 3, true));
-    shapes.add(Grid.create(4, 1, true));
-    final List<Double> frequencies = new ArrayList<>();
-    frequencies.add(-1d);
-    frequencies.add(-.5d);
-    Grid<String> names = Grid.create(shapes.size(), frequencies.size());
-    for (int x = 0; x < names.getW(); x++) {
-      for (int y = 0; y < names.getH(); y++) {
-        names.set(x, y, String.format("shape=%d, freq=%f", x, frequencies.get(y)));
-      }
-    }
-    ExecutorService executor = Executors.newFixedThreadPool(3);
-    VideoFileWriter videoFileWriter = new VideoFileWriter(
-            800, 600, 25,
-            new File("/home/eric/experiments/video-grid.mp4"),
-            names,
-            executor,
-            GraphicsDrawer.RenderingDirectives.create()
-    );
-    List<Future<String>> futures = new ArrayList<>();
-    for (int x = 0; x < names.getW(); x++) {
-      for (int y = 0; y < names.getH(); y++) {
-        final Grid<Boolean> shape = shapes.get(x);
-        final double frequency = frequencies.get(y);
-        final SnapshotListener listener = videoFileWriter.listener(x, y);
-        final String name = names.get(x, y);
-        futures.add(executor.submit(() -> {
-          try {
-            //prepare controller
-            Grid<Double> wormController = Grid.create(shape.getW(), shape.getH(), 0d);
-            for (int lx = 0; lx < shape.getW(); lx++) {
-              for (int ly = 0; ly < shape.getH(); ly++) {
-                wormController.set(lx, ly, (double) lx / (double) shape.getW() * 1 * Math.PI);
-              }
-            }
-            //prepare
-            Locomotion locomotion = new Locomotion(
-                    finalT,
-                    new double[][]{new double[]{0, 1, 999, 1000}, new double[]{50, 0, 0, 50}},
-                    Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-                    2,
-                    new Settings()
-            );
-            //execute
-            List<Double> results = locomotion.apply(new VoxelCompound.Description(
-                    Grid.create(shape.getW(), shape.getH(), Voxel.Builder.create()),
-                    new PhaseSin(frequency, 1d, wormController)
-            ), listener);
-            System.out.printf("Result is %s%n", results);
-          } catch (Throwable t) {
-            t.printStackTrace();
-          }
-          return name;
-        }));
-      }
-    }
-    //wait for end
-    for (Future<String> future : futures) {
-      try {
-        System.out.printf("World %s done%n", future.get());
-      } catch (InterruptedException | ExecutionException ex) {
-        Logger.getLogger(Starter.class.getName()).log(Level.SEVERE, String.format("Exception: %s", ex), ex);
-      }
-    }
-    videoFileWriter.flush();
   }
 
 }
