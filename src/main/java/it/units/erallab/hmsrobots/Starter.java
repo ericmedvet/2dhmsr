@@ -19,7 +19,6 @@ package it.units.erallab.hmsrobots;
 import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.objects.Ground;
-import it.units.erallab.hmsrobots.problems.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.OnlineViewer;
 import it.units.erallab.hmsrobots.objects.Voxel;
@@ -27,26 +26,15 @@ import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.TimeAccumulator;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
-import it.units.erallab.hmsrobots.viewers.VideoFileWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
-import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Vector2;
 
 /**
  *
