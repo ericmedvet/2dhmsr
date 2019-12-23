@@ -37,7 +37,7 @@ import org.jcodec.common.model.Rational;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VideoFileWriter implements Flushable {
+public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private final int w;
   private final int h;
@@ -56,9 +56,9 @@ public class VideoFileWriter implements Flushable {
   private boolean running;
   private int drawnCount;
 
-  private static final Logger L = Logger.getLogger(VideoFileWriter.class.getName());  
+  private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());  
 
-  public VideoFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) throws FileNotFoundException, IOException {
+  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) throws FileNotFoundException, IOException {
     this.w = w;
     this.h = h;
     this.renderingDirectives = renderingDirectives;
@@ -145,6 +145,7 @@ public class VideoFileWriter implements Flushable {
     );
   }
 
+  @Override
   public SnapshotListener listener(final int lX, final int lY) {
     return (Snapshot snapshot) -> {
       synchronized (queueGrid) {

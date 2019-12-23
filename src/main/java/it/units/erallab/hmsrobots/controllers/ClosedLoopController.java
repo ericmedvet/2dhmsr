@@ -16,13 +16,18 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -30,40 +35,68 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public abstract class ClosedLoopController implements Controller {
 
-  private final Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid;
+  public static enum Aggregate {
+    MEAN, DIFF;
+  }
+
+  public static class TimedSensor {
+
+    private final Voxel.Sensor sensor;
+    private final Range<Integer> range;
+    private final Aggregate aggregate;
+
+    public TimedSensor(Voxel.Sensor sensor, int from, int to, Aggregate aggregate) {
+      this.sensor = sensor;
+      range = Range.closed(from, to);
+      this.aggregate = aggregate;
+    }
+
+    public TimedSensor(Voxel.Sensor sensor, int when) {
+      this.sensor = sensor;
+      range = Range.closed(when, when + 1);
+      aggregate = Aggregate.MEAN;
+    }
+
+    public Voxel.Sensor getSensor() {
+      return sensor;
+    }
+
+    public Range<Integer> getRange() {
+      return range;
+    }
+
+    public Aggregate getAggregate() {
+      return aggregate;
+    }
+
+  }
+
+  private final Grid<List<TimedSensor>> sensorsGrid;
   private final Grid<Map<Voxel.Sensor, double[]>> readingsGrid;
 
-  public ClosedLoopController(Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid) {
+  public ClosedLoopController(Grid<List<TimedSensor>> sensorsGrid) {
     this.sensorsGrid = sensorsGrid;
-    readingsGrid = Grid.create(sensorsGrid);
+    readingsGrid = Grid.create(sensorsGrid, (List<TimedSensor> timedSensors) -> (timedSensors == null) ? null : (new EnumMap<>(timedSensors.stream().collect(Collectors.toMap(
+            TimedSensor::getSensor,
+            (TimedSensor t) -> emptyArray(t.getRange().upperEndpoint()),
+            (double[] t, double[] u) -> (u.length > t.length) ? u : t)
+    ))));
   }
 
   protected void readSensors(Grid<Voxel> voxelGrid) {
-    for (Grid.Entry<List<Pair<Voxel.Sensor, Integer>>> entry : sensorsGrid) {
-      if (entry.getValue() == null) {
+    for (Grid.Entry<Map<Voxel.Sensor, double[]>> gridEntry : readingsGrid) {
+      if (gridEntry.getValue() == null) {
         continue;
       }
-      int x = entry.getX();
-      int y = entry.getY();
+      int x = gridEntry.getX();
+      int y = gridEntry.getY();
       if (voxelGrid.get(x, y) == null) {
         throw new RuntimeException(String.format("Cannot read sensors at (%d, %d) because there is no voxel!", x, y));
       }
-      //check if everything is defined
-      if (readingsGrid.get(x, y) == null) {
-        readingsGrid.set(x, y, new EnumMap<Voxel.Sensor, double[]>(Voxel.Sensor.class));
-        for (Pair<Voxel.Sensor, Integer> sensorPair : entry.getValue()) {
-          double[] values = readingsGrid.get(x, y).get(sensorPair.getLeft());
-          if ((values == null) || (values.length < (sensorPair.getRight() + 1))) {
-            values = new double[sensorPair.getRight() + 1];
-            Arrays.fill(values, Double.NaN);
-            readingsGrid.get(x, y).put(sensorPair.getLeft(), values);
-          }
-        }
-      }
-      //iterate over sensor
-      for (Pair<Voxel.Sensor, Integer> sensorPair : entry.getValue()) {
-        double value = voxelGrid.get(x, y).getSensorReading(sensorPair.getLeft());
-        double[] values = readingsGrid.get(x, y).get(sensorPair.getLeft());
+      //iterate over sensors
+      for (Map.Entry<Voxel.Sensor, double[]> mapEntry : gridEntry.getValue().entrySet()) {
+        double value = voxelGrid.get(x, y).getSensorReading(mapEntry.getKey());
+        double[] values = mapEntry.getValue();
         if (values.length > 1) {
           double[] shifted = new double[values.length - 1];
           System.arraycopy(values, 0, shifted, 0, shifted.length);
@@ -81,17 +114,36 @@ public abstract class ClosedLoopController implements Controller {
   }
 
   protected double[] getReadings(int x, int y) {
-    List<Pair<Voxel.Sensor, Integer>> sensors = sensorsGrid.get(x, y);
+    List<TimedSensor> sensors = sensorsGrid.get(x, y);
     double[] values = new double[sensors.size()];
     for (int i = 0; i < sensors.size(); i++) {
-      double[] sensorValues = readingsGrid.get(x, y).get(sensors.get(i).getLeft());
-      values[i] = sensorValues[sensors.get(i).getRight()];
+      Range<Integer> range = sensors.get(i).getRange();
+      double[] sensorValues = readingsGrid.get(x, y).get(sensors.get(i).getSensor());
+      if (range.lowerEndpoint().intValue() == (range.upperEndpoint().intValue() + 1)) {
+        values[i] = sensorValues[range.lowerEndpoint()];
+      } else {
+        if (sensors.get(i).getAggregate().equals(Aggregate.MEAN)) {
+          double sum = 0d;
+          for (int j = range.lowerEndpoint(); j < range.upperEndpoint(); j++) {
+            sum = sum + sensorValues[j];
+          }
+          values[i] = sum / ((double) range.upperEndpoint() - (double) range.lowerEndpoint());
+        } else if (sensors.get(i).getAggregate().equals(Aggregate.DIFF)) {
+          values[i] = sensorValues[range.lowerEndpoint()] - sensorValues[range.upperEndpoint() - 1];
+        }
+      }
     }
     return values;
   }
 
-  public Grid<List<Pair<Voxel.Sensor, Integer>>> getSensorsGrid() {
+  public Grid<List<TimedSensor>> getSensorsGrid() {
     return sensorsGrid;
+  }
+
+  private static double[] emptyArray(int n) {
+    double[] values = new double[n];
+    Arrays.fill(values, Double.NaN);
+    return values;
   }
 
 }

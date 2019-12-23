@@ -28,6 +28,7 @@ import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 
@@ -156,6 +157,31 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
       results.add(value);
     }
     return results;
+  }
+
+  private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {
+    double[] xs = new double[n + 2];
+    double[] ys = new double[n + 2];
+    xs[0] = 0d;
+    xs[n + 1] = length;
+    ys[0] = borderHeight;
+    ys[n + 1] = borderHeight;
+    for (int i = 1; i < n + 1; i++) {
+      xs[i] = 1 + (double) (i - 1) * (length - 2d) / (double) n;
+      ys[i] = random.nextDouble() * peak;
+    }
+    return new double[][]{xs, ys};
+  }
+
+  public static double[][] createTerrain(String name) {
+    Random random = new Random(1);
+    if (name.equals("flat")) {
+      return new double[][]{new double[]{0, 1, 1999, 2000}, new double[]{30, 0, 0, 30}};
+    } else if (name.startsWith("uneven")) {
+      int h = Integer.parseInt(name.replace("uneven", ""));
+      return randomTerrain(20, 2000, h, 30, random);
+    }
+    return null;
   }
 
 }

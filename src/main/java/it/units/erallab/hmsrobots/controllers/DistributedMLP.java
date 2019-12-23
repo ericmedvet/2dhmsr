@@ -21,7 +21,6 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.util.List;
 import java.util.function.Function;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  *
@@ -35,7 +34,7 @@ public class DistributedMLP extends ClosedLoopController {
 
   private final Grid<double[][]> lastSignalsGrid; //1st index: 0=N, 1=E, 2=S, 3=W
 
-  public static int countParams(Grid<Boolean> structure, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid, int signals, int[] innerNeurons) {
+  public static int countParams(Grid<Boolean> structure, Grid<List<TimedSensor>> sensorsGrid, int signals, int[] innerNeurons) {
     doChecks(structure, sensorsGrid);
     int sumOfNOfWeights = 0;
     for (Grid.Entry<Boolean> entry : structure) {
@@ -52,7 +51,7 @@ public class DistributedMLP extends ClosedLoopController {
     return sumOfNOfWeights;
   }
 
-  public DistributedMLP(Grid<Boolean> structure, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid, int signals, int[] innerNeurons, double[] weights) {
+  public DistributedMLP(Grid<Boolean> structure, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid, Grid<List<TimedSensor>> sensorsGrid, int signals, int[] innerNeurons, double[] weights) {
     super(sensorsGrid);
     doChecks(structure, sensorsGrid, drivingFunctionsGrid);
     //set fields
@@ -104,7 +103,7 @@ public class DistributedMLP extends ClosedLoopController {
     }
   }
 
-  private static void doChecks(Grid<Boolean> structure, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid) throws IllegalArgumentException {
+  private static void doChecks(Grid<Boolean> structure, Grid<List<TimedSensor>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid) throws IllegalArgumentException {
     if ((drivingFunctionsGrid.getW() != structure.getW()) || (drivingFunctionsGrid.getH() != structure.getH())) {
       throw new IllegalArgumentException("Structure and driving functions grids should have the same shape");
     }
@@ -118,7 +117,7 @@ public class DistributedMLP extends ClosedLoopController {
     doChecks(structure, sensorsGrid);
   }
 
-  private static void doChecks(Grid<Boolean> structure, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid) throws IllegalArgumentException {
+  private static void doChecks(Grid<Boolean> structure, Grid<List<TimedSensor>> sensorsGrid) throws IllegalArgumentException {
     if ((structure.getW() != sensorsGrid.getW()) || (structure.getH() != sensorsGrid.getH())) {
       throw new IllegalArgumentException("Structure and sensors grids should have the same shape");
     }
@@ -131,7 +130,7 @@ public class DistributedMLP extends ClosedLoopController {
     }
   }
 
-  public DistributedMLP(Grid<MultiLayerPerceptron> mlpGrid, Grid<List<Pair<Voxel.Sensor, Integer>>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctions, int signals) {
+  public DistributedMLP(Grid<MultiLayerPerceptron> mlpGrid, Grid<List<TimedSensor>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctions, int signals) {
     super(sensorsGrid);
     this.drivingFunctionsGrid = drivingFunctions;
     this.mlpGrid = mlpGrid;
