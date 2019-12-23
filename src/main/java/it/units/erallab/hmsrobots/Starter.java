@@ -63,22 +63,22 @@ public class Starter {
             }))
     );
     //centralized mlp
-    Grid<List<Pair<Voxel.Sensor, Integer>>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
+    Grid<List<ClosedLoopController.TimedSensor>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
             (x, y) -> {
               if (!structure.get(x, y)) {
                 return null;
               }
-              List<Pair<Voxel.Sensor, Integer>> sensors = new ArrayList<>();
+              List<ClosedLoopController.TimedSensor> sensors = new ArrayList<>();
               if (y > 2) {
-                sensors.add(Pair.of(Voxel.Sensor.Y_ROT_VELOCITY, 0));
-                sensors.add(Pair.of(Voxel.Sensor.Y_ROT_VELOCITY, 1));
-                sensors.add(Pair.of(Voxel.Sensor.X_ROT_VELOCITY, 0));
-                sensors.add(Pair.of(Voxel.Sensor.X_ROT_VELOCITY, 1));
+                sensors.add(new ClosedLoopController.TimedSensor(Voxel.Sensor.Y_ROT_VELOCITY, 0));
+                sensors.add(new ClosedLoopController.TimedSensor(Voxel.Sensor.Y_ROT_VELOCITY, 1));
+                sensors.add(new ClosedLoopController.TimedSensor(Voxel.Sensor.X_ROT_VELOCITY, 0));
+                sensors.add(new ClosedLoopController.TimedSensor(Voxel.Sensor.X_ROT_VELOCITY, 1));
               }
               if (y == 0) {
-                sensors.add(Pair.of(Voxel.Sensor.TOUCHING, 0));
+                sensors.add(new ClosedLoopController.TimedSensor(Voxel.Sensor.TOUCHING, 0));
               }
-              sensors.add(Pair.of(Voxel.Sensor.AREA_RATIO, 0));
+              sensors.add(new ClosedLoopController.TimedSensor(Voxel.Sensor.AREA_RATIO, 0));
               return sensors;
             }
     );
@@ -91,18 +91,17 @@ public class Starter {
     }
     VoxelCompound.Description vcd2 = new VoxelCompound.Description(
             Grid.create(structure, b -> b ? builder : null),
-            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d))
+            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 0d * Math.sin(-2d * Math.PI * t * 0.5d))
     );
     //distributed mlp
-    Grid<List<Pair<Voxel.Sensor, Integer>>> distributedSensorGrid = Grid.create(structure, b -> b ? Lists.newArrayList(
-            Pair.of(Voxel.Sensor.X_ROT_VELOCITY, 0),
-            Pair.of(Voxel.Sensor.Y_ROT_VELOCITY, 0),
-            Pair.of(Voxel.Sensor.AREA_RATIO, 0),
-            Pair.of(Voxel.Sensor.AREA_RATIO, 1),
-            Pair.of(Voxel.Sensor.AREA_RATIO, 2),
-            Pair.of(Voxel.Sensor.TOUCHING, 0)
+    Grid<List<ClosedLoopController.TimedSensor>> distributedSensorGrid = Grid.create(structure, b -> b ? Lists.newArrayList(
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.X_ROT_VELOCITY, 0, 5, ClosedLoopController.Aggregate.MEAN),
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.Y_ROT_VELOCITY, 0, 5, ClosedLoopController.Aggregate.MEAN),
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.AREA_RATIO, 0, 5, ClosedLoopController.Aggregate.MEAN),
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.AREA_RATIO, 0, 5, ClosedLoopController.Aggregate.DIFF),
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.TOUCHING, 0)
     ) : null);
-    innerNeurons = new int[]{4};
+    innerNeurons = new int[]{8};
     nOfWeights = DistributedMLP.countParams(structure, distributedSensorGrid, 1, innerNeurons);
     weights = new double[nOfWeights];
     for (int i = 0; i < weights.length; i++) {
@@ -125,6 +124,23 @@ public class Starter {
                     weights
             )
     );
+    //one sized centralizedMlp
+    Grid<Boolean> one = Grid.create(1, 1, true);
+    Grid<List<ClosedLoopController.TimedSensor>> oneSensorsGrid = Grid.create(1, 1, Lists.newArrayList(
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.AREA_RATIO, 0, 5, ClosedLoopController.Aggregate.MEAN),
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.AREA_RATIO, 0),
+            new ClosedLoopController.TimedSensor(Voxel.Sensor.TOUCHING, 0)
+    ));
+    innerNeurons = new int[0];
+    nOfWeights = CentralizedMLP.countParams(one, oneSensorsGrid, innerNeurons);
+    weights = new double[nOfWeights];
+    for (int i = 0; i < weights.length; i++) {
+      weights[i] = random.nextDouble() * 2d - 1d;
+    }
+    VoxelCompound.Description vcd4 = new VoxelCompound.Description(
+            Grid.create(one, b -> b ? builder : null),
+            new CentralizedMLP(one, oneSensorsGrid, innerNeurons, weights, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d))
+    );
     //episode
     Locomotion locomotion = new Locomotion(
             60,
@@ -135,6 +151,7 @@ public class Starter {
     );
     Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(1, 3);
     namedSolutionGrid.set(0, 0, Pair.of("phase", vcd1));
+    //namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", vcd4));
     namedSolutionGrid.set(0, 1, Pair.of("centralizedMLP", vcd2));
     namedSolutionGrid.set(0, 2, Pair.of("distributedMLP", vcd3));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
