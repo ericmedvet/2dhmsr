@@ -16,44 +16,29 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.TimeFunction;
-import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.problems.Episode;
-import it.units.erallab.hmsrobots.problems.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Util;
-import java.io.File;
-import java.io.FileReader;
+import java.io.Flushable;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.tuple.Pair;
-import org.dyn4j.dynamics.Settings;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VideoGridWriter<S> implements Runnable {
+public class GridEpisodeRunner<S> implements Runnable {
 
   static {
     try {
-      LogManager.getLogManager().readConfiguration(VideoGridWriter.class.getClassLoader().getResourceAsStream("logging.properties"));
+      LogManager.getLogManager().readConfiguration(GridEpisodeRunner.class.getClassLoader().getResourceAsStream("logging.properties"));
     } catch (IOException ex) {
       //ignore
     } catch (SecurityException ex) {
@@ -64,16 +49,16 @@ public class VideoGridWriter<S> implements Runnable {
   private final Grid<Pair<String, S>> namedSolutionGrid;
   private final Episode<S, ?> episode;
 
-  private final VideoFileWriter videoFileWriter;
+  private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
-  private static final Logger L = Logger.getLogger(VideoGridWriter.class.getName());
+  private static final Logger L = Logger.getLogger(GridEpisodeRunner.class.getName());
 
-  public VideoGridWriter(Grid<Pair<String, S>> namedSolutionGrid, Episode<S, ?> episode, int w, int h, double frameRate, File file, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) throws IOException {
+  public GridEpisodeRunner(Grid<Pair<String, S>> namedSolutionGrid, Episode<S, ?> episode, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
     this.namedSolutionGrid = namedSolutionGrid;
     this.episode = episode;
     this.executor = executor;
-    this.videoFileWriter = new VideoFileWriter(w, h, frameRate, file, Grid.create(namedSolutionGrid, Pair::getLeft), executor, renderingDirectives);
+    this.gridSnapshotListener = gridSnapshotListener;
   }
 
   @Override
@@ -83,7 +68,7 @@ public class VideoGridWriter<S> implements Runnable {
     for (final Grid.Entry<Pair<String, S>> entry : namedSolutionGrid) {
       results.add(executor.submit(() -> {
         L.info(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
-        episode.apply(entry.getValue().getRight(), videoFileWriter.listener(entry.getX(), entry.getY()));
+        episode.apply(entry.getValue().getRight(), gridSnapshotListener.listener(entry.getX(), entry.getY()));
         L.info(String.format("Ended %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
       }));
     }
@@ -96,12 +81,14 @@ public class VideoGridWriter<S> implements Runnable {
       }
     }
     //flush and write
-    try {
-      L.info(String.format("Starting flushing of video"));
-      videoFileWriter.flush();
-      L.info(String.format("Video saved"));
-    } catch (IOException ex) {
-      L.log(Level.SEVERE, String.format("Cannot flush video due to %s", ex), ex);
+    if (gridSnapshotListener instanceof Flushable) {
+      try {
+        L.info(String.format("Starting flushing of video"));
+        ((Flushable) gridSnapshotListener).flush();
+        L.info(String.format("Video saved"));
+      } catch (IOException ex) {
+        L.log(Level.SEVERE, String.format("Cannot flush video due to %s", ex), ex);
+      }
     }
   }
 
