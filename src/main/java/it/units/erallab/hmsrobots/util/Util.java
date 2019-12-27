@@ -37,6 +37,8 @@ import java.util.zip.GZIPOutputStream;
  */
 public class Util {
 
+  private static final Logger L = Logger.getLogger(Util.class.getName());
+
   public static <T extends Serializable> String serialize(T t, boolean compress) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos;
@@ -67,6 +69,7 @@ public class Util {
     try {
       return serialize(t, true);
     } catch (IOException e) {
+      L.log(Level.SEVERE, String.format("Cannot serialize due to %s", e), e);
       return e.getClass().getSimpleName();
     }
   }
@@ -74,9 +77,8 @@ public class Util {
   public static <T> T lazilyDeserialize(String s) {
     try {
       return (T)deserialize(s, true);
-    } catch (IOException e) {
-      return null;
-    } catch (ClassNotFoundException ex) {
+    } catch (IOException | ClassNotFoundException e) {
+      L.log(Level.SEVERE, String.format("Cannot serialize due to %s", e), e);
       return null;
     }
   }

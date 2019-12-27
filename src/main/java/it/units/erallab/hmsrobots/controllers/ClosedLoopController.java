@@ -19,14 +19,11 @@ package it.units.erallab.hmsrobots.controllers;
 import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -39,7 +36,7 @@ public abstract class ClosedLoopController implements Controller {
     MEAN, DIFF;
   }
 
-  public static class TimedSensor {
+  public static class TimedSensor implements Serializable {
 
     private final Voxel.Sensor sensor;
     private final Range<Integer> range;
