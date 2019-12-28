@@ -21,7 +21,6 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 
 import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author eric

@@ -45,7 +45,7 @@ public class DistributedMLP extends ClosedLoopController {
         neurons[0] = inputs;
         neurons[neurons.length - 1] = outputs;
         System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
-        sumOfNOfWeights = sumOfNOfWeights + MultiLayerPerceptron.countWeights(neurons);
+      sumOfNOfWeights = sumOfNOfWeights + MultiLayerPerceptron.countWeights(neurons);
       }
     }
     return sumOfNOfWeights;
