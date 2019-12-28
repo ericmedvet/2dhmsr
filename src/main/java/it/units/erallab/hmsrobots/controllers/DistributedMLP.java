@@ -45,7 +45,7 @@ public class DistributedMLP extends ClosedLoopController {
         neurons[0] = inputs;
         neurons[neurons.length - 1] = outputs;
         System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
-      sumOfNOfWeights = sumOfNOfWeights + MultiLayerPerceptron.countWeights(neurons);
+        sumOfNOfWeights = sumOfNOfWeights + MultiLayerPerceptron.countWeights(neurons);
       }
     }
     return sumOfNOfWeights;
@@ -109,7 +109,7 @@ public class DistributedMLP extends ClosedLoopController {
     }
     for (Grid.Entry<Boolean> entry : structure) {
       if (entry.getValue()) {
-        if (drivingFunctionsGrid.get(entry.getX(), entry.getY())==null) {
+        if (drivingFunctionsGrid.get(entry.getX(), entry.getY()) == null) {
           throw new IllegalArgumentException(String.format("Null driving function at filled grid position (%d,%d)", entry.getX(), entry.getY()));
         }
       }
@@ -123,7 +123,7 @@ public class DistributedMLP extends ClosedLoopController {
     }
     for (Grid.Entry<Boolean> entry : structure) {
       if (entry.getValue()) {
-        if (sensorsGrid.get(entry.getX(), entry.getY())==null) {
+        if (sensorsGrid.get(entry.getX(), entry.getY()) == null) {
           throw new IllegalArgumentException(String.format("Null sensors at filled grid position (%d,%d)", entry.getX(), entry.getY()));
         }
       }
