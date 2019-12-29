@@ -20,6 +20,7 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -212,6 +213,35 @@ public class DistributedMLP extends ClosedLoopController {
       System.arraycopy(values, i * signals + srcOffset, signalValues[i], 0, signals);
     }
     return signalValues;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 23 * hash + Objects.hashCode(this.mlpGrid);
+    hash = 23 * hash + this.signals;
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final DistributedMLP other = (DistributedMLP) obj;
+    if (this.signals != other.signals) {
+      return false;
+    }
+    if (!Objects.equals(this.mlpGrid, other.mlpGrid)) {
+      return false;
+    }
+    return true;
   }
 
 }

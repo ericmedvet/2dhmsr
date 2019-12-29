@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -75,6 +76,39 @@ public class Voxel implements WorldObject {
       this.min = min;
       this.rest = rest;
       this.max = max;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 5;
+      hash = 53 * hash + (int) (Double.doubleToLongBits(this.min) ^ (Double.doubleToLongBits(this.min) >>> 32));
+      hash = 53 * hash + (int) (Double.doubleToLongBits(this.rest) ^ (Double.doubleToLongBits(this.rest) >>> 32));
+      hash = 53 * hash + (int) (Double.doubleToLongBits(this.max) ^ (Double.doubleToLongBits(this.max) >>> 32));
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final SpringRange other = (SpringRange) obj;
+      if (Double.doubleToLongBits(this.min) != Double.doubleToLongBits(other.min)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.rest) != Double.doubleToLongBits(other.rest)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.max) != Double.doubleToLongBits(other.max)) {
+        return false;
+      }
+      return true;
     }
 
   }
@@ -324,6 +358,87 @@ public class Voxel implements WorldObject {
     @Override
     public String toString() {
       return "Builder{" + "sideLength=" + sideLength + ", massSideLengthRatio=" + massSideLengthRatio + ", springF=" + springF + ", springD=" + springD + ", massLinearDamping=" + massLinearDamping + ", massAngularDamping=" + massAngularDamping + ", maxForce=" + maxForce + ", areaRatioOffset=" + areaRatioOffset + ", friction=" + friction + ", restitution=" + restitution + ", mass=" + mass + ", limitContractionFlag=" + limitContractionFlag + ", massCollisionFlag=" + massCollisionFlag + ", forceMethod=" + forceMethod + ", springScaffoldings=" + springScaffoldings + '}';
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.sideLength) ^ (Double.doubleToLongBits(this.sideLength) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.massSideLengthRatio) ^ (Double.doubleToLongBits(this.massSideLengthRatio) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.springF) ^ (Double.doubleToLongBits(this.springF) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.springD) ^ (Double.doubleToLongBits(this.springD) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.massLinearDamping) ^ (Double.doubleToLongBits(this.massLinearDamping) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.massAngularDamping) ^ (Double.doubleToLongBits(this.massAngularDamping) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.maxForce) ^ (Double.doubleToLongBits(this.maxForce) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.areaRatioOffset) ^ (Double.doubleToLongBits(this.areaRatioOffset) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.friction) ^ (Double.doubleToLongBits(this.friction) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.restitution) ^ (Double.doubleToLongBits(this.restitution) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.mass) ^ (Double.doubleToLongBits(this.mass) >>> 32));
+      hash = 97 * hash + (this.limitContractionFlag ? 1 : 0);
+      hash = 97 * hash + (this.massCollisionFlag ? 1 : 0);
+      hash = 97 * hash + Objects.hashCode(this.forceMethod);
+      hash = 97 * hash + Objects.hashCode(this.springScaffoldings);
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final Builder other = (Builder) obj;
+      if (Double.doubleToLongBits(this.sideLength) != Double.doubleToLongBits(other.sideLength)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.massSideLengthRatio) != Double.doubleToLongBits(other.massSideLengthRatio)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.springF) != Double.doubleToLongBits(other.springF)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.springD) != Double.doubleToLongBits(other.springD)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.massLinearDamping) != Double.doubleToLongBits(other.massLinearDamping)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.massAngularDamping) != Double.doubleToLongBits(other.massAngularDamping)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.maxForce) != Double.doubleToLongBits(other.maxForce)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.areaRatioOffset) != Double.doubleToLongBits(other.areaRatioOffset)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.friction) != Double.doubleToLongBits(other.friction)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.restitution) != Double.doubleToLongBits(other.restitution)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.mass) != Double.doubleToLongBits(other.mass)) {
+        return false;
+      }
+      if (this.limitContractionFlag != other.limitContractionFlag) {
+        return false;
+      }
+      if (this.massCollisionFlag != other.massCollisionFlag) {
+        return false;
+      }
+      if (this.forceMethod != other.forceMethod) {
+        return false;
+      }
+      if (!Objects.equals(this.springScaffoldings, other.springScaffoldings)) {
+        return false;
+      }
+      return true;
     }
 
   }
@@ -722,20 +837,20 @@ public class Voxel implements WorldObject {
       case LAST_APPLIED_FORCE:
         return getLastAppliedForce();
       case TOUCHING:
-        return isInTouch()?1d:0d;
+        return isInTouch() ? 1d : 0d;
       default:
         return 0d;
     }
   }
-  
+
   private boolean isInTouch() {
     for (Body vertexBody : vertexBodies) {
       List<Body> inContactBodies = vertexBody.getInContactBodies(false);
       for (Body inContactBody : inContactBodies) {
         Object userData = inContactBody.getUserData();
-        if (userData==null) {
+        if (userData == null) {
           return true;
-        } else if (userData!=vertexBody.getUserData()) {
+        } else if (userData != vertexBody.getUserData()) {
           return true;
         }
       }

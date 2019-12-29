@@ -21,6 +21,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author eric
@@ -103,6 +104,31 @@ public class CentralizedMLP extends ClosedLoopController {
       }
     }
     return control;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 89 * hash + Objects.hashCode(this.mlp);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final CentralizedMLP other = (CentralizedMLP) obj;
+    if (!Objects.equals(this.mlp, other.mlp)) {
+      return false;
+    }
+    return true;
   }
 
 }

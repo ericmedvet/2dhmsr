@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.controllers;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
+import java.util.Objects;
 
 /**
  *
@@ -48,6 +49,5 @@ public class TimeFunction implements Controller {
   public Grid<SerializableFunction<Double, Double>> getFunctions() {
     return functions;
   }
-  
   
 }

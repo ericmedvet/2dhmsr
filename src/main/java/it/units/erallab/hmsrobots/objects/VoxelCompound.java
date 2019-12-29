@@ -25,6 +25,7 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -58,6 +59,35 @@ public class VoxelCompound implements WorldObject {
 
     public Controller getController() {
       return controller;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 19 * hash + Objects.hashCode(this.builderGrid);
+      hash = 19 * hash + Objects.hashCode(this.controller);
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final Description other = (Description) obj;
+      if (!Objects.equals(this.builderGrid, other.builderGrid)) {
+        return false;
+      }
+      if (!Objects.equals(this.controller, other.controller)) {
+        return false;
+      }
+      return true;
     }
 
   }

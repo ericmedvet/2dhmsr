@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +65,39 @@ public abstract class ClosedLoopController implements Controller {
 
     public Aggregate getAggregate() {
       return aggregate;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 11 * hash + Objects.hashCode(this.sensor);
+      hash = 11 * hash + Objects.hashCode(this.range);
+      hash = 11 * hash + Objects.hashCode(this.aggregate);
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final TimedSensor other = (TimedSensor) obj;
+      if (this.sensor != other.sensor) {
+        return false;
+      }
+      if (!Objects.equals(this.range, other.range)) {
+        return false;
+      }
+      if (this.aggregate != other.aggregate) {
+        return false;
+      }
+      return true;
     }
 
   }
@@ -141,6 +175,31 @@ public abstract class ClosedLoopController implements Controller {
     double[] values = new double[n];
     Arrays.fill(values, Double.NaN);
     return values;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 97 * hash + Objects.hashCode(this.sensorsGrid);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final ClosedLoopController other = (ClosedLoopController) obj;
+    if (!Objects.equals(this.sensorsGrid, other.sensorsGrid)) {
+      return false;
+    }
+    return true;
   }
 
 }
