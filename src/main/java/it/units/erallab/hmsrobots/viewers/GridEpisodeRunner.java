@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.problems.Episode;
+import it.units.erallab.hmsrobots.episodes.Episode;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.io.Flushable;
 import java.io.IOException;

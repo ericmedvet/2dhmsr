@@ -509,10 +509,10 @@ public class Voxel implements WorldObject {
     double density = mass * massSideLength / massSideLength / 4;
     //build bodies
     vertexBodies = new Body[4];
-    vertexBodies[0] = new Body(1);
-    vertexBodies[1] = new Body(1);
-    vertexBodies[2] = new Body(1);
-    vertexBodies[3] = new Body(1);
+    vertexBodies[0] = new Body(1); //NW
+    vertexBodies[1] = new Body(1); //NE
+    vertexBodies[2] = new Body(1); //SE
+    vertexBodies[3] = new Body(1); //SW
     for (Body vertexBody : vertexBodies) {
       vertexBody.setUserData(parent);
     }
@@ -793,7 +793,7 @@ public class Voxel implements WorldObject {
 
   public double getAngle() {
     Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
-    Vector2 downSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
+    Vector2 downSide = vertexBodies[3].getWorldCenter().copy().subtract(vertexBodies[2].getWorldCenter());
     return (upSide.getDirection() + downSide.getDirection()) / 2d;
   }
 

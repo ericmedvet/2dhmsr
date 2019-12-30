@@ -22,7 +22,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.problems.Locomotion;
+import it.units.erallab.hmsrobots.episodes.Locomotion;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;

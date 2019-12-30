@@ -25,7 +25,7 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.problems.AbstractEpisode;
+import it.units.erallab.hmsrobots.episodes.AbstractEpisode;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
