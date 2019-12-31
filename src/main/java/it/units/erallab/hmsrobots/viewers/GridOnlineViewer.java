@@ -44,7 +44,7 @@ import javax.swing.JPanel;
  */
 public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
-  private final static int FRAME_RATE = 25;
+  private final static int FRAME_RATE = 30;
   private final static int INIT_WIN_WIDTH = 1000;
   private final static int INIT_WIN_HEIGHT = 600;
 
@@ -188,17 +188,19 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     );
   }
 
-  public void start() {
+  public void start(int delay) {
     setVisible(true);
     canvas.setIgnoreRepaint(true);
     canvas.createBufferStrategy(2);
-    final Stopwatch stopwatch = Stopwatch.createStarted();
     //start consumer of composed frames
     Runnable drawer = new Runnable() {
-      private double lastTime = (double) stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000d;
+      Stopwatch stopwatch = Stopwatch.createUnstarted();
 
       @Override
       public void run() {
+        if(!stopwatch.isRunning()) {
+          stopwatch.start();
+        }
         double currentTime = (double) stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000d;
         Grid<Snapshot> localSnapshotGrid = null;
         synchronized (gridQueue) {
@@ -226,7 +228,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
       }
     };
-    executor.scheduleAtFixedRate(drawer, 0, Math.round(1000d / (double) FRAME_RATE), TimeUnit.MILLISECONDS);
+    executor.scheduleAtFixedRate(drawer, Math.round(delay * 1000d), Math.round(1000d / (double) FRAME_RATE), TimeUnit.MILLISECONDS);
   }
 
   private String name(Enum<?> e) {

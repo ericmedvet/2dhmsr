@@ -36,6 +36,8 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
+  private final static double TERRAIN_BORDER_HEIGHT = 100d;
+  private final static int TERRAIN_POINTS = 50;
 
   public static enum Metric {
     TRAVEL_X_VELOCITY(false),
@@ -176,10 +178,10 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   public static double[][] createTerrain(String name) {
     Random random = new Random(1);
     if (name.equals("flat")) {
-      return new double[][]{new double[]{0, 1, 1999, 2000}, new double[]{30, 0, 0, 30}};
+      return new double[][]{new double[]{0, 10, 1990, 2000}, new double[]{TERRAIN_BORDER_HEIGHT, 0, 0, TERRAIN_BORDER_HEIGHT}};
     } else if (name.startsWith("uneven")) {
       int h = Integer.parseInt(name.replace("uneven", ""));
-      return randomTerrain(20, 2000, h, 30, random);
+      return randomTerrain(TERRAIN_POINTS, 2000, h, TERRAIN_BORDER_HEIGHT, random);
     }
     return null;
   }

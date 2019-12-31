@@ -35,7 +35,7 @@ import org.dyn4j.geometry.Vector2;
  */
 public class Ground implements WorldObject {
   
-  private static final double MIN_Y_THICKNESS = 1d;
+  private static final double MIN_Y_THICKNESS = 10d;
 
   private final List<Body> bodies;
   private final List<Vector2> polygon;

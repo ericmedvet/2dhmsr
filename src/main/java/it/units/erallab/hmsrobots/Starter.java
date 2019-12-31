@@ -21,7 +21,6 @@ import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.episodes.Locomotion;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
@@ -41,27 +40,36 @@ import org.dyn4j.dynamics.Settings;
 public class Starter {
 
   public static void main(String[] args) throws IOException {
-    List<WorldObject> worldObjects = new ArrayList<>();
-    Grid<Boolean> structure = Grid.create(7, 5, (x, y) -> (x < 2) || (x >= 5) || (y > 2));
+    final Grid<Boolean> structure = Grid.create(11, 5, (x, y) -> (x < 2) || (x >= 9) || (y > 0));
     Voxel.Builder builder = Voxel.Builder.create()
-            .springF(15d)
-            .massLinearDamping(0.5d)
-            .massAngularDamping(0.05d)
+            .springF(25d)
+            .massSideLengthRatio(0.05)
+            .massLinearDamping(1d)
+            .massAngularDamping(1d)
+            .restitution(0)
+            .friction(1000)
             .areaRatioOffset(0.2d)
-            .massSideLengthRatio(0.3d)
+            //.forceMethod(Voxel.ForceMethod.FORCE)
+            //.maxForce(10)
             .ropeJointsFlag(false)
             .springScaffoldings(EnumSet.of(
                     Voxel.SpringScaffolding.SIDE_EXTERNAL,
-                    Voxel.SpringScaffolding.SIDE_INTERNAL,
+                    //Voxel.SpringScaffolding.SIDE_INTERNAL,
+                    //Voxel.SpringScaffolding.SIDE_CROSS,
                     Voxel.SpringScaffolding.CENTRAL_CROSS
             ));
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d/30d);
+    int controlInterval = 2;
     //simple
+    double f = 1d;
     VoxelCompound.Description vcd1 = new VoxelCompound.Description(
             Grid.create(structure, b -> b ? builder : null),
-            new TimeFunction(Grid.create(structure.getW(), structure.getH(), t -> {
-              return (Math.sin(2d * Math.PI * t * 5d));
-            }))
-    );
+            new TimeFunction(Grid.create(
+                    structure.getW(),
+                    structure.getH(),
+                    (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) structure.getW()))
+            )));
     //centralized mlp
     Grid<List<ClosedLoopController.TimedSensor>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
             (x, y) -> {
@@ -82,7 +90,7 @@ public class Starter {
               return sensors;
             }
     );
-    int[] innerNeurons = new int[]{10};
+    int[] innerNeurons = new int[]{100};
     int nOfWeights = CentralizedMLP.countParams(structure, centralizedSensorGrid, innerNeurons);
     double[] weights = new double[nOfWeights];
     Random random = new Random();
@@ -101,7 +109,7 @@ public class Starter {
             new ClosedLoopController.TimedSensor(Voxel.Sensor.AREA_RATIO, 0, 5, ClosedLoopController.Aggregate.DIFF),
             new ClosedLoopController.TimedSensor(Voxel.Sensor.TOUCHING, 0)
     ) : null);
-    innerNeurons = new int[]{8};
+    innerNeurons = new int[]{10};
     nOfWeights = DistributedMLP.countParams(structure, distributedSensorGrid, 1, innerNeurons);
     weights = new double[nOfWeights];
     for (int i = 0; i < weights.length; i++) {
@@ -144,20 +152,20 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
             60,
-            Locomotion.createTerrain("flat"),
+            Locomotion.createTerrain("uneven25"),
             Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-            1,
-            new Settings()
+            controlInterval,
+            settings
     );
-    Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(1, 3);
+    Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(1, 2);
     namedSolutionGrid.set(0, 0, Pair.of("phase", vcd1));
     //namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", vcd4));
     namedSolutionGrid.set(0, 1, Pair.of("centralizedMLP", vcd2));
-    namedSolutionGrid.set(0, 2, Pair.of("distributedMLP", vcd3));
+    //namedSolutionGrid.set(0, 2, Pair.of("distributedMLP", vcd3));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
-    gridOnlineViewer.start();
+    gridOnlineViewer.start(5);
     GridEpisodeRunner<VoxelCompound.Description> runner = new GridEpisodeRunner<>(
             namedSolutionGrid, locomotion,
             gridOnlineViewer,
