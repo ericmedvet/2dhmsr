@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.episodes;
+package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.util.function.Function;
 
-public interface Episode<S, R> extends Function<S, R> {
+public interface Task<S, R> extends Function<S, R> {
 
   public R apply(S solution, SnapshotListener listener);
 

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.episodes;
+package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
@@ -32,7 +32,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 
-public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<Double>> {
+public class Locomotion extends AbstractTask<VoxelCompound.Description, List<Double>> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;

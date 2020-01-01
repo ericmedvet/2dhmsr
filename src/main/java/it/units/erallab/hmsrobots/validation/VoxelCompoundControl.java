@@ -25,16 +25,14 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.episodes.AbstractEpisode;
+import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -60,7 +58,7 @@ import org.dyn4j.geometry.Vector2;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VoxelCompoundControl extends AbstractEpisode<Grid<Voxel.Builder>, VoxelCompoundControl.Result> {
+public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, VoxelCompoundControl.Result> {
 
   public static class Result {
 

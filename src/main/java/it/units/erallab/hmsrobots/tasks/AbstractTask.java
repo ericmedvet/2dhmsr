@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.episodes;
+package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Settings;
@@ -23,11 +23,11 @@ import org.dyn4j.dynamics.Settings;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public abstract class AbstractEpisode<T, R> implements Episode<T, R> {
+public abstract class AbstractTask<T, R> implements Task<T, R> {
   
   protected final Settings settings;
 
-  public AbstractEpisode(Settings settings) {
+  public AbstractTask(Settings settings) {
     this.settings = settings;
   }
 

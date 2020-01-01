@@ -16,7 +16,6 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.episodes.Episode;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.io.Flushable;
 import java.io.IOException;
@@ -29,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
+import it.units.erallab.hmsrobots.tasks.Task;
 
 /**
  *
@@ -47,14 +47,14 @@ public class GridEpisodeRunner<S> implements Runnable {
   }
 
   private final Grid<Pair<String, S>> namedSolutionGrid;
-  private final Episode<S, ?> episode;
+  private final Task<S, ?> episode;
 
   private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
   private static final Logger L = Logger.getLogger(GridEpisodeRunner.class.getName());
 
-  public GridEpisodeRunner(Grid<Pair<String, S>> namedSolutionGrid, Episode<S, ?> episode, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
+  public GridEpisodeRunner(Grid<Pair<String, S>> namedSolutionGrid, Task<S, ?> episode, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
     this.namedSolutionGrid = namedSolutionGrid;
     this.episode = episode;
     this.executor = executor;

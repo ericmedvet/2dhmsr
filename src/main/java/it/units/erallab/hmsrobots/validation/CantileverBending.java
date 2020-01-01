@@ -24,7 +24,7 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.episodes.AbstractEpisode;
+import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import java.io.IOException;
@@ -56,7 +56,7 @@ import org.dyn4j.geometry.Vector2;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class CantileverBending extends AbstractEpisode<Grid<Voxel.Builder>, CantileverBending.Result> {
+public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, CantileverBending.Result> {
 
   public static class Result {
 
