@@ -27,10 +27,13 @@ import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -256,7 +259,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
             (double) vc.getVoxels().count(v -> v != null) * simTs.get(dampingIndex) / realTs.get(dampingIndex),
             (double) dampingIndex / realTs.get(dampingIndex),
             (double) vc.getVoxels().count(v -> v != null) * (double) realTs.size() / elapsedSeconds,
-            (double) vc.getVoxels().count(v -> v != null) * simTs.get(simTs.size()-1) / elapsedSeconds,
+            (double) vc.getVoxels().count(v -> v != null) * simTs.get(simTs.size() - 1) / elapsedSeconds,
             (double) realTs.size() / elapsedSeconds,
             finalTopPositions.get(finalTopPositions.size() - 1).y,
             timeEvolution,
@@ -264,31 +267,34 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
     );
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws FileNotFoundException {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    PrintStream timeEvolutionPS = new PrintStream("/home/eric/experiments/2dhmsr/cantilever-time-evolutions.csv");
     List<Grid<Boolean>> shapes = Lists.newArrayList(
-            Grid.create(5, 1),
-            Grid.create(5, 2),
-            Grid.create(10, 4),
-            Grid.create(50, 10)
+            //Grid.create(5, 2),
+            //Grid.create(5, 2),
+            Grid.create(10, 2),
+            Grid.create(10, 4)
+    //Grid.create(20, 5)
     );
     Map<String, List<Object>> params = new LinkedHashMap<>();
-    params.put("settings.stepFrequency", Lists.newArrayList(0.015, 0.005, 0.01, 0.02, 0.025));
-    params.put("settings.positionConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
-    params.put("settings.velocityConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
-    params.put("builder.massLinearDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
-    params.put("builder.massAngularDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
-    params.put("builder.springF", Lists.newArrayList(25, 5, 15, 30, 40));
-    params.put("builder.springD", Lists.newArrayList(1, 0.1, 0.25, 0.5, 0.75));
-    params.put("builder.massSideLengthRatio", Lists.newArrayList(.35, .1, .15, .25, .4));
-    params.put("builder.massCollisionFlag", Lists.newArrayList(false, true));
-    params.put("builder.limitContractionFlag", Lists.newArrayList(true, false));
+    //params.put("settings.stepFrequency", Lists.newArrayList(1d/60d, 1d/120d, 1d/90d, 1d/45d, 1d/30d));
+    //params.put("settings.positionConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
+    //params.put("settings.velocityConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
+    //params.put("builder.massLinearDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
+    //params.put("builder.massAngularDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
+    params.put("builder.springF", Lists.newArrayList(8, 4, 5, 3, 10, 15, 20, 25, 30));
+    //params.put("builder.springD", Lists.newArrayList(1, 0.1, 0.25, 0.5, 0.75));
+    //params.put("builder.massSideLengthRatio", Lists.newArrayList(.35, .1, .15, .25, .4));
+    //params.put("builder.massCollisionFlag", Lists.newArrayList(false, true));
+    //params.put("builder.limitContractionFlag", Lists.newArrayList(true, false));
     params.put("builder.springScaffoldings", Lists.newArrayList(
             EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS, Voxel.SpringScaffolding.CENTRAL_CROSS),
             EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
             EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS),
             EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS)
     ));
+    Map<String, List> timeEvolutionMap = new HashMap<>();
     List<Future<Map<String, Object>>> futures = new ArrayList<>();
     for (Grid<Boolean> shape : shapes) {
       for (Map.Entry<String, List<Object>> param : params.entrySet()) {
@@ -323,7 +329,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
           }
           //set static keys
           final Map<String, Object> staticKeys = new LinkedHashMap<>();
-          staticKeys.put("shape", shape.getW()+"x"+shape.getH());
+          staticKeys.put("shape", shape.getW() + "x" + shape.getH());
           //set static keys to the first value in the list
           staticKeys.putAll(params.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0))));
           //set static key of the current param
@@ -331,11 +337,32 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
           //submit jobs
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
-            CantileverBending cb = new CantileverBending(50d, Double.POSITIVE_INFINITY, 60d, 0.01d, (Settings) configurations.get("settings"));
+            CantileverBending cb = new CantileverBending(
+                    200d,
+                    0.1d,
+                    60d,
+                    0.01d,
+                    (Settings) configurations.get("settings")
+            );
             Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();
             row.putAll(staticKeys);
+            if (timeEvolutionPS != null) {
+              int length = result.getTimeEvolution().values().stream().mapToInt(List::size).max().orElse(0);
+              Map<String, List> enhancedTimeEvolution = new LinkedHashMap<>(result.getTimeEvolution());
+              enhancedTimeEvolution.putAll(staticKeys.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, o -> Collections.nCopies(length, o.getValue()))));
+              synchronized (timeEvolutionMap) {
+                for (Map.Entry<String, List> entry : enhancedTimeEvolution.entrySet()) {
+                  List values = timeEvolutionMap.get(entry.getKey());
+                  if (values == null) {
+                    values = new ArrayList();
+                    timeEvolutionMap.put(entry.getKey(), values);
+                  }
+                  values.addAll(entry.getValue());
+                }
+              }
+            }
             row.putAll(PropertyUtils.describe(result)
                     .entrySet()
                     .stream()
@@ -367,6 +394,30 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       printer.close();
     } catch (IOException ex) {
       Logger.getLogger(VoxelCompoundControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
+    }
+    //write time evolutions
+    if (timeEvolutionPS != null) {
+      printCSV(timeEvolutionMap, timeEvolutionPS);
+    }
+  }
+
+  private static void printCSV(Map<String, List> data, PrintStream ps) {
+    int length = data.values().stream().mapToInt(List::size).max().orElse(0);
+    String[] names = (String[]) data.keySet().toArray(new String[data.keySet().size()]);
+    try {
+      CSVPrinter printer = new CSVPrinter(ps, CSVFormat.DEFAULT.withHeader(names));
+      for (int i = 0; i < length; i++) {
+        Object[] values = new Object[names.length];
+        for (int j = 0; j < names.length; j++) {
+          List<?> currentValues = data.get(names[j]);
+          if (currentValues.size() > i) {
+            values[j] = currentValues.get(i);
+          }
+        }
+        printer.printRecord(values);
+      }
+    } catch (IOException ex) {
+      Logger.getLogger(CantileverBending.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
     }
   }
 

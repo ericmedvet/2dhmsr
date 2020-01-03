@@ -39,9 +39,44 @@ import org.dyn4j.dynamics.Settings;
  */
 public class Starter {
 
+  private static void sampleExecution() {
+    Locomotion locomotion = new Locomotion(
+            60,
+            Locomotion.createTerrain("flat"),
+            Lists.newArrayList(
+                    Locomotion.Metric.TRAVEL_X_VELOCITY,
+                    Locomotion.Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS
+            ),
+            0,
+            new Settings()
+    );
+    final Voxel.Builder hardMaterial = Voxel.Builder.create()
+            .springF(50)
+            .springScaffoldings(EnumSet.allOf(Voxel.SpringScaffolding.class));
+    final Voxel.Builder softMaterial = Voxel.Builder.create()
+            .springF(5)
+            .springScaffoldings(EnumSet.of(
+                    Voxel.SpringScaffolding.SIDE_EXTERNAL,
+                    Voxel.SpringScaffolding.CENTRAL_CROSS));
+    int w = 4;
+    int h = 2;
+    VoxelCompound.Description description = new VoxelCompound.Description(
+            Grid.create(
+                    w, h,
+                    (x, y) -> (y == 0) ? hardMaterial : softMaterial
+            ),
+            new TimeFunction(Grid.create(
+                    w, h,
+                    (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
+            ))
+    );
+    List<Double> result = locomotion.apply(description);
+  }
+
   public static void main(String[] args) throws IOException {
     final Grid<Boolean> structure = Grid.create(11, 5, (x, y) -> (x < 2) || (x >= 9) || (y > 0));
-    Voxel.Builder builder = Voxel.Builder.create()
+    //final Grid<Boolean> structure = Grid.create(4, 2, (x, y) -> (x < 1) || (x > 2) || (y > 0));
+    Voxel.Builder builder1 = Voxel.Builder.create()
             .springF(25d)
             .massSideLengthRatio(0.05)
             .massLinearDamping(1d)
@@ -58,18 +93,47 @@ public class Starter {
                     //Voxel.SpringScaffolding.SIDE_CROSS,
                     Voxel.SpringScaffolding.CENTRAL_CROSS
             ));
+    final Voxel.Builder builder = Voxel.Builder.create();
     Settings settings = new Settings();
-    settings.setStepFrequency(1d/30d);
-    int controlInterval = 2;
+    settings.setStepFrequency(1d / 60d);
+    int controlInterval = 1;
     //simple
     double f = 1d;
-    VoxelCompound.Description vcd1 = new VoxelCompound.Description(
+    VoxelCompound.Description phases1 = new VoxelCompound.Description(
             Grid.create(structure, b -> b ? builder : null),
             new TimeFunction(Grid.create(
                     structure.getW(),
                     structure.getH(),
                     (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) structure.getW()))
             )));
+    VoxelCompound.Description phases2 = new VoxelCompound.Description(
+            Grid.create(structure, b -> b ? builder : null),
+            new TimeFunction(Grid.create(
+                    structure.getW(),
+                    structure.getH(),
+                    (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) structure.getW()))
+            )));
+    //multimaterial
+    final Voxel.Builder materialHard = Voxel.Builder.create()
+            .springF(50)
+            .springScaffoldings(EnumSet.allOf(Voxel.SpringScaffolding.class));
+    final Voxel.Builder materialSoft = Voxel.Builder.create()
+            .springF(5)
+            .springScaffoldings(EnumSet.of(
+                    Voxel.SpringScaffolding.SIDE_EXTERNAL,
+                    Voxel.SpringScaffolding.CENTRAL_CROSS));
+    int w = 4;
+    int h = 2;
+    VoxelCompound.Description multimat = new VoxelCompound.Description(
+            Grid.create(
+                    w, h,
+                    (x, y) -> (y == 0) ? materialHard : materialSoft
+            ),
+            new TimeFunction(Grid.create(
+                    w, h,
+                    (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
+            ))
+    );
     //centralized mlp
     Grid<List<ClosedLoopController.TimedSensor>> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(),
             (x, y) -> {
@@ -97,7 +161,14 @@ public class Starter {
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble() * 2d - 1d;
     }
-    VoxelCompound.Description vcd2 = new VoxelCompound.Description(
+    VoxelCompound.Description centralized1 = new VoxelCompound.Description(
+            Grid.create(structure, b -> b ? builder : null),
+            new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 0d * Math.sin(-2d * Math.PI * t * 0.5d))
+    );
+    for (int i = 0; i < weights.length; i++) {
+      weights[i] = random.nextDouble() * 2d - 1d;
+    }
+    VoxelCompound.Description centralized2 = new VoxelCompound.Description(
             Grid.create(structure, b -> b ? builder : null),
             new CentralizedMLP(structure, centralizedSensorGrid, innerNeurons, weights, t -> 0d * Math.sin(-2d * Math.PI * t * 0.5d))
     );
@@ -145,23 +216,32 @@ public class Starter {
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble() * 2d - 1d;
     }
-    VoxelCompound.Description vcd4 = new VoxelCompound.Description(
-            Grid.create(one, b -> b ? builder : null),
-            new CentralizedMLP(one, oneSensorsGrid, innerNeurons, weights, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d))
+    Voxel.Builder oneBuilder = Voxel.Builder.create()
+            .maxForce(200)
+            .springF(8d)
+            .springD(0.3d)
+            .forceMethod(Voxel.ForceMethod.FORCE)
+            .springScaffoldings(EnumSet.allOf(Voxel.SpringScaffolding.class));
+    VoxelCompound.Description oneMLP = new VoxelCompound.Description(
+            Grid.create(one, b -> b ? oneBuilder : null),
+            //new CentralizedMLP(one, oneSensorsGrid, innerNeurons, weights, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d))
+            new TimeFunction(Grid.create(1, 1, t -> Math.signum(Math.sin(-1d * Math.PI * t * 0.5))))
     );
     //episode
     Locomotion locomotion = new Locomotion(
             60,
-            Locomotion.createTerrain("uneven25"),
+            Locomotion.createTerrain("uneven5"),
             Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
             controlInterval,
             settings
     );
-    Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(1, 2);
-    namedSolutionGrid.set(0, 0, Pair.of("phase", vcd1));
-    //namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", vcd4));
-    namedSolutionGrid.set(0, 1, Pair.of("centralizedMLP", vcd2));
-    //namedSolutionGrid.set(0, 2, Pair.of("distributedMLP", vcd3));
+    Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(2, 2);
+    namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
+    namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
+    namedSolutionGrid.set(0, 1, Pair.of("phase-2", oneMLP));
+    namedSolutionGrid.set(1, 0, Pair.of("centralizedMLP-1", centralized1));
+    namedSolutionGrid.set(1, 1, Pair.of("centralizedMLP-2", centralized2));
+    namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());

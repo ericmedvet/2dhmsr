@@ -116,14 +116,14 @@ public class Voxel implements WorldObject {
   public static class Builder implements Serializable {
 
     private final static double SIDE_LENGTH = 3d;
-    private final static double MASS_SIDE_LENGTH_RATIO = .35d;
-    private final static double SPRING_F = 15d;
-    private final static double SPRING_D = 1d;
-    private final static double MASS_LINEAR_DUMPING = 0.5d;
-    private final static double MASS_ANGULAR_DUMPING = 0.5d;
+    private final static double MASS_SIDE_LENGTH_RATIO = .30d;
+    private final static double SPRING_F = 8d;
+    private final static double SPRING_D = 0.3d;
+    private final static double MASS_LINEAR_DUMPING = 1d;
+    private final static double MASS_ANGULAR_DUMPING = 1d;
     private final static double MAX_FORCE = 1000d; //not used in forceMethod=DISTANCE
-    private final static double AREA_RATIO_OFFSET = 0.25d; //not used in forceMethod=FORCE
-    private final static double FRICTION = 0.5d;
+    private final static double AREA_RATIO_OFFSET = 0.2d; //not used in forceMethod=FORCE
+    private final static double FRICTION = 100d;
     private final static double RESTITUTION = 0.1d;
     private final static double MASS = 1d;
     private final static boolean LIMIT_CONTRACTION_FLAG = true;
@@ -742,7 +742,7 @@ public class Voxel implements WorldObject {
       xc = xc / (double) vertexBodies.length;
       yc = yc / (double) vertexBodies.length;
       for (Body body : vertexBodies) {
-        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);
+        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);                
         body.applyForce(force);
       }
     } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
