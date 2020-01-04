@@ -134,7 +134,7 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
     //build voxel compound
     Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(builderGrid);
     for (Grid.Entry<Voxel.Builder> entry : builderGrid) {
-      functionGrid.set(entry.getX(), entry.getY(), t -> Math.signum(Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) builderGrid.getW())));
+      functionGrid.set(entry.getX(), entry.getY(), t -> Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) builderGrid.getW()));
     }
     VoxelCompound voxelCompound = new VoxelCompound(0, 0, new VoxelCompound.Description(
             builderGrid,
@@ -217,23 +217,22 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
 
   public static void main(String[] args) {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    List<Grid<Boolean>> shapes = Lists.newArrayList(
-            Grid.create(5, 1),
-            Grid.create(5, 2),
-            Grid.create(10, 4),
-            Grid.create(50, 10)
-    );
+    List<Grid<Boolean>> shapes = new ArrayList<>();
+    int iterations = 5;
+    for (int w = 15; w >= 3; w--) {
+      shapes.add(Grid.create(w, 3, true));
+    }
     Map<String, List<Object>> params = new LinkedHashMap<>();
     params.put("settings.stepFrequency", Lists.newArrayList(0.015, 0.005, 0.01, 0.02, 0.025));
-    params.put("settings.positionConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
-    params.put("settings.velocityConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
-    params.put("builder.massLinearDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
-    params.put("builder.massAngularDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
-    params.put("builder.springF", Lists.newArrayList(25, 5, 15, 30, 40));
-    params.put("builder.springD", Lists.newArrayList(1, 0.1, 0.25, 0.5, 0.75));
-    params.put("builder.massSideLengthRatio", Lists.newArrayList(.35, .1, .15, .25, .4));
-    params.put("builder.massCollisionFlag", Lists.newArrayList(false, true));
-    params.put("builder.limitContractionFlag", Lists.newArrayList(true, false));
+    //params.put("settings.positionConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
+    //params.put("settings.velocityConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
+    //params.put("builder.massLinearDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
+    //params.put("builder.massAngularDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
+    //params.put("builder.springF", Lists.newArrayList(25, 5, 15, 30, 40));
+    //params.put("builder.springD", Lists.newArrayList(1, 0.1, 0.25, 0.5, 0.75));
+    //params.put("builder.massSideLengthRatio", Lists.newArrayList(.35, .1, .15, .25, .4));
+    //params.put("builder.massCollisionFlag", Lists.newArrayList(false, true));
+    //params.put("builder.limitContractionFlag", Lists.newArrayList(true, false));
     params.put("builder.springScaffoldings", Lists.newArrayList(
             EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS, Voxel.SpringScaffolding.CENTRAL_CROSS),
             EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
@@ -244,57 +243,61 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
     for (Grid<Boolean> shape : shapes) {
       for (Map.Entry<String, List<Object>> param : params.entrySet()) {
         for (Object paramValue : param.getValue()) {
-          //build basic settings and builder
-          final Map<String, Object> configurations = new HashMap<>();
-          configurations.put("settings", new Settings());
-          configurations.put("builder", Voxel.Builder.create());
-          //set all properties to the first value in the list
-          for (Map.Entry<String, Object> configuration : configurations.entrySet()) {
-            params.entrySet().stream().filter(e -> e.getKey().startsWith(configuration.getKey() + ".")).forEach((Map.Entry<String, List<Object>> e) -> {
-              try {
-                PropertyUtils.setProperty(
-                        configuration.getValue(),
-                        e.getKey().replace(configuration.getKey() + ".", ""),
-                        e.getValue().get(0)
-                );
-              } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
-                System.out.printf("Cannot set property '%s' of '%s' due to: %s%n", e.getKey(), configuration.getKey(), ex);
-              }
-            });
+          for (int iteration = 0; iteration < iterations; iteration++) {
+            //build basic settings and builder
+            final Map<String, Object> configurations = new HashMap<>();
+            configurations.put("settings", new Settings());
+            configurations.put("builder", Voxel.Builder.create());
+            //set all properties to the first value in the list
+            for (Map.Entry<String, Object> configuration : configurations.entrySet()) {
+              params.entrySet().stream().filter(e -> e.getKey().startsWith(configuration.getKey() + ".")).forEach((Map.Entry<String, List<Object>> e) -> {
+                try {
+                  PropertyUtils.setProperty(
+                          configuration.getValue(),
+                          e.getKey().replace(configuration.getKey() + ".", ""),
+                          e.getValue().get(0)
+                  );
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+                  System.out.printf("Cannot set property '%s' of '%s' due to: %s%n", e.getKey(), configuration.getKey(), ex);
+                }
+              });
+            }
+            //set param value
+            try {
+              PropertyUtils.setProperty(
+                      configurations.get(param.getKey().split("\\.")[0]),
+                      param.getKey().split("\\.")[1],
+                      paramValue
+              );
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+              System.out.printf("Cannot set property '%s' to %s due to: %s%n", param.getKey(), paramValue, ex);
+            }
+            //set static keys
+            final Map<String, Object> staticKeys = new LinkedHashMap<>();
+            staticKeys.put("iteration", iteration);
+            staticKeys.put("shape", shape.getW() + "x" + shape.getH());
+            staticKeys.put("nVoxels", shape.values().stream().filter(b -> b).count());
+            //set static keys to the first value in the list
+            staticKeys.putAll(params.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0))));
+            //set static key of the current param
+            staticKeys.put(param.getKey(), paramValue);
+            //submit jobs
+            futures.add(executor.submit(() -> {
+              System.out.printf("Started\t%s%n", staticKeys);
+              VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 1, 1d, (Settings) configurations.get("settings"));
+              Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
+              System.out.printf("Ended\t%s%n", staticKeys);
+              Map<String, Object> row = new LinkedHashMap<>();
+              row.putAll(staticKeys);
+              row.putAll(PropertyUtils.describe(result)
+                      .entrySet()
+                      .stream()
+                      .filter(e -> e.getValue() instanceof Number)
+                      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+              );
+              return row;
+            }));
           }
-          //set param value
-          try {
-            PropertyUtils.setProperty(
-                    configurations.get(param.getKey().split("\\.")[0]),
-                    param.getKey().split("\\.")[1],
-                    paramValue
-            );
-          } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
-            System.out.printf("Cannot set property '%s' to %s due to: %s%n", param.getKey(), paramValue, ex);
-          }
-          //set static keys
-          final Map<String, Object> staticKeys = new LinkedHashMap<>();
-          staticKeys.put("shape", shape.getW() + "x" + shape.getH());
-          //set static keys to the first value in the list
-          staticKeys.putAll(params.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0))));
-          //set static key of the current param
-          staticKeys.put(param.getKey(), paramValue);
-          //submit jobs
-          futures.add(executor.submit(() -> {
-            System.out.printf("Started\t%s%n", staticKeys);
-            VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 2, 1d, (Settings) configurations.get("settings"));
-            Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
-            System.out.printf("Ended\t%s%n", staticKeys);
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.putAll(staticKeys);
-            row.putAll(PropertyUtils.describe(result)
-                    .entrySet()
-                    .stream()
-                    .filter(e -> e.getValue() instanceof Number)
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-            );
-            return row;
-          }));
         }
       }
     }

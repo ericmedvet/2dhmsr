@@ -212,7 +212,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       if (t <= forceDuration) {
         for (int y = 0; y < vc.getVoxels().getH(); y++) {
           for (int i : new int[]{1, 2}) {
-            vc.getVoxels().get(vc.getVoxels().getW() - 1, y).getVertexBodies()[i].applyForce(new Vector2(0d, -force / 2d));
+            vc.getVoxels().get(vc.getVoxels().getW() - 1, y).getVertexBodies()[i].applyForce(new Vector2(0d, -force / 2d / vc.getVoxels().getH()));
           }
         }
       }
@@ -269,13 +269,11 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
 
   public static void main(String[] args) throws FileNotFoundException {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    PrintStream timeEvolutionPS = new PrintStream("/home/eric/experiments/2dhmsr/cantilever-time-evolutions.csv");
+    PrintStream timeEvolutionPS = null; //new PrintStream("/home/eric/experiments/2dhmsr/cantilever-time-evolutions.csv");
     List<Grid<Boolean>> shapes = Lists.newArrayList(
-            //Grid.create(5, 2),
-            //Grid.create(5, 2),
-            Grid.create(10, 2),
-            Grid.create(10, 4)
-    //Grid.create(20, 5)
+            Grid.create(15, 4),
+            Grid.create(10, 4),
+            Grid.create(20, 4)
     );
     Map<String, List<Object>> params = new LinkedHashMap<>();
     //params.put("settings.stepFrequency", Lists.newArrayList(1d/60d, 1d/120d, 1d/90d, 1d/45d, 1d/30d));
@@ -283,7 +281,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
     //params.put("settings.velocityConstraintSolverIterations", Lists.newArrayList(10, 4, 6, 8, 12, 15));
     //params.put("builder.massLinearDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
     //params.put("builder.massAngularDamping", Lists.newArrayList(0.5, 0.01, 0.25, 0.75, 0.95));
-    params.put("builder.springF", Lists.newArrayList(8, 4, 5, 3, 10, 15, 20, 25, 30));
+    params.put("builder.springF", Lists.newArrayList(8, 4, 10, 15, 20, 25, 30));
     //params.put("builder.springD", Lists.newArrayList(1, 0.1, 0.25, 0.5, 0.75));
     //params.put("builder.massSideLengthRatio", Lists.newArrayList(.35, .1, .15, .25, .4));
     //params.put("builder.massCollisionFlag", Lists.newArrayList(false, true));
@@ -338,9 +336,9 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
             CantileverBending cb = new CantileverBending(
-                    200d,
+                    30d,
                     0.1d,
-                    60d,
+                    30d,
                     0.01d,
                     (Settings) configurations.get("settings")
             );

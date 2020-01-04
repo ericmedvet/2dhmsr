@@ -22,6 +22,8 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
+import it.units.erallab.hmsrobots.validation.CantileverBending;
+import it.units.erallab.hmsrobots.validation.VoxelCompoundControl;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
@@ -74,6 +76,12 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
+
+    controlValidation();
+    if (true) {
+      return;
+    }
+
     final Grid<Boolean> structure = Grid.create(11, 5, (x, y) -> (x < 2) || (x >= 9) || (y > 0));
     //final Grid<Boolean> structure = Grid.create(4, 2, (x, y) -> (x < 1) || (x > 2) || (y > 0));
     Voxel.Builder builder1 = Voxel.Builder.create()
@@ -247,7 +255,54 @@ public class Starter {
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
     gridOnlineViewer.start(5);
     GridEpisodeRunner<VoxelCompound.Description> runner = new GridEpisodeRunner<>(
-            namedSolutionGrid, locomotion,
+            namedSolutionGrid,
+            locomotion,
+            gridOnlineViewer,
+            executor
+    );
+    runner.run();
+  }
+
+  public static void cantileverValidation() {
+    CantileverBending cb = new CantileverBending(
+            30d,
+            Double.POSITIVE_INFINITY,
+            30d,
+            0.01d,
+            new Settings()
+    );
+    Grid<Pair<String, Grid<Voxel.Builder>>> namedSolutionGrid = Grid.create(1, 1);
+    namedSolutionGrid.set(0, 0, Pair.of("10x4", Grid.create(10, 4, Voxel.Builder.create())));
+    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
+    gridOnlineViewer.start(5);
+    GridEpisodeRunner<Grid<Voxel.Builder>> runner = new GridEpisodeRunner<>(
+            namedSolutionGrid,
+            cb,
+            gridOnlineViewer,
+            executor
+    );
+    runner.run();
+  }
+
+  public static void controlValidation() {
+    VoxelCompoundControl vcc = new VoxelCompoundControl(
+            30d,
+            5d,
+            1,
+            1d,
+            new Settings()
+    );
+    Grid<Pair<String, Grid<Voxel.Builder>>> namedSolutionGrid = Grid.create(1, 1);
+    namedSolutionGrid.set(0, 0, Pair.of("10x4", Grid.create(10, 4, Voxel.Builder.create())));
+    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
+    gridOnlineViewer.start(5);
+    GridEpisodeRunner<Grid<Voxel.Builder>> runner = new GridEpisodeRunner<>(
+            namedSolutionGrid,
+            vcc,
             gridOnlineViewer,
             executor
     );
