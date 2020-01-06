@@ -76,12 +76,6 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
-
-    controlValidation();
-    if (true) {
-      return;
-    }
-
     final Grid<Boolean> structure = Grid.create(11, 5, (x, y) -> (x < 2) || (x >= 9) || (y > 0));
     //final Grid<Boolean> structure = Grid.create(4, 2, (x, y) -> (x < 1) || (x > 2) || (y > 0));
     Voxel.Builder builder1 = Voxel.Builder.create()
