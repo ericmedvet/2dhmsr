@@ -68,4 +68,8 @@ public class PhaseSin extends TimeFunction {
     return true;
   }
   
+  public Grid<Double> getPhases() {
+    return phases;
+  }
+  
 }
