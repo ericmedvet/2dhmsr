@@ -243,5 +243,17 @@ public class DistributedMLP extends ClosedLoopController {
     }
     return true;
   }
+  
+  public Grid<SerializableFunction<Double, Double>> getDrivingFunctionsGrid() {
+    return drivingFunctionsGrid;
+  }
+  
+  public Grid<MultiLayerPerceptron> getMlpGrid() {
+    return mlpGrid;
+  }
+  
+  public int getSignals() {
+    return signals;
+  }
 
 }
