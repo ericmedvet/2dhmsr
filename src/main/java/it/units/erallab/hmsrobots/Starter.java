@@ -24,9 +24,11 @@ import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.validation.CantileverBending;
 import it.units.erallab.hmsrobots.validation.VoxelCompoundControl;
+import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +43,7 @@ import org.dyn4j.dynamics.Settings;
  */
 public class Starter {
 
-  private static void sampleExecution() {
+  private static void sampleExecution() throws IOException {
     Locomotion locomotion = new Locomotion(
             60,
             Locomotion.createTerrain("flat"),
@@ -72,7 +74,14 @@ public class Starter {
                     (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
             ))
     );
+    FramesFileWriter framesFileWriter = new FramesFileWriter(
+            5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.VERTICAL,
+            new File("/home/eric/experiments/2dhmsr/frames.v.png"),
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()),
+            GraphicsDrawer.RenderingDirectives.create()
+    );
     List<Double> result = locomotion.apply(description);
+    framesFileWriter.flush();
   }
 
   public static void main(String[] args) throws IOException {
@@ -231,12 +240,12 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-            60,
+            7,
             Locomotion.createTerrain("uneven5"),
             Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
             controlInterval,
             settings
-    );
+    );    
     Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(2, 2);
     namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
     namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
