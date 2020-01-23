@@ -18,8 +18,7 @@ package it.units.erallab.hmsrobots.controllers;
 
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.objects.Voxel;
-import java.util.function.Function;
+import java.util.Objects;
 
 /**
  *
@@ -27,8 +26,11 @@ import java.util.function.Function;
  */
 public class PhaseSin extends TimeFunction {
   
+  private final Grid<Double> phases;
+  
   public PhaseSin(double frequency, double amplitude, Grid<Double> phases) {
     super(getFunctions(frequency, amplitude, phases));
+    this.phases = phases;
   }
   
   private static Grid<SerializableFunction<Double,Double>> getFunctions(final double frequency, final double amplitude, final Grid<Double> phases) {
@@ -39,6 +41,35 @@ public class PhaseSin extends TimeFunction {
       }
     }
     return functions;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 83 * hash + Objects.hashCode(this.phases);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final PhaseSin other = (PhaseSin) obj;
+    if (!Objects.equals(this.phases, other.phases)) {
+      return false;
+    }
+    return true;
+  }
+  
+  public Grid<Double> getPhases() {
+    return phases;
   }
   
 }

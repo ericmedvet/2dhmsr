@@ -17,9 +17,6 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -27,10 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Flushable;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 import org.jcodec.api.awt.AWTSequenceEncoder;
@@ -42,49 +37,42 @@ import org.jcodec.common.model.Rational;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VideoFileWriter implements Flushable {
+public class GridFileWriter implements Flushable, GridSnapshotListener {
 
-  private final int ffMemory = 25;
-  private final double ffMargin = 1d;
-  private final int w = 1200;
-  private final int h = 600;
-  private final double frameRate = 25;
-  private final Set<GraphicsDrawer.RenderingMode> renderingModes = EnumSet.of(
-          GraphicsDrawer.RenderingMode.VOXEL_POLY,
-          GraphicsDrawer.RenderingMode.VOXEL_FILL_AREA,
-          GraphicsDrawer.RenderingMode.GRID_MAJOR,
-          GraphicsDrawer.RenderingMode.VIEWPORT_INFO,
-          GraphicsDrawer.RenderingMode.TIME_INFO
-  );
-  private final Set<Voxel.Sensor> sensors = EnumSet.of(Voxel.Sensor.Y_ROT_VELOCITY);
+  private final int w;
+  private final int h;
+  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
 
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
   private final Grid<Queue<Snapshot>> queueGrid;
+  private final Grid<Framer> framerGrid;
 
   private final SeekableByteChannel channel;
   private final AWTSequenceEncoder encoder;
   private final GraphicsDrawer graphicsDrawer;
-  private final Grid<GraphicsDrawer.FrameFollower> ffGrid;
 
   private double t;
   private boolean running;
   private int drawnCount;
 
-  private static final Logger L = Logger.getLogger(VideoFileWriter.class.getName());
+  private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());  
 
-  public VideoFileWriter(File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
+  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) throws FileNotFoundException, IOException {
+    this.w = w;
+    this.h = h;
+    this.renderingDirectives = renderingDirectives;
     this.namesGrid = namesGrid;
-    ffGrid = Grid.create(namesGrid);
+    framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
     //prepare things
     channel = NIOUtils.writableChannel(file);
     encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
     graphicsDrawer = GraphicsDrawer.Builder.create().build();
-    for (int x = 0; x < ffGrid.getW(); x++) {
-      for (int y = 0; y < ffGrid.getH(); y++) {
-        ffGrid.set(x, y, new GraphicsDrawer.FrameFollower(ffMemory, ffMargin));
+    for (int x = 0; x < namesGrid.getW(); x++) {
+      for (int y = 0; y < namesGrid.getH(); y++) {
+        framerGrid.set(x, y, new VoxelCompoundFollower((int)frameRate*3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
         queueGrid.set(x, y, new LinkedList<>());
       }
     }
@@ -157,6 +145,7 @@ public class VideoFileWriter implements Flushable {
     );
   }
 
+  @Override
   public SnapshotListener listener(final int lX, final int lY) {
     return (Snapshot snapshot) -> {
       synchronized (queueGrid) {
@@ -167,7 +156,7 @@ public class VideoFileWriter implements Flushable {
   }
 
   private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
-    L.info(String.format("Writing frame %d/%d", drawnCount, drawnCount + gridQueue.size()));
+    L.finer(String.format("Writing frame %d/%d", drawnCount, drawnCount + gridQueue.size()));
     //set local clip size
     double localW = (double) w / (double) namesGrid.getW();
     double localH = (double) h / (double) namesGrid.getH();
@@ -178,20 +167,11 @@ public class VideoFileWriter implements Flushable {
     for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
         if (entry.getValue() != null) {
           //obtain viewport
-          Compound voxelCompound = null;
-          for (Compound compound : entry.getValue().getCompounds()) {
-            if (compound.getObjectClass().equals(VoxelCompound.class
-            )) {
-              voxelCompound = compound;
-
-              break;
-            }
-          }
-          GraphicsDrawer.Frame frame = ffGrid.get(entry.getX(), entry.getY()).getFrame(voxelCompound, localW / localH);
+          Frame frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
           //draw
           graphicsDrawer.draw(entry.getValue(), g,
-                  new GraphicsDrawer.Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
-                  frame, renderingModes, sensors, namesGrid.get(entry.getX(), entry.getY())
+                  new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
+                  frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
           );
         }
       
@@ -218,7 +198,7 @@ public class VideoFileWriter implements Flushable {
         }
       }
     }
-    L.info("Flushing data");
+    L.fine("Flushing data");
     encoder.finish();
     NIOUtils.closeQuietly(channel);
     running = false;

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -49,7 +50,9 @@ public class Voxel implements WorldObject {
     X_VELOCITY, Y_VELOCITY,
     X_ROT_VELOCITY, Y_ROT_VELOCITY,
     ANGLE,
-    BROKEN_RATIO;
+    BROKEN_RATIO,
+    LAST_APPLIED_FORCE,
+    TOUCHING;
   }
 
   public static enum ForceMethod {
@@ -75,19 +78,52 @@ public class Voxel implements WorldObject {
       this.max = max;
     }
 
+    @Override
+    public int hashCode() {
+      int hash = 5;
+      hash = 53 * hash + (int) (Double.doubleToLongBits(this.min) ^ (Double.doubleToLongBits(this.min) >>> 32));
+      hash = 53 * hash + (int) (Double.doubleToLongBits(this.rest) ^ (Double.doubleToLongBits(this.rest) >>> 32));
+      hash = 53 * hash + (int) (Double.doubleToLongBits(this.max) ^ (Double.doubleToLongBits(this.max) >>> 32));
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final SpringRange other = (SpringRange) obj;
+      if (Double.doubleToLongBits(this.min) != Double.doubleToLongBits(other.min)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.rest) != Double.doubleToLongBits(other.rest)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.max) != Double.doubleToLongBits(other.max)) {
+        return false;
+      }
+      return true;
+    }
+
   }
 
   public static class Builder implements Serializable {
 
     private final static double SIDE_LENGTH = 3d;
-    private final static double MASS_SIDE_LENGTH_RATIO = .35d;
-    private final static double SPRING_F = 25d;
-    private final static double SPRING_D = 1d;
-    private final static double MASS_LINEAR_DUMPING = 0.5d;
-    private final static double MASS_ANGULAR_DUMPING = 0.5d;
+    private final static double MASS_SIDE_LENGTH_RATIO = .30d;
+    private final static double SPRING_F = 8d;
+    private final static double SPRING_D = 0.3d;
+    private final static double MASS_LINEAR_DUMPING = 1d;
+    private final static double MASS_ANGULAR_DUMPING = 1d;
     private final static double MAX_FORCE = 1000d; //not used in forceMethod=DISTANCE
-    private final static double AREA_RATIO_OFFSET = 0.25d; //not used in forceMethod=FORCE
-    private final static double FRICTION = 0.5d;
+    private final static double AREA_RATIO_OFFSET = 0.2d; //not used in forceMethod=FORCE
+    private final static double FRICTION = 100d;
     private final static double RESTITUTION = 0.1d;
     private final static double MASS = 1d;
     private final static boolean LIMIT_CONTRACTION_FLAG = true;
@@ -324,6 +360,87 @@ public class Voxel implements WorldObject {
       return "Builder{" + "sideLength=" + sideLength + ", massSideLengthRatio=" + massSideLengthRatio + ", springF=" + springF + ", springD=" + springD + ", massLinearDamping=" + massLinearDamping + ", massAngularDamping=" + massAngularDamping + ", maxForce=" + maxForce + ", areaRatioOffset=" + areaRatioOffset + ", friction=" + friction + ", restitution=" + restitution + ", mass=" + mass + ", limitContractionFlag=" + limitContractionFlag + ", massCollisionFlag=" + massCollisionFlag + ", forceMethod=" + forceMethod + ", springScaffoldings=" + springScaffoldings + '}';
     }
 
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.sideLength) ^ (Double.doubleToLongBits(this.sideLength) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.massSideLengthRatio) ^ (Double.doubleToLongBits(this.massSideLengthRatio) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.springF) ^ (Double.doubleToLongBits(this.springF) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.springD) ^ (Double.doubleToLongBits(this.springD) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.massLinearDamping) ^ (Double.doubleToLongBits(this.massLinearDamping) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.massAngularDamping) ^ (Double.doubleToLongBits(this.massAngularDamping) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.maxForce) ^ (Double.doubleToLongBits(this.maxForce) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.areaRatioOffset) ^ (Double.doubleToLongBits(this.areaRatioOffset) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.friction) ^ (Double.doubleToLongBits(this.friction) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.restitution) ^ (Double.doubleToLongBits(this.restitution) >>> 32));
+      hash = 97 * hash + (int) (Double.doubleToLongBits(this.mass) ^ (Double.doubleToLongBits(this.mass) >>> 32));
+      hash = 97 * hash + (this.limitContractionFlag ? 1 : 0);
+      hash = 97 * hash + (this.massCollisionFlag ? 1 : 0);
+      hash = 97 * hash + Objects.hashCode(this.forceMethod);
+      hash = 97 * hash + Objects.hashCode(this.springScaffoldings);
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final Builder other = (Builder) obj;
+      if (Double.doubleToLongBits(this.sideLength) != Double.doubleToLongBits(other.sideLength)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.massSideLengthRatio) != Double.doubleToLongBits(other.massSideLengthRatio)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.springF) != Double.doubleToLongBits(other.springF)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.springD) != Double.doubleToLongBits(other.springD)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.massLinearDamping) != Double.doubleToLongBits(other.massLinearDamping)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.massAngularDamping) != Double.doubleToLongBits(other.massAngularDamping)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.maxForce) != Double.doubleToLongBits(other.maxForce)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.areaRatioOffset) != Double.doubleToLongBits(other.areaRatioOffset)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.friction) != Double.doubleToLongBits(other.friction)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.restitution) != Double.doubleToLongBits(other.restitution)) {
+        return false;
+      }
+      if (Double.doubleToLongBits(this.mass) != Double.doubleToLongBits(other.mass)) {
+        return false;
+      }
+      if (this.limitContractionFlag != other.limitContractionFlag) {
+        return false;
+      }
+      if (this.massCollisionFlag != other.massCollisionFlag) {
+        return false;
+      }
+      if (this.forceMethod != other.forceMethod) {
+        return false;
+      }
+      if (!Objects.equals(this.springScaffoldings, other.springScaffoldings)) {
+        return false;
+      }
+      return true;
+    }
+
   }
 
   public static class ParentFilter implements Filter {
@@ -392,10 +509,13 @@ public class Voxel implements WorldObject {
     double density = mass * massSideLength / massSideLength / 4;
     //build bodies
     vertexBodies = new Body[4];
-    vertexBodies[0] = new Body(1);
-    vertexBodies[1] = new Body(1);
-    vertexBodies[2] = new Body(1);
-    vertexBodies[3] = new Body(1);
+    vertexBodies[0] = new Body(1); //NW
+    vertexBodies[1] = new Body(1); //NE
+    vertexBodies[2] = new Body(1); //SE
+    vertexBodies[3] = new Body(1); //SW
+    for (Body vertexBody : vertexBodies) {
+      vertexBody.setUserData(parent);
+    }
     vertexBodies[0].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[1].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[2].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
@@ -622,7 +742,7 @@ public class Voxel implements WorldObject {
       xc = xc / (double) vertexBodies.length;
       yc = yc / (double) vertexBodies.length;
       for (Body body : vertexBodies) {
-        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);
+        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);                
         body.applyForce(force);
       }
     } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
@@ -673,7 +793,7 @@ public class Voxel implements WorldObject {
 
   public double getAngle() {
     Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
-    Vector2 downSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
+    Vector2 downSide = vertexBodies[3].getWorldCenter().copy().subtract(vertexBodies[2].getWorldCenter());
     return (upSide.getDirection() + downSide.getDirection()) / 2d;
   }
 
@@ -714,9 +834,28 @@ public class Voxel implements WorldObject {
         return getLinearVelocity().copy().dot(new Vector2(getAngle() + Math.PI / 2d));
       case BROKEN_RATIO:
         return ratioOfOverlappingVertexBodies();
+      case LAST_APPLIED_FORCE:
+        return getLastAppliedForce();
+      case TOUCHING:
+        return isInTouch() ? 1d : 0d;
       default:
         return 0d;
     }
+  }
+
+  private boolean isInTouch() {
+    for (Body vertexBody : vertexBodies) {
+      List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      for (Body inContactBody : inContactBodies) {
+        Object userData = inContactBody.getUserData();
+        if (userData == null) {
+          return true;
+        } else if (userData != vertexBody.getUserData()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 }

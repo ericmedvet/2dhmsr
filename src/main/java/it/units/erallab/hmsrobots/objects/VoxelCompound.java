@@ -25,6 +25,7 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -44,26 +45,49 @@ public class VoxelCompound implements WorldObject {
 
   public static class Description implements Serializable {
 
-    private final Grid<Boolean> structure;
-    private final Controller controller;
     private final Grid<Voxel.Builder> builderGrid;
+    private final Controller controller;
 
-    public Description(Grid<Boolean> structure, Controller controller, Grid<Voxel.Builder> builderGrid) {
-      this.structure = structure;
-      this.controller = controller;
+    public Description(Grid<Voxel.Builder> builderGrid, Controller controller) {
       this.builderGrid = builderGrid;
+      this.controller = controller;
     }
 
-    public Grid<Boolean> getStructure() {
-      return structure;
+    public Grid<Voxel.Builder> getBuilderGrid() {
+      return builderGrid;
     }
 
     public Controller getController() {
       return controller;
     }
 
-    public Grid<Voxel.Builder> getBuilderGrid() {
-      return builderGrid;
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 19 * hash + Objects.hashCode(this.builderGrid);
+      hash = 19 * hash + Objects.hashCode(this.controller);
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final Description other = (Description) obj;
+      if (!Objects.equals(this.builderGrid, other.builderGrid)) {
+        return false;
+      }
+      if (!Objects.equals(this.controller, other.controller)) {
+        return false;
+      }
+      return true;
     }
 
   }
@@ -73,10 +97,10 @@ public class VoxelCompound implements WorldObject {
     this.controller = description.getController();
     joints = new ArrayList<>();
     //construct voxels
-    voxels = Grid.create(description.getStructure());
-    for (int gx = 0; gx < description.getStructure().getW(); gx++) {
-      for (int gy = 0; gy < description.getStructure().getH(); gy++) {
-        if (description.getStructure().get(gx, gy)) {
+    voxels = Grid.create(description.getBuilderGrid());
+    for (int gx = 0; gx < description.getBuilderGrid().getW(); gx++) {
+      for (int gy = 0; gy < description.getBuilderGrid().getH(); gy++) {
+        if (description.getBuilderGrid().get(gx, gy)!=null) {
           Voxel voxel = description.getBuilderGrid().get(gx, gy).build(
                   x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
                   y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),

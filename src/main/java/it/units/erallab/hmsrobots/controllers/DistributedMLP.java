@@ -20,6 +20,7 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -34,7 +35,7 @@ public class DistributedMLP extends ClosedLoopController {
 
   private final Grid<double[][]> lastSignalsGrid; //1st index: 0=N, 1=E, 2=S, 3=W
 
-  public static int countParams(Grid<Boolean> structure, Grid<List<Voxel.Sensor>> sensorsGrid, int signals, int[] innerNeurons) {
+  public static int countParams(Grid<Boolean> structure, Grid<List<TimedSensor>> sensorsGrid, int signals, int[] innerNeurons) {
     doChecks(structure, sensorsGrid);
     int sumOfNOfWeights = 0;
     for (Grid.Entry<Boolean> entry : structure) {
@@ -51,7 +52,7 @@ public class DistributedMLP extends ClosedLoopController {
     return sumOfNOfWeights;
   }
 
-  public DistributedMLP(Grid<Boolean> structure, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid, Grid<List<Voxel.Sensor>> sensorsGrid, int signals, int[] innerNeurons, double[] weights) {
+  public DistributedMLP(Grid<Boolean> structure, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid, Grid<List<TimedSensor>> sensorsGrid, int signals, int[] innerNeurons, double[] weights) {
     super(sensorsGrid);
     doChecks(structure, sensorsGrid, drivingFunctionsGrid);
     //set fields
@@ -73,7 +74,11 @@ public class DistributedMLP extends ClosedLoopController {
       }
     }
     if (weights.length != sumOfNOfWeights) {
-      throw new IllegalArgumentException(String.format("%d weights expected and %d found", neuronsGrid, weights.length));
+      throw new IllegalArgumentException(String.format(
+              "%d weights expected and %d found",
+              sumOfNOfWeights,
+              weights.length
+      ));
     }
     //set mlps
     mlpGrid = Grid.create(structure);
@@ -99,13 +104,13 @@ public class DistributedMLP extends ClosedLoopController {
     }
   }
 
-  private static void doChecks(Grid<Boolean> structure, Grid<List<Voxel.Sensor>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid) throws IllegalArgumentException {
+  private static void doChecks(Grid<Boolean> structure, Grid<List<TimedSensor>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid) throws IllegalArgumentException {
     if ((drivingFunctionsGrid.getW() != structure.getW()) || (drivingFunctionsGrid.getH() != structure.getH())) {
       throw new IllegalArgumentException("Structure and driving functions grids should have the same shape");
     }
     for (Grid.Entry<Boolean> entry : structure) {
       if (entry.getValue()) {
-        if (drivingFunctionsGrid.get(entry.getX(), entry.getY())==null) {
+        if (drivingFunctionsGrid.get(entry.getX(), entry.getY()) == null) {
           throw new IllegalArgumentException(String.format("Null driving function at filled grid position (%d,%d)", entry.getX(), entry.getY()));
         }
       }
@@ -113,20 +118,20 @@ public class DistributedMLP extends ClosedLoopController {
     doChecks(structure, sensorsGrid);
   }
 
-  private static void doChecks(Grid<Boolean> structure, Grid<List<Voxel.Sensor>> sensorsGrid) throws IllegalArgumentException {
+  private static void doChecks(Grid<Boolean> structure, Grid<List<TimedSensor>> sensorsGrid) throws IllegalArgumentException {
     if ((structure.getW() != sensorsGrid.getW()) || (structure.getH() != sensorsGrid.getH())) {
       throw new IllegalArgumentException("Structure and sensors grids should have the same shape");
     }
     for (Grid.Entry<Boolean> entry : structure) {
       if (entry.getValue()) {
-        if (sensorsGrid.get(entry.getX(), entry.getY())==null) {
+        if (sensorsGrid.get(entry.getX(), entry.getY()) == null) {
           throw new IllegalArgumentException(String.format("Null sensors at filled grid position (%d,%d)", entry.getX(), entry.getY()));
         }
       }
     }
   }
 
-  public DistributedMLP(Grid<MultiLayerPerceptron> mlpGrid, Grid<List<Voxel.Sensor>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctions, int signals) {
+  public DistributedMLP(Grid<MultiLayerPerceptron> mlpGrid, Grid<List<TimedSensor>> sensorsGrid, Grid<SerializableFunction<Double, Double>> drivingFunctions, int signals) {
     super(sensorsGrid);
     this.drivingFunctionsGrid = drivingFunctions;
     this.mlpGrid = mlpGrid;
@@ -143,6 +148,7 @@ public class DistributedMLP extends ClosedLoopController {
 
   @Override
   public Grid<Double> control(double t, double dt, Grid<Voxel> voxelGrid) {
+    readSensors(voxelGrid);
     Grid<Double> outputs = Grid.create(voxelGrid);
     Grid<double[][]> localLastSignals = Grid.create(lastSignalsGrid);
     for (int x = 0; x < voxelGrid.getW(); x++) {
@@ -164,7 +170,8 @@ public class DistributedMLP extends ClosedLoopController {
           localSignals[2] = (southSignals != null) ? southSignals[0] : nullSignals;
           localSignals[3] = (westSignals != null) ? westSignals[1] : nullSignals;
           //compute and set output
-          double[] outputValues = computeLocalOutput(voxel, mlpGrid.get(x, y), getSensorsGrid().get(x, y), drivingValue, localSignals);
+          double[] sensorReadings = getReadings(x, y);
+          double[] outputValues = computeLocalOutput(sensorReadings, mlpGrid.get(x, y), drivingValue, localSignals);
           outputs.set(x, y, outputValues[0]);
           //update lastSignals
           localLastSignals.set(x, y, unflatSignals(outputValues, 1));
@@ -180,12 +187,12 @@ public class DistributedMLP extends ClosedLoopController {
     return outputs;
   }
 
-  private double[] computeLocalOutput(Voxel voxel, MultiLayerPerceptron mlp, List<Voxel.Sensor> sensors, double drivingValue, double[][] localSignals) {
+  private double[] computeLocalOutput(double[] sensorReadings, MultiLayerPerceptron mlp, double drivingValue, double[][] localSignals) {
     double[] inputValues = new double[mlp.getNeurons()[0] - 1];
     int c = 0;
     //collect inputs
-    collectInputs(voxel, sensors, inputValues, c);
-    c = c + sensors.size();
+    System.arraycopy(sensorReadings, 0, inputValues, c, sensorReadings.length);
+    c = c + sensorReadings.length;
     //collect driving function (and bias)
     inputValues[c] = drivingValue;
     c = c + 1;
@@ -206,6 +213,47 @@ public class DistributedMLP extends ClosedLoopController {
       System.arraycopy(values, i * signals + srcOffset, signalValues[i], 0, signals);
     }
     return signalValues;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 23 * hash + Objects.hashCode(this.mlpGrid);
+    hash = 23 * hash + this.signals;
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final DistributedMLP other = (DistributedMLP) obj;
+    if (this.signals != other.signals) {
+      return false;
+    }
+    if (!Objects.equals(this.mlpGrid, other.mlpGrid)) {
+      return false;
+    }
+    return true;
+  }
+  
+  public Grid<SerializableFunction<Double, Double>> getDrivingFunctionsGrid() {
+    return drivingFunctionsGrid;
+  }
+  
+  public Grid<MultiLayerPerceptron> getMlpGrid() {
+    return mlpGrid;
+  }
+  
+  public int getSignals() {
+    return signals;
   }
 
 }

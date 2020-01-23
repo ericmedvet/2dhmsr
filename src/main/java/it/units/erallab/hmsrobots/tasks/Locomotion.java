@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.problems;
+package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
@@ -27,19 +27,21 @@ import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 import org.dyn4j.dynamics.Settings;
 
-public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<Double>> {
+public class Locomotion extends AbstractTask<VoxelCompound.Description, List<Double>> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
+  private final static double TERRAIN_BORDER_HEIGHT = 100d;
+  private final static int TERRAIN_POINTS = 50;
 
   public static enum Metric {
     TRAVEL_X_VELOCITY(false),
+    TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
     AVG_SUM_OF_SQUARED_CONTROL_SIGNALS(true),
     AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS(true);
@@ -61,8 +63,8 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   private final List<Metric> metrics;
   private final int controlStepInterval;
 
-  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, SnapshotListener listener, Settings settings) {
-    super(listener, settings);
+  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, int controlStepInterval, Settings settings) {
+    super(settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.metrics = metrics;
@@ -70,7 +72,7 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
   }
 
   @Override
-  public List<Double> apply(VoxelCompound.Description description) {
+  public List<Double> apply(VoxelCompound.Description description, SnapshotListener listener) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -118,9 +120,9 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
           final int y = entry.getY();
           if (entry.getValue() != null) {
             final double v = entry.getValue();
-            sumOfSquaredControlSignals.set(x, y, v * v * settings.getStepFrequency());
+            sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y) + v * v * settings.getStepFrequency());
             double dV = v - lastControlSignals.get(x, y);
-            sumOfSquaredDeltaControlSignals.set(x, y, dV * dV * settings.getStepFrequency());
+            sumOfSquaredDeltaControlSignals.set(x, y, sumOfSquaredDeltaControlSignals.get(x, y) + dV * dV * settings.getStepFrequency());
             lastControlSignals.set(x, y, entry.getValue());
           }
         }
@@ -141,19 +143,47 @@ public class Locomotion extends AbstractEpisode<VoxelCompound.Description, List<
         case TRAVEL_X_VELOCITY:
           value = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
+        case TRAVEL_X_RELATIVE_VELOCITY:
+          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox[1].x - boundingBox[0].x, boundingBox[1].y - boundingBox[0].y);
+          break;
         case CENTER_AVG_Y:
           value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
           break;
         case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
-          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble() / t;
+          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
           break;
       }
       results.add(value);
     }
     return results;
+  }
+
+  private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {
+    double[] xs = new double[n + 2];
+    double[] ys = new double[n + 2];
+    xs[0] = 0d;
+    xs[n + 1] = length;
+    ys[0] = borderHeight;
+    ys[n + 1] = borderHeight;
+    for (int i = 1; i < n + 1; i++) {
+      xs[i] = 1 + (double) (i - 1) * (length - 2d) / (double) n;
+      ys[i] = random.nextDouble() * peak;
+    }
+    return new double[][]{xs, ys};
+  }
+
+  public static double[][] createTerrain(String name) {
+    Random random = new Random(1);
+    if (name.equals("flat")) {
+      return new double[][]{new double[]{0, 10, 1990, 2000}, new double[]{TERRAIN_BORDER_HEIGHT, 0, 0, TERRAIN_BORDER_HEIGHT}};
+    } else if (name.startsWith("uneven")) {
+      int h = Integer.parseInt(name.replace("uneven", ""));
+      return randomTerrain(TERRAIN_POINTS, 2000, h, TERRAIN_BORDER_HEIGHT, random);
+    }
+    return null;
   }
 
 }
