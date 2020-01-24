@@ -69,5 +69,5 @@ List<Double> result = locomotion.apply(description);
 ```
 
 ## References
-1. Hiller, Jonathan, and Hod Lipson. "[Automatic design and manufacture of soft robots.](https://ieeexplore.ieee.org/abstract/document/6096440)" IEEE Transactions on Robotics 28.2 (2011): 457-466 
-2. arxiv paper
+1. Hiller, Lipson. "[Automatic design and manufacture of soft robots.](https://ieeexplore.ieee.org/abstract/document/6096440)" IEEE Transactions on Robotics 28.2 (2011): 457-466 
+2. Medvet, Bartoli, De Lorenzo, Seriani. "[2D-VSR-Sim: an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617)" arXiv cs.RO: 2001.08617
