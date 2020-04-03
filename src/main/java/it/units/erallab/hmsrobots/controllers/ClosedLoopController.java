@@ -150,7 +150,7 @@ public abstract class ClosedLoopController implements Controller {
     for (int i = 0; i < sensors.size(); i++) {
       Range<Integer> range = sensors.get(i).getRange();
       double[] sensorValues = readingsGrid.get(x, y).get(sensors.get(i).getSensor());
-      if (range.lowerEndpoint().intValue() == (range.upperEndpoint().intValue() + 1)) {
+      if (range.lowerEndpoint().intValue() == (range.upperEndpoint().intValue() - 1)) {
         values[i] = sensorValues[range.lowerEndpoint()];
       } else {
         if (sensors.get(i).getAggregate().equals(Aggregate.MEAN)) {
