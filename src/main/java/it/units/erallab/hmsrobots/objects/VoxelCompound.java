@@ -18,8 +18,8 @@ package it.units.erallab.hmsrobots.objects;
 
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.Controller;
-import it.units.erallab.hmsrobots.objects.immutable.Component;
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutablePoly;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import java.io.Serializable;
 
@@ -100,7 +100,7 @@ public class VoxelCompound implements WorldObject {
     voxels = Grid.create(description.getBuilderGrid());
     for (int gx = 0; gx < description.getBuilderGrid().getW(); gx++) {
       for (int gy = 0; gy < description.getBuilderGrid().getH(); gy++) {
-        if (description.getBuilderGrid().get(gx, gy)!=null) {
+        if (description.getBuilderGrid().get(gx, gy) != null) {
           Voxel voxel = description.getBuilderGrid().get(gx, gy).build(
                   x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
                   y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),
@@ -132,14 +132,14 @@ public class VoxelCompound implements WorldObject {
   }
 
   @Override
-  public Compound getSnapshot() {
-    List<Component> components = new ArrayList<>();
+  public ImmutableObject immutable() {
+    ImmutableObject immutableObject = new ImmutableObject(getClass());
     for (Voxel voxel : voxels.values()) {
       if (voxel != null) {
-        components.addAll(voxel.getSnapshot().getComponents());
+        immutableObject.getChildren().add(voxel.immutable());
       }
     }
-    return new Compound(VoxelCompound.class, components);
+    return immutableObject;
   }
 
   @Override
@@ -205,20 +205,22 @@ public class VoxelCompound implements WorldObject {
     double minY = Double.POSITIVE_INFINITY;
     double maxX = Double.NEGATIVE_INFINITY;
     double maxY = Double.NEGATIVE_INFINITY;
-    Compound compound = getSnapshot();
-    for (Component component : compound.getComponents()) {
-      for (Point2 p : component.getPoly().getVertexes()) {
-        if (p.x < minX) {
-          minX = p.x;
-        }
-        if (p.y < minY) {
-          minY = p.y;
-        }
-        if (p.x > maxX) {
-          maxX = p.x;
-        }
-        if (p.y > maxY) {
-          maxY = p.y;
+    for (Voxel voxel : voxels.values()) {
+      if (voxel != null) {
+        ImmutablePoly immutablePoly = (ImmutablePoly) voxel.immutable();
+        for (Point2 p : immutablePoly.getPoly().getVertexes()) {
+          if (p.x < minX) {
+            minX = p.x;
+          }
+          if (p.y < minY) {
+            minY = p.y;
+          }
+          if (p.x > maxX) {
+            maxX = p.x;
+          }
+          if (p.y > maxY) {
+            maxY = p.y;
+          }
         }
       }
     }

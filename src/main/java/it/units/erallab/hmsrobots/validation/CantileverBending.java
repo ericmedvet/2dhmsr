@@ -220,7 +220,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       t = t + settings.getStepFrequency();
       world.step(1);
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
+        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //get position

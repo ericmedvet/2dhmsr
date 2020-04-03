@@ -190,7 +190,7 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
         voxelCompound.control(t, settings.getStepFrequency());
       }
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
+        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //collect data

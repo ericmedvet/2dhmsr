@@ -23,7 +23,7 @@ import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.Component;
+import it.units.erallab.hmsrobots.objects.immutable.OldComponent;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
@@ -294,14 +294,14 @@ public class GraphicsDrawer {
     //draw components
     List<Point2> compoundCenters = new ArrayList<>();
     g.setStroke(new BasicStroke(2f / (float) ratio));
-    for (Compound object : snapshot.getCompounds()) {
+    for (ImmutableObject object : snapshot.getObjects()) {
       draw(object, g, directives);
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
         if (object.getObjectClass().equals(VoxelCompound.class)) {
           double sumX = 0d;
           double sumY = 0d;
           double nVoxels = 0d;
-          for (Component component : object.getComponents()) {
+          for (OldComponent component : object.getComponents()) {
             if (component instanceof VoxelComponent) {
               Point2 center = component.getPoly().center();
               sumX = sumX + center.x;
@@ -361,8 +361,8 @@ public class GraphicsDrawer {
 
   private void draw(Compound compound, Graphics2D g, RenderingDirectives directives) {
     if (compound.getObjectClass().equals(VoxelCompound.class)) {
-      for (Component component : compound.getComponents()) {
-        if (component.getType().equals(Component.Type.ENCLOSING)) {
+      for (OldComponent component : compound.getComponents()) {
+        if (component.getType().equals(OldComponent.Type.ENCLOSING)) {
           VoxelComponent voxelComponent = (VoxelComponent) component;
           final Point2 c = component.getPoly().center();
           //iterate over rendering mean
@@ -395,16 +395,16 @@ public class GraphicsDrawer {
             g.setColor(new Color(0f, 0f, 1f, builder.getVoxelComponentAlpha()));
             g.draw(toPath(component.getPoly(), true));
           }
-        } else if (component.getType().equals(Component.Type.CONNECTION) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.SPRINGS)) {
+        } else if (component.getType().equals(OldComponent.Type.CONNECTION) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.SPRINGS)) {
           g.setColor(Color.BLUE);
           g.draw(toPath(component.getPoly(), false));
-        } else if (component.getType().equals(Component.Type.RIGID) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.COMPONENTS)) {
+        } else if (component.getType().equals(OldComponent.Type.RIGID) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.COMPONENTS)) {
           g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()));
           g.fill(toPath(component.getPoly(), true));
         }
       }
     } else if (compound.getObjectClass().equals(Ground.class)) {
-      for (Component component : compound.getComponents()) {
+      for (OldComponent component : compound.getComponents()) {
         Color fillColor = new Color(
                 builder.getGroundColor().getRed(),
                 builder.getGroundColor().getGreen(),
@@ -418,13 +418,13 @@ public class GraphicsDrawer {
         g.fill(path);
       }
     } else {
-      for (Component component : compound.getComponents()) {
+      for (OldComponent component : compound.getComponents()) {
         drawComponent(component, g);
       }
     }
   }
 
-  private void drawComponent(Component component, Graphics2D g) {
+  private void drawComponent(OldComponent component, Graphics2D g) {
     switch (component.getType()) {
       case CONNECTION:
         g.setColor(Color.BLUE);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,40 +16,29 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-import it.units.erallab.hmsrobots.objects.WorldObject;
-import java.io.Serializable;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Compound implements Serializable {
+public class ImmutableObject {
   
-  private final Class<? extends WorldObject> objectClass;
-  private final List<Component> components;
+  private final Class<? extends Object> objectClass;
+  private final List<ImmutableObject> children;
 
-  public Compound(Class<? extends WorldObject> objectClass, List<Component> components) {
+  public ImmutableObject(Class<? extends Object> objectClass) {
     this.objectClass = objectClass;
-    this.components = components;
+    children = new ArrayList<>();
   }
 
-  public Compound(Class<? extends WorldObject> objectClass, Component component) {
-    this(objectClass, Collections.singletonList(component));
-  }
-
-  public Class<? extends WorldObject> getObjectClass() {
+  public Class<? extends Object> getObjectClass() {
     return objectClass;
   }
-  
-  public List<Component> getComponents() {
-    return components;
-  }
 
-  @Override
-  public String toString() {
-    return "Compound{" + "objectClass=" + objectClass + ", components=" + components + '}';
+  public List<ImmutableObject> getChildren() {
+    return children;
   }
-  
+      
 }

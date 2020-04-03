@@ -16,14 +16,13 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.immutable.Component;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutablePoly;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableVector;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -665,8 +664,7 @@ public class Voxel implements WorldObject {
   }
 
   @Override
-  public Compound getSnapshot() {
-    List<Component> components = new ArrayList<>(1 + 1 + vertexBodies.length + springJoints.length);
+  public ImmutableObject immutable() {
     //add enclosing
     Poly poly = new Poly(
             new Point2(getIndexedVertex(0, 3)),
@@ -674,20 +672,23 @@ public class Voxel implements WorldObject {
             new Point2(getIndexedVertex(2, 1)),
             new Point2(getIndexedVertex(3, 0))
     );
+    ImmutablePoly immutablePoly = new ImmutablePoly(poly, getClass());
+    // TODO add components for sensors
+    /*
     EnumMap<Voxel.Sensor, Double> sensorReadings = new EnumMap<>(Voxel.Sensor.class);
     for (Voxel.Sensor sensor : Voxel.Sensor.values()) {
       sensorReadings.put(sensor, getSensorReading(sensor));
     }
-    components.add(new VoxelComponent(sideLength, lastAppliedForce, sensorReadings, poly));
+    */
     //add parts
     for (Body body : vertexBodies) {
-      components.add(new Component(Component.Type.RIGID, rectangleToPoly(body)));
+      immutablePoly.getChildren().add(new ImmutablePoly(rectangleToPoly(body), Body.class));      
     }
     //add joints
     for (DistanceJoint joint : springJoints) {
-      components.add(new Component(Component.Type.CONNECTION, new Poly(new Point2(joint.getAnchor1()), new Point2(joint.getAnchor2()))));
+      immutablePoly.getChildren().add(new ImmutableVector(new Point2(joint.getAnchor1()), new Point2(joint.getAnchor2()), Body.class));      
     }
-    return new Compound(this.getClass(), components);
+    return immutablePoly;
   }
 
   private Vector2 getIndexedVertex(int i, int j) {

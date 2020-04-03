@@ -131,7 +131,7 @@ public class Locomotion extends AbstractTask<VoxelCompound.Description, List<Dou
       centerPositions.add(new Point2(voxelCompound.getCenter()));
       //possibly output snapshot
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
+        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
     }

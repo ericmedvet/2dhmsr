@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.Component;
+import it.units.erallab.hmsrobots.objects.immutable.OldComponent;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
@@ -59,7 +59,7 @@ public class VoxelCompoundFollower implements Framer {
               double x2 = Double.NEGATIVE_INFINITY;
               double y1 = Double.POSITIVE_INFINITY;
               double y2 = Double.NEGATIVE_INFINITY;
-              for (Component component : c.getComponents()) {
+              for (OldComponent component : c.getComponents()) {
                 for (Point2 p : component.getPoly().getVertexes()) {
                   x1 = Math.min(x1, p.x);
                   x2 = Math.max(x2, p.x);

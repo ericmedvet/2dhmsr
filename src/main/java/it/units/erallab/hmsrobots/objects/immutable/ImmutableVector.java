@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,18 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.objects;
-
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import org.dyn4j.dynamics.World;
+package it.units.erallab.hmsrobots.objects.immutable;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public interface WorldObject {
+public class ImmutableVector extends ImmutableObject {
   
-  public ImmutableObject immutable();
-  public void addTo(World world);  
+  private final Point2 start;
+  private final Point2 end;
+
+  public ImmutableVector(Point2 start, Point2 end, Class<? extends Object> objectClass) {
+    super(objectClass);
+    this.start = start;
+    this.end = end;
+  }
+
+  public Point2 getStart() {
+    return start;
+  }
+
+  public Point2 getEnd() {
+    return end;
+  }    
   
 }
