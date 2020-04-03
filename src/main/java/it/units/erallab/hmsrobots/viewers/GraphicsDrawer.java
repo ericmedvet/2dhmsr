@@ -23,7 +23,7 @@ import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.OldComponent;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
