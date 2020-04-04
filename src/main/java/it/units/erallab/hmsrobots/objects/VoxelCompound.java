@@ -16,22 +16,21 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutablePoly;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import java.io.Serializable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
+import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -102,9 +101,9 @@ public class VoxelCompound implements WorldObject {
       for (int gy = 0; gy < description.getBuilderGrid().getH(); gy++) {
         if (description.getBuilderGrid().get(gx, gy) != null) {
           Voxel voxel = description.getBuilderGrid().get(gx, gy).build(
-                  x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
-                  y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),
-                  this
+              x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
+              y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),
+              this
           );
           voxels.set(gx, gy, voxel);
           //check for adjacent voxels
@@ -125,8 +124,8 @@ public class VoxelCompound implements WorldObject {
 
   private static Joint join(Body body1, Body body2) {
     WeldJoint joint = new WeldJoint(body1, body2, new Vector2(
-            (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
-            (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
+        (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
+        (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
     return joint;
   }
@@ -201,6 +200,7 @@ public class VoxelCompound implements WorldObject {
   }
 
   public Point2[] boundingBox() {
+    //TODO redo with use of boundingBox() of ImmutableObject
     double minX = Double.POSITIVE_INFINITY;
     double minY = Double.POSITIVE_INFINITY;
     double maxX = Double.NEGATIVE_INFINITY;

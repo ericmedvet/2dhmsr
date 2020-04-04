@@ -17,8 +17,8 @@
 package it.units.erallab.hmsrobots.objects.immutable;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  *
@@ -29,9 +29,9 @@ public class Snapshot implements Serializable, Comparable<Snapshot> {
   private final double time;
   private final Collection<ImmutableObject> objects;
 
-  public Snapshot(double time) {
+  public Snapshot(double time, Collection<ImmutableObject> objects) {
     this.time = time;
-    objects = new ArrayList<>();
+    this.objects = Collections.unmodifiableCollection(objects);
   }
 
   public double getTime() {

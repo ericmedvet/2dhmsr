@@ -17,33 +17,20 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
-import it.units.erallab.hmsrobots.objects.immutable.VoxelComponent;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
+import it.units.erallab.hmsrobots.objects.immutable.*;
+
+import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GraphicsDrawer {
@@ -212,24 +199,6 @@ public class GraphicsDrawer {
 
   private final Builder builder;
 
-  private final static EnumMap<Voxel.Sensor, Function<VoxelComponent, Range<Double>>> SENSOR_DOMAIN_FUNCTIONS;
-
-  static {
-    final double sideRatio = 1.5d;
-    SENSOR_DOMAIN_FUNCTIONS = new EnumMap<>(Voxel.Sensor.class);
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.ANGLE, (v) -> Range.closed(-Math.PI, Math.PI));
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.AREA_RATIO, (v) -> Range.closed(0.5d, 1.5d));
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.BROKEN_RATIO, (v) -> Range.closed(0d, 1d));
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.TOUCHING, (v) -> Range.closed(0d, 1d));
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.VELOCITY_MAGNITUDE, (v) -> Range.closed(0d, v.getSideLength() * sideRatio * Math.sqrt(2d)));
-    Function<VoxelComponent, Range<Double>> vDomainFunction = (v) -> Range.closed(-v.getSideLength() * sideRatio, v.getSideLength() * sideRatio);
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.X_VELOCITY, vDomainFunction);
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.Y_VELOCITY, vDomainFunction);
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.X_ROT_VELOCITY, vDomainFunction);
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.Y_ROT_VELOCITY, vDomainFunction);
-    SENSOR_DOMAIN_FUNCTIONS.put(Voxel.Sensor.LAST_APPLIED_FORCE, (v) -> Range.closed(-1d, 1d));
-  }
-
   private GraphicsDrawer() {
     builder = Builder.create();
   }
@@ -238,56 +207,56 @@ public class GraphicsDrawer {
     this.builder = builder;
   }
 
-  public void draw(Snapshot snapshot, Graphics2D g, Frame graphicsFrame, Frame worldFrame, RenderingDirectives directives, String... infos) {
+  public void draw(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, RenderingDirectives directives, String... infos) {
     //set clipping area
     g.setClip(
-            (int) graphicsFrame.getX1(), (int) graphicsFrame.getY1(),
-            (int) (graphicsFrame.getX2() - graphicsFrame.getX1()), (int) (graphicsFrame.getY2() - graphicsFrame.getY1())
+        (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
+        (int) (graphicsFrame.max.x - graphicsFrame.min.x), (int) (graphicsFrame.max.y - graphicsFrame.min.y)
     );
     //save original transform
     AffineTransform oAt = g.getTransform();
     //prepare transformation
-    double xRatio = (graphicsFrame.getX2() - graphicsFrame.getX1()) / (worldFrame.getX2() - worldFrame.getX1());
-    double yRatio = (graphicsFrame.getY2() - graphicsFrame.getY1()) / (worldFrame.getY2() - worldFrame.getY1());
+    double xRatio = (graphicsFrame.max.x - graphicsFrame.min.x) / (worldFrame.max.x - worldFrame.min.x);
+    double yRatio = (graphicsFrame.max.y - graphicsFrame.min.y) / (worldFrame.max.y - worldFrame.min.y);
     double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
-    at.translate(graphicsFrame.getX1(), graphicsFrame.getY1());
+    at.translate(graphicsFrame.min.x, graphicsFrame.min.y);
     at.scale(ratio, -ratio);
-    at.translate(-worldFrame.getX1(), -worldFrame.getY2());
+    at.translate(-worldFrame.min.x, -worldFrame.max.y);
     //draw background
     g.setColor(builder.getBackgroundColor());
     g.fillRect(
-            (int) graphicsFrame.getX1(), (int) graphicsFrame.getY1(),
-            (int) (graphicsFrame.getX2() - graphicsFrame.getX1()), (int) (graphicsFrame.getY2() - graphicsFrame.getY1())
+        (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
+        (int) (graphicsFrame.max.x - graphicsFrame.min.x), (int) (graphicsFrame.max.y - graphicsFrame.min.y)
     );
     //draw grid
     g.setTransform(at);
     if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MAJOR) || directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MINOR)) {
       g.setColor(builder.getGridColor());
       g.setStroke(new BasicStroke(1f / (float) ratio));
-      double gridSize = computeGridSize(worldFrame.getX1(), worldFrame.getX2());
+      double gridSize = computeGridSize(worldFrame.min.x, worldFrame.max.x);
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MAJOR)) {
-        for (double gridX = Math.floor(worldFrame.getX1() / gridSize) * gridSize; gridX < worldFrame.getX2(); gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, worldFrame.getY1(), gridX, worldFrame.getY2()));
+        for (double gridX = Math.floor(worldFrame.min.x / gridSize) * gridSize; gridX < worldFrame.max.x; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, worldFrame.min.y, gridX, worldFrame.max.y));
         }
-        for (double gridY = Math.floor(worldFrame.getY1() / gridSize) * gridSize; gridY < worldFrame.getY2(); gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(worldFrame.getX1(), gridY, worldFrame.getX2(), gridY));
+        for (double gridY = Math.floor(worldFrame.min.y / gridSize) * gridSize; gridY < worldFrame.max.y; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(worldFrame.min.x, gridY, worldFrame.max.x, gridY));
         }
       }
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.GRID_MINOR)) {
         gridSize = gridSize / 5d;
         g.setStroke(new BasicStroke(
-                1f / (float) ratio,
-                BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_ROUND,
-                1.0f,
-                new float[]{2f / (float) ratio, 0f, 2f / (float) ratio},
-                0f));
-        for (double gridX = Math.floor(worldFrame.getX1() / gridSize) * gridSize; gridX < worldFrame.getX2(); gridX = gridX + gridSize) {
-          g.draw(new Line2D.Double(gridX, worldFrame.getY1(), gridX, worldFrame.getY2()));
+            1f / (float) ratio,
+            BasicStroke.CAP_BUTT,
+            BasicStroke.JOIN_ROUND,
+            1.0f,
+            new float[]{2f / (float) ratio, 0f, 2f / (float) ratio},
+            0f));
+        for (double gridX = Math.floor(worldFrame.min.x / gridSize) * gridSize; gridX < worldFrame.max.x; gridX = gridX + gridSize) {
+          g.draw(new Line2D.Double(gridX, worldFrame.min.y, gridX, worldFrame.max.y));
         }
-        for (double gridY = Math.floor(worldFrame.getY1() / gridSize) * gridSize; gridY < worldFrame.getY2(); gridY = gridY + gridSize) {
-          g.draw(new Line2D.Double(worldFrame.getX1(), gridY, worldFrame.getX2(), gridY));
+        for (double gridY = Math.floor(worldFrame.min.y / gridSize) * gridSize; gridY < worldFrame.max.y; gridY = gridY + gridSize) {
+          g.draw(new Line2D.Double(worldFrame.min.x, gridY, worldFrame.max.x, gridY));
         }
       }
     }
@@ -295,30 +264,19 @@ public class GraphicsDrawer {
     List<Point2> compoundCenters = new ArrayList<>();
     g.setStroke(new BasicStroke(2f / (float) ratio));
     for (ImmutableObject object : snapshot.getObjects()) {
-      draw(object, g, directives);
+      Point2 center = draw(object, g, directives);
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
         if (object.getObjectClass().equals(VoxelCompound.class)) {
-          double sumX = 0d;
-          double sumY = 0d;
-          double nVoxels = 0d;
-          for (OldComponent component : object.getComponents()) {
-            if (component instanceof VoxelComponent) {
-              Point2 center = component.getPoly().center();
-              sumX = sumX + center.x;
-              sumY = sumY + center.y;
-              nVoxels = nVoxels + 1;
-            }
-          }
-          compoundCenters.add(new Point2(sumX / nVoxels, sumY / nVoxels));
+          compoundCenters.add(center);
         }
       }
     }
-    //restore transform    
+    //restore transform
     g.setTransform(oAt);
     //info
     StringBuilder sb = new StringBuilder();
     if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VIEWPORT_INFO)) {
-      sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.getX1(), worldFrame.getY1(), worldFrame.getX2(), worldFrame.getY2()));
+      sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.min.x, worldFrame.min.y, worldFrame.max.x, worldFrame.max.y));
     }
     if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.TIME_INFO)) {
       sb.append((sb.length() > 0) ? " " : "").append(String.format("t=%.2f", snapshot.getTime()));
@@ -338,7 +296,7 @@ public class GraphicsDrawer {
       g.setColor(builder.getInfoColor());
       int relY = 1;
       for (String line : sb.toString().split(String.format("%n"))) {
-        g.drawString(line, (int) graphicsFrame.getX1() + 1, (int) graphicsFrame.getY1() + relY + g.getFontMetrics().getMaxAscent());
+        g.drawString(line, (int) graphicsFrame.min.x + 1, (int) graphicsFrame.min.y + relY + g.getFontMetrics().getMaxAscent());
         relY = relY + g.getFontMetrics().getMaxAscent() + 1;
       }
     }
@@ -359,86 +317,29 @@ public class GraphicsDrawer {
     return gridSize;
   }
 
-  private void draw(Compound compound, Graphics2D g, RenderingDirectives directives) {
-    if (compound.getObjectClass().equals(VoxelCompound.class)) {
-      for (OldComponent component : compound.getComponents()) {
-        if (component.getType().equals(OldComponent.Type.ENCLOSING)) {
-          VoxelComponent voxelComponent = (VoxelComponent) component;
-          final Point2 c = component.getPoly().center();
-          //iterate over rendering mean
-          for (Map.Entry<VoxelRenderingMean, Voxel.Sensor> entry : directives.getMeanSensorMap().entries()) {
-            double value = voxelComponent.getSensorReadings().get(entry.getValue());
-            double normalizedValue = value;
-            if (SENSOR_DOMAIN_FUNCTIONS.containsKey(entry.getValue())) {
-              Range<Double> domain = SENSOR_DOMAIN_FUNCTIONS.get(entry.getValue()).apply(voxelComponent);
-              normalizedValue = (value - domain.lowerEndpoint()) / (domain.upperEndpoint() - domain.lowerEndpoint());
-              normalizedValue = Math.max(0d, normalizedValue);
-              normalizedValue = Math.min(1d, normalizedValue);
-            }
-            if (entry.getKey().equals(VoxelRenderingMean.FILL_COLOR)) {
-              Color color = linear(Color.RED, Color.GREEN, Color.YELLOW, 0d, 0.5d, 1d, normalizedValue, builder.getVoxelFillAlpha());
-              g.setColor(color);
-              g.fill(toPath(component.getPoly(), true));
-            } else if (entry.getKey().equals(VoxelRenderingMean.CIRCLE)) {
-              double r = (voxelComponent.getSideLength() * (1d - 0.5d * normalizedValue)) / 2d;
-              g.setColor(Color.BLUE);
-              Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
-              g.draw(circle);
-            } else if (entry.getKey().equals(VoxelRenderingMean.FILLED_CIRCLE)) {
-              double r = voxelComponent.getSideLength() * normalizedValue;
-              g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha() / 2));
-              Ellipse2D circle = new Ellipse2D.Double(c.x - r, c.y - r, r * 2d, r * 2d);
-              g.fill(circle);
-            }
-          }
-          if (directives.getVoxelRenderingModes().contains(VoxelRenderingMode.POLY)) {
-            g.setColor(new Color(0f, 0f, 1f, builder.getVoxelComponentAlpha()));
-            g.draw(toPath(component.getPoly(), true));
-          }
-        } else if (component.getType().equals(OldComponent.Type.CONNECTION) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.SPRINGS)) {
-          g.setColor(Color.BLUE);
-          g.draw(toPath(component.getPoly(), false));
-        } else if (component.getType().equals(OldComponent.Type.RIGID) && directives.getVoxelRenderingModes().contains(VoxelRenderingMode.COMPONENTS)) {
-          g.setColor(new Color(0f, 0f, 1f, builder.getVoxelFillAlpha()));
-          g.fill(toPath(component.getPoly(), true));
-        }
-      }
-    } else if (compound.getObjectClass().equals(Ground.class)) {
-      for (OldComponent component : compound.getComponents()) {
-        Color fillColor = new Color(
-                builder.getGroundColor().getRed(),
-                builder.getGroundColor().getGreen(),
-                builder.getGroundColor().getBlue(),
-                builder.getGroundColor().getAlpha() / 2
-        );
-        final Path2D path = toPath(component.getPoly(), true);
-        g.setColor(Color.BLACK);
-        g.draw(path);
-        g.setColor(fillColor);
-        g.fill(path);
-      }
-    } else {
-      for (OldComponent component : compound.getComponents()) {
-        drawComponent(component, g);
-      }
+  private Point2 draw(ImmutableObject object, Graphics2D g, RenderingDirectives directives) {
+    //draw all children
+    double cx = 0d;
+    double cy = 0d;
+    double n = 0;
+    for (ImmutableObject child : object.getChildren()) {
+      Point2 childCenter = draw(child, g, directives);
+      cx = cx + childCenter.x;
+      cy = cy + childCenter.y;
+      n = n + 1;
     }
-  }
-
-  private void drawComponent(OldComponent component, Graphics2D g) {
-    switch (component.getType()) {
-      case CONNECTION:
-        g.setColor(Color.BLUE);
-        g.draw(toPath(component.getPoly(), false));
-        break;
-      case RIGID:
-        g.setColor(Color.BLUE);
-        g.draw(toPath(component.getPoly(), true));
-        break;
-      default:
-        g.setColor(Color.BLUE);
-        g.draw(toPath(component.getPoly(), true));
-        break;
+    Point2 center = new Point2(cx / n, cy / n);
+    //draw shape
+    if (object instanceof ImmutablePoly) {
+      ImmutablePoly immutablePoly = (ImmutablePoly) object;
+      g.setColor(Color.BLUE);
+      g.draw(toPath(immutablePoly.getPoly(), true));
+    } else if (object instanceof ImmutableVector) {
+      ImmutableVector immutableVector = (ImmutableVector) object;
+      g.setColor(Color.RED);
+      g.draw(toPath(immutableVector.getStart(), immutableVector.getEnd()));
     }
+    return center;
   }
 
   private Color linear(final Color c1, final Color c2, final Color c3, double x1, double x2, double x3, double x, float alpha) {
@@ -464,13 +365,18 @@ public class GraphicsDrawer {
   }
 
   private Path2D toPath(Poly poly, boolean close) {
-    Path2D path = new Path2D.Double();
-    path.moveTo(poly.getVertexes()[0].x, poly.getVertexes()[0].y);
-    for (int i = 1; i < poly.getVertexes().length; i++) {
-      path.lineTo(poly.getVertexes()[i].x, poly.getVertexes()[i].y);
-    }
+    Path2D path = toPath(poly.getVertexes());
     if (close) {
       path.closePath();
+    }
+    return path;
+  }
+
+  private Path2D toPath(Point2... points) {
+    Path2D path = new Path2D.Double();
+    path.moveTo(points[0].x, points[0].y);
+    for (int i = 1; i < points.length; i++) {
+      path.lineTo(points[i].x, points[i].y);
     }
     return path;
   }

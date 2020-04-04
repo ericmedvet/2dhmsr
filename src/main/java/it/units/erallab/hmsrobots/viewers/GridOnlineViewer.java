@@ -18,28 +18,21 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
-import java.awt.BorderLayout;
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics2D;
-import java.awt.Toolkit;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.image.BufferStrategy;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
@@ -146,45 +139,45 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     running = true;
     //start consumer of single frames
     executor.submit(() -> {
-      while (running) {
-        //check if ready
-        Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
-        synchronized (queueGrid) {
-          for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-            Snapshot snapshot;
-            while ((snapshot = entry.getValue().peek()) != null) {
-              if (snapshot.getTime() < t) {
-                entry.getValue().poll();
-              } else {
-                break;
+          while (running) {
+            //check if ready
+            Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
+            synchronized (queueGrid) {
+              for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+                Snapshot snapshot;
+                while ((snapshot = entry.getValue().peek()) != null) {
+                  if (snapshot.getTime() < t) {
+                    entry.getValue().poll();
+                  } else {
+                    break;
+                  }
+                }
+                snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
               }
             }
-            snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
-          }
-        }
-        boolean ready = true;
-        for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-          ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
-        }
-        if (ready) {
-          //update time
-          t = t + 1d / FRAME_RATE;
-          //render asynchronously
-          synchronized (gridQueue) {
-            gridQueue.offer(Grid.copy(snapshotGrid));
-            gridQueue.notifyAll();
-          }
-        } else {
-          synchronized (queueGrid) {
-            try {
-              queueGrid.wait();
-            } catch (InterruptedException ex) {
-              //ignore
+            boolean ready = true;
+            for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+              ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
+            }
+            if (ready) {
+              //update time
+              t = t + 1d / FRAME_RATE;
+              //render asynchronously
+              synchronized (gridQueue) {
+                gridQueue.offer(Grid.copy(snapshotGrid));
+                gridQueue.notifyAll();
+              }
+            } else {
+              synchronized (queueGrid) {
+                try {
+                  queueGrid.wait();
+                } catch (InterruptedException ex) {
+                  //ignore
+                }
+              }
             }
           }
         }
-      }
-    }
     );
   }
 
@@ -198,7 +191,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
       @Override
       public void run() {
-        if(!stopwatch.isRunning()) {
+        if (!stopwatch.isRunning()) {
           stopwatch.start();
         }
         double currentTime = (double) stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000d;
@@ -255,11 +248,15 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
       if (entry.getValue() != null) {
         //obtain viewport
-        Frame frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
+        BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
         //draw
-        graphicsDrawer.draw(entry.getValue(), g,
-                new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
-                frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
+        graphicsDrawer.draw(
+            entry.getValue(), g,
+            BoundingBox.build(
+                Point2.build(localW * entry.getX(), localH * entry.getY()),
+                Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
+            ),
+            frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
         );
       }
     }

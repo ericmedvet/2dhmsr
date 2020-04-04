@@ -17,25 +17,32 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.*;
-import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
+import it.units.erallab.hmsrobots.controllers.ClosedLoopController;
+import it.units.erallab.hmsrobots.controllers.DistributedMLP;
+import it.units.erallab.hmsrobots.controllers.TimeFunction;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
+import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.validation.CantileverBending;
 import it.units.erallab.hmsrobots.validation.VoxelCompoundControl;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import org.apache.commons.lang3.tuple.Pair;
+import org.dyn4j.dynamics.Settings;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import org.apache.commons.lang3.tuple.Pair;
-import org.dyn4j.dynamics.Settings;
 
 /**
  *
@@ -85,15 +92,19 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
+
+    System.out.println("Hello world!");
+    System.exit(0);
+
     final Grid<Boolean> structure = Grid.create(11, 5, (x, y) -> (x < 2) || (x >= 9) || (y > 0));
     //final Grid<Boolean> structure = Grid.create(4, 2, (x, y) -> (x < 1) || (x > 2) || (y > 0));
     Voxel.Builder builder1 = Voxel.Builder.create()
-            .springF(25d)
-            .massSideLengthRatio(0.05)
-            .massLinearDamping(1d)
-            .massAngularDamping(1d)
-            .restitution(0)
-            .friction(1000)
+        .springF(25d)
+        .massSideLengthRatio(0.05)
+        .massLinearDamping(1d)
+        .massAngularDamping(1d)
+        .restitution(0)
+        .friction(1000)
             .areaRatioOffset(0.2d)
             //.forceMethod(Voxel.ForceMethod.FORCE)
             //.maxForce(10)

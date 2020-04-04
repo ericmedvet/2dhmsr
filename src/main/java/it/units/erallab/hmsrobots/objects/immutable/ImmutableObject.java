@@ -20,11 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class ImmutableObject {
-  
+
   private final Class<? extends Object> objectClass;
   private final List<ImmutableObject> children;
 
@@ -40,5 +39,21 @@ public class ImmutableObject {
   public List<ImmutableObject> getChildren() {
     return children;
   }
-      
+
+  public BoundingBox getBoundingBox() {
+    if (children.isEmpty()) {
+      return null;
+    }
+    BoundingBox boundingBox = null;
+    for (ImmutableObject child : children) {
+      BoundingBox childBoundingBox = child.getBoundingBox();
+      if (boundingBox == null) {
+        boundingBox = childBoundingBox;
+      } else {
+        boundingBox = BoundingBox.largest(boundingBox, childBoundingBox);
+      }
+    }
+    return boundingBox;
+  }
+
 }

@@ -16,9 +16,16 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
-import java.awt.Graphics2D;
+import org.jcodec.api.awt.AWTSequenceEncoder;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.io.SeekableByteChannel;
+import org.jcodec.common.model.Rational;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,10 +35,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
-import org.jcodec.api.awt.AWTSequenceEncoder;
-import org.jcodec.common.io.NIOUtils;
-import org.jcodec.common.io.SeekableByteChannel;
-import org.jcodec.common.model.Rational;
 
 /**
  *
@@ -167,11 +170,15 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
         if (entry.getValue() != null) {
           //obtain viewport
-          Frame frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
+          BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
           //draw
-          graphicsDrawer.draw(entry.getValue(), g,
-                  new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
-                  frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
+          graphicsDrawer.draw(
+              entry.getValue(), g,
+              BoundingBox.build(
+                  Point2.build(localW * entry.getX(), localH * entry.getY()),
+                  Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
+              ),
+              frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
           );
         }
       

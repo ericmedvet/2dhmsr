@@ -16,25 +16,29 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import java.awt.Graphics2D;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class FramesFileWriter implements Flushable, SnapshotListener {
 
   public static enum Direction {
     HORIZONTAL, VERTICAL
-  };
+  }
+
+  ;
 
   private final double initialT;
   private final double finalT;
@@ -87,25 +91,31 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
 
   @Override
   public void listen(final Snapshot snapshot) {
-      Frame worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
-      if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
-        return;
-      }
-      if ((lastSnapshot != null) && ((snapshot.getTime() - lastSnapshot.getTime()) < dT)) { //wait for next snapshot
-        return;
-      }
-      lastSnapshot = snapshot;
-      Frame imageFrame;
-      if (direction.equals(Direction.HORIZONTAL)) {
-        imageFrame = new Frame(w * frameCount, w * (frameCount + 1), 0, h);
-      } else {
-        imageFrame = new Frame(0, w, h * frameCount, h * (frameCount + 1));
-      }
-      L.info(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
-      frameCount = frameCount + 1;
-      Graphics2D g = image.createGraphics();
-      graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, renderingDirectives, String.format("%d", frameCount));
-      g.dispose();
+    BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
+    if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
+      return;
+    }
+    if ((lastSnapshot != null) && ((snapshot.getTime() - lastSnapshot.getTime()) < dT)) { //wait for next snapshot
+      return;
+    }
+    lastSnapshot = snapshot;
+    BoundingBox imageFrame;
+    if (direction.equals(Direction.HORIZONTAL)) {
+      imageFrame = BoundingBox.build(
+          Point2.build(w * frameCount, 0),
+          Point2.build(w * (frameCount + 1), h)
+      );
+    } else {
+      imageFrame = BoundingBox.build(
+          Point2.build(0, h * frameCount),
+          Point2.build(w, h * (frameCount + 1))
+      );
+    }
+    L.info(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
+    frameCount = frameCount + 1;
+    Graphics2D g = image.createGraphics();
+    graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, renderingDirectives, String.format("%d", frameCount));
+    g.dispose();
   }
 
 }

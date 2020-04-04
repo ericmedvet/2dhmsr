@@ -16,15 +16,15 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 @FunctionalInterface
 public interface Framer {
-  
-  public Frame getFrame(Snapshot snapshot, double ratio);
-  
+
+  public BoundingBox getFrame(Snapshot snapshot, double ratio);
+
 }
