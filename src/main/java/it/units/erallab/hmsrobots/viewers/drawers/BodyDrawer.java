@@ -18,29 +18,44 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.Configuration;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import org.dyn4j.dynamics.Body;
 
 import java.awt.*;
-import java.util.Collections;
-import java.util.Set;
+import java.awt.geom.Path2D;
 
-public class BodyDrawer implements Drawer {
+public class BodyDrawer implements Configuration<BodyDrawer>, Drawer {
 
-  private final static Set<Class<? extends Object>> CLASSES = Collections.unmodifiableSet(Set.of(
-      Body.class
-  ));
+  @Configurable
+  private Color strokeColor = Color.BLUE;
+  @Configurable
+  private Color fillColor = GraphicsDrawer.alphaed(Color.BLUE, 0.25f);
+
+  private BodyDrawer() {
+  }
+
+  public static BodyDrawer build() {
+    return new BodyDrawer();
+  }
 
   @Override
   public boolean draw(ImmutableObject object, Graphics2D g) {
-    Poly poly = (Poly) object.getShape();
-    g.setColor(Color.BLUE);
-    g.draw(GraphicsDrawer.toPath(poly, true));
+    Path2D path = GraphicsDrawer.toPath((Poly) object.getShape(), true);
+    if (strokeColor != null) {
+      g.setColor(strokeColor);
+      g.draw(path);
+    }
+    if (fillColor != null) {
+      g.setColor(fillColor);
+      g.fill(path);
+    }
     return false;
   }
 
   @Override
-  public Set<Class<? extends Object>> getDrawableClasses() {
-    return CLASSES;
+  public boolean canDraw(Class c) {
+    return Body.class.isAssignableFrom(c);
   }
 }

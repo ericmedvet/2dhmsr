@@ -16,40 +16,46 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
+import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.Vector;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.Configuration;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
-import org.dyn4j.dynamics.joint.Joint;
 
 import java.awt.*;
+import java.awt.geom.Path2D;
 
-public class JointDrawer implements Configuration<JointDrawer>, Drawer {
+public class GroundDrawer implements Configuration<GroundDrawer>, Drawer {
 
   @Configurable
-  private Color color = Color.RED;
+  private Color strokeColor = Color.BLACK;
   @Configurable
-  private float strokeWidth = 2f;
+  private Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.25f);
 
-  private JointDrawer() {
+  private GroundDrawer() {
   }
 
-  public static JointDrawer build() {
-    return new JointDrawer();
+  public static GroundDrawer build() {
+    return new GroundDrawer();
   }
 
   @Override
   public boolean draw(ImmutableObject object, Graphics2D g) {
-    Vector vector = (Vector) object.getShape();
-    g.setStroke(new BasicStroke(strokeWidth / (float) g.getTransform().getScaleX()));
-    g.setColor(color);
-    g.draw(GraphicsDrawer.toPath(vector.getStart(), vector.getEnd()));
+    Path2D path = GraphicsDrawer.toPath((Poly) object.getShape(), true);
+    if (strokeColor != null) {
+      g.setColor(strokeColor);
+      g.draw(path);
+    }
+    if (fillColor != null) {
+      g.setColor(fillColor);
+      g.fill(path);
+    }
     return false;
   }
 
   @Override
   public boolean canDraw(Class c) {
-    return Joint.class.isAssignableFrom(c);
+    return c.isAssignableFrom(Ground.class);
   }
 }

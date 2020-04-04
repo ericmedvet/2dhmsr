@@ -16,10 +16,7 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
-import it.units.erallab.hmsrobots.objects.immutable.Vector;
+import it.units.erallab.hmsrobots.objects.immutable.*;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -688,7 +685,7 @@ public class Voxel implements WorldObject {
     }
     */
     //add enclosing
-    ImmutableObject immutable = new ImmutableObject(
+    ImmutableVoxel immutable = new ImmutableVoxel(
         this,
         Poly.build(
             Point2.build(getIndexedVertex(0, 3)),
@@ -696,7 +693,8 @@ public class Voxel implements WorldObject {
             Point2.build(getIndexedVertex(2, 1)),
             Point2.build(getIndexedVertex(3, 0))
         ),
-        children
+        children,
+        sideLength * sideLength
     );
     return immutable;
   }

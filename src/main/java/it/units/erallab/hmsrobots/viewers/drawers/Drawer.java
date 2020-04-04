@@ -19,12 +19,11 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 
 import java.awt.*;
-import java.util.Set;
 
 public interface Drawer {
 
   public boolean draw(ImmutableObject object, Graphics2D g);
 
-  public Set<Class<? extends Object>> getDrawableClasses();
+  public boolean canDraw(Class c);
 
 }

@@ -28,7 +28,6 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.validation.CantileverBending;
 import it.units.erallab.hmsrobots.validation.VoxelCompoundControl;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import org.apache.commons.lang3.tuple.Pair;
@@ -83,8 +82,7 @@ public class Starter {
     FramesFileWriter framesFileWriter = new FramesFileWriter(
         5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.VERTICAL,
         new File("/home/eric/experiments/2dhmsr/frames.v.png"),
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()),
-        GraphicsDrawer.RenderingDirectives.create()
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     );
     List<Double> result = locomotion.apply(description);
     framesFileWriter.flush();
@@ -112,7 +110,7 @@ public class Starter {
         ));
     final Voxel.Builder builder = Voxel.Builder.create();
     Settings settings = new Settings();
-    settings.setStepFrequency(1d / 60d);
+    settings.setStepFrequency(1d / 30d);
     int controlInterval = 1;
     //simple
     double f = 1d;
@@ -246,7 +244,7 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        7,
+        30,
         Locomotion.createTerrain("uneven5"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         controlInterval,
@@ -261,7 +259,7 @@ public class Starter {
     namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
     GridEpisodeRunner<VoxelCompound.Description> runner = new GridEpisodeRunner<>(
         namedSolutionGrid,
@@ -284,7 +282,7 @@ public class Starter {
     namedSolutionGrid.set(0, 0, Pair.of("10x4", Grid.create(10, 4, Voxel.Builder.create())));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Grid<Voxel.Builder>> runner = new GridEpisodeRunner<>(
         namedSolutionGrid,
@@ -307,7 +305,7 @@ public class Starter {
     namedSolutionGrid.set(0, 0, Pair.of("10x4", Grid.create(10, 4, Voxel.Builder.create())));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor, GraphicsDrawer.RenderingDirectives.create());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Grid<Voxel.Builder>> runner = new GridEpisodeRunner<>(
         namedSolutionGrid,

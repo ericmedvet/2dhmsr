@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
@@ -25,7 +24,6 @@ import it.units.erallab.hmsrobots.util.Grid;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 import java.awt.image.BufferStrategy;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -48,23 +46,21 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
   private final Canvas canvas;
   private final GraphicsDrawer graphicsDrawer;
-  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
   private final ScheduledExecutorService executor;
 
   private double t;
   private boolean running;
 
-  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) {
+  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
     super("World viewer");
     this.namesGrid = namesGrid;
-    this.renderingDirectives = renderingDirectives;
     this.executor = executor;
     //create things
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
     //create drawer
-    graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    graphicsDrawer = GraphicsDrawer.build();
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
         framerGrid.set(x, y, new VoxelCompoundFollower((int) FRAME_RATE * 3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
@@ -78,59 +74,8 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     canvas.setPreferredSize(dimension);
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
-    //add checkboxes
-    JPanel topPanel = new JPanel();
-    topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.PAGE_AXIS));
-    for (final GraphicsDrawer.VoxelRenderingMean mean : GraphicsDrawer.VoxelRenderingMean.values()) {
-      JPanel meanPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 0));
-      meanPanel.add(new JLabel(name(mean) + ": "));
-      for (final Voxel.Sensor sensor : Voxel.Sensor.values()) {
-        boolean selected = false;
-        if (renderingDirectives.getMeanSensorMap().containsKey(mean)) {
-          selected = renderingDirectives.getMeanSensorMap().get(mean).contains(sensor);
-        }
-        JCheckBox checkBox = new JCheckBox(name(sensor), selected);
-        checkBox.addItemListener((ItemEvent e) -> {
-          if (e.getStateChange() == ItemEvent.SELECTED) {
-            renderingDirectives.getMeanSensorMap().get(mean).add(sensor);
-          } else {
-            renderingDirectives.getMeanSensorMap().get(mean).remove(sensor);
-          }
-        });
-        meanPanel.add(checkBox);
-      }
-      topPanel.add(meanPanel);
-    }
-    JPanel voxelRenderingPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 0));
-    voxelRenderingPanel.add(new JLabel("voxel: "));
-    for (GraphicsDrawer.VoxelRenderingMode mode : GraphicsDrawer.VoxelRenderingMode.values()) {
-      JCheckBox checkBox = new JCheckBox(name(mode), renderingDirectives.getVoxelRenderingModes().contains(mode));
-      checkBox.addItemListener((ItemEvent e) -> {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          renderingDirectives.getVoxelRenderingModes().add(mode);
-        } else {
-          renderingDirectives.getVoxelRenderingModes().remove(mode);
-        }
-      });
-      voxelRenderingPanel.add(checkBox);
-    }
-    topPanel.add(voxelRenderingPanel);
-    JPanel generalRenderingPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 0));
-    generalRenderingPanel.add(new JLabel("general: "));
-    for (GraphicsDrawer.GeneralRenderingMode mode : GraphicsDrawer.GeneralRenderingMode.values()) {
-      JCheckBox checkBox = new JCheckBox(name(mode), renderingDirectives.getGeneralRenderingModes().contains(mode));
-      checkBox.addItemListener((ItemEvent e) -> {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          renderingDirectives.getGeneralRenderingModes().add(mode);
-        } else {
-          renderingDirectives.getGeneralRenderingModes().remove(mode);
-        }
-      });
-      generalRenderingPanel.add(checkBox);
-    }
-    topPanel.add(generalRenderingPanel);
     //set layout and put components
-    getContentPane().add(topPanel, BorderLayout.PAGE_START);
+    getContentPane().add(new ConfigurablePane(graphicsDrawer), BorderLayout.LINE_END);
     getContentPane().add(canvas, BorderLayout.CENTER);
     //pack
     pack();
@@ -261,7 +206,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
                 Point2.build(localW * entry.getX(), localH * entry.getY()),
                 Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
             ),
-            frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
+            frame, namesGrid.get(entry.getX(), entry.getY())
         );
       }
     }

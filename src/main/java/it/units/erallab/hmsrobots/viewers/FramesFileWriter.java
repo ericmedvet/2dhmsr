@@ -38,8 +38,6 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
     HORIZONTAL, VERTICAL
   }
 
-  ;
-
   private final double initialT;
   private final double finalT;
   private final double dT;
@@ -48,7 +46,6 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
   private final Direction direction;
   private final File file;
   private final ExecutorService executor;
-  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
 
   private final GraphicsDrawer graphicsDrawer;
   private final Framer framer;
@@ -59,7 +56,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
 
   private static final Logger L = Logger.getLogger(FramesFileWriter.class.getName());
 
-  public FramesFileWriter(double initialT, double finalT, double dT, int w, int h, Direction direction, File file, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) {
+  public FramesFileWriter(double initialT, double finalT, double dT, int w, int h, Direction direction, File file, ExecutorService executor) {
     this.initialT = initialT;
     this.finalT = finalT;
     this.dT = dT;
@@ -68,7 +65,6 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
     this.direction = direction;
     this.file = file;
     this.executor = executor;
-    this.renderingDirectives = renderingDirectives;
     int frames = (int) Math.floor((finalT - initialT) / dT);
     int overallW = w;
     int overallH = h;
@@ -78,7 +74,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
       overallH = h * frames;
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
-    graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    graphicsDrawer = GraphicsDrawer.build();
     framer = new VoxelCompoundFollower((int) frames, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX);
     frameCount = 0;
   }
@@ -114,7 +110,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
     L.info(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
     frameCount = frameCount + 1;
     Graphics2D g = image.createGraphics();
-    graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, renderingDirectives, String.format("%d", frameCount));
+    graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, String.format("%d", frameCount));
     g.dispose();
   }
 

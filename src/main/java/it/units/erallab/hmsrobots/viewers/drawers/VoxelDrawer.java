@@ -18,29 +18,55 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableVoxel;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.Configuration;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
-import java.util.Collections;
-import java.util.Set;
+import java.awt.geom.Path2D;
 
-public class VoxelDrawer implements Drawer {
+public class VoxelDrawer implements Configuration<VoxelDrawer>, Drawer {
 
-  private final static Set<Class<? extends Object>> CLASSES = Collections.unmodifiableSet(Set.of(
-      Voxel.class
-  ));
+  @Configurable
+  private Color strokeColor = Color.BLUE;
+  @Configurable
+  private Color restFillColor = GraphicsDrawer.alphaed(Color.YELLOW, 0.5f);
+  @Configurable
+  private Color shrunkFillColor = GraphicsDrawer.alphaed(Color.RED, 0.5f);
+  @Configurable
+  private Color expandedFillColor = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
+  @Configurable
+  private float shrunkRatio = 0.75f;
+  @Configurable
+  private float expandendRatio = 1.25f;
+
+  private VoxelDrawer() {
+  }
+
+  public static VoxelDrawer build() {
+    return new VoxelDrawer();
+  }
 
   @Override
   public boolean draw(ImmutableObject object, Graphics2D g) {
-    Poly poly = (Poly) object.getShape();
-    g.setColor(Color.GREEN);
-    g.draw(GraphicsDrawer.toPath(poly, true));
+    ImmutableVoxel voxel = (ImmutableVoxel) object;
+    Poly poly = (Poly) voxel.getShape();
+    Path2D path = GraphicsDrawer.toPath(poly, true);
+    g.setColor(strokeColor);
+    g.draw(path);
+    g.setColor(GraphicsDrawer.linear(
+        shrunkFillColor, restFillColor, expandedFillColor,
+        shrunkRatio, 1f, expandendRatio,
+        (float) (poly.area() / voxel.getRestArea())
+    ));
+    g.fill(path);
     return true;
   }
 
   @Override
-  public Set<Class<? extends Object>> getDrawableClasses() {
-    return CLASSES;
+  public boolean canDraw(Class c) {
+    return Voxel.class.isAssignableFrom(c);
   }
 }
