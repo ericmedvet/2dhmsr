@@ -671,11 +671,11 @@ public class Voxel implements WorldObject {
     //add parts
     List<ImmutableObject> children = new ArrayList<>(vertexBodies.length + springJoints.length);
     for (Body body : vertexBodies) {
-      children.add(new ImmutableObject(this, rectangleToPoly(body)));
+      children.add(new ImmutableObject(body, rectangleToPoly(body)));
     }
     //add joints
     for (DistanceJoint joint : springJoints) {
-      children.add(new ImmutableObject(this, Vector.build(
+      children.add(new ImmutableObject(joint, Vector.build(
           Point2.build(joint.getAnchor1()),
           Point2.build(joint.getAnchor2())
       )));

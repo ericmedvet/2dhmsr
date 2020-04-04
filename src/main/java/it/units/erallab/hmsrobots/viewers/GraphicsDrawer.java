@@ -21,6 +21,9 @@ import com.google.common.collect.Sets;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.immutable.*;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.JointDrawer;
+import it.units.erallab.hmsrobots.viewers.drawers.VoxelDrawer;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -262,10 +265,16 @@ public class GraphicsDrawer {
       }
     }
     //draw components
+
+    List<Drawer> drawers = new ArrayList<>();
+    drawers.add(new VoxelDrawer());
+    drawers.add(new JointDrawer());
+
     List<Point2> compoundCenters = new ArrayList<>();
     g.setStroke(new BasicStroke(2f / (float) ratio));
     for (ImmutableObject object : snapshot.getObjects()) {
-      draw(object, g, directives);
+      //draw(object, g, directives);
+      recursivelyDraw(object, g, drawers);
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
         if (object.getObjectClass().equals(VoxelCompound.class)) {
           Point2[] centers = new Point2[object.getChildren().size()];
@@ -320,6 +329,28 @@ public class GraphicsDrawer {
     return gridSize;
   }
 
+  private void recursivelyDraw(final ImmutableObject object, final Graphics2D g, final List<Drawer> drawers) {
+    boolean drawChildren = true;
+    for (Drawer drawer : drawers) {
+      if (match(object.getObjectClass(), drawer.getDrawableClasses())) {
+        drawChildren = drawer.draw(object, g);
+        break;
+      }
+    }
+    if (drawChildren) {
+      object.getChildren().stream().forEach(c -> recursivelyDraw(c, g, drawers));
+    }
+  }
+
+  private boolean match(final Class c, final Set<Class<? extends Object>> classes) {
+    for (Class other : classes) {
+      if (other.isAssignableFrom(c)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void draw(ImmutableObject object, Graphics2D g, RenderingDirectives directives) {
     //draw all children
     for (ImmutableObject child : object.getChildren()) {
@@ -361,7 +392,7 @@ public class GraphicsDrawer {
     return new Color((float) r, (float) g, (float) b, alpha);
   }
 
-  private Path2D toPath(Poly poly, boolean close) {
+  public static Path2D toPath(Poly poly, boolean close) {
     Path2D path = toPath(poly.getVertexes());
     if (close) {
       path.closePath();
@@ -369,7 +400,7 @@ public class GraphicsDrawer {
     return path;
   }
 
-  private Path2D toPath(Point2... points) {
+  public static Path2D toPath(Point2... points) {
     Path2D path = new Path2D.Double();
     path.moveTo(points[0].x, points[0].y);
     for (int i = 1; i < points.length; i++) {
