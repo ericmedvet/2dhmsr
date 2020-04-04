@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,35 +25,37 @@ import java.util.List;
 public class ImmutableObject {
 
   private final Class<? extends Object> objectClass;
+  private final int objectHashCode;
+  private final Shape shape;
   private final List<ImmutableObject> children;
 
-  public ImmutableObject(Class<? extends Object> objectClass) {
-    this.objectClass = objectClass;
-    children = new ArrayList<>();
+  public ImmutableObject(Object object, Shape shape, List<ImmutableObject> children) {
+    objectClass = object.getClass();
+    objectHashCode = object.hashCode();
+    this.shape = shape;
+    this.children = Collections.unmodifiableList(children);
+  }
+
+  public ImmutableObject(Object object, Shape shape) {
+    objectClass = object.getClass();
+    objectHashCode = object.hashCode();
+    this.shape = shape;
+    this.children = Collections.EMPTY_LIST;
   }
 
   public Class<? extends Object> getObjectClass() {
     return objectClass;
   }
 
+  public int getObjectHashCode() {
+    return objectHashCode;
+  }
+
+  public Shape getShape() {
+    return shape;
+  }
+
   public List<ImmutableObject> getChildren() {
     return children;
   }
-
-  public BoundingBox getBoundingBox() {
-    if (children.isEmpty()) {
-      return null;
-    }
-    BoundingBox boundingBox = null;
-    for (ImmutableObject child : children) {
-      BoundingBox childBoundingBox = child.getBoundingBox();
-      if (boundingBox == null) {
-        boundingBox = childBoundingBox;
-      } else {
-        boundingBox = BoundingBox.largest(boundingBox, childBoundingBox);
-      }
-    }
-    return boundingBox;
-  }
-
 }

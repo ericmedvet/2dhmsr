@@ -22,6 +22,7 @@ import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
@@ -162,12 +163,12 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
-            builderGrid, null
+        builderGrid, null
     ));
-    Point2[] boundingBox = vc.boundingBox();
+    BoundingBox boundingBox = vc.boundingBox();
     worldObjects.add(vc);
     //build ground
-    Ground ground = new Ground(new double[]{0, 1}, new double[]{0, boundingBox[1].y - boundingBox[0].y + 2d * WALL_MARGIN});
+    Ground ground = new Ground(new double[]{0, 1}, new double[]{0, boundingBox.max.y - boundingBox.min.y + 2d * WALL_MARGIN});
     worldObjects.add(ground);
     //build world w/o gravity
     World world = new World();
@@ -177,7 +178,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       worldObject.addTo(world);
     }
     //attach vc to ground
-    vc.translate(new Vector2(-boundingBox[0].x + 1d, (boundingBox[1].y - boundingBox[0].y + 2d * WALL_MARGIN) / 2d - 1d));
+    vc.translate(new Vector2(-boundingBox.min.x + 1d, (boundingBox.max.y - boundingBox.min.y + 2d * WALL_MARGIN) / 2d - 1d));
     for (int y = 0; y < vc.getVoxels().getH(); y++) {
       for (int i : new int[]{0, 3}) {
         WeldJoint joint = new WeldJoint(
@@ -236,7 +237,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
     List<Point2> finalTopPositions = new ArrayList<>();
     for (int x = 0; x < vc.getVoxels().getW(); x++) {
       Vector2 center = vc.getVoxels().get(x, 0).getCenter();
-      finalTopPositions.add(new Point2(center.x, center.y - y0));
+      finalTopPositions.add(Point2.build(center.x, center.y - y0));
     }
     return new Result(
             elapsedSeconds,

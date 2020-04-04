@@ -16,14 +16,12 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Poly implements Serializable {
+public class Poly implements Shape {
 
   private final Point2[] vertexes;
 
@@ -34,8 +32,17 @@ public class Poly implements Serializable {
     }
   }
 
-  public Poly(Point2... vertexes) {
+  private Poly(Point2... vertexes) {
     this.vertexes = vertexes;
+  }
+
+  public static Poly build(Point2... vertexes) {
+    return new Poly(vertexes);
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.build(vertexes);
   }
 
   public Point2[] getVertexes() {
@@ -52,14 +59,9 @@ public class Poly implements Serializable {
     return a;
   }
 
+  @Override
   public Point2 center() {
-    double x = 0d;
-    double y= 0d;
-    for (Point2 v : vertexes) {
-      x = x+v.x;
-      y = y+v.y;
-    }
-    return new Point2(x/(double)vertexes.length, y/(double)vertexes.length);
+    return Point2.average(vertexes);
   }
 
 }

@@ -16,10 +16,9 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutablePoly;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
@@ -54,9 +53,9 @@ public class Box implements WorldObject {
     for (int i = 0; i<4; i++) {
       Vector2 tV = rectangle.getVertices()[i].copy();
       t.transform(tV);
-      vertices[i] = new Point2(tV);
+      vertices[i] = Point2.build(tV);
     }
-    return new ImmutablePoly(new Poly(vertices), getClass());    
+    return new ImmutableObject(this, Poly.build(vertices));
   }
 
   @Override

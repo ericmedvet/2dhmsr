@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.tasks;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -83,14 +84,14 @@ public class Locomotion extends AbstractTask<VoxelCompound.Description, List<Dou
     worldObjects.add(ground);
     //position robot: x of rightmost point is on 2nd point of profile
     VoxelCompound voxelCompound = new VoxelCompound(0d, 0d, description);
-    Point2[] boundingBox = voxelCompound.boundingBox();
+    BoundingBox boundingBox = voxelCompound.boundingBox();
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
-    double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
+    double xRight = xLeft + boundingBox.max.x - boundingBox.min.x;
     double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
     double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
     Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
-    Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
+    Vector2 currentPoint = new Vector2(boundingBox.min.x, boundingBox.min.y);
     Vector2 movement = targetPoint.subtract(currentPoint);
     voxelCompound.translate(movement);
     //get initial x
@@ -128,7 +129,7 @@ public class Locomotion extends AbstractTask<VoxelCompound.Description, List<Dou
         }
       }
       //update center position metrics
-      centerPositions.add(new Point2(voxelCompound.getCenter()));
+      centerPositions.add(Point2.build(voxelCompound.getCenter()));
       //possibly output snapshot
       if (listener != null) {
         Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
@@ -144,7 +145,7 @@ public class Locomotion extends AbstractTask<VoxelCompound.Description, List<Dou
           value = (voxelCompound.getCenter().x - initCenterX) / t;
           break;
         case TRAVEL_X_RELATIVE_VELOCITY:
-          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox[1].x - boundingBox[0].x, boundingBox[1].y - boundingBox[0].y);
+          value = (voxelCompound.getCenter().x - initCenterX) / t / Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y);
           break;
         case CENTER_AVG_Y:
           value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();

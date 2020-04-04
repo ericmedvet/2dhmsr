@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2019 eric
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,10 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public class ImmutablePoly extends ImmutableObject {
-  
-  private final Poly poly;
+import java.io.Serializable;
 
-  public ImmutablePoly(Poly poly, Class<? extends Object> objectClass) {
-    super(objectClass);
-    this.poly = poly;
-  }
+public interface Shape extends Serializable {
+  public BoundingBox boundingBox();
 
-  public Poly getPoly() {
-    return poly;
-  }    
-  
+  public Point2 center();
 }

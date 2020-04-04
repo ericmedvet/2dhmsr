@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,28 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public class ImmutableVector extends ImmutableObject {
-  
+public class Vector implements Shape {
+
   private final Point2 start;
   private final Point2 end;
 
-  public ImmutableVector(Point2 start, Point2 end, Class<? extends Object> objectClass) {
-    super(objectClass);
+  private Vector(Point2 start, Point2 end) {
     this.start = start;
     this.end = end;
+  }
+
+  public static Vector build(Point2 start, Point2 end) {
+    return new Vector(start, end);
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.build(start, end);
+  }
+
+  @Override
+  public Point2 center() {
+    return Point2.average(start, end);
   }
 
   public Point2 getStart() {
@@ -37,6 +46,5 @@ public class ImmutableVector extends ImmutableObject {
 
   public Point2 getEnd() {
     return end;
-  }    
-  
+  }
 }

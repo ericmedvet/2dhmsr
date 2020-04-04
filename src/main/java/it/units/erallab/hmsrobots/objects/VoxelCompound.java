@@ -17,9 +17,8 @@
 package it.units.erallab.hmsrobots.objects;
 
 import it.units.erallab.hmsrobots.controllers.Controller;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutablePoly;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -132,13 +131,17 @@ public class VoxelCompound implements WorldObject {
 
   @Override
   public ImmutableObject immutable() {
-    ImmutableObject immutableObject = new ImmutableObject(getClass());
+    List<ImmutableObject> children = new ArrayList<>();
     for (Voxel voxel : voxels.values()) {
       if (voxel != null) {
-        immutableObject.getChildren().add(voxel.immutable());
+        children.add(voxel.immutable());
       }
     }
-    return immutableObject;
+    return new ImmutableObject(
+        this,
+        null,
+        children
+    );
   }
 
   @Override
@@ -199,32 +202,10 @@ public class VoxelCompound implements WorldObject {
     return description;
   }
 
-  public Point2[] boundingBox() {
-    //TODO redo with use of boundingBox() of ImmutableObject
-    double minX = Double.POSITIVE_INFINITY;
-    double minY = Double.POSITIVE_INFINITY;
-    double maxX = Double.NEGATIVE_INFINITY;
-    double maxY = Double.NEGATIVE_INFINITY;
-    for (Voxel voxel : voxels.values()) {
-      if (voxel != null) {
-        ImmutablePoly immutablePoly = (ImmutablePoly) voxel.immutable();
-        for (Point2 p : immutablePoly.getPoly().getVertexes()) {
-          if (p.x < minX) {
-            minX = p.x;
-          }
-          if (p.y < minY) {
-            minY = p.y;
-          }
-          if (p.x > maxX) {
-            maxX = p.x;
-          }
-          if (p.y > maxY) {
-            maxY = p.y;
-          }
-        }
-      }
-    }
-    return new Point2[]{new Point2(minX, minY), new Point2(maxX, maxY)};
+  public BoundingBox boundingBox() {
+    return immutable().getChildren().stream()
+        .map(o -> o.getShape().boundingBox())
+        .reduce((b1, b2) -> BoundingBox.largest(b1, b2)).get();
   }
 
 }

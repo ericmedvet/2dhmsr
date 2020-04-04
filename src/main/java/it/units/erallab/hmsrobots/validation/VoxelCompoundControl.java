@@ -23,7 +23,7 @@ import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -146,14 +146,14 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
     worldObjects.add(ground);
     double[][] groundProfile = new double[][]{groundXs, groundYs};
     //position robot: x of rightmost point is on 2nd point of profile
-    Point2[] boundingBox = voxelCompound.boundingBox();
+    BoundingBox boundingBox = voxelCompound.boundingBox();
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
-    double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
+    double xRight = xLeft + boundingBox.max.x - boundingBox.min.x;
     double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
     double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
     Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
-    Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
+    Vector2 currentPoint = new Vector2(boundingBox.min.x, boundingBox.min.y);
     Vector2 movement = targetPoint.subtract(currentPoint);
     voxelCompound.translate(movement);
     //build world w/o gravity

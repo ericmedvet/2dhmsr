@@ -205,7 +205,12 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
           }
         }
         if (localSnapshotGrid != null) {
-          renderFrame(localSnapshotGrid);
+          try {
+            renderFrame(localSnapshotGrid);
+          } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(0);
+          }
           synchronized (gridQueue) {
             gridQueue.notifyAll();
           }

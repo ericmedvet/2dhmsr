@@ -52,7 +52,10 @@ public class VoxelCompoundFollower implements Framer {
     BoundingBox enclosing = snapshot.getObjects().stream()
         .filter(o -> o.getObjectClass().equals(VoxelCompound.class))
         .limit(compounds)
-        .map(o -> o.getBoundingBox())
+        .map(o -> o.getChildren().stream()
+            .map(c -> c.getShape().boundingBox())
+            .reduce((b1, b2) -> BoundingBox.largest(b1, b2))
+            .get())
         .reduce((b1, b2) -> BoundingBox.largest(b1, b2))
         .get();
     //add to queue
@@ -112,8 +115,8 @@ public class VoxelCompoundFollower implements Framer {
 
   private static BoundingBox average(BoundingBox b1, BoundingBox b2) {
     return BoundingBox.build(
-        Point2.mid(b1.min, b2.min),
-        Point2.mid(b1.max, b2.max)
+        Point2.average(b1.min, b2.min),
+        Point2.average(b1.max, b2.max)
     );
   }
 

@@ -16,16 +16,10 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutablePoly;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableVector;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.objects.immutable.Vector;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -37,8 +31,13 @@ import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Transform;
 import org.dyn4j.geometry.Vector2;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
+
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Voxel implements WorldObject {
@@ -56,11 +55,15 @@ public class Voxel implements WorldObject {
 
   public static enum ForceMethod {
     DISTANCE, FORCE
-  };
+  }
+
+  ;
 
   public static enum SpringScaffolding {
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS
-  };
+  }
+
+  ;
 
   private static class SpringRange {
 
@@ -129,10 +132,10 @@ public class Voxel implements WorldObject {
     private final static boolean MASS_COLLISION_FLAG = false;
     private final static ForceMethod FORCE_METHOD = ForceMethod.DISTANCE;
     private final static EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.of(
-            SpringScaffolding.SIDE_EXTERNAL,
-            SpringScaffolding.SIDE_INTERNAL,
-            SpringScaffolding.SIDE_CROSS,
-            SpringScaffolding.CENTRAL_CROSS
+        SpringScaffolding.SIDE_EXTERNAL,
+        SpringScaffolding.SIDE_INTERNAL,
+        SpringScaffolding.SIDE_CROSS,
+        SpringScaffolding.CENTRAL_CROSS
     );
 
     private double sideLength = SIDE_LENGTH;
@@ -557,20 +560,20 @@ public class Voxel implements WorldObject {
     if (springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint joint : localSpringJoints) {
         joint.setUserData(sideParallelRange);
@@ -580,20 +583,20 @@ public class Voxel implements WorldObject {
     if (springScaffoldings.contains(SpringScaffolding.SIDE_EXTERNAL)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint joint : localSpringJoints) {
         joint.setUserData(sideParallelRange);
@@ -603,36 +606,36 @@ public class Voxel implements WorldObject {
     if (springScaffoldings.contains(SpringScaffolding.SIDE_CROSS)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
-              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[2],
-              vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[2], vertexBodies[3],
-              vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
-              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
+          vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
+          vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[3], vertexBodies[0],
-              vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
-              vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
+          vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
+          vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint joint : localSpringJoints) {
         joint.setUserData(sideCrossRange);
@@ -642,12 +645,12 @@ public class Voxel implements WorldObject {
     if (springScaffoldings.contains(SpringScaffolding.CENTRAL_CROSS)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[2],
-              vertexBodies[0].getWorldCenter(),
-              vertexBodies[2].getWorldCenter()
+          vertexBodies[0].getWorldCenter(),
+          vertexBodies[2].getWorldCenter()
       ));
       localSpringJoints.add(new DistanceJoint(vertexBodies[1], vertexBodies[3],
-              vertexBodies[1].getWorldCenter(),
-              vertexBodies[3].getWorldCenter()
+          vertexBodies[1].getWorldCenter(),
+          vertexBodies[3].getWorldCenter()
       ));
       for (DistanceJoint joint : localSpringJoints) {
         joint.setUserData(centralCrossRange);
@@ -665,14 +668,18 @@ public class Voxel implements WorldObject {
 
   @Override
   public ImmutableObject immutable() {
-    //add enclosing
-    Poly poly = new Poly(
-            new Point2(getIndexedVertex(0, 3)),
-            new Point2(getIndexedVertex(1, 2)),
-            new Point2(getIndexedVertex(2, 1)),
-            new Point2(getIndexedVertex(3, 0))
-    );
-    ImmutablePoly immutablePoly = new ImmutablePoly(poly, getClass());
+    //add parts
+    List<ImmutableObject> children = new ArrayList<>(vertexBodies.length + springJoints.length);
+    for (Body body : vertexBodies) {
+      children.add(new ImmutableObject(this, rectangleToPoly(body)));
+    }
+    //add joints
+    for (DistanceJoint joint : springJoints) {
+      children.add(new ImmutableObject(this, Vector.build(
+          Point2.build(joint.getAnchor1()),
+          Point2.build(joint.getAnchor2())
+      )));
+    }
     // TODO add components for sensors
     /*
     EnumMap<Voxel.Sensor, Double> sensorReadings = new EnumMap<>(Voxel.Sensor.class);
@@ -680,15 +687,18 @@ public class Voxel implements WorldObject {
       sensorReadings.put(sensor, getSensorReading(sensor));
     }
     */
-    //add parts
-    for (Body body : vertexBodies) {
-      immutablePoly.getChildren().add(new ImmutablePoly(rectangleToPoly(body), Body.class));      
-    }
-    //add joints
-    for (DistanceJoint joint : springJoints) {
-      immutablePoly.getChildren().add(new ImmutableVector(new Point2(joint.getAnchor1()), new Point2(joint.getAnchor2()), Body.class));      
-    }
-    return immutablePoly;
+    //add enclosing
+    ImmutableObject immutable = new ImmutableObject(
+        this,
+        Poly.build(
+            Point2.build(getIndexedVertex(0, 3)),
+            Point2.build(getIndexedVertex(1, 2)),
+            Point2.build(getIndexedVertex(2, 1)),
+            Point2.build(getIndexedVertex(3, 0))
+        ),
+        children
+    );
+    return immutable;
   }
 
   private Vector2 getIndexedVertex(int i, int j) {
@@ -706,9 +716,9 @@ public class Voxel implements WorldObject {
     for (int i = 0; i < 4; i++) {
       Vector2 tV = rectangle.getVertices()[i].copy();
       t.transform(tV);
-      vertices[i] = new Point2(tV);
+      vertices[i] = Point2.build(tV);
     }
-    return new Poly(vertices);
+    return Poly.build(vertices);
   }
 
   @Override
@@ -743,7 +753,7 @@ public class Voxel implements WorldObject {
       xc = xc / (double) vertexBodies.length;
       yc = yc / (double) vertexBodies.length;
       for (Body body : vertexBodies) {
-        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);                
+        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);
         body.applyForce(force);
       }
     } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
@@ -773,11 +783,11 @@ public class Voxel implements WorldObject {
   }
 
   public double getAreaRatio() {
-    Poly poly = new Poly(
-            new Point2(getIndexedVertex(0, 3)),
-            new Point2(getIndexedVertex(1, 2)),
-            new Point2(getIndexedVertex(2, 1)),
-            new Point2(getIndexedVertex(3, 0))
+    Poly poly = Poly.build(
+        Point2.build(getIndexedVertex(0, 3)),
+        Point2.build(getIndexedVertex(1, 2)),
+        Point2.build(getIndexedVertex(2, 1)),
+        Point2.build(getIndexedVertex(3, 0))
     );
     return poly.area() / sideLength / sideLength;
   }

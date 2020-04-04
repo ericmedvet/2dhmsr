@@ -16,7 +16,9 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-public class BoundingBox {
+import java.io.Serializable;
+
+public class BoundingBox implements Serializable {
 
   public final Point2 min;
   public final Point2 max;
@@ -36,14 +38,22 @@ public class BoundingBox {
       maxY = Math.max(maxY, point.y);
     }
     return new BoundingBox(
-        new Point2(minX, minY),
-        new Point2(maxX, maxY)
+        Point2.build(minX, minY),
+        Point2.build(maxX, maxY)
     );
   }
 
   private BoundingBox(Point2 min, Point2 max) {
     this.min = min;
     this.max = max;
+  }
+
+  @Override
+  public String toString() {
+    return "BoundingBox{" +
+        "min=" + min +
+        ", max=" + max +
+        '}';
   }
 
   public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {

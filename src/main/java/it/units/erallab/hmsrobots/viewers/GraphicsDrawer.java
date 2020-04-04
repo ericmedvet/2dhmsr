@@ -29,6 +29,7 @@ import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -208,11 +209,6 @@ public class GraphicsDrawer {
   }
 
   public void draw(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, RenderingDirectives directives, String... infos) {
-
-
-    System.out.println("drawing -start");
-
-
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -268,14 +264,13 @@ public class GraphicsDrawer {
     //draw components
     List<Point2> compoundCenters = new ArrayList<>();
     g.setStroke(new BasicStroke(2f / (float) ratio));
-
-    System.out.println("drawing");
-
     for (ImmutableObject object : snapshot.getObjects()) {
-      Point2 center = draw(object, g, directives);
+      draw(object, g, directives);
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
         if (object.getObjectClass().equals(VoxelCompound.class)) {
-          compoundCenters.add(center);
+          Point2[] centers = new Point2[object.getChildren().size()];
+          centers = object.getChildren().stream().map(o -> o.getShape().center()).collect(Collectors.toList()).toArray(centers);
+          compoundCenters.add(Point2.average(centers));
         }
       }
     }
@@ -325,29 +320,23 @@ public class GraphicsDrawer {
     return gridSize;
   }
 
-  private Point2 draw(ImmutableObject object, Graphics2D g, RenderingDirectives directives) {
+  private void draw(ImmutableObject object, Graphics2D g, RenderingDirectives directives) {
     //draw all children
-    double cx = 0d;
-    double cy = 0d;
-    double n = 0;
     for (ImmutableObject child : object.getChildren()) {
-      Point2 childCenter = draw(child, g, directives);
-      cx = cx + childCenter.x;
-      cy = cy + childCenter.y;
-      n = n + 1;
+      draw(child, g, directives);
     }
-    Point2 center = new Point2(cx / n, cy / n);
     //draw shape
-    if (object instanceof ImmutablePoly) {
-      ImmutablePoly immutablePoly = (ImmutablePoly) object;
-      g.setColor(Color.BLUE);
-      g.draw(toPath(immutablePoly.getPoly(), true));
-    } else if (object instanceof ImmutableVector) {
-      ImmutableVector immutableVector = (ImmutableVector) object;
-      g.setColor(Color.RED);
-      g.draw(toPath(immutableVector.getStart(), immutableVector.getEnd()));
+    if (object.getShape() != null) {
+      if (object.getShape() instanceof Poly) {
+        Poly poly = (Poly) object.getShape();
+        g.setColor(Color.BLUE);
+        g.draw(toPath(poly, true));
+      } else if (object.getShape() instanceof Vector) {
+        Vector vector = (Vector) object.getShape();
+        g.setColor(Color.BLUE);
+        g.draw(toPath(vector.getStart(), vector.getEnd()));
+      }
     }
-    return center;
   }
 
   private Color linear(final Color c1, final Color c2, final Color c3, double x1, double x2, double x3, double x, float alpha) {

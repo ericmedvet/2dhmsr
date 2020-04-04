@@ -18,34 +18,47 @@ package it.units.erallab.hmsrobots.objects.immutable;
 
 import org.dyn4j.geometry.Vector2;
 
-import java.io.Serializable;
-
 /**
  * @author eric
  */
-public class Point2 implements Serializable {
+public class Point2 implements Shape {
 
   public final double x;
   public final double y;
 
-  public Point2(double x, double y) {
-    //TODO make private
+  private Point2(double x, double y) {
     this.x = x;
     this.y = y;
-  }
-
-  public Point2(Vector2 v) {
-    //TODO make private
-    x = v.x;
-    y = v.y;
   }
 
   public static Point2 build(double x, double y) {
     return new Point2(x, y);
   }
 
-  public static Point2 mid(Point2 p1, Point2 p2) {
-    return build((p1.x + p2.x) / 2d, (p1.y + p2.y) / 2d);
+  public static Point2 build(Vector2 v) {
+    return new Point2(v.x, v.y);
+  }
+
+  public static Point2 average(Point2... points) {
+    double cx = 0;
+    double cy = 0;
+    double n = 0;
+    for (Point2 point : points) {
+      cx = cx + point.x;
+      cy = cy + point.y;
+      n = n + 1;
+    }
+    return Point2.build(cx / n, cy / n);
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.build(this);
+  }
+
+  @Override
+  public Point2 center() {
+    return this;
   }
 
   @Override
