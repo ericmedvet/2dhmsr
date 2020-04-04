@@ -208,6 +208,11 @@ public class GraphicsDrawer {
   }
 
   public void draw(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, RenderingDirectives directives, String... infos) {
+
+
+    System.out.println("drawing -start");
+
+
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -263,6 +268,9 @@ public class GraphicsDrawer {
     //draw components
     List<Point2> compoundCenters = new ArrayList<>();
     g.setStroke(new BasicStroke(2f / (float) ratio));
+
+    System.out.println("drawing");
+
     for (ImmutableObject object : snapshot.getObjects()) {
       Point2 center = draw(object, g, directives);
       if (directives.getGeneralRenderingModes().contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
