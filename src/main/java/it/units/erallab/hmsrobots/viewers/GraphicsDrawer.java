@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
@@ -37,29 +37,29 @@ import java.util.stream.Collectors;
  */
 public class GraphicsDrawer implements Configuration<GraphicsDrawer> {
 
-  public static enum GeneralRenderingMode {
+  public enum GeneralRenderingMode {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, VOXEL_COMPOUND_CENTERS_INFO
   }
 
-  @Configurable(type = Configurable.Type.BASIC)
-  private Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
+  @Configurable(type = Configurable.Type.BASIC, enumClass = GeneralRenderingMode.class)
+  private final Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
       GeneralRenderingMode.GRID_MAJOR,
       GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO,
       GeneralRenderingMode.TIME_INFO
   ));
   @Configurable
-  private Color gridColor = Color.GRAY;
+  private final Color gridColor = Color.GRAY;
   @Configurable
-  private Color infoColor = Color.BLUE;
+  private final Color infoColor = Color.BLUE;
   @Configurable
-  private Color backgroundColor = Color.WHITE;
+  private final Color backgroundColor = Color.WHITE;
   @Configurable
-  private Color basicColor = Color.BLUE;
-  private double[] gridSizes = new double[]{2, 5, 10};
-  @Configurable
-  private float strokeWidth = 1f;
-  @Configurable
-  private List<Drawer> drawers = new ArrayList<>(List.of(
+  private final Color basicColor = Color.BLUE;
+  private final double[] gridSizes = new double[]{2, 5, 10};
+  @Configurable(uiMin = 1, uiMax = 5)
+  private final float strokeWidth = 1f;
+  @Configurable(type = Configurable.Type.BASIC)
+  private final List<Drawer> drawers = new ArrayList<>(List.of(
       VoxelDrawer.build(),
       BodyDrawer.build(),
       GroundDrawer.build(),

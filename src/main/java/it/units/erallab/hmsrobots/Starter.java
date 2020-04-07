@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots;
 
@@ -250,13 +250,13 @@ public class Starter {
         controlInterval,
         settings
     );
-    Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(2, 2);
+    Grid<Pair<String, VoxelCompound.Description>> namedSolutionGrid = Grid.create(1, 1);
     namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
-    namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
+    /*namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
     namedSolutionGrid.set(0, 1, Pair.of("phase-2", oneMLP));
     namedSolutionGrid.set(1, 0, Pair.of("centralizedMLP-1", centralized1));
     namedSolutionGrid.set(1, 1, Pair.of("centralizedMLP-2", centralized2));
-    namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
+    namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));*/
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
