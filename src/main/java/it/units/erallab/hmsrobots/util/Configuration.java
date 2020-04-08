@@ -19,18 +19,34 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public interface Configuration<C extends Configuration> extends Serializable {
+
+  static <T extends Configuration<T>> T build(Class<T> type) {
+    try {
+      Method buildMethod = type.getDeclaredMethod("build");
+      T newInstance = (T) buildMethod.invoke(null);
+      return newInstance;
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  static <T extends Configuration<T>> T build(Class<T> type, Map<String, Pair<Class<?>, Object>> map) {
+    T newInstance = build(type);
+    newInstance.configure(map);
+    return newInstance;
+  }
 
   default Set<String> configurables(Configurable.Type... types) {
     EnumSet<Configurable.Type> set = EnumSet.noneOf(Configurable.Type.class);
@@ -41,17 +57,67 @@ public interface Configuration<C extends Configuration> extends Serializable {
     return annotated;
   }
 
-  default Map<String, Object> getConfigurables() {
-    Map<String, Object> map = new LinkedHashMap<>();
+  default Map<String, Pair<Class<?>, Object>> toMap() {
+    Map<String, Pair<Class<?>, Object>> map = new LinkedHashMap<>();
     for (String key : configurables()) {
-      map.put(key, getConfigurable(key));
+      Pair<Class<?>, Object> pair = toPair(getConfigurable(key));
+      if (pair != null) {
+        map.put(key, pair);
+      }
     }
     return map;
   }
 
-  default void setConfigurables(Map<String, Object> map) {
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
-      setConfigurable(entry.getKey(), entry.getValue());
+  private static Pair<Class<?>, Object> toPair(Object object) {
+    if (object == null) {
+      return null;
+    }
+    if (object instanceof Configuration) {
+      return Pair.of(object.getClass(), ((Configuration<?>) object).toMap());
+    }
+    if (object instanceof List) {
+      object = ((List<?>) object).stream()
+          .map(Configuration::toPair)
+          .collect(Collectors.toList());
+    }
+    if (object instanceof Set) {
+      object = ((Set<?>) object).stream()
+          .map(Configuration::toPair)
+          .collect(Collectors.toSet());
+    }
+    if (object instanceof Map) {
+      object = ((Map<?, ?>) object).entrySet().stream()
+          .map(e -> Pair.of(toPair(e.getKey()), toPair(e.getValue())))
+          .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    }
+    return Pair.of(object.getClass(), object);
+  }
+
+  private static Object fromPair(Pair<Class<?>, Object> pair) {
+    if (Lists.newArrayList(pair.getKey().getInterfaces()).contains(Configuration.class)) {
+      return build((Class) pair.getKey(), (Map) pair.getValue());
+    }
+    if (pair.getValue() instanceof List) {
+      return ((List<?>) pair.getValue()).stream()
+          .map(p -> fromPair((Pair<Class<?>, Object>) p))
+          .collect(Collectors.toList());
+    }
+    if (pair.getValue() instanceof Set) {
+      return ((Set<?>) pair.getValue()).stream()
+          .map(p -> fromPair((Pair<Class<?>, Object>) p))
+          .collect(Collectors.toSet());
+    }
+    if (pair.getValue() instanceof Map) {
+      return ((Map<?, ?>) pair.getValue()).entrySet().stream()
+          .map(e -> Pair.of(fromPair((Pair<Class<?>, Object>) e.getKey()), fromPair((Pair<Class<?>, Object>) e.getValue())))
+          .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    }
+    return pair.getValue();
+  }
+
+  default void configure(Map<String, Pair<Class<?>, Object>> map) {
+    for (Map.Entry<String, Pair<Class<?>, Object>> entry : map.entrySet()) {
+      setConfigurable(entry.getKey(), fromPair(entry.getValue()));
     }
   }
 
