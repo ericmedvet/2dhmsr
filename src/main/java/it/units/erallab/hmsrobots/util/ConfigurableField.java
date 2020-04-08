@@ -14,22 +14,25 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.sensors.Sensor;
-import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
+package it.units.erallab.hmsrobots.util;
 
-import java.io.Serializable;
-import java.util.List;
+import javax.annotation.meta.TypeQualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-/**
- *
- * @author eric
- */
-@FunctionalInterface
-public interface Controller extends Serializable {
+@TypeQualifier
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ConfigurableField {
 
-  Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues);
-  
+  enum Type {BASIC, ADVANCED}
+
+  Type type() default Type.ADVANCED;
+
+  Class<?> enumClass() default Void.class;
+
+  double uiMin() default Double.NEGATIVE_INFINITY;
+
+  double uiMax() default Double.POSITIVE_INFINITY;
+
 }

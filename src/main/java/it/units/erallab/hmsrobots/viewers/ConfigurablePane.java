@@ -17,7 +17,7 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.Configuration;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -89,28 +89,28 @@ public class ConfigurablePane extends JPanel {
 
   private final Map<String, List<MutablePair<Object, Boolean>>> collectionValues = new LinkedHashMap<>();
 
-  public ConfigurablePane(Configuration<?> configuration) {
+  public ConfigurablePane(Configurable<?> configurable) {
     //set general properties
     setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
     //add things
-    add(new JLabel(configuration.getClass().getSimpleName()));
-    for (String key : configuration.configurables(Configurable.Type.BASIC, Configurable.Type.ADVANCED)) {
-      add(forAny(key, configuration));
+    add(new JLabel(configurable.getClass().getSimpleName()));
+    for (String key : configurable.configurables(ConfigurableField.Type.BASIC, ConfigurableField.Type.ADVANCED)) {
+      add(forAny(key, configurable));
     }
   }
 
-  private JComponent forAny(String key, Configuration<?> configuration) {
-    Object value = configuration.getConfigurable(key);
+  private JComponent forAny(String key, Configurable<?> configurable) {
+    Object value = configurable.getConfigurable(key);
     if (value == null) {
       return new JLabel(key + " (null)");
-    } else if (value instanceof Configuration) {
-      return new ConfigurablePane((Configuration<?>) value);
+    } else if (value instanceof Configurable) {
+      return new ConfigurablePane((Configurable<?>) value);
     } else if (value instanceof Number) {
       double num = ((Number) value).doubleValue();
       final Class<? extends Number> type = ((Number) value).getClass();
-      final double min = Math.min(num, getUiMin(key, configuration) != null ? getUiMin(key, configuration).doubleValue() : 1d);
-      final double max = Math.max(num, getUiMax(key, configuration) != null ? getUiMax(key, configuration).doubleValue() : 5d);
+      final double min = Math.min(num, getUiMin(key, configurable) != null ? getUiMin(key, configurable).doubleValue() : 1d);
+      final double max = Math.max(num, getUiMax(key, configurable) != null ? getUiMax(key, configurable).doubleValue() : 5d);
       JSlider slider = new JSlider(
           JSlider.HORIZONTAL,
           0,
@@ -121,14 +121,14 @@ public class ConfigurablePane extends JPanel {
       slider.setMinorTickSpacing(10);
       slider.setPaintTicks(true);
       slider.setPreferredSize(new Dimension(100, 40));
-      slider.addChangeListener(e -> configuration.setConfigurable(
+      slider.addChangeListener(e -> configurable.setConfigurable(
           key,
           number(slider.getValue() / 100d * (max - min) + min, type)
       ));
       return justified(new JLabel(key), null, slider);
     } else if (value instanceof Color) {
       ColorChooserButton button = new ColorChooserButton((Color) value);
-      button.addColorChangedListener(c -> configuration.setConfigurable(key, c));
+      button.addColorChangedListener(c -> configurable.setConfigurable(key, c));
       return justified(new JLabel(key), null, button);
     } else if (value instanceof Collection) {
       List<MutablePair<Object, Boolean>> pairs;
@@ -136,7 +136,7 @@ public class ConfigurablePane extends JPanel {
       pairs = collection.stream()
           .map(o -> MutablePair.of(o, true))
           .collect(Collectors.toList());
-      Set<Object> otherValues = getEnumValues(key, configuration);
+      Set<Object> otherValues = getEnumValues(key, configurable);
       otherValues.removeAll(collection);
       pairs.addAll(otherValues.stream()
           .map(o -> MutablePair.of(o, false))
@@ -154,7 +154,7 @@ public class ConfigurablePane extends JPanel {
         checkBox.setSelected(pair.getValue());
         checkBox.addActionListener(e -> {
           pair.setValue(!pair.getValue());
-          configuration.setConfigurable(key, collection(
+          configurable.setConfigurable(key, collection(
               collectionValues.get(key).stream()
                   .filter(p -> p.getValue())
                   .map(p -> p.getKey())
@@ -162,8 +162,8 @@ public class ConfigurablePane extends JPanel {
               collection
           ));
         });
-        if (pair.getKey() instanceof Configuration) {
-          elementsPanel.add(justified(new ConfigurablePane((Configuration) pair.getKey()), checkBox));
+        if (pair.getKey() instanceof Configurable) {
+          elementsPanel.add(justified(new ConfigurablePane((Configurable) pair.getKey()), checkBox));
         } else {
           elementsPanel.add(justified(new JLabel(pair.getKey().toString()), null, checkBox));
         }
@@ -209,36 +209,36 @@ public class ConfigurablePane extends JPanel {
     panel.add(box);
   }
 
-  private static Number getUiMin(String key, Configuration configuration) {
-    Field field = FieldUtils.getField(configuration.getClass(), key, true);
-    if ((field == null) || ((field.getAnnotation(Configurable.class) == null))) {
+  private static Number getUiMin(String key, Configurable configurable) {
+    Field field = FieldUtils.getField(configurable.getClass(), key, true);
+    if ((field == null) || ((field.getAnnotation(ConfigurableField.class) == null))) {
       return null;
     }
-    double uiMin = field.getAnnotation(Configurable.class).uiMin();
+    double uiMin = field.getAnnotation(ConfigurableField.class).uiMin();
     if (uiMin == Double.NEGATIVE_INFINITY) {
       return null;
     }
     return uiMin;
   }
 
-  private static Number getUiMax(String key, Configuration configuration) {
-    Field field = FieldUtils.getField(configuration.getClass(), key, true);
-    if ((field == null) || ((field.getAnnotation(Configurable.class) == null))) {
+  private static Number getUiMax(String key, Configurable configurable) {
+    Field field = FieldUtils.getField(configurable.getClass(), key, true);
+    if ((field == null) || ((field.getAnnotation(ConfigurableField.class) == null))) {
       return null;
     }
-    double uiMax = field.getAnnotation(Configurable.class).uiMax();
+    double uiMax = field.getAnnotation(ConfigurableField.class).uiMax();
     if (uiMax == Double.POSITIVE_INFINITY) {
       return null;
     }
     return uiMax;
   }
 
-  private static Set<Object> getEnumValues(String key, Configuration configuration) {
-    Field field = FieldUtils.getField(configuration.getClass(), key, true);
-    if ((field == null) || ((field.getAnnotation(Configurable.class) == null))) {
+  private static Set<Object> getEnumValues(String key, Configurable configurable) {
+    Field field = FieldUtils.getField(configurable.getClass(), key, true);
+    if ((field == null) || ((field.getAnnotation(ConfigurableField.class) == null))) {
       return null;
     }
-    Class<?> enumClass = field.getAnnotation(Configurable.class).enumClass();
+    Class<?> enumClass = field.getAnnotation(ConfigurableField.class).enumClass();
     if (!enumClass.isEnum()) {
       return Collections.EMPTY_SET;
     }

@@ -1,25 +1,27 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.objects;
 
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
+import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
+import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
@@ -34,7 +36,7 @@ import java.util.Objects;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VoxelCompound implements WorldObject {
+public class Robot implements WorldObject {
 
   private final List<Joint> joints;
   private final Controller controller;
@@ -43,16 +45,16 @@ public class VoxelCompound implements WorldObject {
 
   public static class Description implements Serializable {
 
-    private final Grid<Voxel.Builder> builderGrid;
+    private final Grid<Voxel.Description> voxelDescriptionGrid;
     private final Controller controller;
 
-    public Description(Grid<Voxel.Builder> builderGrid, Controller controller) {
-      this.builderGrid = builderGrid;
+    public Description(Grid<Voxel.Description> voxelDescriptionGrid, Controller controller) {
+      this.voxelDescriptionGrid = voxelDescriptionGrid;
       this.controller = controller;
     }
 
-    public Grid<Voxel.Builder> getBuilderGrid() {
-      return builderGrid;
+    public Grid<Voxel.Description> getVoxelDescriptionGrid() {
+      return voxelDescriptionGrid;
     }
 
     public Controller getController() {
@@ -62,7 +64,7 @@ public class VoxelCompound implements WorldObject {
     @Override
     public int hashCode() {
       int hash = 7;
-      hash = 19 * hash + Objects.hashCode(this.builderGrid);
+      hash = 19 * hash + Objects.hashCode(this.voxelDescriptionGrid);
       hash = 19 * hash + Objects.hashCode(this.controller);
       return hash;
     }
@@ -79,31 +81,28 @@ public class VoxelCompound implements WorldObject {
         return false;
       }
       final Description other = (Description) obj;
-      if (!Objects.equals(this.builderGrid, other.builderGrid)) {
+      if (!Objects.equals(this.voxelDescriptionGrid, other.voxelDescriptionGrid)) {
         return false;
       }
-      if (!Objects.equals(this.controller, other.controller)) {
-        return false;
-      }
-      return true;
+      return Objects.equals(this.controller, other.controller);
     }
 
   }
 
-  public VoxelCompound(double x, double y, Description description) {
+  public Robot(double x, double y, Description description) {
     this.description = description;
     this.controller = description.getController();
     joints = new ArrayList<>();
     //construct voxels
-    voxels = Grid.create(description.getBuilderGrid());
-    for (int gx = 0; gx < description.getBuilderGrid().getW(); gx++) {
-      for (int gy = 0; gy < description.getBuilderGrid().getH(); gy++) {
-        if (description.getBuilderGrid().get(gx, gy) != null) {
-          Voxel voxel = description.getBuilderGrid().get(gx, gy).build(
-              x + (double) gx * description.getBuilderGrid().get(gx, gy).getSideLength(),
-              y + gy * description.getBuilderGrid().get(gx, gy).getSideLength(),
-              this
-          );
+    voxels = Grid.create(description.getVoxelDescriptionGrid());
+    for (int gx = 0; gx < description.getVoxelDescriptionGrid().getW(); gx++) {
+      for (int gy = 0; gy < description.getVoxelDescriptionGrid().getH(); gy++) {
+        if (description.getVoxelDescriptionGrid().get(gx, gy) != null) {
+          Voxel voxel = Voxel.build(this, description.getVoxelDescriptionGrid().get(gx, gy));
+          voxel.translate(new Vector2(
+              x + (double) gx * voxel.getSideLength(),
+              y + gy * voxel.getSideLength()
+          ));
           voxels.set(gx, gy, voxel);
           //check for adjacent voxels
           if ((gx > 0) && (voxels.get(gx - 1, gy) != null)) {
@@ -156,19 +155,16 @@ public class VoxelCompound implements WorldObject {
     }
   }
 
-  public Grid<Double> control(double t, double dt) {
-    Grid<Double> forceGrid = null;
-    if (controller != null) {
-      forceGrid = controller.control(t, dt, voxels);
-      for (Grid.Entry<Double> entry : forceGrid) {
-        if (entry.getValue() != null) {
-          if (voxels.get(entry.getX(), entry.getY()) != null) {
-            voxels.get(entry.getX(), entry.getY()).applyForce(entry.getValue());
-          }
-        }
-      }
+  public Grid<Double> act(final double t) {
+    //sense
+    Grid<List<Pair<Sensor, double[]>>> sensorsValues = Grid.create(voxels, v -> v == null ? null : v.sense(t));
+    //control
+    Grid<Double> forces = controller.control(t, sensorsValues);
+    //apply
+    for (Grid.Entry<Voxel> voxelEntry : voxels) {
+      voxelEntry.getValue().applyForce(forces.get(voxelEntry.getX(), voxelEntry.getY()));
     }
-    return forceGrid;
+    return forces;
   }
 
   public Vector2 getCenter() {

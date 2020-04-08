@@ -19,17 +19,17 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 import it.units.erallab.hmsrobots.objects.immutable.Vector;
 import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.Configuration;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import org.dyn4j.dynamics.joint.Joint;
 
 import java.awt.*;
 
-public class JointDrawer implements Configuration<JointDrawer>, Drawer {
+public class JointDrawer implements Configurable<JointDrawer>, Drawer {
 
-  @Configurable
+  @ConfigurableField
   private final Color color = Color.RED;
-  @Configurable(uiMin = 1, uiMax = 5)
+  @ConfigurableField(uiMin = 1, uiMax = 5)
   private final float strokeWidth = 2f;
 
   private JointDrawer() {

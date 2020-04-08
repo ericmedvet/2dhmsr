@@ -14,22 +14,32 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.controllers;
+package it.units.erallab.hmsrobots.sensors;
 
-import it.units.erallab.hmsrobots.sensors.Sensor;
-import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
+import it.units.erallab.hmsrobots.objects.Voxel;
+import org.dyn4j.dynamics.Body;
 
-import java.io.Serializable;
 import java.util.List;
 
-/**
- *
- * @author eric
- */
-@FunctionalInterface
-public interface Controller extends Serializable {
+public class Touch implements Sensor {
+  @Override
+  public int n() {
+    return 1;
+  }
 
-  Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues);
-  
+  @Override
+  public double[] sense(Voxel voxel, double t) {
+    for (Body vertexBody : voxel.getVertexBodies()) {
+      List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      for (Body inContactBody : inContactBodies) {
+        Object userData = inContactBody.getUserData();
+        if (userData == null) {
+          return new double[]{1d};
+        } else if (userData != vertexBody.getUserData()) {
+          return new double[]{1d};
+        }
+      }
+    }
+    return new double[]{0d};
+  }
 }

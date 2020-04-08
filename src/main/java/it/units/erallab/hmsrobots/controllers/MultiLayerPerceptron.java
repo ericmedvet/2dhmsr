@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2019 eric
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.controllers;
 
@@ -27,7 +27,7 @@ import java.util.function.Function;
  */
 public class MultiLayerPerceptron implements Serializable, Function<double[], double[]> {
 
-  public static enum ActivationFunction {
+  public enum ActivationFunction {
     RELU((Double x) -> {
       if (x < 0) {
         return 0d;
@@ -44,7 +44,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
     private final Function<Double, Double> f;
 
-    private ActivationFunction(Function<Double, Double> f) {
+    ActivationFunction(Function<Double, Double> f) {
       this.f = f;
     }
 
@@ -60,7 +60,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     this.weights = unflat(weights, neurons);
   }
 
-  protected static double[][][] unflat(double[] flatWeights, int[] neurons) {
+  public static double[][][] unflat(double[] flatWeights, int[] neurons) {
     double[][][] unflatWeights = new double[neurons.length - 1][][];
     int c = 0;
     for (int i = 0; i < neurons.length - 1; i++) {
@@ -75,7 +75,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     return unflatWeights;
   }
 
-  protected static double[] flat(double[][][] unflatWeights, int[] neurons) {
+  public static double[] flat(double[][][] unflatWeights, int[] neurons) {
     int n = 0;
     for (int i = 0; i < neurons.length - 1; i++) {
       n = n + neurons[i] * neurons[i + 1];
@@ -92,7 +92,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     }
     return flatWeights;
   }
-  
+
   public static int countWeights(int[] neurons) {
     int largestLayerSize = Arrays.stream(neurons).max().orElse(0);
     double[][][] fakeWeights = new double[neurons.length][][];
@@ -100,6 +100,14 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     Arrays.fill(fakeLayerWeights, new double[largestLayerSize]);
     Arrays.fill(fakeWeights, fakeLayerWeights);
     return flat(fakeWeights, neurons).length;
+  }
+
+  public static int[] neurons(int nOfInputs, int[] innerNeurons, int nOfOutputs) {
+    int[] neurons = new int[innerNeurons.length + 2];
+    neurons[0] = nOfInputs;
+    neurons[neurons.length - 1] = nOfOutputs;
+    System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
+    return neurons;
   }
 
   @Override
@@ -159,10 +167,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     if (!Arrays.deepEquals(this.weights, other.weights)) {
       return false;
     }
-    if (!Arrays.equals(this.neurons, other.neurons)) {
-      return false;
-    }
-    return true;
+    return Arrays.equals(this.neurons, other.neurons);
   }
 
 }

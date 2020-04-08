@@ -21,25 +21,25 @@ import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableVoxel;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.Configuration;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 
-public class VoxelDrawer implements Configuration<VoxelDrawer>, Drawer {
+public class VoxelDrawer implements Configurable<VoxelDrawer>, Drawer {
 
-  @Configurable
+  @ConfigurableField
   private final Color strokeColor = Color.BLUE;
-  @Configurable
+  @ConfigurableField
   private final Color restFillColor = GraphicsDrawer.alphaed(Color.YELLOW, 0.5f);
-  @Configurable
+  @ConfigurableField
   private final Color shrunkFillColor = GraphicsDrawer.alphaed(Color.RED, 0.5f);
-  @Configurable
+  @ConfigurableField
   private final Color expandedFillColor = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
-  @Configurable(uiMin = 0.1f, uiMax = 0.999f)
+  @ConfigurableField(uiMin = 0.1f, uiMax = 0.999f)
   private final float shrunkRatio = 0.75f;
-  @Configurable(uiMin = 1.001f, uiMax = 2f)
+  @ConfigurableField(uiMin = 1.001f, uiMax = 2f)
   private final float expandendRatio = 1.25f;
 
   private VoxelDrawer() {

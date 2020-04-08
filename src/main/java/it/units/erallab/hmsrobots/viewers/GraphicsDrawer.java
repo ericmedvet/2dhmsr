@@ -16,10 +16,10 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
+import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.immutable.*;
 import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.Configuration;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
 
 import java.awt.*;
@@ -35,30 +35,30 @@ import java.util.stream.Collectors;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class GraphicsDrawer implements Configuration<GraphicsDrawer> {
+public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
 
   public enum GeneralRenderingMode {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, VOXEL_COMPOUND_CENTERS_INFO
   }
 
-  @Configurable(type = Configurable.Type.BASIC, enumClass = GeneralRenderingMode.class)
+  @ConfigurableField(type = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
   private final Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
       GeneralRenderingMode.GRID_MAJOR,
       GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO,
       GeneralRenderingMode.TIME_INFO
   ));
-  @Configurable
+  @ConfigurableField
   private final Color gridColor = Color.GRAY;
-  @Configurable
+  @ConfigurableField
   private final Color infoColor = Color.BLUE;
-  @Configurable
+  @ConfigurableField
   private final Color backgroundColor = Color.WHITE;
-  @Configurable
+  @ConfigurableField
   private final Color basicColor = Color.BLUE;
   private final double[] gridSizes = new double[]{2, 5, 10};
-  @Configurable(uiMin = 1, uiMax = 5)
+  @ConfigurableField(uiMin = 1, uiMax = 5)
   private final float strokeWidth = 1f;
-  @Configurable(type = Configurable.Type.BASIC)
+  @ConfigurableField(type = ConfigurableField.Type.BASIC)
   private final List<Drawer> drawers = new ArrayList<>(List.of(
       VoxelDrawer.build(),
       BodyDrawer.build(),
@@ -132,7 +132,7 @@ public class GraphicsDrawer implements Configuration<GraphicsDrawer> {
     for (ImmutableObject object : snapshot.getObjects()) {
       recursivelyDraw(object, g, basicStroke);
       if (generalRenderingModes.contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
-        if (object.getObjectClass().equals(VoxelCompound.class)) {
+        if (object.getObjectClass().equals(Robot.class)) {
           Point2[] centers = new Point2[object.getChildren().size()];
           centers = object.getChildren().stream().map(o -> o.getShape().center()).collect(Collectors.toList()).toArray(centers);
           compoundCenters.add(Point2.average(centers));

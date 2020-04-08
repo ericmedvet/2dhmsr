@@ -14,39 +14,29 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.util;
+package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
 
-import java.io.Serializable;
+public class Breakdown implements Sensor {
+  private final static double THRESHOLD = 0.2d;
 
-public class Configuration<T> implements Serializable {
-  private final Class<T> type;
-  private final Object value;
-
-  public static <C> Configuration<C> of(Class<C> type, Object value) {
-    return new Configuration<>(type, value);
-  }
-
-  private Configuration(Class<T> type, Object value) {
-    this.type = type;
-    this.value = value;
-  }
-
-  public Class<T> getType() {
-    return type;
-  }
-
-  public Object getValue() {
-    return value;
+  @Override
+  public int n() {
+    return 1;
   }
 
   @Override
-  public String toString() {
-    return "(" + type.getSimpleName() + ") " + value;
-  }
-
-  public static void main(String[] args) {
-    Voxel.Description d = Voxel.Description.build();
+  public double[] sense(Voxel voxel, double t) {
+    double c = 0d;
+    for (int i = 0; i < voxel.getVertexBodies().length; i++) {
+      for (int j = i + 1; j < voxel.getVertexBodies().length; j++) {
+        double d = voxel.getVertexBodies()[i].getWorldCenter().distance(voxel.getVertexBodies()[j].getWorldCenter());
+        if (d < voxel.getSideLength() * THRESHOLD) {
+          c = c + 1d;
+        }
+      }
+    }
+    return new double[]{2d * c / (double) (voxel.getVertexBodies().length * (voxel.getVertexBodies().length - 1))};
   }
 }

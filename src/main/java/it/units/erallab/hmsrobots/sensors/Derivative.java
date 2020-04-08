@@ -14,39 +14,36 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.util;
+package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
 
-import java.io.Serializable;
+public class Derivative implements Sensor {
+  private final Sensor sensor;
 
-public class Configuration<T> implements Serializable {
-  private final Class<T> type;
-  private final Object value;
+  private double lastT;
+  private double[] lastReadings;
 
-  public static <C> Configuration<C> of(Class<C> type, Object value) {
-    return new Configuration<>(type, value);
-  }
-
-  private Configuration(Class<T> type, Object value) {
-    this.type = type;
-    this.value = value;
-  }
-
-  public Class<T> getType() {
-    return type;
-  }
-
-  public Object getValue() {
-    return value;
+  public Derivative(Sensor sensor) {
+    this.sensor = sensor;
   }
 
   @Override
-  public String toString() {
-    return "(" + type.getSimpleName() + ") " + value;
+  public int n() {
+    return sensor.n();
   }
 
-  public static void main(String[] args) {
-    Voxel.Description d = Voxel.Description.build();
+  @Override
+  public double[] sense(Voxel voxel, double t) {
+    double[] currentReadings = sensor.sense(voxel, t);
+    double[] diffs = new double[currentReadings.length];
+    if (lastReadings != null) {
+      for (int i = 0; i < diffs.length; i++) {
+        diffs[i] = (currentReadings[i] - lastReadings[i]) / (t - lastT);
+      }
+    }
+    lastT = t;
+    lastReadings = currentReadings;
+    return new double[0];
   }
 }

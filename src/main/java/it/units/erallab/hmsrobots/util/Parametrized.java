@@ -14,22 +14,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.controllers;
+package it.units.erallab.hmsrobots.util;
 
-import it.units.erallab.hmsrobots.sensors.Sensor;
-import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
+public interface Parametrized {
+  double[] getParams();
 
-import java.io.Serializable;
-import java.util.List;
-
-/**
- *
- * @author eric
- */
-@FunctionalInterface
-public interface Controller extends Serializable {
-
-  Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues);
-  
+  void setParams(double[] params);
 }
