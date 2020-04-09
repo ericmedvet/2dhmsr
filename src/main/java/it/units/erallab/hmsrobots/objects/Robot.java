@@ -162,7 +162,9 @@ public class Robot implements WorldObject {
     Grid<Double> forces = controller.control(t, sensorsValues);
     //apply
     for (Grid.Entry<Voxel> voxelEntry : voxels) {
-      voxelEntry.getValue().applyForce(forces.get(voxelEntry.getX(), voxelEntry.getY()));
+      if (voxelEntry.getValue() != null) {
+        voxelEntry.getValue().applyForce(forces.get(voxelEntry.getX(), voxelEntry.getY()));
+      }
     }
     return forces;
   }

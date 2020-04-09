@@ -26,7 +26,7 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
  */
 public class CentralizedMLP extends FlatSensing implements Parametrized {
 
-  private MultiLayerPerceptron mlp;
+  private final MultiLayerPerceptron mlp;
   private final SerializableFunction<Double, Double> drivingFunction;
 
   public CentralizedMLP(Grid<Voxel.Description> voxelGrid, MultiLayerPerceptron mlp, SerializableFunction<Double, Double> drivingFunction) {
@@ -37,46 +37,38 @@ public class CentralizedMLP extends FlatSensing implements Parametrized {
 
   public CentralizedMLP(Grid<Voxel.Description> voxelGrid, int[] innerNeurons, double[] weights, SerializableFunction<Double, Double> drivingFunction) {
     super(voxelGrid);
+    int[] neurons = MultiLayerPerceptron.neurons(nOfInputs() + 1 + 1, innerNeurons, nOfOutputs());
+    double[] localWeights = new double[MultiLayerPerceptron.countWeights(neurons)];
+    if (weights != null) {
+      System.arraycopy(weights, 0, localWeights, 0, weights.length);
+    }
     mlp = new MultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
-        MultiLayerPerceptron.neurons(nOfInputs() + 1 + 1, innerNeurons, nOfOutputs()),
-        weights
+        neurons,
+        localWeights
     );
     this.drivingFunction = drivingFunction;
   }
 
   public CentralizedMLP(Grid<Voxel.Description> voxelGrid, int[] innerNeurons, SerializableFunction<Double, Double> drivingFunction) {
-    super(voxelGrid);
-    int[] neurons = MultiLayerPerceptron.neurons(nOfInputs() + 1 + 1, innerNeurons, nOfOutputs());
-    double[] weights = new double[MultiLayerPerceptron.countWeights(neurons)];
-    mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
-        neurons,
-        weights
-    );
-    this.drivingFunction = drivingFunction;
+    this(voxelGrid, innerNeurons, null, drivingFunction);
   }
 
   @Override
   protected double[] control(double t, double[] inputs) {
-    double[] mlpInputs = new double[nOfOutputs() + 1 + 1];
-    System.arraycopy(inputs, 0, mlpInputs, 0, inputs.length);
-    mlpInputs[0] = 1d;
-    mlpInputs[1] = drivingFunction == null ? 0d : drivingFunction.apply(t);
+    double[] mlpInputs = new double[1 + nOfInputs()];
+    mlpInputs[0] = drivingFunction == null ? 0d : drivingFunction.apply(t);
+    System.arraycopy(inputs, 0, mlpInputs, 1, inputs.length);
     return mlp.apply(mlpInputs);
   }
 
   @Override
   public double[] getParams() {
-    return MultiLayerPerceptron.flat(mlp.getWeights(), mlp.getNeurons());
+    return mlp.getParams();
   }
 
   @Override
   public void setParams(double[] params) {
-    mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
-        mlp.getNeurons(),
-        params
-    );
+    mlp.setParams(params);
   }
 }

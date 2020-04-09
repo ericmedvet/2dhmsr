@@ -123,8 +123,7 @@ public class ConfigurablePane extends JPanel {
       slider.setPreferredSize(new Dimension(100, 40));
       slider.addChangeListener(e -> configurable.setConfigurable(
           key,
-          number(slider.getValue() / 100d * (max - min) + min, type)
-      ));
+          number(slider.getValue() / 100d * (max - min) + min, type)));
       return justified(new JLabel(key), null, slider);
     } else if (value instanceof Color) {
       ColorChooserButton button = new ColorChooserButton((Color) value);

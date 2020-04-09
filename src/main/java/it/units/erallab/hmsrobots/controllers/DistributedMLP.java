@@ -20,7 +20,6 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Parametrized;
-import it.units.erallab.hmsrobots.util.SerializableFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -62,21 +61,18 @@ public class DistributedMLP implements Controller, Parametrized {
     }
   }
 
-  private final Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid;
   private final Grid<MultiLayerPerceptron> mlpGrid;
   private final int signals;
 
   private final Grid<double[]> lastSignalsGrid;
 
-  public DistributedMLP(Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid, Grid<MultiLayerPerceptron> mlpGrid, int signals) {
-    this.drivingFunctionsGrid = drivingFunctionsGrid;
+  public DistributedMLP(Grid<MultiLayerPerceptron> mlpGrid, int signals) {
     this.mlpGrid = mlpGrid;
     this.signals = signals;
     lastSignalsGrid = Grid.create(mlpGrid, mlp -> new double[signals * Dir.values().length]);
   }
 
-  public DistributedMLP(Grid<Voxel.Description> voxelGrid, Grid<SerializableFunction<Double, Double>> drivingFunctionsGrid, int[] innerNeurons, double[] weights, int signals) {
-    this.drivingFunctionsGrid = drivingFunctionsGrid;
+  public DistributedMLP(Grid<Voxel.Description> voxelGrid, int[] innerNeurons, double[] weights, int signals) {
     this.signals = signals;
     mlpGrid = Grid.create(voxelGrid);
     int c = 0;
@@ -85,12 +81,14 @@ public class DistributedMLP implements Controller, Parametrized {
         int nOfReadings = entry.getValue().getSensors().stream()
             .mapToInt(Sensor::n)
             .sum();
-        int nOfInputs = 1 + (drivingFunctionsGrid.get(entry.getX(), entry.getY()) == null ? 0 : 1) + nOfReadings;
+        int nOfInputs = 1 + nOfReadings + Dir.values().length * signals;
         int nOfOutputs = 1 + Dir.values().length * signals;
         int[] neurons = MultiLayerPerceptron.neurons(nOfInputs, innerNeurons, nOfOutputs);
         int nOfWeights = MultiLayerPerceptron.countWeights(neurons);
         double[] localWeights = new double[nOfWeights];
-        System.arraycopy(weights, c, localWeights, 0, nOfWeights);
+        if (weights != null) {
+          System.arraycopy(weights, c, localWeights, 0, nOfWeights);
+        }
         c = c + nOfWeights;
         mlpGrid.set(entry.getX(), entry.getY(), new MultiLayerPerceptron(
             MultiLayerPerceptron.ActivationFunction.TANH,
@@ -102,30 +100,33 @@ public class DistributedMLP implements Controller, Parametrized {
     lastSignalsGrid = Grid.create(mlpGrid, mlp -> new double[signals * Dir.values().length]);
   }
 
+  public DistributedMLP(Grid<Voxel.Description> voxelGrid, int[] innerNeurons, int signals) {
+    this(voxelGrid, innerNeurons, null, signals);
+  }
+
   @Override
   public Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
-    Grid<double[]> outputGrid = Grid.create(mlpGrid.getW(), mlpGrid.getH(), (x, y) -> {
-      SerializableFunction<Double, Double> drivingFunction = drivingFunctionsGrid.get(x, y);
-      double[] signalsAndFunctionValues = getLastSignals(x, y,
-          drivingFunction != null ? new double[]{drivingFunction.apply(t)} : new double[0]
-      );
-      double[] inputs = flatten(sensorsValues.get(x, y), signalsAndFunctionValues);
-      return mlpGrid.get(x, y).apply(inputs);
-    });
+    Grid<double[]> outputGrid = Grid.create(mlpGrid);
+    for (Grid.Entry<MultiLayerPerceptron> entry : mlpGrid) {
+      if (entry.getValue() != null) {
+        double[] signalsAndFunctionValues = getLastSignals(entry.getX(), entry.getY());
+        double[] inputs = flatten(sensorsValues.get(entry.getX(), entry.getY()), signalsAndFunctionValues);
+        outputGrid.set(entry.getX(), entry.getY(), entry.getValue().apply(inputs));
+      }
+    }
     Grid<Double> controlGrid = Grid.create(outputGrid);
     for (Grid.Entry<double[]> entry : outputGrid) {
-      controlGrid.set(entry.getX(), entry.getY(), entry.getValue()[0]);
-      updateLastSignals(entry.getX(), entry.getY(), entry.getValue(), 1);
+      if (entry.getValue() != null) {
+        controlGrid.set(entry.getX(), entry.getY(), entry.getValue()[0]);
+        updateLastSignals(entry.getX(), entry.getY(), entry.getValue(), 1);
+      }
     }
     return controlGrid;
   }
 
-  private double[] getLastSignals(int x, int y, double... otherValues) {
-    double[] values = new double[otherValues.length + signals * 4];
-    if (otherValues.length > 0) {
-      System.arraycopy(otherValues, 0, values, 0, otherValues.length);
-    }
-    int c = otherValues.length;
+  private double[] getLastSignals(int x, int y) {
+    double[] values = new double[signals * Dir.values().length];
+    int c = 0;
     for (int i = 0; i < Dir.values().length; i++) {
       int adjacentX = x + Dir.values()[i].dx;
       int adjacentY = y + Dir.values()[i].dy;
@@ -157,7 +158,20 @@ public class DistributedMLP implements Controller, Parametrized {
 
   @Override
   public double[] getParams() {
-    return new double[0];
+    int size = mlpGrid.values().stream()
+        .filter(mlp -> mlp != null)
+        .mapToInt(mlp -> mlp.getParams().length)
+        .sum();
+    double[] values = new double[size];
+    int c = 0;
+    for (Grid.Entry<MultiLayerPerceptron> entry : mlpGrid) {
+      if (entry.getValue() != null) {
+        double[] localValues = entry.getValue().getParams();
+        System.arraycopy(localValues, 0, values, c, localValues.length);
+        c = c + localValues.length;
+      }
+    }
+    return values;
   }
 
   @Override
@@ -165,14 +179,10 @@ public class DistributedMLP implements Controller, Parametrized {
     int c = 0;
     for (Grid.Entry<MultiLayerPerceptron> entry : mlpGrid) {
       if (entry.getValue() != null) {
-        double[] weights = new double[entry.getValue().getWeights().length];
-        System.arraycopy(params, c, weights, 0, weights.length);
-        c = c + weights.length;
-        mlpGrid.set(entry.getX(), entry.getY(), new MultiLayerPerceptron(
-            MultiLayerPerceptron.ActivationFunction.TANH,
-            entry.getValue().getNeurons(),
-            weights
-        ));
+        double[] localValues = new double[entry.getValue().getParams().length];
+        System.arraycopy(params, c, localValues, 0, localValues.length);
+        entry.getValue().setParams(localValues);
+        c = c + localValues.length;
       }
     }
   }

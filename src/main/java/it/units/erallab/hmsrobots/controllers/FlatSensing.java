@@ -59,6 +59,7 @@ public abstract class FlatSensing implements Controller {
         for (Pair<Sensor, double[]> sensorPair : readings) {
           double[] sensorReadings = sensorPair.getValue();
           System.arraycopy(sensorReadings, 0, values, c, sensorReadings.length);
+          c = c + sensorReadings.length;
         }
       }
     }

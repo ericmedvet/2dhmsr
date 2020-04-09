@@ -18,13 +18,11 @@ package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
-import it.units.erallab.hmsrobots.controllers.TimeFunction;
+import it.units.erallab.hmsrobots.controllers.DistributedMLP;
+import it.units.erallab.hmsrobots.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.sensors.AreaRatio;
-import it.units.erallab.hmsrobots.sensors.Derivative;
-import it.units.erallab.hmsrobots.sensors.Touch;
-import it.units.erallab.hmsrobots.sensors.Velocity;
+import it.units.erallab.hmsrobots.sensors.*;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.validation.CantileverBending;
@@ -74,7 +72,7 @@ public class Starter {
             w, h,
             (x, y) -> (y == 0) ? hardMaterial : softMaterial
         ),
-        new TimeFunction(Grid.create(
+        new TimeFunctions(Grid.create(
             w, h,
             (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
         ))
@@ -89,7 +87,7 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
-    final Grid<Boolean> structure = Grid.create(11, 5, (x, y) -> (x < 2) || (x >= 9) || (y > 0));
+    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
     final Voxel.Description voxelDescription = Voxel.Description.build();
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);
@@ -98,14 +96,14 @@ public class Starter {
     double f = 1d;
     Robot.Description phases1 = new Robot.Description(
         Grid.create(structure, b -> b ? voxelDescription : null),
-        new TimeFunction(Grid.create(
+        new TimeFunctions(Grid.create(
             structure.getW(),
             structure.getH(),
             (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) structure.getW()))
         )));
     Robot.Description phases2 = new Robot.Description(
         Grid.create(structure, b -> b ? voxelDescription : null),
-        new TimeFunction(Grid.create(
+        new TimeFunctions(Grid.create(
             structure.getW(),
             structure.getH(),
             (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) structure.getW()))
@@ -126,13 +124,13 @@ public class Starter {
             w, h,
             (x, y) -> (y == 0) ? hardMaterial : softMaterial
         ),
-        new TimeFunction(Grid.create(
+        new TimeFunctions(Grid.create(
             w, h,
             (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
         ))
     );
     //centralized mlp
-    Grid<Voxel.Description> centralizedSensorGrid = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+    Grid<Voxel.Description> centRobotWithSensors = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
       if (structure.get(x, y)) {
         Voxel.Description d = Voxel.Description.build();
         if (y > 2) {
@@ -148,14 +146,43 @@ public class Starter {
       return null;
     });
     Random random = new Random(1);
-    Robot.Description centralized1 = new Robot.Description(
-        centralizedSensorGrid,
-        new CentralizedMLP(centralizedSensorGrid, new int[]{100}, t -> 0d * Math.sin(-2d * Math.PI * t * 0.5d))
+    Robot.Description centralizedMlpRobot = new Robot.Description(
+        centRobotWithSensors,
+        new CentralizedMLP(centRobotWithSensors, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d))
     );
-    double[] weights = ((CentralizedMLP) centralized1.getController()).getParams();
+    double[] weights = ((CentralizedMLP) centralizedMlpRobot.getController()).getParams();
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble() * 2d - 1d;
     }
+    ((CentralizedMLP) centralizedMlpRobot.getController()).setParams(weights);
+    //distributed
+    Grid<Voxel.Description> distRobotWithSensors = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+      if (structure.get(x, y)) {
+        Voxel.Description d = Voxel.Description.build();
+        if (y > 2) {
+          d.getSensors().add(new Velocity(true, Velocity.Axis.X, Velocity.Axis.Y));
+          d.getSensors().add(new Derivative(new Velocity(true, Velocity.Axis.X, Velocity.Axis.Y)));
+        }
+        if (y == 0) {
+          d.getSensors().add(new Touch());
+        }
+        d.getSensors().add(new AreaRatio());
+        if ((x == structure.getW() - 1) && (y == structure.getH() - 1)) {
+          d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)));
+        }
+        return d;
+      }
+      return null;
+    });
+    Robot.Description distributedMlpRobot = new Robot.Description(
+        distRobotWithSensors,
+        new DistributedMLP(distRobotWithSensors, new int[0], 1)
+    );
+    weights = ((DistributedMLP) distributedMlpRobot.getController()).getParams();
+    for (int i = 0; i < weights.length; i++) {
+      weights[i] = random.nextDouble() * 2d - 1d;
+    }
+    ((DistributedMLP) distributedMlpRobot.getController()).setParams(weights);
     //episode
     Locomotion locomotion = new Locomotion(
         30,
@@ -164,12 +191,11 @@ public class Starter {
         settings
     );
     Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(1, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
-    /*namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
-    namedSolutionGrid.set(0, 1, Pair.of("phase-2", oneMLP));
-    namedSolutionGrid.set(1, 0, Pair.of("centralizedMLP-1", centralized1));
-    namedSolutionGrid.set(1, 1, Pair.of("centralizedMLP-2", centralized2));
-    namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));*/
+    /*namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
+    namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));*/
+    namedSolutionGrid.set(0, 0, Pair.of("centralizedMLP", centralizedMlpRobot));
+    //namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", distributedMlpRobot));
+    /*namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));*/
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);

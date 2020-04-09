@@ -17,33 +17,22 @@
 package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.SerializableFunction;
 
-public class Derivative implements Sensor {
-  private final Sensor sensor;
+public class TimeFunction implements Sensor {
+  private final SerializableFunction<Double, Double> function;
 
-  private double lastT;
-  private double[] lastReadings;
-
-  public Derivative(Sensor sensor) {
-    this.sensor = sensor;
+  public TimeFunction(SerializableFunction<Double, Double> function) {
+    this.function = function;
   }
 
   @Override
   public int n() {
-    return sensor.n();
+    return 1;
   }
 
   @Override
   public double[] sense(Voxel voxel, double t) {
-    double[] currentReadings = sensor.sense(voxel, t);
-    double[] diffs = new double[currentReadings.length];
-    if (lastReadings != null) {
-      for (int i = 0; i < diffs.length; i++) {
-        diffs[i] = (currentReadings[i] - lastReadings[i]) / (t - lastT);
-      }
-    }
-    lastT = t;
-    lastReadings = currentReadings;
-    return diffs;
+    return new double[]{function.apply(t)};
   }
 }

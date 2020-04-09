@@ -26,24 +26,24 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class TimeFunction implements Controller {
+public class TimeFunctions implements Controller {
 
   private final Grid<SerializableFunction<Double, Double>> functions;
 
-  public TimeFunction(Grid<SerializableFunction<Double, Double>> functions) {
+  public TimeFunctions(Grid<SerializableFunction<Double, Double>> functions) {
     this.functions = functions;
   }
 
   @Override
   public Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
-    Grid<Double> forces = Grid.create(sensorsValues);
+    Grid<Double> controlValues = Grid.create(sensorsValues);
     for (Grid.Entry<List<Pair<Sensor, double[]>>> entry : sensorsValues) {
       SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
       if ((entry.getValue() != null) && (function != null)) {
-        forces.set(entry.getX(), entry.getY(), function.apply(t));
+        controlValues.set(entry.getX(), entry.getY(), function.apply(t));
       }
     }
-    return forces;
+    return controlValues;
   }
 
   public Grid<SerializableFunction<Double, Double>> getFunctions() {

@@ -16,16 +16,17 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import it.units.erallab.hmsrobots.util.Parametrized;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
 
 /**
- *
  * @author eric
  */
-public class MultiLayerPerceptron implements Serializable, Function<double[], double[]> {
+public class MultiLayerPerceptron implements Serializable, Function<double[], double[]>, Parametrized {
 
   public enum ActivationFunction {
     RELU((Double x) -> {
@@ -113,7 +114,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   @Override
   public double[] apply(double[] input) {
     if (input.length != neurons[0] - 1) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons.length - 1, input.length));
+      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0] - 1, input.length));
     }
     double[][] values = new double[neurons.length][];
     values[0] = new double[neurons[0]];
@@ -138,6 +139,23 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
   public int[] getNeurons() {
     return neurons;
+  }
+
+  @Override
+  public double[] getParams() {
+    return MultiLayerPerceptron.flat(weights, neurons);
+  }
+
+  @Override
+  public void setParams(double[] params) {
+    double[][][] newWeights = MultiLayerPerceptron.unflat(params, neurons);
+    for (int l = 0; l < newWeights.length; l++) {
+      for (int s = 0; s < newWeights[l].length; s++) {
+        for (int d = 0; d < newWeights[l][s].length; d++) {
+          weights[l][s][d] = newWeights[l][s][d];
+        }
+      }
+    }
   }
 
   @Override

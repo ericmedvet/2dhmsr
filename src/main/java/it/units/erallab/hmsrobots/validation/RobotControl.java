@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.validation;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.TimeFunction;
+import it.units.erallab.hmsrobots.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
@@ -125,7 +125,7 @@ public class RobotControl extends AbstractTask<Grid<Voxel.Description>, RobotCon
     }
     Robot robot = new Robot(0, 0, new Robot.Description(
         voxelDescriptionGrid,
-        new TimeFunction(functionGrid)
+        new TimeFunctions(functionGrid)
     ));
     worldObjects.add(robot);
     //build ground
