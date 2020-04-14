@@ -79,7 +79,7 @@ public class DistributedMLP implements Controller, Parametrized {
     for (Grid.Entry<Voxel.Description> entry : voxelGrid) {
       if (entry.getValue() != null) {
         int nOfReadings = entry.getValue().getSensors().stream()
-            .mapToInt(Sensor::n)
+            .mapToInt(s -> s.domains().length)
             .sum();
         int nOfInputs = 1 + nOfReadings + Dir.values().length * signals;
         int nOfOutputs = 1 + Dir.values().length * signals;

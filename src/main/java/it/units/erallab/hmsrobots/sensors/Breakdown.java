@@ -21,9 +21,13 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 public class Breakdown implements Sensor {
   private final static double THRESHOLD = 0.2d;
 
+  private final Domain[] domains = new Domain[]{
+      Domain.build(0d, 1d)
+  };
+
   @Override
-  public int n() {
-    return 1;
+  public Domain[] domains() {
+    return domains;
   }
 
   @Override

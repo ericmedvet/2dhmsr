@@ -21,19 +21,37 @@ import it.units.erallab.hmsrobots.util.Configuration;
 
 public class ImmutableReading extends ImmutableObject {
   private final double[] values;
+  private final Sensor.Domain[] domains;
   private final Configuration<? extends Sensor> configuration;
+  private final int index;
+  private final int nOfSensors;
 
-  public ImmutableReading(Object object, Shape shape, double[] values, Configuration<? extends Sensor> configuration) {
+  public ImmutableReading(Object object, Shape shape, double[] values, Sensor.Domain[] domains, Configuration<? extends Sensor> configuration, int index, int nOfSensors) {
     super(object, shape);
     this.values = values;
+    this.domains = domains;
     this.configuration = configuration;
+    this.index = index;
+    this.nOfSensors = nOfSensors;
   }
 
   public double[] getValues() {
     return values;
   }
 
+  public Sensor.Domain[] getDomains() {
+    return domains;
+  }
+
   public Configuration<? extends Sensor> getConfiguration() {
     return configuration;
+  }
+
+  public int getNOfSensors() {
+    return nOfSensors;
+  }
+
+  public int getIndex() {
+    return index;
   }
 }

@@ -22,9 +22,13 @@ import org.dyn4j.dynamics.Body;
 import java.util.List;
 
 public class Touch implements Sensor {
+  private final Domain[] domains = new Domain[]{
+      Domain.build(0d, 1d)
+  };
+
   @Override
-  public int n() {
-    return 1;
+  public Domain[] domains() {
+    return domains;
   }
 
   @Override

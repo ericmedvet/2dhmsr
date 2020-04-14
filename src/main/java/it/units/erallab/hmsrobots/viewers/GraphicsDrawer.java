@@ -64,7 +64,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       Body.build(),
       Ground.build(),
       Joint.build(),
-      Angle.build()
+      GenericSensor.build()
   ));
 
   private GraphicsDrawer() {

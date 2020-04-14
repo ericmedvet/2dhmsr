@@ -33,8 +33,8 @@ public class Derivative implements Sensor, Configurable<Derivative> {
   }
 
   @Override
-  public int n() {
-    return sensor.n();
+  public Domain[] domains() {
+    return sensor.domains();
   }
 
   @Override

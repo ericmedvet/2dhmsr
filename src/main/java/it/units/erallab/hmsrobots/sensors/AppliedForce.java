@@ -19,9 +19,13 @@ package it.units.erallab.hmsrobots.sensors;
 import it.units.erallab.hmsrobots.objects.Voxel;
 
 public class AppliedForce implements Sensor {
+  private final Domain[] domains = new Domain[]{
+      Domain.build(-1d, 1d)
+  };
+
   @Override
-  public int n() {
-    return 1;
+  public Domain[] domains() {
+    return domains;
   }
 
   @Override

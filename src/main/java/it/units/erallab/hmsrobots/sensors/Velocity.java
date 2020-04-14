@@ -16,12 +16,12 @@
  */
 package it.units.erallab.hmsrobots.sensors;
 
-import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 import org.dyn4j.geometry.Vector2;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 
 public class Velocity implements Sensor, Configurable<Velocity> {
@@ -31,26 +31,33 @@ public class Velocity implements Sensor, Configurable<Velocity> {
   private final boolean rotated;
   @ConfigurableField
   private final EnumSet<Axis> axes;
+  private final double maxVelocityNorm;
+  private final Domain[] domains;
 
-  public Velocity(boolean rotated, Axis... axes) {
-    this.rotated = rotated;
-    this.axes = EnumSet.noneOf(Axis.class);
-    this.axes.addAll(Lists.newArrayList(axes));
+  public Velocity(boolean rotated, double maxVelocityNorm, Axis... axes) {
+    this(
+        rotated,
+        maxVelocityNorm,
+        axes.length > 0 ? EnumSet.of(axes[0], axes) : EnumSet.noneOf(Axis.class)
+    );
   }
 
-  public Velocity(boolean rotated, EnumSet<Axis> axes) {
+  public Velocity(boolean rotated, double maxVelocityNorm, EnumSet<Axis> axes) {
     this.rotated = rotated;
+    this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;
+    domains = new Domain[this.axes.size()];
+    Arrays.fill(domains, Domain.build(-maxVelocityNorm, maxVelocityNorm));
   }
 
   @Override
-  public int n() {
-    return axes.size();
+  public Domain[] domains() {
+    return domains;
   }
 
   @Override
   public double[] sense(Voxel voxel, double t) {
-    double[] values = new double[n()];
+    double[] values = new double[domains.length];
     int c = 0;
     Vector2 velocity = voxel.getLinearVelocity();
     double angle = 0d;
@@ -73,6 +80,6 @@ public class Velocity implements Sensor, Configurable<Velocity> {
       }
       c = c + 1;
     }
-    return new double[n()];
+    return values;
   }
 }

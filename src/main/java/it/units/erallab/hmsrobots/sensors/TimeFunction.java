@@ -25,14 +25,16 @@ public class TimeFunction implements Sensor, Configurable<TimeFunction> {
 
   @ConfigurableField
   private final SerializableFunction<Double, Double> function;
+  private final Domain[] domains;
 
-  public TimeFunction(SerializableFunction<Double, Double> function) {
+  public TimeFunction(SerializableFunction<Double, Double> function, double min, double max) {
     this.function = function;
+    domains = new Domain[]{Domain.build(min, max)};
   }
 
   @Override
-  public int n() {
-    return 1;
+  public Domain[] domains() {
+    return domains;
   }
 
   @Override

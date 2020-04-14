@@ -134,8 +134,8 @@ public class Starter {
       if (structure.get(x, y)) {
         Voxel.Description d = Voxel.Description.build();
         if (y > 2) {
-          d.getSensors().add(new Velocity(true, Velocity.Axis.X, Velocity.Axis.Y));
-          d.getSensors().add(new Derivative(new Velocity(true, Velocity.Axis.X, Velocity.Axis.Y)));
+          //d.getSensors().add(new Velocity(true, d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y));
+          d.getSensors().add(new Average(new Velocity(true, 2d * d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y), 1d));
         }
         if (y == 0) {
           d.getSensors().add(new Touch());
@@ -160,8 +160,8 @@ public class Starter {
       if (structure.get(x, y)) {
         Voxel.Description d = Voxel.Description.build();
         if (y > 2) {
-          d.getSensors().add(new Velocity(true, Velocity.Axis.X, Velocity.Axis.Y));
-          d.getSensors().add(new Derivative(new Velocity(true, Velocity.Axis.X, Velocity.Axis.Y)));
+          //d.getSensors().add(new Velocity(true, d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y));
+          d.getSensors().add(new Average(new Velocity(true, d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y), 0.5d));
         }
         if (y == 0) {
           d.getSensors().add(new Touch());
@@ -169,7 +169,7 @@ public class Starter {
         d.getSensors().add(new AreaRatio());
         d.getSensors().add(new Average(new Angle(), 1d));
         if ((x == structure.getW() - 1) && (y == structure.getH() - 1)) {
-          d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)));
+          d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d), -1, +1));
         }
         return d;
       }

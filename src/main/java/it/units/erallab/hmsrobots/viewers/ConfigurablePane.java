@@ -129,6 +129,11 @@ public class ConfigurablePane extends JPanel {
       ColorChooserButton button = new ColorChooserButton((Color) value);
       button.addColorChangedListener(c -> configurable.setConfigurable(key, c));
       return justified(new JLabel(key), null, button);
+    } else if (value instanceof Boolean) {
+      JCheckBox checkBox = new JCheckBox();
+      checkBox.setSelected(((Boolean) value).booleanValue());
+      checkBox.addActionListener(c -> configurable.setConfigurable(key, checkBox.isSelected()));
+      return justified(new JLabel(key), null, checkBox);
     } else if (value instanceof Collection) {
       List<MutablePair<Object, Boolean>> pairs;
       Collection<Object> collection = (Collection) value;

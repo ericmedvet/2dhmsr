@@ -35,7 +35,7 @@ public abstract class FlatSensing implements Controller {
     nOfInputs = voxelGrid.values().stream()
         .filter(v -> v != null)
         .mapToInt(v -> v.getSensors().stream()
-            .mapToInt(Sensor::n)
+            .mapToInt(s -> s.domains().length)
             .sum())
         .sum();
     nOfOutputs = (int) voxelGrid.values().stream()

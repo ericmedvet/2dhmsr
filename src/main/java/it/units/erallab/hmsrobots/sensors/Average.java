@@ -37,8 +37,8 @@ public class Average implements Sensor, Configurable<Average> {
   }
 
   @Override
-  public int n() {
-    return sensor.n();
+  public Domain[] domains() {
+    return sensor.domains();
   }
 
   @Override

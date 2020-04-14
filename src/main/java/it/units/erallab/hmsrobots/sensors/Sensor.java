@@ -21,6 +21,30 @@ import it.units.erallab.hmsrobots.objects.Voxel;
 import java.io.Serializable;
 
 public interface Sensor extends Serializable {
-  int n();
+
+  class Domain {
+    private final double min;
+    private final double max;
+
+    private Domain(double min, double max) {
+      this.min = min;
+      this.max = max;
+    }
+
+    public static Domain build(double min, double max) {
+      return new Domain(min, max);
+    }
+
+    public double getMin() {
+      return min;
+    }
+
+    public double getMax() {
+      return max;
+    }
+  }
+
+  Domain[] domains();
+
   double[] sense(Voxel voxel, double t);
 }

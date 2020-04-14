@@ -17,21 +17,35 @@
 package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 
-public class AreaRatio implements Sensor {
-  private final static double RATIO_DELTA = 0.5d;
+public class Normalization implements Sensor, Configurable<Normalization> {
 
+  @ConfigurableField
+  private final Sensor sensor;
   private final Domain[] domains = new Domain[]{
-      Domain.build(1d - RATIO_DELTA, 1d + RATIO_DELTA)
+      Domain.build(0d, 1d)
   };
+
+  public Normalization(Sensor sensor) {
+    this.sensor = sensor;
+  }
 
   @Override
   public Domain[] domains() {
-    return domains;
+    return sensor.domains();
   }
 
   @Override
   public double[] sense(Voxel voxel, double t) {
-    return new double[]{voxel.getAreaRatio()};
+    double[] innerValues = sensor.sense(voxel, t);
+    double[] values = new double[innerValues.length];
+    for (int i = 0; i < values.length; i++) {
+      Domain d = sensor.domains()[i];
+      values[i] = Math.min(Math.max((innerValues[i] - d.getMin()) / (d.getMax() - d.getMin()), 0d), 1d);
+    }
+    return values;
   }
+
 }

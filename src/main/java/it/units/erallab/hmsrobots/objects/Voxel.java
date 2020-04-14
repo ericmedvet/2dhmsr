@@ -437,13 +437,18 @@ public class Voxel implements WorldObject {
       )));
     }
     //add sensor readings
-    for (Pair<Sensor, double[]> sensorReadings : lastSensorReadings) {
-      Sensor sensor = sensorReadings.getKey();
+    int nOfSensors = lastSensorReadings.size();
+    for (int i = 0; i < nOfSensors; i++) {
+      Pair<Sensor, double[]> pair = lastSensorReadings.get(i);
+      Sensor sensor = pair.getKey();
       children.add(new ImmutableReading(
           sensor,
           voxelShape,
-          sensorReadings.getValue(),
-          (sensor instanceof Configurable) ? ((Configurable) sensor).toConfiguration() : null
+          pair.getValue(),
+          sensor.domains(),
+          (sensor instanceof Configurable) ? ((Configurable) sensor).toConfiguration() : null,
+          i,
+          nOfSensors
       ));
     }
     //add enclosing
