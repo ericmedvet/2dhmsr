@@ -17,8 +17,12 @@
 package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 
-public class Derivative implements Sensor {
+public class Derivative implements Sensor, Configurable<Derivative> {
+
+  @ConfigurableField
   private final Sensor sensor;
 
   private double lastT;

@@ -167,6 +167,7 @@ public class Starter {
           d.getSensors().add(new Touch());
         }
         d.getSensors().add(new AreaRatio());
+        d.getSensors().add(new Average(new Angle(), 1d));
         if ((x == structure.getW() - 1) && (y == structure.getH() - 1)) {
           d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)));
         }
@@ -185,7 +186,7 @@ public class Starter {
     ((DistributedMLP) distributedMlpRobot.getController()).setParams(weights);
     //episode
     Locomotion locomotion = new Locomotion(
-        30,
+        60,
         Locomotion.createTerrain("uneven5"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
@@ -193,8 +194,8 @@ public class Starter {
     Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(1, 1);
     /*namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
     namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));*/
-    namedSolutionGrid.set(0, 0, Pair.of("centralizedMLP", centralizedMlpRobot));
-    //namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", distributedMlpRobot));
+    //namedSolutionGrid.set(0, 0, Pair.of("centralizedMLP", centralizedMlpRobot));
+    namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", distributedMlpRobot));
     /*namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));*/
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());

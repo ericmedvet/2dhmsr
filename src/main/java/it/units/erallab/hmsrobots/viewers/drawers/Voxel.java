@@ -17,45 +17,59 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableVoxel;
 import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
-import org.dyn4j.dynamics.Body;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 
-public class BodyDrawer implements Configurable<BodyDrawer>, Drawer {
+public class Voxel implements Configurable<Voxel>, Drawer {
 
+  @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
+  private final boolean fill = true;
   @ConfigurableField
   private final Color strokeColor = Color.BLUE;
   @ConfigurableField
-  private final Color fillColor = GraphicsDrawer.alphaed(Color.BLUE, 0.25f);
+  private final Color restFillColor = GraphicsDrawer.alphaed(Color.YELLOW, 0.5f);
+  @ConfigurableField
+  private final Color shrunkFillColor = GraphicsDrawer.alphaed(Color.RED, 0.5f);
+  @ConfigurableField
+  private final Color expandedFillColor = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
+  @ConfigurableField(uiMin = 0.1f, uiMax = 0.999f)
+  private final float shrunkRatio = 0.75f;
+  @ConfigurableField(uiMin = 1.001f, uiMax = 2f)
+  private final float expandendRatio = 1.25f;
 
-  private BodyDrawer() {
+  private Voxel() {
   }
 
-  public static BodyDrawer build() {
-    return new BodyDrawer();
+  public static Voxel build() {
+    return new Voxel();
   }
 
   @Override
   public boolean draw(ImmutableObject object, Graphics2D g) {
-    Path2D path = GraphicsDrawer.toPath((Poly) object.getShape(), true);
-    if (strokeColor != null) {
-      g.setColor(strokeColor);
-      g.draw(path);
-    }
-    if (fillColor != null) {
-      g.setColor(fillColor);
+    ImmutableVoxel voxel = (ImmutableVoxel) object;
+    Poly poly = (Poly) voxel.getShape();
+    Path2D path = GraphicsDrawer.toPath(poly, true);
+    g.setColor(strokeColor);
+    g.draw(path);
+    if (fill) {
+      g.setColor(GraphicsDrawer.linear(
+          shrunkFillColor, restFillColor, expandedFillColor,
+          shrunkRatio, 1f, expandendRatio,
+          (float) (poly.area() / voxel.getRestArea())
+      ));
       g.fill(path);
     }
-    return false;
+    return true;
   }
 
   @Override
   public boolean canDraw(Class c) {
-    return Body.class.isAssignableFrom(c);
+    return it.units.erallab.hmsrobots.objects.Voxel.class.isAssignableFrom(c);
   }
 }

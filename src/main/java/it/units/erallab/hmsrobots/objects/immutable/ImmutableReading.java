@@ -14,13 +14,26 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.sensors;
+package it.units.erallab.hmsrobots.objects.immutable;
 
-import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.sensors.Sensor;
+import it.units.erallab.hmsrobots.util.Configuration;
 
-import java.io.Serializable;
+public class ImmutableReading extends ImmutableObject {
+  private final double[] values;
+  private final Configuration<? extends Sensor> configuration;
 
-public interface Sensor extends Serializable {
-  int n();
-  double[] sense(Voxel voxel, double t);
+  public ImmutableReading(Object object, Shape shape, double[] values, Configuration<? extends Sensor> configuration) {
+    super(object, shape);
+    this.values = values;
+    this.configuration = configuration;
+  }
+
+  public double[] getValues() {
+    return values;
+  }
+
+  public Configuration<? extends Sensor> getConfiguration() {
+    return configuration;
+  }
 }

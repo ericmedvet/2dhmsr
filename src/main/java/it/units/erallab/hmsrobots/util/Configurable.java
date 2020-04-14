@@ -52,7 +52,7 @@ public interface Configurable<C extends Configurable> extends Serializable {
     EnumSet<ConfigurableField.Type> set = EnumSet.noneOf(ConfigurableField.Type.class);
     set.addAll(Lists.newArrayList(types));
     Set<String> annotated = FieldUtils.getFieldsListWithAnnotation(getClass(), ConfigurableField.class).stream()
-        .filter(f -> set.isEmpty() || set.contains(f.getAnnotation(ConfigurableField.class).type()))
+        .filter(f -> set.isEmpty() || set.contains(f.getAnnotation(ConfigurableField.class).uiType()))
         .map(Field::getName).collect(Collectors.toSet());
     return annotated;
   }

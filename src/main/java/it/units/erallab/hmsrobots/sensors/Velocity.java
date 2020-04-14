@@ -18,14 +18,18 @@ package it.units.erallab.hmsrobots.sensors;
 
 import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.EnumSet;
 
-public class Velocity implements Sensor {
+public class Velocity implements Sensor, Configurable<Velocity> {
   public enum Axis {X, Y}
 
+  @ConfigurableField
   private final boolean rotated;
+  @ConfigurableField
   private final EnumSet<Axis> axes;
 
   public Velocity(boolean rotated, Axis... axes) {

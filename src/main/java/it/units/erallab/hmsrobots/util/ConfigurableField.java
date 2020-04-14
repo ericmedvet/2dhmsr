@@ -27,7 +27,7 @@ public @interface ConfigurableField {
 
   enum Type {BASIC, ADVANCED}
 
-  Type type() default Type.ADVANCED;
+  Type uiType() default Type.ADVANCED;
 
   Class<?> enumClass() default Void.class;
 

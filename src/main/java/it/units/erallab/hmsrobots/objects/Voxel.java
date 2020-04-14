@@ -33,6 +33,7 @@ import org.dyn4j.geometry.Transform;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -237,7 +238,7 @@ public class Voxel implements WorldObject {
   private final List<Sensor> sensors;
 
   private double lastAppliedForce = 0d;
-  private final List<Pair<Sensor, double[]>> lastSensorReadings = new ArrayList<>();
+  private List<Pair<Sensor, double[]>> lastSensorReadings = Collections.EMPTY_LIST;
   private World world;
 
   public static Voxel build(Robot robot, Description description) {
@@ -300,11 +301,11 @@ public class Voxel implements WorldObject {
     ropeJoints = localRopeJoints.toArray(new RopeJoint[0]);
     //build distance joints
     List<DistanceJoint> allSpringJoints = new ArrayList<>();
-    double minSideLenght = Math.sqrt(sideLength * sideLength * (1d - description.areaRatioOffset));
-    double maxSideLenght = Math.sqrt(sideLength * sideLength * (1d + description.areaRatioOffset));
-    SpringRange sideParallelRange = new SpringRange(minSideLenght - 2d * massSideLength, sideLength - 2d * massSideLength, maxSideLenght - 2d * massSideLength);
+    double minSideLength = Math.sqrt(sideLength * sideLength * (1d - description.areaRatioOffset));
+    double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + description.areaRatioOffset));
+    SpringRange sideParallelRange = new SpringRange(minSideLength - 2d * massSideLength, sideLength - 2d * massSideLength, maxSideLength - 2d * massSideLength);
     SpringRange sideCrossRange = new SpringRange(Math.sqrt(massSideLength * massSideLength + sideParallelRange.min * sideParallelRange.min), Math.sqrt(massSideLength * massSideLength + sideParallelRange.rest * sideParallelRange.rest), Math.sqrt(massSideLength * massSideLength + sideParallelRange.max * sideParallelRange.max));
-    SpringRange centralCrossRange = new SpringRange((minSideLenght - massSideLength) * Math.sqrt(2d), (sideLength - massSideLength) * Math.sqrt(2d), (maxSideLenght - massSideLength) * Math.sqrt(2d));
+    SpringRange centralCrossRange = new SpringRange((minSideLength - massSideLength) * Math.sqrt(2d), (sideLength - massSideLength) * Math.sqrt(2d), (maxSideLength - massSideLength) * Math.sqrt(2d));
     if (description.springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
@@ -416,6 +417,13 @@ public class Voxel implements WorldObject {
 
   @Override
   public ImmutableObject immutable() {
+    //voxel shape
+    Shape voxelShape = Poly.build(
+        Point2.build(getIndexedVertex(0, 3)),
+        Point2.build(getIndexedVertex(1, 2)),
+        Point2.build(getIndexedVertex(2, 1)),
+        Point2.build(getIndexedVertex(3, 0))
+    );
     //add parts
     List<ImmutableObject> children = new ArrayList<>(vertexBodies.length + springJoints.length);
     for (Body body : vertexBodies) {
@@ -428,22 +436,20 @@ public class Voxel implements WorldObject {
           Point2.build(joint.getAnchor2())
       )));
     }
-    // TODO add components for sensors
-    /*
-    EnumMap<Voxel.Sensor, Double> sensorReadings = new EnumMap<>(Voxel.Sensor.class);
-    for (Voxel.Sensor sensor : Voxel.Sensor.values()) {
-      sensorReadings.put(sensor, getSensorReading(sensor));
+    //add sensor readings
+    for (Pair<Sensor, double[]> sensorReadings : lastSensorReadings) {
+      Sensor sensor = sensorReadings.getKey();
+      children.add(new ImmutableReading(
+          sensor,
+          voxelShape,
+          sensorReadings.getValue(),
+          (sensor instanceof Configurable) ? ((Configurable) sensor).toConfiguration() : null
+      ));
     }
-    */
     //add enclosing
     ImmutableVoxel immutable = new ImmutableVoxel(
         this,
-        Poly.build(
-            Point2.build(getIndexedVertex(0, 3)),
-            Point2.build(getIndexedVertex(1, 2)),
-            Point2.build(getIndexedVertex(2, 1)),
-            Point2.build(getIndexedVertex(3, 0))
-        ),
+        voxelShape,
         children,
         sideLength * sideLength
     );
@@ -485,10 +491,11 @@ public class Voxel implements WorldObject {
   }
 
   public List<Pair<Sensor, double[]>> sense(double t) {
-    List<Pair<Sensor, double[]>> readings = sensors.stream()
+    List<Pair<Sensor, double[]>> pairs = sensors.stream()
         .map(s -> Pair.of(s, s.sense(this, t)))
         .collect(Collectors.toList());
-    return readings;
+    lastSensorReadings = pairs;
+    return pairs;
   }
 
   public Body[] getVertexBodies() {

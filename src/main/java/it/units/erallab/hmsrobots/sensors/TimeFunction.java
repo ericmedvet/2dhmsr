@@ -17,9 +17,13 @@
 package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
-public class TimeFunction implements Sensor {
+public class TimeFunction implements Sensor, Configurable<TimeFunction> {
+
+  @ConfigurableField
   private final SerializableFunction<Double, Double> function;
 
   public TimeFunction(SerializableFunction<Double, Double> function) {

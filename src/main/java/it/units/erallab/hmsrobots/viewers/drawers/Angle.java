@@ -17,39 +17,44 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.Vector;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableReading;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.objects.immutable.Poly;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
-import org.dyn4j.dynamics.joint.Joint;
 
 import java.awt.*;
 
-public class JointDrawer implements Configurable<JointDrawer>, Drawer {
+
+public class Angle implements Configurable<Angle>, Drawer {
 
   @ConfigurableField
-  private final Color color = Color.RED;
-  @ConfigurableField(uiMin = 1, uiMax = 5)
-  private final float strokeWidth = 2f;
+  private final Color strokeColor = Color.BLACK;
 
-  private JointDrawer() {
+  private Angle() {
   }
 
-  public static JointDrawer build() {
-    return new JointDrawer();
+  public static Angle build() {
+    return new Angle();
   }
 
   @Override
   public boolean draw(ImmutableObject object, Graphics2D g) {
-    Vector vector = (Vector) object.getShape();
-    g.setStroke(new BasicStroke(strokeWidth / (float) g.getTransform().getScaleX()));
-    g.setColor(color);
-    g.draw(GraphicsDrawer.toPath(vector.getStart(), vector.getEnd()));
+    Poly voxelPoly = (Poly) object.getShape();
+    double radius = Math.sqrt(voxelPoly.area()) / 2d;
+    Point2 center = voxelPoly.center();
+    double angle = ((ImmutableReading) object).getValues()[0];
+    g.setColor(strokeColor);
+    g.draw(GraphicsDrawer.toPath(
+        center,
+        Point2.build(center.x + angle * Math.cos(angle), center.y + angle * Math.sin(angle))
+    ));
     return false;
   }
 
   @Override
   public boolean canDraw(Class c) {
-    return Joint.class.isAssignableFrom(c);
+    return it.units.erallab.hmsrobots.sensors.Angle.class.isAssignableFrom(c);
   }
 }

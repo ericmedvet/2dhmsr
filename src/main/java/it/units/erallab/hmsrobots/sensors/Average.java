@@ -17,12 +17,16 @@
 package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 
 import java.util.TreeMap;
 
-public class Average implements Sensor {
+public class Average implements Sensor, Configurable<Average> {
 
+  @ConfigurableField
   private final Sensor sensor;
+  @ConfigurableField
   private final double interval;
   private final TreeMap<Double, double[]> readings;
 

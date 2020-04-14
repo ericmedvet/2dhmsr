@@ -41,7 +41,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, VOXEL_COMPOUND_CENTERS_INFO
   }
 
-  @ConfigurableField(type = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
+  @ConfigurableField(uiType = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
   private final Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
       GeneralRenderingMode.GRID_MAJOR,
       GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO,
@@ -58,12 +58,13 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   private final double[] gridSizes = new double[]{2, 5, 10};
   @ConfigurableField(uiMin = 1, uiMax = 5)
   private final float strokeWidth = 1f;
-  @ConfigurableField(type = ConfigurableField.Type.BASIC)
+  @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
   private final List<Drawer> drawers = new ArrayList<>(List.of(
-      VoxelDrawer.build(),
-      BodyDrawer.build(),
-      GroundDrawer.build(),
-      JointDrawer.build()
+      Voxel.build(),
+      Body.build(),
+      Ground.build(),
+      Joint.build(),
+      Angle.build()
   ));
 
   private GraphicsDrawer() {
