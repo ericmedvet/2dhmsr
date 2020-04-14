@@ -186,17 +186,17 @@ public class Starter {
     ((DistributedMLP) distributedMlpRobot.getController()).setParams(weights);
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        30,
         Locomotion.createTerrain("uneven5"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(1, 1);
-    /*namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
-    namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));*/
+    Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(2, 2);
+    namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
+    namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
     //namedSolutionGrid.set(0, 0, Pair.of("centralizedMLP", centralizedMlpRobot));
-    namedSolutionGrid.set(0, 0, Pair.of("distributedMLP", distributedMlpRobot));
-    /*namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));*/
+    namedSolutionGrid.set(1, 0, Pair.of("distributedMLP", distributedMlpRobot));
+    namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
