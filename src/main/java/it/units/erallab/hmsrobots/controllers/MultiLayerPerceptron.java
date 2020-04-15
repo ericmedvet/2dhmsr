@@ -1,20 +1,22 @@
 /*
- * Copyright (C) 2019 eric
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.controllers;
+
+import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -22,12 +24,11 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- *
  * @author eric
  */
-public class MultiLayerPerceptron implements Serializable, Function<double[], double[]> {
+public class MultiLayerPerceptron implements Serializable, Function<double[], double[]>, Parametrized {
 
-  public static enum ActivationFunction {
+  public enum ActivationFunction {
     RELU((Double x) -> {
       if (x < 0) {
         return 0d;
@@ -44,7 +45,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
     private final Function<Double, Double> f;
 
-    private ActivationFunction(Function<Double, Double> f) {
+    ActivationFunction(Function<Double, Double> f) {
       this.f = f;
     }
 
@@ -60,7 +61,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     this.weights = unflat(weights, neurons);
   }
 
-  protected static double[][][] unflat(double[] flatWeights, int[] neurons) {
+  public static double[][][] unflat(double[] flatWeights, int[] neurons) {
     double[][][] unflatWeights = new double[neurons.length - 1][][];
     int c = 0;
     for (int i = 0; i < neurons.length - 1; i++) {
@@ -75,7 +76,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     return unflatWeights;
   }
 
-  protected static double[] flat(double[][][] unflatWeights, int[] neurons) {
+  public static double[] flat(double[][][] unflatWeights, int[] neurons) {
     int n = 0;
     for (int i = 0; i < neurons.length - 1; i++) {
       n = n + neurons[i] * neurons[i + 1];
@@ -92,7 +93,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     }
     return flatWeights;
   }
-  
+
   public static int countWeights(int[] neurons) {
     int largestLayerSize = Arrays.stream(neurons).max().orElse(0);
     double[][][] fakeWeights = new double[neurons.length][][];
@@ -102,10 +103,18 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     return flat(fakeWeights, neurons).length;
   }
 
+  public static int[] neurons(int nOfInputs, int[] innerNeurons, int nOfOutputs) {
+    int[] neurons = new int[innerNeurons.length + 2];
+    neurons[0] = nOfInputs;
+    neurons[neurons.length - 1] = nOfOutputs;
+    System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
+    return neurons;
+  }
+
   @Override
   public double[] apply(double[] input) {
     if (input.length != neurons[0] - 1) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons.length - 1, input.length));
+      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0] - 1, input.length));
     }
     double[][] values = new double[neurons.length][];
     values[0] = new double[neurons[0]];
@@ -130,6 +139,23 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
   public int[] getNeurons() {
     return neurons;
+  }
+
+  @Override
+  public double[] getParams() {
+    return MultiLayerPerceptron.flat(weights, neurons);
+  }
+
+  @Override
+  public void setParams(double[] params) {
+    double[][][] newWeights = MultiLayerPerceptron.unflat(params, neurons);
+    for (int l = 0; l < newWeights.length; l++) {
+      for (int s = 0; s < newWeights[l].length; s++) {
+        for (int d = 0; d < newWeights[l][s].length; d++) {
+          weights[l][s][d] = newWeights[l][s][d];
+        }
+      }
+    }
   }
 
   @Override
@@ -159,10 +185,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     if (!Arrays.deepEquals(this.weights, other.weights)) {
       return false;
     }
-    if (!Arrays.equals(this.neurons, other.neurons)) {
-      return false;
-    }
-    return true;
+    return Arrays.equals(this.neurons, other.neurons);
   }
 
 }

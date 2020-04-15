@@ -17,29 +17,20 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
-import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
-import java.awt.BorderLayout;
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics2D;
-import java.awt.Toolkit;
-import java.awt.event.ItemEvent;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
@@ -55,23 +46,21 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
   private final Canvas canvas;
   private final GraphicsDrawer graphicsDrawer;
-  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
   private final ScheduledExecutorService executor;
 
   private double t;
   private boolean running;
 
-  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) {
+  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
     super("World viewer");
     this.namesGrid = namesGrid;
-    this.renderingDirectives = renderingDirectives;
     this.executor = executor;
     //create things
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
     //create drawer
-    graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    graphicsDrawer = GraphicsDrawer.build();
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
         framerGrid.set(x, y, new VoxelCompoundFollower((int) FRAME_RATE * 3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
@@ -85,59 +74,8 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     canvas.setPreferredSize(dimension);
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
-    //add checkboxes
-    JPanel topPanel = new JPanel();
-    topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.PAGE_AXIS));
-    for (final GraphicsDrawer.VoxelRenderingMean mean : GraphicsDrawer.VoxelRenderingMean.values()) {
-      JPanel meanPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 0));
-      meanPanel.add(new JLabel(name(mean) + ": "));
-      for (final Voxel.Sensor sensor : Voxel.Sensor.values()) {
-        boolean selected = false;
-        if (renderingDirectives.getMeanSensorMap().containsKey(mean)) {
-          selected = renderingDirectives.getMeanSensorMap().get(mean).contains(sensor);
-        }
-        JCheckBox checkBox = new JCheckBox(name(sensor), selected);
-        checkBox.addItemListener((ItemEvent e) -> {
-          if (e.getStateChange() == ItemEvent.SELECTED) {
-            renderingDirectives.getMeanSensorMap().get(mean).add(sensor);
-          } else {
-            renderingDirectives.getMeanSensorMap().get(mean).remove(sensor);
-          }
-        });
-        meanPanel.add(checkBox);
-      }
-      topPanel.add(meanPanel);
-    }
-    JPanel voxelRenderingPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 0));
-    voxelRenderingPanel.add(new JLabel("voxel: "));
-    for (GraphicsDrawer.VoxelRenderingMode mode : GraphicsDrawer.VoxelRenderingMode.values()) {
-      JCheckBox checkBox = new JCheckBox(name(mode), renderingDirectives.getVoxelRenderingModes().contains(mode));
-      checkBox.addItemListener((ItemEvent e) -> {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          renderingDirectives.getVoxelRenderingModes().add(mode);
-        } else {
-          renderingDirectives.getVoxelRenderingModes().remove(mode);
-        }
-      });
-      voxelRenderingPanel.add(checkBox);
-    }
-    topPanel.add(voxelRenderingPanel);
-    JPanel generalRenderingPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 0));
-    generalRenderingPanel.add(new JLabel("general: "));
-    for (GraphicsDrawer.GeneralRenderingMode mode : GraphicsDrawer.GeneralRenderingMode.values()) {
-      JCheckBox checkBox = new JCheckBox(name(mode), renderingDirectives.getGeneralRenderingModes().contains(mode));
-      checkBox.addItemListener((ItemEvent e) -> {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          renderingDirectives.getGeneralRenderingModes().add(mode);
-        } else {
-          renderingDirectives.getGeneralRenderingModes().remove(mode);
-        }
-      });
-      generalRenderingPanel.add(checkBox);
-    }
-    topPanel.add(generalRenderingPanel);
     //set layout and put components
-    getContentPane().add(topPanel, BorderLayout.PAGE_START);
+    getContentPane().add(new ConfigurablePane(graphicsDrawer), BorderLayout.LINE_END);
     getContentPane().add(canvas, BorderLayout.CENTER);
     //pack
     pack();
@@ -146,45 +84,45 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     running = true;
     //start consumer of single frames
     executor.submit(() -> {
-      while (running) {
-        //check if ready
-        Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
-        synchronized (queueGrid) {
-          for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-            Snapshot snapshot;
-            while ((snapshot = entry.getValue().peek()) != null) {
-              if (snapshot.getTime() < t) {
-                entry.getValue().poll();
-              } else {
-                break;
+          while (running) {
+            //check if ready
+            Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
+            synchronized (queueGrid) {
+              for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+                Snapshot snapshot;
+                while ((snapshot = entry.getValue().peek()) != null) {
+                  if (snapshot.getTime() < t) {
+                    entry.getValue().poll();
+                  } else {
+                    break;
+                  }
+                }
+                snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
               }
             }
-            snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
-          }
-        }
-        boolean ready = true;
-        for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-          ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
-        }
-        if (ready) {
-          //update time
-          t = t + 1d / FRAME_RATE;
-          //render asynchronously
-          synchronized (gridQueue) {
-            gridQueue.offer(Grid.copy(snapshotGrid));
-            gridQueue.notifyAll();
-          }
-        } else {
-          synchronized (queueGrid) {
-            try {
-              queueGrid.wait();
-            } catch (InterruptedException ex) {
-              //ignore
+            boolean ready = true;
+            for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+              ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
+            }
+            if (ready) {
+              //update time
+              t = t + 1d / FRAME_RATE;
+              //render asynchronously
+              synchronized (gridQueue) {
+                gridQueue.offer(Grid.copy(snapshotGrid));
+                gridQueue.notifyAll();
+              }
+            } else {
+              synchronized (queueGrid) {
+                try {
+                  queueGrid.wait();
+                } catch (InterruptedException ex) {
+                  //ignore
+                }
+              }
             }
           }
         }
-      }
-    }
     );
   }
 
@@ -198,7 +136,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
       @Override
       public void run() {
-        if(!stopwatch.isRunning()) {
+        if (!stopwatch.isRunning()) {
           stopwatch.start();
         }
         double currentTime = (double) stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000d;
@@ -212,7 +150,12 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
           }
         }
         if (localSnapshotGrid != null) {
-          renderFrame(localSnapshotGrid);
+          try {
+            renderFrame(localSnapshotGrid);
+          } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(0);
+          }
           synchronized (gridQueue) {
             gridQueue.notifyAll();
           }
@@ -255,11 +198,15 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
       if (entry.getValue() != null) {
         //obtain viewport
-        Frame frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
+        BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
         //draw
-        graphicsDrawer.draw(entry.getValue(), g,
-                new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
-                frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
+        graphicsDrawer.draw(
+            entry.getValue(), g,
+            BoundingBox.build(
+                Point2.build(localW * entry.getX(), localH * entry.getY()),
+                Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
+            ),
+            frame, namesGrid.get(entry.getX(), entry.getY())
         );
       }
     }

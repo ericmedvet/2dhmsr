@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.objects;
 
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
+import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
 import org.dyn4j.dynamics.World;
 
 /**
@@ -25,7 +25,7 @@ import org.dyn4j.dynamics.World;
  */
 public interface WorldObject {
   
-  public Compound getSnapshot();
-  public void addTo(World world);
+  public ImmutableObject immutable();
+  public void addTo(World world);  
   
 }

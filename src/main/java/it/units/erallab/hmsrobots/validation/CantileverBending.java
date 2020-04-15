@@ -1,65 +1,55 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.validation;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.objects.Ground;
+import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, CantileverBending.Result> {
+public class CantileverBending extends AbstractTask<Grid<Voxel.Description>, CantileverBending.Result> {
 
   public static class Result {
 
@@ -169,16 +159,16 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
   }
 
   @Override
-  public Result apply(Grid<Voxel.Builder> builderGrid, SnapshotListener listener) {
+  public Result apply(Grid<Voxel.Description> voxelDescriptionGrid, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
-    VoxelCompound vc = new VoxelCompound(0, 0, new VoxelCompound.Description(
-            builderGrid, null
+    Robot robot = new Robot(0, 0, new Robot.Description(
+        voxelDescriptionGrid, null
     ));
-    Point2[] boundingBox = vc.boundingBox();
-    worldObjects.add(vc);
+    BoundingBox boundingBox = robot.boundingBox();
+    worldObjects.add(robot);
     //build ground
-    Ground ground = new Ground(new double[]{0, 1}, new double[]{0, boundingBox[1].y - boundingBox[0].y + 2d * WALL_MARGIN});
+    Ground ground = new Ground(new double[]{0, 1}, new double[]{0, boundingBox.max.y - boundingBox.min.y + 2d * WALL_MARGIN});
     worldObjects.add(ground);
     //build world w/o gravity
     World world = new World();
@@ -188,13 +178,13 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       worldObject.addTo(world);
     }
     //attach vc to ground
-    vc.translate(new Vector2(-boundingBox[0].x + 1d, (boundingBox[1].y - boundingBox[0].y + 2d * WALL_MARGIN) / 2d - 1d));
-    for (int y = 0; y < vc.getVoxels().getH(); y++) {
+    robot.translate(new Vector2(-boundingBox.min.x + 1d, (boundingBox.max.y - boundingBox.min.y + 2d * WALL_MARGIN) / 2d - 1d));
+    for (int y = 0; y < robot.getVoxels().getH(); y++) {
       for (int i : new int[]{0, 3}) {
         WeldJoint joint = new WeldJoint(
-                ground.getBodies().get(0),
-                vc.getVoxels().get(0, y).getVertexBodies()[i],
-                vc.getVoxels().get(0, y).getVertexBodies()[i].getWorldCenter()
+            ground.getBodies().get(0),
+            robot.getVoxels().get(0, y).getVertexBodies()[i],
+            robot.getVoxels().get(0, y).getVertexBodies()[i].getWorldCenter()
         );
         world.addJoint(joint);
       }
@@ -203,16 +193,16 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
     List<Double> ys = new ArrayList<>((int) Math.round(finalT / settings.getStepFrequency()));
     List<Double> realTs = new ArrayList<>((int) Math.round(finalT / settings.getStepFrequency()));
     List<Double> simTs = new ArrayList<>((int) Math.round(finalT / settings.getStepFrequency()));
-    double y0 = vc.getVoxels().get(vc.getVoxels().getW() - 1, vc.getVoxels().getH() / 2).getCenter().y;
+    double y0 = robot.getVoxels().get(robot.getVoxels().getW() - 1, robot.getVoxels().getH() / 2).getCenter().y;
     //simulate
     Stopwatch stopwatch = Stopwatch.createStarted();
     double t = 0d;
     while (t < finalT) {
       //add force
       if (t <= forceDuration) {
-        for (int y = 0; y < vc.getVoxels().getH(); y++) {
+        for (int y = 0; y < robot.getVoxels().getH(); y++) {
           for (int i : new int[]{1, 2}) {
-            vc.getVoxels().get(vc.getVoxels().getW() - 1, y).getVertexBodies()[i].applyForce(new Vector2(0d, -force / 2d / vc.getVoxels().getH()));
+            robot.getVoxels().get(robot.getVoxels().getW() - 1, y).getVertexBodies()[i].applyForce(new Vector2(0d, -force / 2d / robot.getVoxels().getH()));
           }
         }
       }
@@ -220,11 +210,11 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       t = t + settings.getStepFrequency();
       world.step(1);
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
+        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //get position
-      double y = vc.getVoxels().get(vc.getVoxels().getW() - 1, vc.getVoxels().getH() / 2).getCenter().y;
+      double y = robot.getVoxels().get(robot.getVoxels().getW() - 1, robot.getVoxels().getH() / 2).getCenter().y;
       ys.add(y - y0);
       realTs.add((double) stopwatch.elapsed(TimeUnit.MICROSECONDS) / 1000000d);
       simTs.add(t);
@@ -245,25 +235,25 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
     timeEvolution.put("rt", realTs);
     timeEvolution.put("y", ys);
     List<Point2> finalTopPositions = new ArrayList<>();
-    for (int x = 0; x < vc.getVoxels().getW(); x++) {
-      Vector2 center = vc.getVoxels().get(x, 0).getCenter();
-      finalTopPositions.add(new Point2(center.x, center.y - y0));
+    for (int x = 0; x < robot.getVoxels().getW(); x++) {
+      Vector2 center = robot.getVoxels().get(x, 0).getCenter();
+      finalTopPositions.add(Point2.build(center.x, center.y - y0));
     }
     return new Result(
-            elapsedSeconds,
-            realTs.get(dampingIndex),
-            simTs.get(dampingIndex),
-            realTs.size(),
-            dampingIndex,
-            (double) vc.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex),
-            (double) vc.getVoxels().count(v -> v != null) * simTs.get(dampingIndex) / realTs.get(dampingIndex),
-            (double) dampingIndex / realTs.get(dampingIndex),
-            (double) vc.getVoxels().count(v -> v != null) * (double) realTs.size() / elapsedSeconds,
-            (double) vc.getVoxels().count(v -> v != null) * simTs.get(simTs.size() - 1) / elapsedSeconds,
-            (double) realTs.size() / elapsedSeconds,
-            finalTopPositions.get(finalTopPositions.size() - 1).y,
-            timeEvolution,
-            finalTopPositions
+        elapsedSeconds,
+        realTs.get(dampingIndex),
+        simTs.get(dampingIndex),
+        realTs.size(),
+        dampingIndex,
+        (double) robot.getVoxels().count(v -> v != null) * (double) dampingIndex / realTs.get(dampingIndex),
+        (double) robot.getVoxels().count(v -> v != null) * simTs.get(dampingIndex) / realTs.get(dampingIndex),
+        (double) dampingIndex / realTs.get(dampingIndex),
+        (double) robot.getVoxels().count(v -> v != null) * (double) realTs.size() / elapsedSeconds,
+        (double) robot.getVoxels().count(v -> v != null) * simTs.get(simTs.size() - 1) / elapsedSeconds,
+        (double) realTs.size() / elapsedSeconds,
+        finalTopPositions.get(finalTopPositions.size() - 1).y,
+        timeEvolution,
+        finalTopPositions
     );
   }
 
@@ -300,7 +290,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
           //build basic settings and builder
           final Map<String, Object> configurations = new HashMap<>();
           configurations.put("settings", new Settings());
-          configurations.put("builder", Voxel.Builder.create());
+          //configurations.put("builder", Voxel.Builder.create()); //TODO fix with configuration
           //set all properties to the first value in the list
           for (Map.Entry<String, Object> configuration : configurations.entrySet()) {
             params.entrySet().stream().filter(e -> e.getKey().startsWith(configuration.getKey() + ".")).forEach((Map.Entry<String, List<Object>> e) -> {
@@ -336,13 +326,13 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
           futures.add(executor.submit(() -> {
             System.out.printf("Started\t%s%n", staticKeys);
             CantileverBending cb = new CantileverBending(
-                    30d,
-                    0.1d,
-                    30d,
-                    0.01d,
-                    (Settings) configurations.get("settings")
+                30d,
+                0.1d,
+                30d,
+                0.01d,
+                (Settings) configurations.get("settings")
             );
-            Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
+            Result result = cb.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Description) configurations.get("builder")));
             System.out.printf("Ended\t%s%n", staticKeys);
             Map<String, Object> row = new LinkedHashMap<>();
             row.putAll(staticKeys);
@@ -391,7 +381,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
       printer.flush();
       printer.close();
     } catch (IOException ex) {
-      Logger.getLogger(VoxelCompoundControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
+      Logger.getLogger(RobotControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
     }
     //write time evolutions
     if (timeEvolutionPS != null) {
@@ -401,7 +391,7 @@ public class CantileverBending extends AbstractTask<Grid<Voxel.Builder>, Cantile
 
   private static void printCSV(Map<String, List> data, PrintStream ps) {
     int length = data.values().stream().mapToInt(List::size).max().orElse(0);
-    String[] names = (String[]) data.keySet().toArray(new String[data.keySet().size()]);
+    String[] names = data.keySet().toArray(new String[data.keySet().size()]);
     try {
       CSVPrinter printer = new CSVPrinter(ps, CSVFormat.DEFAULT.withHeader(names));
       for (int i = 0; i < length; i++) {

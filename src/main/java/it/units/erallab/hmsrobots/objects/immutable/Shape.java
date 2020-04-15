@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2019 eric
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,35 +18,8 @@ package it.units.erallab.hmsrobots.objects.immutable;
 
 import java.io.Serializable;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public class Component implements Serializable {
+public interface Shape extends Serializable {
+  public BoundingBox boundingBox();
 
-  public static enum Type {
-    RIGID, CONNECTION, ENCLOSING
-  }
-  
-  private final Type type;
-  private final Poly poly;
-
-  public Component(Type type, Poly poly) {
-    this.type = type;
-    this.poly = poly;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public Poly getPoly() {
-    return poly;
-  }
-
-  @Override
-  public String toString() {
-    return "Component{" + "type=" + type + ", poly=" + poly + '}';
-  }
-
+  public Point2 center();
 }

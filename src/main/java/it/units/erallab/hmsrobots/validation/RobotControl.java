@@ -1,64 +1,53 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.validation;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.TimeFunction;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.objects.Ground;
+import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.VoxelCompound;
 import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
-import java.io.IOException;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, VoxelCompoundControl.Result> {
+public class RobotControl extends AbstractTask<Grid<Voxel.Description>, RobotControl.Result> {
 
   public static class Result {
 
@@ -117,30 +106,28 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
 
   private final double finalT;
   private final double groundHillsHeight;
-  private final int controlStepInterval;
   private final double freq;
 
-  public VoxelCompoundControl(double finalT, double groundHillsHeight, int controlStepInterval, double freq, Settings settings) {
+  public RobotControl(double finalT, double groundHillsHeight, double freq, Settings settings) {
     super(settings);
     this.finalT = finalT;
     this.groundHillsHeight = groundHillsHeight;
-    this.controlStepInterval = controlStepInterval;
     this.freq = freq;
   }
 
   @Override
-  public Result apply(Grid<Voxel.Builder> builderGrid, SnapshotListener listener) {
+  public Result apply(Grid<Voxel.Description> voxelDescriptionGrid, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
-    Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(builderGrid);
-    for (Grid.Entry<Voxel.Builder> entry : builderGrid) {
-      functionGrid.set(entry.getX(), entry.getY(), t -> Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) builderGrid.getW()));
+    Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(voxelDescriptionGrid);
+    for (Grid.Entry<Voxel.Description> entry : voxelDescriptionGrid) {
+      functionGrid.set(entry.getX(), entry.getY(), t -> Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) voxelDescriptionGrid.getW()));
     }
-    VoxelCompound voxelCompound = new VoxelCompound(0, 0, new VoxelCompound.Description(
-            builderGrid,
-            new TimeFunction(functionGrid)
+    Robot robot = new Robot(0, 0, new Robot.Description(
+        voxelDescriptionGrid,
+        new TimeFunctions(functionGrid)
     ));
-    worldObjects.add(voxelCompound);
+    worldObjects.add(robot);
     //build ground
     Random random = new Random(1);
     double[] groundXs = new double[GROUND_HILLS_N + 2];
@@ -157,16 +144,16 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
     worldObjects.add(ground);
     double[][] groundProfile = new double[][]{groundXs, groundYs};
     //position robot: x of rightmost point is on 2nd point of profile
-    Point2[] boundingBox = voxelCompound.boundingBox();
+    BoundingBox boundingBox = robot.boundingBox();
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
-    double xRight = xLeft + boundingBox[1].x - boundingBox[0].x;
+    double xRight = xLeft + boundingBox.max.x - boundingBox.min.x;
     double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
     double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
     Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
-    Vector2 currentPoint = new Vector2(boundingBox[0].x, boundingBox[0].y);
+    Vector2 currentPoint = new Vector2(boundingBox.min.x, boundingBox.min.y);
     Vector2 movement = targetPoint.subtract(currentPoint);
-    voxelCompound.translate(movement);
+    robot.translate(movement);
     //build world w/o gravity
     World world = new World();
     world.setSettings(settings);
@@ -186,18 +173,16 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
       world.step(1);
       steps = steps + 1;
       //control
-      if ((steps % (controlStepInterval + 1)) == 0) {
-        voxelCompound.control(t, settings.getStepFrequency());
-      }
+      robot.act(t);
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::getSnapshot).collect(Collectors.toList()));
+        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //collect data
-      for (Grid.Entry<Voxel> entry : voxelCompound.getVoxels()) {
+      for (Grid.Entry<Voxel> entry : robot.getVoxels()) {
         if (entry.getValue() != null) {
-          double velocityMagnitude = entry.getValue().getSensorReading(Voxel.Sensor.VELOCITY_MAGNITUDE);
-          double brokenRatio = entry.getValue().getSensorReading(Voxel.Sensor.BROKEN_RATIO);
+          double velocityMagnitude = 0d; //TODO fix me! entry.getValue().getSensorReading(Voxel.Sensor.VELOCITY_MAGNITUDE);
+          double brokenRatio = 0d; //TODO fix me! entry.getValue().getSensorReading(Voxel.Sensor.BROKEN_RATIO);
           sumOfBrokenRatio = sumOfBrokenRatio + brokenRatio;
           maxVelocityMagnitude = Math.max(maxVelocityMagnitude, velocityMagnitude);
         }
@@ -206,16 +191,17 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
     stopwatch.stop();
     double elapsedSeconds = (double) stopwatch.elapsed(TimeUnit.MICROSECONDS) / 1000000d;
     return new Result(
-            elapsedSeconds, steps,
-            (double) voxelCompound.getVoxels().count(v -> v != null) * (double) steps / elapsedSeconds,
-            (double) voxelCompound.getVoxels().count(v -> v != null) * finalT / elapsedSeconds,
-            (double) steps / elapsedSeconds,
-            sumOfBrokenRatio / (double) voxelCompound.getVoxels().count(v -> v != null) / (double) steps,
-            maxVelocityMagnitude
+        elapsedSeconds, steps,
+        (double) robot.getVoxels().count(v -> v != null) * (double) steps / elapsedSeconds,
+        (double) robot.getVoxels().count(v -> v != null) * finalT / elapsedSeconds,
+        (double) steps / elapsedSeconds,
+        sumOfBrokenRatio / (double) robot.getVoxels().count(v -> v != null) / (double) steps,
+        maxVelocityMagnitude
     );
   }
 
   public static void main(String[] args) {
+    //TODO fix for using description
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     List<Grid<Boolean>> shapes = new ArrayList<>();
     int iterations = 5;
@@ -234,10 +220,10 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
     //params.put("builder.massCollisionFlag", Lists.newArrayList(false, true));
     //params.put("builder.limitContractionFlag", Lists.newArrayList(true, false));
     params.put("builder.springScaffoldings", Lists.newArrayList(
-            EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS, Voxel.SpringScaffolding.CENTRAL_CROSS),
-            EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
-            EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS),
-            EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS)
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS, Voxel.SpringScaffolding.CENTRAL_CROSS),
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.SIDE_INTERNAL, Voxel.SpringScaffolding.SIDE_CROSS),
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS)
     ));
     List<Future<Map<String, Object>>> futures = new ArrayList<>();
     for (Grid<Boolean> shape : shapes) {
@@ -247,15 +233,15 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
             //build basic settings and builder
             final Map<String, Object> configurations = new HashMap<>();
             configurations.put("settings", new Settings());
-            configurations.put("builder", Voxel.Builder.create());
+            //configurations.put("builder", Voxel.Builder.create()); //TODO fix!
             //set all properties to the first value in the list
             for (Map.Entry<String, Object> configuration : configurations.entrySet()) {
               params.entrySet().stream().filter(e -> e.getKey().startsWith(configuration.getKey() + ".")).forEach((Map.Entry<String, List<Object>> e) -> {
                 try {
                   PropertyUtils.setProperty(
-                          configuration.getValue(),
-                          e.getKey().replace(configuration.getKey() + ".", ""),
-                          e.getValue().get(0)
+                      configuration.getValue(),
+                      e.getKey().replace(configuration.getKey() + ".", ""),
+                      e.getValue().get(0)
                   );
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
                   System.out.printf("Cannot set property '%s' of '%s' due to: %s%n", e.getKey(), configuration.getKey(), ex);
@@ -265,9 +251,9 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
             //set param value
             try {
               PropertyUtils.setProperty(
-                      configurations.get(param.getKey().split("\\.")[0]),
-                      param.getKey().split("\\.")[1],
-                      paramValue
+                  configurations.get(param.getKey().split("\\.")[0]),
+                  param.getKey().split("\\.")[1],
+                  paramValue
               );
             } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
               System.out.printf("Cannot set property '%s' to %s due to: %s%n", param.getKey(), paramValue, ex);
@@ -284,16 +270,16 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
             //submit jobs
             futures.add(executor.submit(() -> {
               System.out.printf("Started\t%s%n", staticKeys);
-              VoxelCompoundControl vcc = new VoxelCompoundControl(50d, 5d, 1, 1d, (Settings) configurations.get("settings"));
-              Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Builder) configurations.get("builder")));
+              RobotControl vcc = new RobotControl(50d, 5d, 1, (Settings) configurations.get("settings"));
+              Result result = vcc.apply(Grid.create(shape.getW(), shape.getH(), (Voxel.Description) configurations.get("builder")));
               System.out.printf("Ended\t%s%n", staticKeys);
               Map<String, Object> row = new LinkedHashMap<>();
               row.putAll(staticKeys);
               row.putAll(PropertyUtils.describe(result)
-                      .entrySet()
-                      .stream()
-                      .filter(e -> e.getValue() instanceof Number)
-                      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                  .entrySet()
+                  .stream()
+                  .filter(e -> e.getValue() instanceof Number)
+                  .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
               );
               return row;
             }));
@@ -320,7 +306,7 @@ public class VoxelCompoundControl extends AbstractTask<Grid<Voxel.Builder>, Voxe
       printer.flush();
       printer.close();
     } catch (IOException ex) {
-      Logger.getLogger(VoxelCompoundControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
+      Logger.getLogger(RobotControl.class.getName()).log(Level.SEVERE, "Cannot print CSV", ex);
     }
   }
 

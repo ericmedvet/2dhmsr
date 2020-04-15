@@ -16,25 +16,27 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
-import java.awt.Graphics2D;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class FramesFileWriter implements Flushable, SnapshotListener {
 
   public static enum Direction {
     HORIZONTAL, VERTICAL
-  };
+  }
 
   private final double initialT;
   private final double finalT;
@@ -44,7 +46,6 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
   private final Direction direction;
   private final File file;
   private final ExecutorService executor;
-  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
 
   private final GraphicsDrawer graphicsDrawer;
   private final Framer framer;
@@ -55,7 +56,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
 
   private static final Logger L = Logger.getLogger(FramesFileWriter.class.getName());
 
-  public FramesFileWriter(double initialT, double finalT, double dT, int w, int h, Direction direction, File file, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) {
+  public FramesFileWriter(double initialT, double finalT, double dT, int w, int h, Direction direction, File file, ExecutorService executor) {
     this.initialT = initialT;
     this.finalT = finalT;
     this.dT = dT;
@@ -64,7 +65,6 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
     this.direction = direction;
     this.file = file;
     this.executor = executor;
-    this.renderingDirectives = renderingDirectives;
     int frames = (int) Math.floor((finalT - initialT) / dT);
     int overallW = w;
     int overallH = h;
@@ -74,7 +74,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
       overallH = h * frames;
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
-    graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    graphicsDrawer = GraphicsDrawer.build();
     framer = new VoxelCompoundFollower((int) frames, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX);
     frameCount = 0;
   }
@@ -87,25 +87,31 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
 
   @Override
   public void listen(final Snapshot snapshot) {
-      Frame worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
-      if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
-        return;
-      }
-      if ((lastSnapshot != null) && ((snapshot.getTime() - lastSnapshot.getTime()) < dT)) { //wait for next snapshot
-        return;
-      }
-      lastSnapshot = snapshot;
-      Frame imageFrame;
-      if (direction.equals(Direction.HORIZONTAL)) {
-        imageFrame = new Frame(w * frameCount, w * (frameCount + 1), 0, h);
-      } else {
-        imageFrame = new Frame(0, w, h * frameCount, h * (frameCount + 1));
-      }
-      L.info(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
-      frameCount = frameCount + 1;
-      Graphics2D g = image.createGraphics();
-      graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, renderingDirectives, String.format("%d", frameCount));
-      g.dispose();
+    BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
+    if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
+      return;
+    }
+    if ((lastSnapshot != null) && ((snapshot.getTime() - lastSnapshot.getTime()) < dT)) { //wait for next snapshot
+      return;
+    }
+    lastSnapshot = snapshot;
+    BoundingBox imageFrame;
+    if (direction.equals(Direction.HORIZONTAL)) {
+      imageFrame = BoundingBox.build(
+          Point2.build(w * frameCount, 0),
+          Point2.build(w * (frameCount + 1), h)
+      );
+    } else {
+      imageFrame = BoundingBox.build(
+          Point2.build(0, h * frameCount),
+          Point2.build(w, h * (frameCount + 1))
+      );
+    }
+    L.info(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
+    frameCount = frameCount + 1;
+    Graphics2D g = image.createGraphics();
+    graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, String.format("%d", frameCount));
+    g.dispose();
   }
 
 }

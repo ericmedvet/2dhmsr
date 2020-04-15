@@ -16,9 +16,9 @@
  */
 package it.units.erallab.hmsrobots.objects.immutable;
 
-import it.units.erallab.hmsrobots.objects.immutable.Compound;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  *
@@ -27,19 +27,19 @@ import java.util.Collection;
 public class Snapshot implements Serializable, Comparable<Snapshot> {
   
   private final double time;
-  private final Collection<Compound> compounds;
+  private final Collection<ImmutableObject> objects;
 
-  public Snapshot(double time, Collection<Compound> compounds) {
+  public Snapshot(double time, Collection<ImmutableObject> objects) {
     this.time = time;
-    this.compounds = compounds;
+    this.objects = Collections.unmodifiableCollection(objects);
   }
 
   public double getTime() {
     return time;
   }
 
-  public Collection<Compound> getCompounds() {
-    return compounds;
+  public Collection<ImmutableObject> getObjects() {
+    return objects;
   }
 
   @Override
