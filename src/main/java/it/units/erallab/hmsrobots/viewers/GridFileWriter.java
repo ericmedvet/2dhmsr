@@ -16,9 +16,16 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
-import java.awt.Graphics2D;
+import org.jcodec.api.awt.AWTSequenceEncoder;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.io.SeekableByteChannel;
+import org.jcodec.common.model.Rational;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,20 +35,14 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
-import org.jcodec.api.awt.AWTSequenceEncoder;
-import org.jcodec.common.io.NIOUtils;
-import org.jcodec.common.io.SeekableByteChannel;
-import org.jcodec.common.model.Rational;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private final int w;
   private final int h;
-  private final GraphicsDrawer.RenderingDirectives renderingDirectives;
 
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
@@ -56,12 +57,11 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private boolean running;
   private int drawnCount;
 
-  private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());  
+  private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
-  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer.RenderingDirectives renderingDirectives) throws FileNotFoundException, IOException {
+  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
     this.w = w;
     this.h = h;
-    this.renderingDirectives = renderingDirectives;
     this.namesGrid = namesGrid;
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
@@ -69,10 +69,10 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     //prepare things
     channel = NIOUtils.writableChannel(file);
     encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
-    graphicsDrawer = GraphicsDrawer.Builder.create().build();
+    graphicsDrawer = GraphicsDrawer.build();
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
-        framerGrid.set(x, y, new VoxelCompoundFollower((int)frameRate*3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
+        framerGrid.set(x, y, new VoxelCompoundFollower((int) frameRate * 3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
         queueGrid.set(x, y, new LinkedList<>());
       }
     }
@@ -103,45 +103,45 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     });
     //start consumer of single frames
     executor.submit(() -> {
-      while (running) {
-        //check if ready
-        Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
-        synchronized (queueGrid) {
-          for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-            Snapshot snapshot;
-            while ((snapshot = entry.getValue().peek()) != null) {
-              if (snapshot.getTime() < t) {
-                entry.getValue().poll();
-              } else {
-                break;
+          while (running) {
+            //check if ready
+            Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
+            synchronized (queueGrid) {
+              for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+                Snapshot snapshot;
+                while ((snapshot = entry.getValue().peek()) != null) {
+                  if (snapshot.getTime() < t) {
+                    entry.getValue().poll();
+                  } else {
+                    break;
+                  }
+                }
+                snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
               }
             }
-            snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
-          }
-        }
-        boolean ready = true;
-        for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-          ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
-        }
-        if (ready) {
-          //update time
-          t = t + 1d / frameRate;
-          //render asynchronously
-          synchronized (gridQueue) {
-            gridQueue.offer(Grid.copy(snapshotGrid));
-            gridQueue.notifyAll();
-          }
-        } else {
-          synchronized (queueGrid) {
-            try {
-              queueGrid.wait();
-            } catch (InterruptedException ex) {
-              //ignore
+            boolean ready = true;
+            for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+              ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
+            }
+            if (ready) {
+              //update time
+              t = t + 1d / frameRate;
+              //render asynchronously
+              synchronized (gridQueue) {
+                gridQueue.offer(Grid.copy(snapshotGrid));
+                gridQueue.notifyAll();
+              }
+            } else {
+              synchronized (queueGrid) {
+                try {
+                  queueGrid.wait();
+                } catch (InterruptedException ex) {
+                  //ignore
+                }
+              }
             }
           }
         }
-      }
-    }
     );
   }
 
@@ -165,16 +165,20 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     Graphics2D g = image.createGraphics();
     //iterate over snapshot grid
     for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
-        if (entry.getValue() != null) {
-          //obtain viewport
-          Frame frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
-          //draw
-          graphicsDrawer.draw(entry.getValue(), g,
-                  new Frame(localW * entry.getX(), localW * (entry.getX() + 1), localH * entry.getY(), localH * (entry.getY() + 1)),
-                  frame, renderingDirectives, namesGrid.get(entry.getX(), entry.getY())
-          );
-        }
-      
+      if (entry.getValue() != null) {
+        //obtain viewport
+        BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
+        //draw
+        graphicsDrawer.draw(
+            entry.getValue(), g,
+            BoundingBox.build(
+                Point2.build(localW * entry.getX(), localH * entry.getY()),
+                Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
+            ),
+            frame, namesGrid.get(entry.getX(), entry.getY())
+        );
+      }
+
     }
     //dispose and encode
     g.dispose();

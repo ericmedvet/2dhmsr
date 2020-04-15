@@ -7,10 +7,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="2dhmsr" />
+        <module name="TwoDimHighlyModularSoftRobots" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="2dhmsr" target="11" />
+      <module name="TwoDimHighlyModularSoftRobots" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>
