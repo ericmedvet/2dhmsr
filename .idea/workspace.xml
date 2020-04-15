@@ -16,10 +16,21 @@
         <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
       </path>
     </expand>
-    <select />
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:release-1.1.0" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -40,7 +51,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="develop" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -67,7 +78,6 @@
     <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="extract.method.default.visibility" value="private" />
     <property name="last_directory_selection" value="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/assets" />
@@ -97,7 +107,7 @@
       <command value="mvn compile" />
     </option>
   </component>
-  <component name="RunManager" selected="Application.Configurable">
+  <component name="RunManager" selected="Application.Starter">
     <configuration name="ConfMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.util.ConfMain" />
       <module name="TwoDimHighlyModularSoftRobots" />
@@ -152,7 +162,7 @@
     </configuration>
     <configuration name="Starter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.Starter" />
-      <module name="TwoDimHighlyModularSoftRobots" />
+      <module name="2dhmsr" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="it.units.erallab.hmsrobots.*" />
@@ -282,7 +292,14 @@
       <option name="project" value="LOCAL" />
       <updated>1586903076324</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Project update.">
+      <created>1586934049344</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1586934049344</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -298,7 +315,19 @@
         </entry>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="release-1.1.0" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -321,7 +350,8 @@
     <MESSAGE value="Sensor readings can now be rendered (one Drawer for Angle as an example)." />
     <MESSAGE value="Sensor now has Domains.&#10;Added a generic Drawer for all sensor readings." />
     <MESSAGE value="README.md updated." />
-    <option name="LAST_COMMIT_MESSAGE" value="README.md updated." />
+    <MESSAGE value="Project update." />
+    <option name="LAST_COMMIT_MESSAGE" value="Project update." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -334,10 +364,10 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="582" y="215" width="873" height="684" key="#Project_Structure/54.27.1866.1053@54.27.1866.1053" timestamp="1586933924840" />
-    <state x="635" y="191" width="710" height="732" key="#Starter" timestamp="1586884699203">
+    <state x="635" y="191" width="765" height="732" key="#Starter" timestamp="1586934150428">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state x="635" y="191" width="710" height="732" key="#Starter/54.27.1866.1053@54.27.1866.1053" timestamp="1586884699203" />
+    <state x="635" y="191" width="765" height="732" key="#Starter/54.27.1866.1053@54.27.1866.1053" timestamp="1586934150428" />
     <state x="445" y="211" width="1084" height="798" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1585953461142">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -366,30 +396,30 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="668" y="392" width="628" height="330" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/54.27.1866.1053@54.27.1866.1053" timestamp="1586298738705" />
-    <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2" timestamp="1586903076121">
+    <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2" timestamp="1586934049116">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2/54.27.1866.1053@54.27.1866.1053" timestamp="1586903076121" />
+    <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2/54.27.1866.1053@54.27.1866.1053" timestamp="1586934049116" />
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl" timestamp="1585990173297">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="1820" height="274" key="GridCell.Tab.0.bottom" timestamp="1586903196897">
+    <state width="1820" height="274" key="GridCell.Tab.0.bottom" timestamp="1586934219745">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586903196897" />
-    <state width="1820" height="274" key="GridCell.Tab.0.center" timestamp="1586903196896">
+    <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219745" />
+    <state width="1820" height="274" key="GridCell.Tab.0.center" timestamp="1586934219745">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586903196896" />
-    <state width="1820" height="274" key="GridCell.Tab.0.left" timestamp="1586903196896">
+    <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219745" />
+    <state width="1820" height="274" key="GridCell.Tab.0.left" timestamp="1586934219744">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586903196896" />
-    <state width="1820" height="274" key="GridCell.Tab.0.right" timestamp="1586903196897">
+    <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219744" />
+    <state width="1820" height="274" key="GridCell.Tab.0.right" timestamp="1586934219745">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586903196897" />
+    <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219745" />
     <state width="1820" height="340" key="GridCell.Tab.1.bottom" timestamp="1586457828164">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -406,6 +436,10 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
+    <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog" timestamp="1586934109675">
+      <screen x="54" y="27" width="1866" height="1053" />
+    </state>
+    <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586934109675" />
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor" timestamp="1586299733861">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
