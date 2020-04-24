@@ -20,12 +20,15 @@
       <path>
         <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
         <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="BRANCH:release-1.1.0" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:develop" type="e8cecc67:BranchNodeDescriptor" />
       </path>
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/DistributedMLP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/DistributedMLP.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -44,6 +47,12 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="develop" />
@@ -80,7 +89,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="copyright.profiles" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
@@ -316,7 +325,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="release-1.1.0" />
+                        <option value="develop" />
                       </list>
                     </value>
                   </entry>
@@ -367,10 +376,10 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="445" y="211" width="1084" height="798" key="#com.intellij.execution.impl.EditConfigurationsDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1585953461142" />
-    <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser" timestamp="1586898690815">
+    <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser" timestamp="1587745401810">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser/54.27.1866.1053@54.27.1866.1053" timestamp="1586898690815" />
+    <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser/54.27.1866.1053@54.27.1866.1053" timestamp="1587745401810" />
     <state x="826" y="445" width="312" height="223" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog" timestamp="1585990308837">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -399,22 +408,22 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="1820" height="274" key="GridCell.Tab.0.bottom" timestamp="1586934219745">
+    <state width="1820" height="274" key="GridCell.Tab.0.bottom" timestamp="1586936447801">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219745" />
-    <state width="1820" height="274" key="GridCell.Tab.0.center" timestamp="1586934219745">
+    <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
+    <state width="1820" height="274" key="GridCell.Tab.0.center" timestamp="1586936447799">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219745" />
-    <state width="1820" height="274" key="GridCell.Tab.0.left" timestamp="1586934219744">
+    <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
+    <state width="1820" height="274" key="GridCell.Tab.0.left" timestamp="1586936447799">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219744" />
-    <state width="1820" height="274" key="GridCell.Tab.0.right" timestamp="1586934219745">
+    <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
+    <state width="1820" height="274" key="GridCell.Tab.0.right" timestamp="1586936447800">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586934219745" />
+    <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
     <state width="1820" height="340" key="GridCell.Tab.1.bottom" timestamp="1586457828164">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -435,14 +444,14 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586934109675" />
-    <state x="396" y="193" width="1346" height="852" key="SettingsEditor" timestamp="1586299733861">
+    <state x="396" y="193" width="1346" height="852" key="SettingsEditor" timestamp="1586936398265">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586299733861" />
-    <state x="582" y="289" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1586903086149">
+    <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
+    <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2" timestamp="1586935973446">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
-    <state x="582" y="289" width="800" height="535" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586903086149" />
+    <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
     <state x="744" y="333" width="476" height="448" key="chooseDestDirectoryDialog" timestamp="1586385553691">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>

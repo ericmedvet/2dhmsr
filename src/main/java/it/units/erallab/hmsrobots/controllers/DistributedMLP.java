@@ -186,4 +186,8 @@ public class DistributedMLP implements Controller, Parametrized {
       }
     }
   }
+
+  public Grid<MultiLayerPerceptron> getMlpGrid() {
+    return mlpGrid;
+  }
 }
