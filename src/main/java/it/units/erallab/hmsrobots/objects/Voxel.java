@@ -528,7 +528,7 @@ public class Voxel implements WorldObject {
     } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
       for (DistanceJoint joint : springJoints) {
         SpringRange range = (SpringRange) joint.getUserData();
-        if (f > 0) {
+        if (f >= 0) {
           joint.setDistance(range.rest - (range.rest - range.min) * f);
         } else if (f < 0) {
           joint.setDistance(range.rest + (range.max - range.rest) * -f);

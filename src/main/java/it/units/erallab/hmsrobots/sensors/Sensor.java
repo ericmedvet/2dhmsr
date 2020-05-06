@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 public interface Sensor extends Serializable {
 
-  class Domain {
+  class Domain implements Serializable {
     private final double min;
     private final double max;
 

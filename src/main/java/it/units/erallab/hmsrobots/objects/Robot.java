@@ -159,14 +159,14 @@ public class Robot implements WorldObject {
     //sense
     Grid<List<Pair<Sensor, double[]>>> sensorsValues = Grid.create(voxels, v -> v == null ? null : v.sense(t));
     //control
-    Grid<Double> forces = controller.control(t, sensorsValues);
+    Grid<Double> controlValues = controller.control(t, sensorsValues);
     //apply
     for (Grid.Entry<Voxel> voxelEntry : voxels) {
       if (voxelEntry.getValue() != null) {
-        voxelEntry.getValue().applyForce(forces.get(voxelEntry.getX(), voxelEntry.getY()));
+        voxelEntry.getValue().applyForce(controlValues.get(voxelEntry.getX(), voxelEntry.getY()));
       }
     }
-    return forces;
+    return controlValues;
   }
 
   public Vector2 getCenter() {

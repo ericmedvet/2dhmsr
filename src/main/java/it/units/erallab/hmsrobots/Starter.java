@@ -17,9 +17,7 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
-import it.units.erallab.hmsrobots.controllers.DistributedMLP;
-import it.units.erallab.hmsrobots.controllers.TimeFunctions;
+import it.units.erallab.hmsrobots.controllers.*;
 import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.sensors.*;
@@ -30,6 +28,7 @@ import it.units.erallab.hmsrobots.validation.RobotControl;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -167,7 +166,7 @@ public class Starter {
           d.getSensors().add(new Touch());
         }
         d.getSensors().add(new AreaRatio());
-        d.getSensors().add(new Average(new Angle(), 1d));
+        //d.getSensors().add(new Average(new Angle(), 1d));
         if ((x == structure.getW() - 1) && (y == structure.getH() - 1)) {
           d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d), -1, +1));
         }
@@ -175,28 +174,46 @@ public class Starter {
       }
       return null;
     });
-    Robot.Description distributedMlpRobot = new Robot.Description(
-        distRobotWithSensors,
-        new DistributedMLP(distRobotWithSensors, new int[0], 1)
-    );
-    weights = ((DistributedMLP) distributedMlpRobot.getController()).getParams();
+    DistributedMLP distributedMLP = new DistributedMLP(distRobotWithSensors, new int[0], 2);
+    weights = distributedMLP.getParams();
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble() * 2d - 1d;
     }
-    ((DistributedMLP) distributedMlpRobot.getController()).setParams(weights);
+    distributedMLP.setParams(weights);
+    Robot.Description distributedMlpRobot1 = new Robot.Description(
+        distRobotWithSensors,
+        new Discontinuous(distributedMLP, 1d / 5d, Discontinuous.Type.IMPULSE)
+    );
+    Robot.Description distributedMlpRobot2 = new Robot.Description(
+        SerializationUtils.clone(distRobotWithSensors),
+        new Discontinuous(SerializationUtils.clone(distributedMLP), 1d / 5d, Discontinuous.Type.STEP)
+    );
+    //single
+    Controller simplePhase = new TimeFunctions(Grid.create(1, 1, (x, y) -> t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)));
+    Robot.Description single1 = new Robot.Description(
+        Grid.create(1, 1, Voxel.Description.build()),
+        new Discontinuous(simplePhase, 1d / 10d, Discontinuous.Type.IMPULSE)
+    );
+    Robot.Description single2 = new Robot.Description(
+        Grid.create(1, 1, Voxel.Description.build()),
+        new Discontinuous(SerializationUtils.clone(simplePhase), 1d / 10d, Discontinuous.Type.STEP)
+    );
     //episode
     Locomotion locomotion = new Locomotion(
-        30,
+        60,
         Locomotion.createTerrain("uneven5"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(2, 2);
-    namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
-    namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
+    Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(2, 1);
+    //namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
+    //namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
     //namedSolutionGrid.set(0, 0, Pair.of("centralizedMLP", centralizedMlpRobot));
-    namedSolutionGrid.set(1, 0, Pair.of("distributedMLP", distributedMlpRobot));
-    namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
+    namedSolutionGrid.set(0, 0, Pair.of("distributedMLP-impulse", distributedMlpRobot1));
+    namedSolutionGrid.set(1, 0, Pair.of("distributedMLP-step", distributedMlpRobot2));
+    //namedSolutionGrid.set(0, 0, Pair.of("impulse", single1));
+    //namedSolutionGrid.set(1, 0, Pair.of("step", single2));
+    //namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
