@@ -25,12 +25,12 @@ import java.util.List;
 
 public abstract class FlatSensing implements Controller {
 
-  private final Grid<Voxel.Description> voxelGrid;
+  private final Grid<Voxel> voxelGrid;
 
   private final int nOfInputs;
   private final int nOfOutputs;
 
-  public FlatSensing(Grid<Voxel.Description> voxelGrid) {
+  public FlatSensing(Grid<Voxel> voxelGrid) {
     this.voxelGrid = voxelGrid;
     nOfInputs = voxelGrid.values().stream()
         .filter(v -> v != null)
@@ -72,7 +72,7 @@ public abstract class FlatSensing implements Controller {
     double[] outputs = control(t, inputs);
     int c = 0;
     Grid<Double> controlGrid = Grid.create(voxelGrid);
-    for (Grid.Entry<Voxel.Description> entry : voxelGrid) {
+    for (Grid.Entry<Voxel> entry : voxelGrid) {
       if (entry.getValue() != null) {
         controlGrid.set(entry.getX(), entry.getY(), outputs[c]);
         c = c + 1;

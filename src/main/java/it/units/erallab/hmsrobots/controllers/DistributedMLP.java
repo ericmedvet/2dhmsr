@@ -72,11 +72,11 @@ public class DistributedMLP implements Controller, Parametrized {
     lastSignalsGrid = Grid.create(mlpGrid, mlp -> new double[signals * Dir.values().length]);
   }
 
-  public DistributedMLP(Grid<Voxel.Description> voxelGrid, int[] innerNeurons, double[] weights, int signals) {
+  public DistributedMLP(Grid<Voxel> voxelGrid, int[] innerNeurons, double[] weights, int signals) {
     this.signals = signals;
     mlpGrid = Grid.create(voxelGrid);
     int c = 0;
-    for (Grid.Entry<Voxel.Description> entry : voxelGrid) {
+    for (Grid.Entry<Voxel> entry : voxelGrid) {
       if (entry.getValue() != null) {
         int nOfReadings = entry.getValue().getSensors().stream()
             .mapToInt(s -> s.domains().length)
@@ -100,7 +100,7 @@ public class DistributedMLP implements Controller, Parametrized {
     lastSignalsGrid = Grid.create(mlpGrid, mlp -> new double[signals * Dir.values().length]);
   }
 
-  public DistributedMLP(Grid<Voxel.Description> voxelGrid, int[] innerNeurons, int signals) {
+  public DistributedMLP(Grid<Voxel> voxelGrid, int[] innerNeurons, int signals) {
     this(voxelGrid, innerNeurons, null, signals);
   }
 

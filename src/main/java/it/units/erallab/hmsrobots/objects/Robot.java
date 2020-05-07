@@ -28,82 +28,45 @@ import org.dyn4j.dynamics.joint.Joint;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot implements WorldObject {
+public class Robot<V extends Voxel> implements WorldObject, Serializable {
 
-  private final List<Joint> joints;
   private final Controller controller;
-  private final Grid<Voxel> voxels;
-  private final Description description;
+  private final Grid<V> voxels;
 
-  public static class Description implements Serializable {
+  private transient List<Joint> joints;
 
-    private final Grid<Voxel.Description> voxelDescriptionGrid;
-    private final Controller controller;
-
-    public Description(Grid<Voxel.Description> voxelDescriptionGrid, Controller controller) {
-      this.voxelDescriptionGrid = voxelDescriptionGrid;
-      this.controller = controller;
-    }
-
-    public Grid<Voxel.Description> getVoxelDescriptionGrid() {
-      return voxelDescriptionGrid;
-    }
-
-    public Controller getController() {
-      return controller;
-    }
-
-    @Override
-    public int hashCode() {
-      int hash = 7;
-      hash = 19 * hash + Objects.hashCode(this.voxelDescriptionGrid);
-      hash = 19 * hash + Objects.hashCode(this.controller);
-      return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      final Description other = (Description) obj;
-      if (!Objects.equals(this.voxelDescriptionGrid, other.voxelDescriptionGrid)) {
-        return false;
-      }
-      return Objects.equals(this.controller, other.controller);
-    }
-
+  public Robot(Controller controller, Grid<V> voxels) {
+    this.controller = controller;
+    this.voxels = voxels;
+    assemble();
   }
 
-  public Robot(double x, double y, Description description) {
-    this.description = description;
-    this.controller = description.getController();
+  private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+    ois.defaultReadObject();
+    assemble();
+  }
+
+  private void assemble() {
     joints = new ArrayList<>();
-    //construct voxels
-    voxels = Grid.create(description.getVoxelDescriptionGrid());
-    for (int gx = 0; gx < description.getVoxelDescriptionGrid().getW(); gx++) {
-      for (int gy = 0; gy < description.getVoxelDescriptionGrid().getH(); gy++) {
-        if (description.getVoxelDescriptionGrid().get(gx, gy) != null) {
-          Voxel voxel = Voxel.build(this, description.getVoxelDescriptionGrid().get(gx, gy));
+    //translate voxels
+    for (int gx = 0; gx < voxels.getW(); gx++) {
+      for (int gy = 0; gy < voxels.getH(); gy++) {
+        Voxel voxel = voxels.get(gx, gy);
+        if (voxel != null) {
+          voxel.setOwner(this);
           voxel.translate(new Vector2(
-              x + (double) gx * voxel.getSideLength(),
-              y + gy * voxel.getSideLength()
+              (double) gx * voxel.getSideLength(),
+              (double) gy * voxel.getSideLength()
           ));
-          voxels.set(gx, gy, voxel);
           //check for adjacent voxels
           if ((gx > 0) && (voxels.get(gx - 1, gy) != null)) {
             Voxel adjacent = voxels.get(gx - 1, gy);
@@ -161,7 +124,7 @@ public class Robot implements WorldObject {
     //control
     Grid<Double> controlValues = controller.control(t, sensorsValues);
     //apply
-    for (Grid.Entry<Voxel> voxelEntry : voxels) {
+    for (Grid.Entry<V> voxelEntry : voxels) {
       if (voxelEntry.getValue() != null) {
         voxelEntry.getValue().applyForce(controlValues.get(voxelEntry.getX(), voxelEntry.getY()));
       }
@@ -192,18 +155,18 @@ public class Robot implements WorldObject {
     }
   }
 
-  public Grid<Voxel> getVoxels() {
+  public Grid<V> getVoxels() {
     return voxels;
-  }
-
-  public Description getDescription() {
-    return description;
   }
 
   public BoundingBox boundingBox() {
     return immutable().getChildren().stream()
         .map(o -> o.getShape().boundingBox())
         .reduce((b1, b2) -> BoundingBox.largest(b1, b2)).get();
+  }
+
+  public Controller getController() {
+    return controller;
   }
 
 }

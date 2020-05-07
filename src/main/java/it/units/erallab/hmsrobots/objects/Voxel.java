@@ -19,7 +19,6 @@ package it.units.erallab.hmsrobots.objects;
 import it.units.erallab.hmsrobots.objects.immutable.*;
 import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
@@ -32,6 +31,9 @@ import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Transform;
 import org.dyn4j.geometry.Vector2;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -41,7 +43,7 @@ import java.util.stream.Collectors;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Voxel implements WorldObject {
+public class Voxel implements WorldObject, Serializable {
 
   public enum ForceMethod {
     DISTANCE, FORCE
@@ -116,178 +118,87 @@ public class Voxel implements WorldObject {
 
   }
 
-  public static class Description implements Configurable<Description> {
-    @ConfigurableField
-    private final double sideLength = 3d;
-    @ConfigurableField
-    private final double massSideLengthRatio = .30d;
-    @ConfigurableField
-    private final double springF = 8d;
-    @ConfigurableField
-    private final double springD = 0.3d;
-    @ConfigurableField
-    private final double massLinearDamping = 1d;
-    @ConfigurableField
-    private final double massAngularDamping = 1d;
-    @ConfigurableField
-    private final double maxForce = 1000d; //not used in forceMethod=DISTANCE
-    @ConfigurableField
-    private final double areaRatioOffset = 0.2d; //not used in forceMethod=FORCE
-    @ConfigurableField
-    private final double friction = 100d;
-    @ConfigurableField
-    private final double restitution = 0.1d;
-    @ConfigurableField
-    private final double mass = 1d;
-    @ConfigurableField
-    private final boolean limitContractionFlag = true;
-    @ConfigurableField
-    private final boolean massCollisionFlag = false;
-    @ConfigurableField
-    private final ForceMethod forceMethod = ForceMethod.DISTANCE;
-    @ConfigurableField
-    private final EnumSet<SpringScaffolding> springScaffoldings = EnumSet.of(
-        SpringScaffolding.SIDE_EXTERNAL,
-        SpringScaffolding.SIDE_INTERNAL,
-        SpringScaffolding.SIDE_CROSS,
-        SpringScaffolding.CENTRAL_CROSS
-    );
-    @ConfigurableField
-    private final List<Sensor> sensors = new ArrayList<>();
-
-    private Description() {
-    }
-
-    public double getSideLength() {
-      return sideLength;
-    }
-
-    public double getMassSideLengthRatio() {
-      return massSideLengthRatio;
-    }
-
-    public double getSpringF() {
-      return springF;
-    }
-
-    public double getSpringD() {
-      return springD;
-    }
-
-    public double getMassLinearDamping() {
-      return massLinearDamping;
-    }
-
-    public double getMassAngularDamping() {
-      return massAngularDamping;
-    }
-
-    public double getMaxForce() {
-      return maxForce;
-    }
-
-    public double getAreaRatioOffset() {
-      return areaRatioOffset;
-    }
-
-    public double getFriction() {
-      return friction;
-    }
-
-    public double getRestitution() {
-      return restitution;
-    }
-
-    public double getMass() {
-      return mass;
-    }
-
-    public boolean isLimitContractionFlag() {
-      return limitContractionFlag;
-    }
-
-    public boolean isMassCollisionFlag() {
-      return massCollisionFlag;
-    }
-
-    public ForceMethod getForceMethod() {
-      return forceMethod;
-    }
-
-    public EnumSet<SpringScaffolding> getSpringScaffoldings() {
-      return springScaffoldings;
-    }
-
-    public List<Sensor> getSensors() {
-      return sensors;
-    }
-
-    public static Description build() {
-      return new Description();
-    }
-  }
-
-  private final Body[] vertexBodies;
-  private final DistanceJoint[] springJoints;
-  private final RopeJoint[] ropeJoints;
-  private final double sideLength;
-  private final ForceMethod forceMethod;
-  private final double maxForce;
-  private final double massSideLengthRatio;
-  private final Robot robot;
+  //private final Robot robot;
   private final List<Sensor> sensors;
+  private final double sideLength;
+  private final double massSideLengthRatio;
+  private final double springF;
+  private final double springD;
+  private final double massLinearDamping;
+  private final double massAngularDamping;
+  private final double maxForce; //not used in forceMethod=DISTANCE
+  private final double areaRatioOffset; //not used in forceMethod=FORCE
+  private final double friction;
+  private final double restitution;
+  private final double mass;
+  private final boolean limitContractionFlag;
+  private final boolean massCollisionFlag;
+  private final ForceMethod forceMethod;
+  private final EnumSet<SpringScaffolding> springScaffoldings;
+
+  private transient Body[] vertexBodies;
+  private transient DistanceJoint[] springJoints;
+  private transient RopeJoint[] ropeJoints;
+  private transient World world;
 
   private double lastAppliedForce = 0d;
   private List<Pair<Sensor, double[]>> lastSensorReadings = Collections.EMPTY_LIST;
-  private World world;
 
-  public static Voxel build(Robot robot, Description description) {
-    return new Voxel(robot, description);
+  public Voxel(List<Sensor> sensors, double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double maxForce, double areaRatioOffset, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, ForceMethod forceMethod, EnumSet<SpringScaffolding> springScaffoldings) {
+    this.sensors = sensors;
+    this.sideLength = sideLength;
+    this.massSideLengthRatio = massSideLengthRatio;
+    this.springF = springF;
+    this.springD = springD;
+    this.massLinearDamping = massLinearDamping;
+    this.massAngularDamping = massAngularDamping;
+    this.maxForce = maxForce;
+    this.areaRatioOffset = areaRatioOffset;
+    this.friction = friction;
+    this.restitution = restitution;
+    this.mass = mass;
+    this.limitContractionFlag = limitContractionFlag;
+    this.massCollisionFlag = massCollisionFlag;
+    this.forceMethod = forceMethod;
+    this.springScaffoldings = springScaffoldings;
+    assemble();
   }
 
-  public static Voxel build(Robot robot) {
-    return new Voxel(robot, Description.build());
+  public Voxel(List<Sensor> sensors) {
+    this(sensors, 3d, .30d, 8d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, ForceMethod.DISTANCE, EnumSet.allOf(SpringScaffolding.class));
   }
 
-  private Voxel(Robot robot, Description description) {
-    this.robot = robot;
-    this.sideLength = description.sideLength;
-    this.forceMethod = description.forceMethod;
-    this.maxForce = description.maxForce;
-    this.massSideLengthRatio = description.massSideLengthRatio;
-    this.sensors = new ArrayList<>(description.sensors);
+  private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+    ois.defaultReadObject();
+    assemble();
+  }
+
+  private void assemble() {
     //compute densities
-    double massSideLength = description.sideLength * description.massSideLengthRatio;
-    double density = description.mass * massSideLength / massSideLength / 4;
+    double massSideLength = sideLength * massSideLengthRatio;
+    double density = mass * massSideLength / massSideLength / 4;
     //build bodies
     vertexBodies = new Body[4];
     vertexBodies[0] = new Body(1); //NW
     vertexBodies[1] = new Body(1); //NE
     vertexBodies[2] = new Body(1); //SE
     vertexBodies[3] = new Body(1); //SW
-    for (Body vertexBody : vertexBodies) {
-      vertexBody.setUserData(robot);
-    }
-    vertexBodies[0].addFixture(new Rectangle(massSideLength, massSideLength), density, description.friction, description.restitution);
-    vertexBodies[1].addFixture(new Rectangle(massSideLength, massSideLength), density, description.friction, description.restitution);
-    vertexBodies[2].addFixture(new Rectangle(massSideLength, massSideLength), density, description.friction, description.restitution);
-    vertexBodies[3].addFixture(new Rectangle(massSideLength, massSideLength), density, description.friction, description.restitution);
+    vertexBodies[0].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[1].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[2].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
+    vertexBodies[3].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[0].translate(-(sideLength / 2d - massSideLength / 2d), +(sideLength / 2d - massSideLength / 2d));
     vertexBodies[1].translate(+(sideLength / 2d - massSideLength / 2d), +(sideLength / 2d - massSideLength / 2d));
     vertexBodies[2].translate(+(sideLength / 2d - massSideLength / 2d), -(sideLength / 2d - massSideLength / 2d));
     vertexBodies[3].translate(-(sideLength / 2d - massSideLength / 2d), -(sideLength / 2d - massSideLength / 2d));
-    ParentFilter filter = new ParentFilter(robot);
     for (Body body : vertexBodies) {
       body.setMass(MassType.NORMAL);
-      body.setLinearDamping(description.massLinearDamping);
-      body.setAngularDamping(description.massAngularDamping);
-      if (description.massCollisionFlag) {
-        body.getFixture(0).setFilter(filter);
-      }
+      body.setLinearDamping(massLinearDamping);
+      body.setAngularDamping(massAngularDamping);
     }
     //build rope joints
     List<RopeJoint> localRopeJoints = new ArrayList<>();
-    if (description.limitContractionFlag) {
+    if (limitContractionFlag) {
       localRopeJoints.add(new RopeJoint(vertexBodies[0], vertexBodies[1], vertexBodies[0].getWorldCenter(), vertexBodies[1].getWorldCenter()));
       localRopeJoints.add(new RopeJoint(vertexBodies[1], vertexBodies[2], vertexBodies[1].getWorldCenter(), vertexBodies[2].getWorldCenter()));
       localRopeJoints.add(new RopeJoint(vertexBodies[2], vertexBodies[3], vertexBodies[2].getWorldCenter(), vertexBodies[3].getWorldCenter()));
@@ -301,12 +212,12 @@ public class Voxel implements WorldObject {
     ropeJoints = localRopeJoints.toArray(new RopeJoint[0]);
     //build distance joints
     List<DistanceJoint> allSpringJoints = new ArrayList<>();
-    double minSideLength = Math.sqrt(sideLength * sideLength * (1d - description.areaRatioOffset));
-    double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + description.areaRatioOffset));
+    double minSideLength = Math.sqrt(sideLength * sideLength * (1d - areaRatioOffset));
+    double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + areaRatioOffset));
     SpringRange sideParallelRange = new SpringRange(minSideLength - 2d * massSideLength, sideLength - 2d * massSideLength, maxSideLength - 2d * massSideLength);
     SpringRange sideCrossRange = new SpringRange(Math.sqrt(massSideLength * massSideLength + sideParallelRange.min * sideParallelRange.min), Math.sqrt(massSideLength * massSideLength + sideParallelRange.rest * sideParallelRange.rest), Math.sqrt(massSideLength * massSideLength + sideParallelRange.max * sideParallelRange.max));
     SpringRange centralCrossRange = new SpringRange((minSideLength - massSideLength) * Math.sqrt(2d), (sideLength - massSideLength) * Math.sqrt(2d), (maxSideLength - massSideLength) * Math.sqrt(2d));
-    if (description.springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
+    if (springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
@@ -329,7 +240,7 @@ public class Voxel implements WorldObject {
       }
       allSpringJoints.addAll(localSpringJoints);
     }
-    if (description.springScaffoldings.contains(SpringScaffolding.SIDE_EXTERNAL)) {
+    if (springScaffoldings.contains(SpringScaffolding.SIDE_EXTERNAL)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
@@ -352,7 +263,7 @@ public class Voxel implements WorldObject {
       }
       allSpringJoints.addAll(localSpringJoints);
     }
-    if (description.springScaffoldings.contains(SpringScaffolding.SIDE_CROSS)) {
+    if (springScaffoldings.contains(SpringScaffolding.SIDE_CROSS)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
@@ -391,7 +302,7 @@ public class Voxel implements WorldObject {
       }
       allSpringJoints.addAll(localSpringJoints);
     }
-    if (description.springScaffoldings.contains(SpringScaffolding.CENTRAL_CROSS)) {
+    if (springScaffoldings.contains(SpringScaffolding.CENTRAL_CROSS)) {
       List<DistanceJoint> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint(vertexBodies[0], vertexBodies[2],
           vertexBodies[0].getWorldCenter(),
@@ -409,10 +320,20 @@ public class Voxel implements WorldObject {
     //setup spring joints
     for (DistanceJoint joint : allSpringJoints) {
       joint.setDistance(((SpringRange) joint.getUserData()).rest);
-      joint.setFrequency(description.springF);
-      joint.setDampingRatio(description.springD);
+      joint.setFrequency(springF);
+      joint.setDampingRatio(springD);
     }
     springJoints = allSpringJoints.toArray(new DistanceJoint[0]);
+  }
+
+  public void setOwner(Robot robot) {
+    ParentFilter filter = new ParentFilter(robot);
+    for (Body vertexBody : vertexBodies) {
+      vertexBody.setUserData(robot);
+      if (massCollisionFlag) {
+        vertexBody.getFixture(0).setFilter(filter);
+      }
+    }
   }
 
   @Override
@@ -452,13 +373,12 @@ public class Voxel implements WorldObject {
       ));
     }
     //add enclosing
-    ImmutableVoxel immutable = new ImmutableVoxel(
+    return new ImmutableVoxel(
         this,
         voxelShape,
         children,
         sideLength * sideLength
     );
-    return immutable;
   }
 
   private Vector2 getIndexedVertex(int i, int j) {
@@ -585,10 +505,6 @@ public class Voxel implements WorldObject {
 
   public double getSideLength() {
     return sideLength;
-  }
-
-  public Robot getRobot() {
-    return robot;
   }
 
   public World getWorld() {

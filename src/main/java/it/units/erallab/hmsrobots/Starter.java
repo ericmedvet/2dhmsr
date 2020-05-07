@@ -17,14 +17,18 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.*;
+import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
+import it.units.erallab.hmsrobots.controllers.Discontinuous;
+import it.units.erallab.hmsrobots.controllers.DistributedMLP;
+import it.units.erallab.hmsrobots.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.sensors.*;
+import it.units.erallab.hmsrobots.sensors.AreaRatio;
+import it.units.erallab.hmsrobots.sensors.Average;
+import it.units.erallab.hmsrobots.sensors.Touch;
+import it.units.erallab.hmsrobots.sensors.Velocity;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.validation.CantileverBending;
-import it.units.erallab.hmsrobots.validation.RobotControl;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
@@ -34,9 +38,7 @@ import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,7 +49,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public class Starter {
 
   private static void sampleExecution() throws IOException {
-    Locomotion locomotion = new Locomotion(
+    final Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("flat"),
         Lists.newArrayList(
@@ -56,98 +58,83 @@ public class Starter {
         ),
         new Settings()
     );
-    final Voxel.Description hardMaterial = Voxel.Description.build()
-        .setConfigurable("springF", 50)
-        .setConfigurable("springScaffoldings", EnumSet.allOf(Voxel.SpringScaffolding.class));
-    final Voxel.Description softMaterial = Voxel.Description.build()
-        .setConfigurable("springF", 5)
-        .setConfigurable("springScaffoldings", EnumSet.of(
-            Voxel.SpringScaffolding.SIDE_EXTERNAL,
-            Voxel.SpringScaffolding.CENTRAL_CROSS));
+    final Voxel hardMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 50d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.allOf(Voxel.SpringScaffolding.class));
+    final Voxel softMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 5d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS));
     int w = 4;
     int h = 2;
-    Robot.Description description = new Robot.Description(
-        Grid.create(
-            w, h,
-            (x, y) -> (y == 0) ? hardMaterial : softMaterial
-        ),
+    Robot robot = new Robot(
         new TimeFunctions(Grid.create(
             w, h,
             (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
-        ))
+        )),
+        Grid.create(
+            w, h,
+            (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
+        )
     );
     FramesFileWriter framesFileWriter = new FramesFileWriter(
         5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.VERTICAL,
         new File("/home/eric/experiments/2dhmsr/frames.v.png"),
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     );
-    List<Double> result = locomotion.apply(description);
+    List<Double> result = locomotion.apply(robot);
     framesFileWriter.flush();
   }
 
   public static void main(String[] args) throws IOException {
     final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
-    final Voxel.Description voxelDescription = Voxel.Description.build();
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);
     int controlInterval = 1;
     //simple
     double f = 1d;
-    Robot.Description phases1 = new Robot.Description(
-        Grid.create(structure, b -> b ? voxelDescription : null),
+    Robot phasesRobot = new Robot(
         new TimeFunctions(Grid.create(
             structure.getW(),
             structure.getH(),
             (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) structure.getW()))
-        )));
-    Robot.Description phases2 = new Robot.Description(
-        Grid.create(structure, b -> b ? voxelDescription : null),
+        )),
+        Grid.create(structure, b -> b ? new Voxel(Collections.EMPTY_LIST) : null)
+    );
+    //multimaterial
+    Voxel hardMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 50d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.allOf(Voxel.SpringScaffolding.class));
+    Voxel softMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 5d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS));
+    Robot multimaterial = new Robot(
         new TimeFunctions(Grid.create(
             structure.getW(),
             structure.getH(),
-            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) structure.getW()))
-        )));
-    //multimaterial
-    final Voxel.Description hardMaterial = Voxel.Description.build()
-        .setConfigurable("springF", 50)
-        .setConfigurable("springScaffoldings", EnumSet.allOf(Voxel.SpringScaffolding.class));
-    final Voxel.Description softMaterial = Voxel.Description.build()
-        .setConfigurable("springF", 5)
-        .setConfigurable("springScaffoldings", EnumSet.of(
-            Voxel.SpringScaffolding.SIDE_EXTERNAL,
-            Voxel.SpringScaffolding.CENTRAL_CROSS));
-    int w = 4;
-    int h = 2;
-    Robot.Description multimat = new Robot.Description(
+            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) structure.getW()))
+        )),
         Grid.create(
-            w, h,
-            (x, y) -> (y == 0) ? hardMaterial : softMaterial
-        ),
-        new TimeFunctions(Grid.create(
-            w, h,
-            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
-        ))
+            structure.getW(),
+            structure.getH(),
+            (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
+        )
     );
     //centralized mlp
-    Grid<Voxel.Description> centRobotWithSensors = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+    Grid<Voxel> sensingVoxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
       if (structure.get(x, y)) {
-        Voxel.Description d = Voxel.Description.build();
         if (y > 2) {
-          //d.getSensors().add(new Velocity(true, d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y));
-          d.getSensors().add(new Average(new Velocity(true, 2d * d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y), 1d));
+          return new Voxel(Arrays.asList(
+              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+          ));
         }
         if (y == 0) {
-          d.getSensors().add(new Touch());
+          return new Voxel(Arrays.asList(
+              new Average(new Touch(), 1d)
+          ));
         }
-        d.getSensors().add(new AreaRatio());
-        return d;
+        return new Voxel(Arrays.asList(
+            new AreaRatio()
+        ));
       }
       return null;
     });
     Random random = new Random(1);
-    Robot.Description centralizedMlpRobot = new Robot.Description(
-        centRobotWithSensors,
-        new CentralizedMLP(centRobotWithSensors, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d))
+    Robot centralizedMlpRobot = new Robot(
+        new CentralizedMLP(sensingVoxels, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)),
+        SerializationUtils.clone(sensingVoxels)
     );
     double[] weights = ((CentralizedMLP) centralizedMlpRobot.getController()).getParams();
     for (int i = 0; i < weights.length; i++) {
@@ -155,48 +142,19 @@ public class Starter {
     }
     ((CentralizedMLP) centralizedMlpRobot.getController()).setParams(weights);
     //distributed
-    Grid<Voxel.Description> distRobotWithSensors = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
-      if (structure.get(x, y)) {
-        Voxel.Description d = Voxel.Description.build();
-        if (y > 2) {
-          //d.getSensors().add(new Velocity(true, d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y));
-          d.getSensors().add(new Average(new Velocity(true, d.getSideLength(), Velocity.Axis.X, Velocity.Axis.Y), 0.5d));
-        }
-        if (y == 0) {
-          d.getSensors().add(new Touch());
-        }
-        d.getSensors().add(new AreaRatio());
-        //d.getSensors().add(new Average(new Angle(), 1d));
-        if ((x == structure.getW() - 1) && (y == structure.getH() - 1)) {
-          d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d), -1, +1));
-        }
-        return d;
-      }
-      return null;
-    });
-    DistributedMLP distributedMLP = new DistributedMLP(distRobotWithSensors, new int[0], 2);
+    DistributedMLP distributedMLP = new DistributedMLP(sensingVoxels, new int[0], 2);
     weights = distributedMLP.getParams();
     for (int i = 0; i < weights.length; i++) {
       weights[i] = random.nextDouble() * 2d - 1d;
     }
     distributedMLP.setParams(weights);
-    Robot.Description distributedMlpRobot1 = new Robot.Description(
-        distRobotWithSensors,
-        new Discontinuous(distributedMLP, 1d / 5d, Discontinuous.Type.IMPULSE)
+    Robot distributedMlpRobot1 = new Robot(
+        new Discontinuous(distributedMLP, 1d / 5d, Discontinuous.Type.IMPULSE),
+        SerializationUtils.clone(sensingVoxels)
     );
-    Robot.Description distributedMlpRobot2 = new Robot.Description(
-        SerializationUtils.clone(distRobotWithSensors),
-        new Discontinuous(SerializationUtils.clone(distributedMLP), 1d / 5d, Discontinuous.Type.STEP)
-    );
-    //single
-    Controller simplePhase = new TimeFunctions(Grid.create(1, 1, (x, y) -> t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)));
-    Robot.Description single1 = new Robot.Description(
-        Grid.create(1, 1, Voxel.Description.build()),
-        new Discontinuous(simplePhase, 1d / 10d, Discontinuous.Type.IMPULSE)
-    );
-    Robot.Description single2 = new Robot.Description(
-        Grid.create(1, 1, Voxel.Description.build()),
-        new Discontinuous(SerializationUtils.clone(simplePhase), 1d / 10d, Discontinuous.Type.STEP)
+    Robot distributedMlpRobot2 = new Robot(
+        new Discontinuous(SerializationUtils.clone(distributedMLP), 1d / 5d, Discontinuous.Type.STEP),
+        SerializationUtils.clone(sensingVoxels)
     );
     //episode
     Locomotion locomotion = new Locomotion(
@@ -205,67 +163,20 @@ public class Starter {
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot.Description>> namedSolutionGrid = Grid.create(2, 1);
-    //namedSolutionGrid.set(0, 0, Pair.of("phase-1", phases1));
-    //namedSolutionGrid.set(0, 1, Pair.of("phase-2", phases2));
-    //namedSolutionGrid.set(0, 0, Pair.of("centralizedMLP", centralizedMlpRobot));
-    namedSolutionGrid.set(0, 0, Pair.of("distributedMLP-impulse", distributedMlpRobot1));
-    namedSolutionGrid.set(1, 0, Pair.of("distributedMLP-step", distributedMlpRobot2));
-    //namedSolutionGrid.set(0, 0, Pair.of("impulse", single1));
-    //namedSolutionGrid.set(1, 0, Pair.of("step", single2));
-    //namedSolutionGrid.set(1, 1, Pair.of("multimat", multimat));
+    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(2, 3);
+    namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
+    namedSolutionGrid.set(1, 0, Pair.of("centralized", centralizedMlpRobot));
+    namedSolutionGrid.set(0, 1, Pair.of("distributedMLP-impulse", distributedMlpRobot1));
+    namedSolutionGrid.set(1, 1, Pair.of("distributedMLP-step", distributedMlpRobot2));
+    namedSolutionGrid.set(0, 2, Pair.of("multimaterial", multimaterial));
+    namedSolutionGrid.set(1, 2, Pair.of("multimaterial", SerializationUtils.clone(multimaterial)));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot.Description> runner = new GridEpisodeRunner<>(
+    GridEpisodeRunner<Robot> runner = new GridEpisodeRunner<>(
         namedSolutionGrid,
         locomotion,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
-  }
-
-  public static void cantileverValidation() {
-    CantileverBending cb = new CantileverBending(
-        30d,
-        Double.POSITIVE_INFINITY,
-        30d,
-        0.01d,
-        new Settings()
-    );
-    Grid<Pair<String, Grid<Voxel.Description>>> namedSolutionGrid = Grid.create(1, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("10x4", Grid.create(10, 4, Voxel.Description.build())));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Grid<Voxel.Description>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        cb,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
-  }
-
-  public static void controlValidation() {
-    RobotControl vcc = new RobotControl(
-        30d,
-        5d,
-        1,
-        new Settings()
-    );
-    Grid<Pair<String, Grid<Voxel.Description>>> namedSolutionGrid = Grid.create(1, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("10x4", Grid.create(10, 4, Voxel.Description.build())));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Grid<Voxel.Description>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        vcc,
         gridOnlineViewer,
         executor
     );

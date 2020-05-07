@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
+public class Locomotion extends AbstractTask<Robot, List<Double>> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -71,7 +71,7 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
   }
 
   @Override
-  public List<Double> apply(Robot.Description description, SnapshotListener listener) {
+  public List<Double> apply(Robot robot, SnapshotListener listener) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -81,7 +81,6 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
     ground.addTo(world);
     worldObjects.add(ground);
     //position robot: x of rightmost point is on 2nd point of profile
-    Robot robot = new Robot(0d, 0d, description);
     BoundingBox boundingBox = robot.boundingBox();
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
