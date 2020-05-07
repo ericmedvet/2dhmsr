@@ -25,14 +25,9 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/Discontinuous.java" afterDir="false" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Robot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Sensor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Sensor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Grid.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Grid.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -308,7 +303,14 @@
       <option name="project" value="LOCAL" />
       <updated>1586934049344</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected.">
+      <created>1588784415079</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1588784415079</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -360,7 +362,8 @@
     <MESSAGE value="Sensor now has Domains.&#10;Added a generic Drawer for all sensor readings." />
     <MESSAGE value="README.md updated." />
     <MESSAGE value="Project update." />
-    <option name="LAST_COMMIT_MESSAGE" value="Project update." />
+    <MESSAGE value="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected." />
+    <option name="LAST_COMMIT_MESSAGE" value="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -414,50 +417,50 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="2090" height="326" key="GridCell.Tab.0.bottom" timestamp="1588784160435">
+    <state width="2090" height="401" key="GridCell.Tab.0.bottom" timestamp="1588786491510">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
-    <state width="2090" height="326" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588784160435" />
+    <state width="2090" height="401" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
     <state width="2090" height="326" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="2090" height="326" key="GridCell.Tab.0.center" timestamp="1588784160435">
+    <state width="2090" height="401" key="GridCell.Tab.0.center" timestamp="1588786491510">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="326" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588784160435" />
+    <state width="2090" height="401" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
     <state width="2090" height="326" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="2090" height="326" key="GridCell.Tab.0.left" timestamp="1588784160435">
+    <state width="2090" height="401" key="GridCell.Tab.0.left" timestamp="1588786491510">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="326" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588784160435" />
+    <state width="2090" height="401" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
     <state width="2090" height="326" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="2090" height="326" key="GridCell.Tab.0.right" timestamp="1588784160435">
+    <state width="2090" height="401" key="GridCell.Tab.0.right" timestamp="1588786491510">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
-    <state width="2090" height="326" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588784160435" />
+    <state width="2090" height="401" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
     <state width="2090" height="326" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1588781247598">
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1588786491511">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
-    <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588781247598" />
-    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1588781247598">
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
+    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1588786491511">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
-    <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588781247598" />
-    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1588781247598">
+    <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
+    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1588786491510">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
-    <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588781247598" />
-    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1588781247598">
+    <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1588786491511">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
-    <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588781247598" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog" timestamp="1586934109675">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -467,10 +470,11 @@
     </state>
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2" timestamp="1586935973446">
-      <screen x="54" y="27" width="1866" height="1053" />
+    <state x="660" y="322" width="1005" height="590" key="Vcs.Push.Dialog.v2" timestamp="1588784437614">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
+    <state x="660" y="322" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588784437614" />
     <state x="846" y="367" width="476" height="448" key="chooseDestDirectoryDialog" timestamp="1588777863562">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
