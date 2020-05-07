@@ -27,7 +27,7 @@
   <component name="ChangeListManager">
     <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -180,9 +180,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Application.Starter" />
-        <item itemvalue="Application.Configuration" />
-        <item itemvalue="Application.ConfMain" />
         <item itemvalue="Application.GraphicsDrawer" />
+        <item itemvalue="Application.ConfMain" />
+        <item itemvalue="Application.Configuration" />
         <item itemvalue="Application.Configurable" />
       </list>
     </recent_temporary>
@@ -470,11 +470,11 @@
     </state>
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="322" width="1005" height="590" key="Vcs.Push.Dialog.v2" timestamp="1588784437614">
+    <state x="660" y="312" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1588884011789">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
-    <state x="660" y="322" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588784437614" />
+    <state x="660" y="312" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588884011789" />
     <state x="846" y="367" width="476" height="448" key="chooseDestDirectoryDialog" timestamp="1588777863562">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
@@ -502,10 +502,11 @@
     </state>
     <state x="650" y="340" width="663" height="434" key="git4idea.merge.GitPullDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586933465045" />
     <state x="738" y="380" key="git4idea.merge.GitPullDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588778325002" />
-    <state x="768" y="396" width="438" height="322" key="git4idea.ui.GitTagDialog" timestamp="1585952211835">
-      <screen x="54" y="27" width="1866" height="1053" />
+    <state x="873" y="445" width="438" height="322" key="git4idea.ui.GitTagDialog" timestamp="1588883953536">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="768" y="396" width="438" height="322" key="git4idea.ui.GitTagDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1585952211835" />
+    <state x="873" y="445" key="git4idea.ui.GitTagDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588883953536" />
     <state width="600" height="424" key="javadoc.popup" timestamp="1586006597535">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>

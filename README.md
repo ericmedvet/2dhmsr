@@ -46,13 +46,13 @@ On top of the GUI, a set of UI controls allows the user to customize the visuali
 A brief fragment of code using for setting up a VSR and assessing it in the task of locomotion.
 ```java
 Locomotion locomotion = new Locomotion(
-  60,
-  Locomotion.createTerrain("uneven10"),
-  Lists.newArrayList(
-    Locomotion.Metric.TRAVEL_X_VELOCITY,
-    Locomotion.Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS
-  ),
-  new Settings()
+    60,
+    Locomotion.createTerrain("uneven10"),
+    Lists.newArrayList(
+        Locomotion.Metric.TRAVEL_X_VELOCITY,
+        Locomotion.Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS
+    ),
+    new Settings()
 );
 final Voxel.Description hardMaterial = Voxel.Description.build()
     .setConfigurable("springF", 50)
