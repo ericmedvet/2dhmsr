@@ -19,9 +19,9 @@ package it.units.erallab.hmsrobots.validation;
 import com.google.common.base.Stopwatch;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.objects.immutable.Point2;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
@@ -42,7 +42,8 @@ import java.util.stream.Collectors;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class CantileverBending extends AbstractTask<Grid<Voxel>, CantileverBending.Result> {
+//TODO should be rewritten to take just a Grid<Voxel> and avoid using Robot<>
+public class CantileverBending extends AbstractTask<Grid<ControllableVoxel>, CantileverBending.Result> {
 
   public static class Result {
 
@@ -152,10 +153,10 @@ public class CantileverBending extends AbstractTask<Grid<Voxel>, CantileverBendi
   }
 
   @Override
-  public Result apply(Grid<Voxel> voxels, SnapshotListener listener) {
+  public Result apply(Grid<ControllableVoxel> voxels, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
-    Robot robot = new Robot(
+    Robot<ControllableVoxel> robot = new Robot<>(
         (t, sensorValues) -> Grid.create(voxels, v -> 0d),
         voxels
     );

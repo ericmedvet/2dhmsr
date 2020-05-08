@@ -20,9 +20,9 @@ import com.google.common.base.Stopwatch;
 import it.units.erallab.hmsrobots.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.objects.Ground;
 import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.Voxel;
 import it.units.erallab.hmsrobots.objects.WorldObject;
 import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class RobotControl extends AbstractTask<Grid<Voxel>, RobotControl.Result> {
+public class RobotControl extends AbstractTask<Grid<ControllableVoxel>, RobotControl.Result> {
 
   public static class Result {
 
@@ -110,14 +110,14 @@ public class RobotControl extends AbstractTask<Grid<Voxel>, RobotControl.Result>
   }
 
   @Override
-  public Result apply(Grid<Voxel> voxels, SnapshotListener listener) {
+  public Result apply(Grid<ControllableVoxel> voxels, SnapshotListener listener) {
     List<WorldObject> worldObjects = new ArrayList<>();
     //build voxel compound
     Grid<SerializableFunction<Double, Double>> functionGrid = Grid.create(voxels);
-    for (Grid.Entry<Voxel> entry : voxels) {
+    for (Grid.Entry<ControllableVoxel> entry : voxels) {
       functionGrid.set(entry.getX(), entry.getY(), t -> Math.sin(-2d * Math.PI * t * freq + 2d * Math.PI * (double) entry.getX() / (double) voxels.getW()));
     }
-    Robot robot = new Robot(
+    Robot<ControllableVoxel> robot = new Robot<>(
         new TimeFunctions(functionGrid),
         voxels
     );
@@ -173,7 +173,7 @@ public class RobotControl extends AbstractTask<Grid<Voxel>, RobotControl.Result>
         listener.listen(snapshot);
       }
       //collect data
-      for (Grid.Entry<Voxel> entry : robot.getVoxels()) {
+      for (Grid.Entry<ControllableVoxel> entry : robot.getVoxels()) {
         if (entry.getValue() != null) {
           double velocityMagnitude = 0d; //TODO fix me! entry.getValue().getSensorReading(Voxel.Sensor.VELOCITY_MAGNITUDE);
           double brokenRatio = 0d; //TODO fix me! entry.getValue().getSensorReading(Voxel.Sensor.BROKEN_RATIO);

@@ -16,30 +16,31 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.SensingVoxel;
 import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.Objects;
 
-public abstract class FlatSensing implements Controller {
+public abstract class FlatSensing extends SensingController<Double, SensingVoxel> {
 
-  private final Grid<Voxel> voxelGrid;
+  private final Grid<SensingVoxel> voxels;
 
   private final int nOfInputs;
   private final int nOfOutputs;
 
-  public FlatSensing(Grid<Voxel> voxelGrid) {
-    this.voxelGrid = voxelGrid;
-    nOfInputs = voxelGrid.values().stream()
-        .filter(v -> v != null)
+  public FlatSensing(Grid<SensingVoxel> voxels) {
+    this.voxels = voxels;
+    nOfInputs = voxels.values().stream()
+        .filter(Objects::nonNull)
         .mapToInt(v -> v.getSensors().stream()
             .mapToInt(s -> s.domains().length)
             .sum())
         .sum();
-    nOfOutputs = (int) voxelGrid.values().stream()
-        .filter(v -> v != null)
+    nOfOutputs = (int) voxels.values().stream()
+        .filter(Objects::nonNull)
         .count();
   }
 
@@ -67,18 +68,37 @@ public abstract class FlatSensing implements Controller {
   }
 
   @Override
-  public Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
+  public void control(double t, Grid<SensingVoxel> voxels) {
+    Grid<List<Pair<Sensor, double[]>>> sensorsValues = Grid.create(voxels, v -> v == null ? null : v.sense(t));
     double[] inputs = flatten(sensorsValues);
     double[] outputs = control(t, inputs);
     int c = 0;
-    Grid<Double> controlGrid = Grid.create(voxelGrid);
-    for (Grid.Entry<Voxel> entry : voxelGrid) {
+    for (Grid.Entry<SensingVoxel> entry : voxels) {
       if (entry.getValue() != null) {
-        controlGrid.set(entry.getX(), entry.getY(), outputs[c]);
+        entry.getValue().applyForce(outputs[c]);
         c = c + 1;
       }
     }
-    return controlGrid;
+  }
+
+  @Override
+  protected Grid<Double> computeControlValues(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
+    double[] inputs = flatten(sensorsValues);
+    double[] outputs = control(t, inputs);
+    int c = 0;
+    Grid<Double> controls = Grid.create(sensorsValues);
+    for (Grid.Entry<List<Pair<Sensor, double[]>>> entry : sensorsValues) {
+      if (entry.getValue() != null) {
+        controls.set(entry.getX(), entry.getY(), outputs[c]);
+        c = c + 1;
+      }
+    }
+    return controls;
+  }
+
+  @Override
+  protected void control(Double value, SensingVoxel voxel) {
+    voxel.applyForce(value);
   }
 
   protected abstract double[] control(double t, double[] inputs);

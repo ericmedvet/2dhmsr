@@ -18,10 +18,9 @@ package it.units.erallab.hmsrobots.objects;
 
 import it.units.erallab.hmsrobots.controllers.Controller;
 import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
@@ -37,14 +36,14 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot<V extends Voxel> implements WorldObject, Serializable {
+public class Robot<V extends ControllableVoxel> implements WorldObject, Serializable {
 
-  private final Controller controller;
+  private final Controller<V> controller;
   private final Grid<V> voxels;
 
   private transient List<Joint> joints;
 
-  public Robot(Controller controller, Grid<V> voxels) {
+  public Robot(Controller<V> controller, Grid<V> voxels) {
     this.controller = controller;
     this.voxels = voxels;
     assemble();
@@ -118,18 +117,8 @@ public class Robot<V extends Voxel> implements WorldObject, Serializable {
     }
   }
 
-  public Grid<Double> act(final double t) {
-    //sense
-    Grid<List<Pair<Sensor, double[]>>> sensorsValues = Grid.create(voxels, v -> v == null ? null : v.sense(t));
-    //control
-    Grid<Double> controlValues = controller.control(t, sensorsValues);
-    //apply
-    for (Grid.Entry<V> voxelEntry : voxels) {
-      if (voxelEntry.getValue() != null) {
-        voxelEntry.getValue().applyForce(controlValues.get(voxelEntry.getX(), voxelEntry.getY()));
-      }
-    }
-    return controlValues;
+  public void act(final double t) {
+    controller.control(t, voxels);
   }
 
   public Vector2 getCenter() {
@@ -155,18 +144,18 @@ public class Robot<V extends Voxel> implements WorldObject, Serializable {
     }
   }
 
-  public Grid<V> getVoxels() {
-    return voxels;
-  }
-
   public BoundingBox boundingBox() {
     return immutable().getChildren().stream()
         .map(o -> o.getShape().boundingBox())
         .reduce((b1, b2) -> BoundingBox.largest(b1, b2)).get();
   }
 
-  public Controller getController() {
+  public Controller<V> getController() {
     return controller;
+  }
+
+  public Grid<V> getVoxels() {
+    return voxels;
   }
 
 }

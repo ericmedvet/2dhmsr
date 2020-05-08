@@ -108,7 +108,9 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
       world.step(1);
       steps = steps + 1;
       //control and update control signals metrics
-      Grid<Double> controlSignals = robot.act(t);
+      robot.act(t);
+      //TODO add power consumption to controllable voxel and take that value
+/*
       if (lastControlSignals == null) {
         lastControlSignals = Grid.copy(controlSignals);
       }
@@ -123,6 +125,7 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
           lastControlSignals.set(x, y, entry.getValue());
         }
       }
+*/
       //update center position metrics
       centerPositions.add(Point2.build(robot.getCenter()));
       //possibly output snapshot

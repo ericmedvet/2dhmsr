@@ -16,20 +16,17 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.sensors.Sensor;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
- *
  * @author eric
  */
 @FunctionalInterface
-public interface Controller extends Serializable {
+public interface Controller<V extends ControllableVoxel> extends Serializable {
 
-  Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues);
-  
+  void control(double t, Grid<V> voxels);
+
 }

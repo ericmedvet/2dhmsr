@@ -23,6 +23,8 @@ import it.units.erallab.hmsrobots.controllers.DistributedMLP;
 import it.units.erallab.hmsrobots.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.objects.Robot;
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
+import it.units.erallab.hmsrobots.objects.immutable.SensingVoxel;
 import it.units.erallab.hmsrobots.sensors.AreaRatio;
 import it.units.erallab.hmsrobots.sensors.Average;
 import it.units.erallab.hmsrobots.sensors.Touch;
@@ -38,7 +40,10 @@ import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,8 +63,42 @@ public class Starter {
         ),
         new Settings()
     );
-    final Voxel hardMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 50d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.allOf(Voxel.SpringScaffolding.class));
-    final Voxel softMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 5d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS));
+    final ControllableVoxel hardMaterialVoxel = new ControllableVoxel(
+        Voxel.SIDE_LENGTH,
+        Voxel.MASS_SIDE_LENGTH_RATIO,
+        50d,
+        Voxel.SPRING_D,
+        Voxel.MASS_LINEAR_DAMPING,
+        Voxel.MASS_ANGULAR_DAMPING,
+        Voxel.FRICTION,
+        Voxel.RESTITUTION,
+        Voxel.MASS,
+        Voxel.LIMIT_CONTRACTION_FLAG,
+        Voxel.MASS_COLLISION_FLAG,
+        Voxel.AREA_RATIO_MAX_DELTA,
+        Voxel.SPRING_SCAFFOLDINGS,
+        ControllableVoxel.MAX_FORCE,
+        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
+        ControllableVoxel.ForceMethod.DISTANCE
+    );
+    final ControllableVoxel softMaterialVoxel = new ControllableVoxel(
+        Voxel.SIDE_LENGTH,
+        Voxel.MASS_SIDE_LENGTH_RATIO,
+        5d,
+        Voxel.SPRING_D,
+        Voxel.MASS_LINEAR_DAMPING,
+        Voxel.MASS_ANGULAR_DAMPING,
+        Voxel.FRICTION,
+        Voxel.RESTITUTION,
+        Voxel.MASS,
+        Voxel.LIMIT_CONTRACTION_FLAG,
+        Voxel.MASS_COLLISION_FLAG,
+        Voxel.AREA_RATIO_MAX_DELTA,
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
+        ControllableVoxel.MAX_FORCE,
+        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
+        ControllableVoxel.ForceMethod.DISTANCE
+    );
     int w = 4;
     int h = 2;
     Robot robot = new Robot(
@@ -88,18 +127,52 @@ public class Starter {
     int controlInterval = 1;
     //simple
     double f = 1d;
-    Robot phasesRobot = new Robot(
+    Robot<ControllableVoxel> phasesRobot = new Robot<>(
         new TimeFunctions(Grid.create(
             structure.getW(),
             structure.getH(),
             (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) structure.getW()))
         )),
-        Grid.create(structure, b -> b ? new Voxel(Collections.EMPTY_LIST) : null)
+        Grid.create(structure, b -> b ? new ControllableVoxel() : null)
     );
     //multimaterial
-    Voxel hardMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 50d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.allOf(Voxel.SpringScaffolding.class));
-    Voxel softMaterialVoxel = new Voxel(Collections.EMPTY_LIST, 3d, .30d, 5d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, Voxel.ForceMethod.DISTANCE, EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS));
-    Robot multimaterial = new Robot(
+    final ControllableVoxel hardMaterialVoxel = new ControllableVoxel(
+        Voxel.SIDE_LENGTH,
+        Voxel.MASS_SIDE_LENGTH_RATIO,
+        50d,
+        Voxel.SPRING_D,
+        Voxel.MASS_LINEAR_DAMPING,
+        Voxel.MASS_ANGULAR_DAMPING,
+        Voxel.FRICTION,
+        Voxel.RESTITUTION,
+        Voxel.MASS,
+        Voxel.LIMIT_CONTRACTION_FLAG,
+        Voxel.MASS_COLLISION_FLAG,
+        Voxel.AREA_RATIO_MAX_DELTA,
+        Voxel.SPRING_SCAFFOLDINGS,
+        ControllableVoxel.MAX_FORCE,
+        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
+        ControllableVoxel.ForceMethod.DISTANCE
+    );
+    final ControllableVoxel softMaterialVoxel = new ControllableVoxel(
+        Voxel.SIDE_LENGTH,
+        Voxel.MASS_SIDE_LENGTH_RATIO,
+        5d,
+        Voxel.SPRING_D,
+        Voxel.MASS_LINEAR_DAMPING,
+        Voxel.MASS_ANGULAR_DAMPING,
+        Voxel.FRICTION,
+        Voxel.RESTITUTION,
+        Voxel.MASS,
+        Voxel.LIMIT_CONTRACTION_FLAG,
+        Voxel.MASS_COLLISION_FLAG,
+        Voxel.AREA_RATIO_MAX_DELTA,
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
+        ControllableVoxel.MAX_FORCE,
+        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
+        ControllableVoxel.ForceMethod.DISTANCE
+    );
+    Robot<ControllableVoxel> multimaterial = new Robot<>(
         new TimeFunctions(Grid.create(
             structure.getW(),
             structure.getH(),
@@ -112,27 +185,27 @@ public class Starter {
         )
     );
     //centralized mlp
-    Grid<Voxel> sensingVoxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+    Grid<SensingVoxel> sensingVoxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
       if (structure.get(x, y)) {
         if (y > 2) {
-          return new Voxel(Arrays.asList(
+          return new SensingVoxel(Arrays.asList(
               new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
               new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
           ));
         }
         if (y == 0) {
-          return new Voxel(Arrays.asList(
+          return new SensingVoxel(Arrays.asList(
               new Average(new Touch(), 1d)
           ));
         }
-        return new Voxel(Arrays.asList(
+        return new SensingVoxel(Arrays.asList(
             new AreaRatio()
         ));
       }
       return null;
     });
     Random random = new Random(1);
-    Robot centralizedMlpRobot = new Robot(
+    Robot<SensingVoxel> centralizedMlpRobot = new Robot(
         new CentralizedMLP(sensingVoxels, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)),
         SerializationUtils.clone(sensingVoxels)
     );
@@ -148,12 +221,12 @@ public class Starter {
       weights[i] = random.nextDouble() * 2d - 1d;
     }
     distributedMLP.setParams(weights);
-    Robot distributedMlpRobot1 = new Robot(
-        new Discontinuous(distributedMLP, 1d / 5d, Discontinuous.Type.IMPULSE),
+    Robot<SensingVoxel> distributedMlpRobot1 = new Robot<>(
+        new Discontinuous<>(distributedMLP, 0d, 1d / 5d, Discontinuous.Type.IMPULSE),
         SerializationUtils.clone(sensingVoxels)
     );
-    Robot distributedMlpRobot2 = new Robot(
-        new Discontinuous(SerializationUtils.clone(distributedMLP), 1d / 5d, Discontinuous.Type.STEP),
+    Robot<SensingVoxel> distributedMlpRobot2 = new Robot<>(
+        new Discontinuous<>(SerializationUtils.clone(distributedMLP), 0d, 1d / 5d, Discontinuous.Type.STEP),
         SerializationUtils.clone(sensingVoxels)
     );
     //episode

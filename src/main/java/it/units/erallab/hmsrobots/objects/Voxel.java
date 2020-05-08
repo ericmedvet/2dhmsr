@@ -17,9 +17,6 @@
 package it.units.erallab.hmsrobots.objects;
 
 import it.units.erallab.hmsrobots.objects.immutable.*;
-import it.units.erallab.hmsrobots.sensors.Sensor;
-import it.units.erallab.hmsrobots.util.Configurable;
-import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -35,25 +32,19 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Voxel implements WorldObject, Serializable {
 
-  public enum ForceMethod {
-    DISTANCE, FORCE
-  }
-
   public enum SpringScaffolding {
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS
   }
 
-  private static class SpringRange {
+  protected static class SpringRange {
 
     public final double min;
     public final double rest;
@@ -118,54 +109,59 @@ public class Voxel implements WorldObject, Serializable {
 
   }
 
-  //private final Robot robot;
-  private final List<Sensor> sensors;
+  public static final double SIDE_LENGTH = 3d;
+  public static final double MASS_SIDE_LENGTH_RATIO = .30d;
+  public static final double SPRING_F = 8d;
+  public static final double SPRING_D = 0.3d;
+  public static final double MASS_LINEAR_DAMPING = 1d;
+  public static final double MASS_ANGULAR_DAMPING = 1d;
+  public static final double FRICTION = 100d;
+  public static final double RESTITUTION = 0.1d;
+  public static final double MASS = 1d;
+  public static final boolean LIMIT_CONTRACTION_FLAG = true;
+  public static final boolean MASS_COLLISION_FLAG = false;
+  public static final double AREA_RATIO_MAX_DELTA = 0.25d;
+  public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
+
   private final double sideLength;
   private final double massSideLengthRatio;
   private final double springF;
   private final double springD;
   private final double massLinearDamping;
   private final double massAngularDamping;
-  private final double maxForce; //not used in forceMethod=DISTANCE
-  private final double areaRatioOffset; //not used in forceMethod=FORCE
   private final double friction;
   private final double restitution;
   private final double mass;
   private final boolean limitContractionFlag;
   private final boolean massCollisionFlag;
-  private final ForceMethod forceMethod;
+  private final double areaRatioMaxDelta;
   private final EnumSet<SpringScaffolding> springScaffoldings;
 
-  private transient Body[] vertexBodies;
-  private transient DistanceJoint[] springJoints;
-  private transient RopeJoint[] ropeJoints;
+  protected transient Body[] vertexBodies;
+  protected transient DistanceJoint[] springJoints;
+  protected transient RopeJoint[] ropeJoints;
   private transient World world;
 
-  private double lastAppliedForce = 0d;
-  private List<Pair<Sensor, double[]>> lastSensorReadings = Collections.EMPTY_LIST;
 
-  public Voxel(List<Sensor> sensors, double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double maxForce, double areaRatioOffset, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, ForceMethod forceMethod, EnumSet<SpringScaffolding> springScaffoldings) {
-    this.sensors = sensors;
+  public Voxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings) {
     this.sideLength = sideLength;
     this.massSideLengthRatio = massSideLengthRatio;
     this.springF = springF;
     this.springD = springD;
     this.massLinearDamping = massLinearDamping;
     this.massAngularDamping = massAngularDamping;
-    this.maxForce = maxForce;
-    this.areaRatioOffset = areaRatioOffset;
     this.friction = friction;
     this.restitution = restitution;
     this.mass = mass;
     this.limitContractionFlag = limitContractionFlag;
     this.massCollisionFlag = massCollisionFlag;
-    this.forceMethod = forceMethod;
+    this.areaRatioMaxDelta = areaRatioMaxDelta;
     this.springScaffoldings = springScaffoldings;
     assemble();
   }
 
-  public Voxel(List<Sensor> sensors) {
-    this(sensors, 3d, .30d, 8d, 0.3d, 1d, 1d, 100d, 0.2d, 100d, 0.1d, 1d, true, false, ForceMethod.DISTANCE, EnumSet.allOf(SpringScaffolding.class));
+  public Voxel() {
+    this(SIDE_LENGTH, MASS_SIDE_LENGTH_RATIO, SPRING_F, SPRING_D, MASS_LINEAR_DAMPING, MASS_ANGULAR_DAMPING, FRICTION, RESTITUTION, MASS, LIMIT_CONTRACTION_FLAG, MASS_COLLISION_FLAG, AREA_RATIO_MAX_DELTA, SPRING_SCAFFOLDINGS);
   }
 
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
@@ -212,8 +208,8 @@ public class Voxel implements WorldObject, Serializable {
     ropeJoints = localRopeJoints.toArray(new RopeJoint[0]);
     //build distance joints
     List<DistanceJoint> allSpringJoints = new ArrayList<>();
-    double minSideLength = Math.sqrt(sideLength * sideLength * (1d - areaRatioOffset));
-    double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + areaRatioOffset));
+    double minSideLength = Math.sqrt(sideLength * sideLength * (1d - areaRatioMaxDelta));
+    double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + areaRatioMaxDelta));
     SpringRange sideParallelRange = new SpringRange(minSideLength - 2d * massSideLength, sideLength - 2d * massSideLength, maxSideLength - 2d * massSideLength);
     SpringRange sideCrossRange = new SpringRange(Math.sqrt(massSideLength * massSideLength + sideParallelRange.min * sideParallelRange.min), Math.sqrt(massSideLength * massSideLength + sideParallelRange.rest * sideParallelRange.rest), Math.sqrt(massSideLength * massSideLength + sideParallelRange.max * sideParallelRange.max));
     SpringRange centralCrossRange = new SpringRange((minSideLength - massSideLength) * Math.sqrt(2d), (sideLength - massSideLength) * Math.sqrt(2d), (maxSideLength - massSideLength) * Math.sqrt(2d));
@@ -357,21 +353,6 @@ public class Voxel implements WorldObject, Serializable {
           Point2.build(joint.getAnchor2())
       )));
     }
-    //add sensor readings
-    int nOfSensors = lastSensorReadings.size();
-    for (int i = 0; i < nOfSensors; i++) {
-      Pair<Sensor, double[]> pair = lastSensorReadings.get(i);
-      Sensor sensor = pair.getKey();
-      children.add(new ImmutableReading(
-          sensor,
-          voxelShape,
-          pair.getValue(),
-          sensor.domains(),
-          (sensor instanceof Configurable) ? ((Configurable) sensor).toConfiguration() : null,
-          i,
-          nOfSensors
-      ));
-    }
     //add enclosing
     return new ImmutableVoxel(
         this,
@@ -415,50 +396,8 @@ public class Voxel implements WorldObject, Serializable {
     }
   }
 
-  public List<Pair<Sensor, double[]>> sense(double t) {
-    List<Pair<Sensor, double[]>> pairs = sensors.stream()
-        .map(s -> Pair.of(s, s.sense(this, t)))
-        .collect(Collectors.toList());
-    lastSensorReadings = pairs;
-    return pairs;
-  }
-
   public Body[] getVertexBodies() {
     return vertexBodies;
-  }
-
-  public void applyForce(double f) {
-    if (Math.abs(f) > 1d) {
-      f = Math.signum(f);
-    }
-    lastAppliedForce = f;
-    if (forceMethod.equals(ForceMethod.FORCE)) {
-      double xc = 0d;
-      double yc = 0d;
-      for (Body body : vertexBodies) {
-        xc = xc + body.getWorldCenter().x;
-        yc = yc + body.getWorldCenter().y;
-      }
-      xc = xc / (double) vertexBodies.length;
-      yc = yc / (double) vertexBodies.length;
-      for (Body body : vertexBodies) {
-        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);
-        body.applyForce(force);
-      }
-    } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
-      for (DistanceJoint joint : springJoints) {
-        SpringRange range = (SpringRange) joint.getUserData();
-        if (f >= 0) {
-          joint.setDistance(range.rest - (range.rest - range.min) * f);
-        } else if (f < 0) {
-          joint.setDistance(range.rest + (range.max - range.rest) * -f);
-        }
-      }
-    }
-  }
-
-  public double getLastAppliedForce() {
-    return lastAppliedForce;
   }
 
   public Vector2 getLinearVelocity() {
@@ -511,7 +450,4 @@ public class Voxel implements WorldObject, Serializable {
     return world;
   }
 
-  public List<Sensor> getSensors() {
-    return sensors;
-  }
 }

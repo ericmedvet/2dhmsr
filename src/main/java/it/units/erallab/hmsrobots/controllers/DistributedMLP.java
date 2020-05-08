@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.SensingVoxel;
 import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Parametrized;
@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class DistributedMLP implements Controller, Parametrized {
+public class DistributedMLP extends SensingController<Double, SensingVoxel> implements Parametrized {
 
   private enum Dir {
 
@@ -72,11 +72,11 @@ public class DistributedMLP implements Controller, Parametrized {
     lastSignalsGrid = Grid.create(mlpGrid, mlp -> new double[signals * Dir.values().length]);
   }
 
-  public DistributedMLP(Grid<Voxel> voxelGrid, int[] innerNeurons, double[] weights, int signals) {
+  public DistributedMLP(Grid<SensingVoxel> voxels, int[] innerNeurons, double[] weights, int signals) {
     this.signals = signals;
-    mlpGrid = Grid.create(voxelGrid);
+    mlpGrid = Grid.create(voxels);
     int c = 0;
-    for (Grid.Entry<Voxel> entry : voxelGrid) {
+    for (Grid.Entry<SensingVoxel> entry : voxels) {
       if (entry.getValue() != null) {
         int nOfReadings = entry.getValue().getSensors().stream()
             .mapToInt(s -> s.domains().length)
@@ -100,12 +100,12 @@ public class DistributedMLP implements Controller, Parametrized {
     lastSignalsGrid = Grid.create(mlpGrid, mlp -> new double[signals * Dir.values().length]);
   }
 
-  public DistributedMLP(Grid<Voxel> voxelGrid, int[] innerNeurons, int signals) {
-    this(voxelGrid, innerNeurons, null, signals);
+  public DistributedMLP(Grid<SensingVoxel> voxels, int[] innerNeurons, int signals) {
+    this(voxels, innerNeurons, null, signals);
   }
 
   @Override
-  public Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
+  protected Grid<Double> computeControlValues(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
     Grid<double[]> outputGrid = Grid.create(mlpGrid);
     for (Grid.Entry<MultiLayerPerceptron> entry : mlpGrid) {
       if (entry.getValue() != null) {
@@ -122,6 +122,11 @@ public class DistributedMLP implements Controller, Parametrized {
       }
     }
     return controlGrid;
+  }
+
+  @Override
+  protected void control(Double value, SensingVoxel voxel) {
+    voxel.applyForce(value);
   }
 
   private double[] getLastSignals(int x, int y) {

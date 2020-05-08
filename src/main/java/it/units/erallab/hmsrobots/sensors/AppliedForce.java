@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.sensors;
 
 import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
 
 public class AppliedForce implements Sensor {
   private final Domain[] domains = new Domain[]{
@@ -30,6 +31,9 @@ public class AppliedForce implements Sensor {
 
   @Override
   public double[] sense(Voxel voxel, double t) {
-    return new double[]{voxel.getLastAppliedForce()};
+    if (voxel instanceof ControllableVoxel) {
+      return new double[]{((ControllableVoxel) voxel).getLastAppliedForce()};
+    }
+    return new double[]{0d};
   }
 }

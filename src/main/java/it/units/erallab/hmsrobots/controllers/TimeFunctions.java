@@ -16,17 +16,14 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.sensors.Sensor;
+import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class TimeFunctions implements Controller {
+public class TimeFunctions implements Controller<ControllableVoxel> {
 
   private final Grid<SerializableFunction<Double, Double>> functions;
 
@@ -35,15 +32,13 @@ public class TimeFunctions implements Controller {
   }
 
   @Override
-  public Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
-    Grid<Double> controlValues = Grid.create(sensorsValues);
-    for (Grid.Entry<List<Pair<Sensor, double[]>>> entry : sensorsValues) {
+  public void control(double t, Grid<ControllableVoxel> voxels) {
+    for (Grid.Entry<ControllableVoxel> entry : voxels) {
       SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
       if ((entry.getValue() != null) && (function != null)) {
-        controlValues.set(entry.getX(), entry.getY(), function.apply(t));
+        entry.getValue().applyForce(function.apply(t));
       }
     }
-    return controlValues;
   }
 
   public Grid<SerializableFunction<Double, Double>> getFunctions() {

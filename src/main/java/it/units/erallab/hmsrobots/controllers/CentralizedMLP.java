@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
-import it.units.erallab.hmsrobots.objects.Voxel;
+import it.units.erallab.hmsrobots.objects.immutable.SensingVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
@@ -29,13 +29,13 @@ public class CentralizedMLP extends FlatSensing implements Parametrized {
   private final MultiLayerPerceptron mlp;
   private final SerializableFunction<Double, Double> drivingFunction;
 
-  public CentralizedMLP(Grid<Voxel> voxelGrid, MultiLayerPerceptron mlp, SerializableFunction<Double, Double> drivingFunction) {
+  public CentralizedMLP(Grid<SensingVoxel> voxelGrid, MultiLayerPerceptron mlp, SerializableFunction<Double, Double> drivingFunction) {
     super(voxelGrid);
     this.mlp = mlp;
     this.drivingFunction = drivingFunction;
   }
 
-  public CentralizedMLP(Grid<Voxel> voxelGrid, int[] innerNeurons, double[] weights, SerializableFunction<Double, Double> drivingFunction) {
+  public CentralizedMLP(Grid<SensingVoxel> voxelGrid, int[] innerNeurons, double[] weights, SerializableFunction<Double, Double> drivingFunction) {
     super(voxelGrid);
     int[] neurons = MultiLayerPerceptron.neurons(nOfInputs() + 1 + 1, innerNeurons, nOfOutputs());
     double[] localWeights = new double[MultiLayerPerceptron.countWeights(neurons)];
@@ -50,7 +50,7 @@ public class CentralizedMLP extends FlatSensing implements Parametrized {
     this.drivingFunction = drivingFunction;
   }
 
-  public CentralizedMLP(Grid<Voxel> voxelGrid, int[] innerNeurons, SerializableFunction<Double, Double> drivingFunction) {
+  public CentralizedMLP(Grid<SensingVoxel> voxelGrid, int[] innerNeurons, SerializableFunction<Double, Double> drivingFunction) {
     this(voxelGrid, innerNeurons, null, drivingFunction);
   }
 

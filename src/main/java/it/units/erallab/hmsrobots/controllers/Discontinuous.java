@@ -16,43 +16,51 @@
  */
 package it.units.erallab.hmsrobots.controllers;
 
+import it.units.erallab.hmsrobots.objects.immutable.SensingVoxel;
 import it.units.erallab.hmsrobots.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
-public class Discontinuous implements Controller {
+public class Discontinuous<C, V extends SensingVoxel> extends SensingController<C, V> {
 
   public enum Type {IMPULSE, STEP}
 
-  private final Controller controller;
+  private final SensingController<C, V> controller;
+  private final C nullControlValue;
   private final double interval;
   private final Type type;
 
   private double lastT;
-  private Grid<Double> lastControlValues;
+  private Grid<C> lastControlValues;
 
-  public Discontinuous(Controller controller, double interval, Type type) {
+  public Discontinuous(SensingController<C, V> controller, C nullControlValue, double interval, Type type) {
     this.controller = controller;
+    this.nullControlValue = nullControlValue;
     this.interval = interval;
     this.type = type;
   }
 
   @Override
-  public Grid<Double> control(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
+  protected Grid<C> computeControlValues(double t, Grid<List<Pair<Sensor, double[]>>> sensorsValues) {
     if ((lastControlValues == null) || (t - lastT >= interval)) {
-      lastControlValues = controller.control(t, sensorsValues);
+      lastControlValues = controller.computeControlValues(t, sensorsValues);
       lastT = t;
       return lastControlValues;
     }
     if (type.equals(Type.IMPULSE)) {
-      return Grid.create(lastControlValues, d -> (d == null) ? null : 0d);
+      return Grid.create(lastControlValues, d -> (d == null) ? null : nullControlValue);
     }
     return lastControlValues;
   }
 
-  public Controller getController() {
+  @Override
+  protected void control(C c, V voxel) {
+    controller.control(c, voxel);
+  }
+
+  public SensingController<C, V> getController() {
     return controller;
   }
 
