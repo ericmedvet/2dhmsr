@@ -64,6 +64,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       Body.build(),
       Ground.build(),
       Joint.build(),
+      Lidar.build(),
       GenericSensor.build()
   ));
 

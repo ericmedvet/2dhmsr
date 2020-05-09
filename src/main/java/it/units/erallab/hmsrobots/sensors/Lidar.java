@@ -59,10 +59,11 @@ public class Lidar implements Sensor, Configurable<Lidar> {
         }
     }
 
-    @ConfigurableField
     private final HashMap<Side, Integer> raysPerSide;
     @ConfigurableField
     private final double rayLength;
+    @ConfigurableField
+    private final double[] rayDirections;
     private final Domain[] domains;
 
     public Lidar(HashMap<Side, Integer> raysPerSide, double rayLength) {
@@ -72,6 +73,7 @@ public class Lidar implements Sensor, Configurable<Lidar> {
         for (Integer rays : raysPerSide.values()) {
             numRays += rays;
         }
+        rayDirections = new double[numRays];
         domains = new Domain[numRays];
         Arrays.fill(domains, Domain.build(0d, 1d));
     }
@@ -98,6 +100,7 @@ public class Lidar implements Sensor, Configurable<Lidar> {
                 }
                 // Create a ray from the given start point towards the given direction
                 Ray ray = new Ray(voxel.getCenter(), direction);
+                rayDirections[rayHitsIdx] = direction;
                 results.clear();
                 // if the flag is false, the results list will contain the closest result (if any)
                 voxel.getWorld().raycast(ray, rayLength, true, false, true, results);
