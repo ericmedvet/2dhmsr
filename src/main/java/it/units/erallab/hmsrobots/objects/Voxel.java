@@ -573,7 +573,7 @@ public class Voxel implements WorldObject {
 
   public double getAngle() {
     Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
-    Vector2 downSide = vertexBodies[3].getWorldCenter().copy().subtract(vertexBodies[2].getWorldCenter());
+    Vector2 downSide = vertexBodies[2].getWorldCenter().copy().subtract(vertexBodies[3].getWorldCenter());
     return (upSide.getDirection() + downSide.getDirection()) / 2d;
   }
 

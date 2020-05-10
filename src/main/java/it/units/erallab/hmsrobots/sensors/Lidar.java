@@ -42,7 +42,7 @@ public class Lidar implements Sensor, Configurable<Lidar> {
             this.endAngle = endAngle;
         }
 
-        public double getStartAngle() {
+        public double getStartAngle()  {
             return startAngle;
         }
 
@@ -51,7 +51,7 @@ public class Lidar implements Sensor, Configurable<Lidar> {
         }
 
         public double angleDifference() {
-            double angleDiff = Math.abs(startAngle - endAngle);
+            double angleDiff = Math.abs(endAngle - startAngle);
             if (angleDiff > 180) {
                 angleDiff = 360 - angleDiff;
             }
@@ -59,14 +59,14 @@ public class Lidar implements Sensor, Configurable<Lidar> {
         }
     }
 
-    private final HashMap<Side, Integer> raysPerSide;
+    private final LinkedHashMap<Side, Integer> raysPerSide;
     @ConfigurableField
     private final double rayLength;
     @ConfigurableField
     private final double[] rayDirections;
     private final Domain[] domains;
 
-    public Lidar(HashMap<Side, Integer> raysPerSide, double rayLength) {
+    public Lidar(LinkedHashMap<Side, Integer> raysPerSide, double rayLength) {
         this.raysPerSide = raysPerSide;
         this.rayLength = rayLength;
         int numRays = 0;
@@ -85,8 +85,8 @@ public class Lidar implements Sensor, Configurable<Lidar> {
 
     @Override
     public double[] sense(Voxel voxel, double t) {
-        double[] rayHits = new double[domains.length];
         int rayHitsIdx = 0;
+        double[] rayHits = new double[domains.length];
         // List of objects the ray intersects
         List<RaycastResult> results = new ArrayList<>();
 
@@ -95,24 +95,28 @@ public class Lidar implements Sensor, Configurable<Lidar> {
             Integer numRays = entry.getValue();
             for (int rayIdx = 0; rayIdx < numRays; rayIdx++) {
                 double direction = Math.toRadians(side.getStartAngle() - rayIdx * (Math.abs(side.angleDifference()) / numRays));
+                // take into account rotation angle
+                direction += voxel.getAngle();
+                // clip direction in [-π, π]
                 if (Math.abs(direction) > Math.PI) {
                     direction = 2 * Math.PI - Math.abs(direction);
                 }
                 // Create a ray from the given start point towards the given direction
                 Ray ray = new Ray(voxel.getCenter(), direction);
-                rayDirections[rayHitsIdx] = direction;
                 results.clear();
-                // if the flag is false, the results list will contain the closest result (if any)
-                voxel.getWorld().raycast(ray, rayLength, true, false, true, results);
+                // if the all flag is false, the results list will contain the closest result (if any)
+                voxel.getWorld().raycast(ray, rayLength, true, false, false, results);
+                rayDirections[rayHitsIdx] = direction;
                 if (results.isEmpty()) {
                     rayHits[rayHitsIdx] = 1d;
                 } else {
                     rayHits[rayHitsIdx] = results.get(0).getRaycast().getDistance() / rayLength;
                 }
+//                System.out.println("side: " + side.name() + " rayIdx: " + rayIdx + " distance: " + rayHits[rayHitsIdx]);
                 rayHitsIdx++;
             }
         }
-
+        System.out.println();
         return rayHits;
     }
 }

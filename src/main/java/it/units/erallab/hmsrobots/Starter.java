@@ -36,6 +36,7 @@ import org.dyn4j.dynamics.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -170,6 +171,15 @@ public class Starter {
         d.getSensors().add(new Average(new Angle(), 1d));
         if ((x == structure.getW() - 1) && (y == structure.getH() - 1)) {
           d.getSensors().add(new TimeFunction(t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d), -1, +1));
+        }
+        if (x == 0 && y == 0) {
+          double rayLength = 10d;
+          LinkedHashMap<Lidar.Side, Integer> sides = new LinkedHashMap<>();
+          sides.put(Lidar.Side.N, 5);
+          sides.put(Lidar.Side.E, 5);
+          sides.put(Lidar.Side.S, 5);
+          sides.put(Lidar.Side.W, 5);
+          d.getSensors().add(new Lidar(sides, rayLength));
         }
         return d;
       }
