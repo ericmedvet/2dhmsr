@@ -17,43 +17,34 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.util.Point2;
-import it.units.erallab.hmsrobots.util.Poly;
+import it.units.erallab.hmsrobots.util.Vector;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 
-
-public class Angle extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.Angle> implements Configurable<Angle> {
+public class VoxelJoint extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint> implements Configurable<VoxelJoint> {
 
   @ConfigurableField
-  private final Color strokeColor = Color.BLACK;
+  private final Color color = Color.RED;
+  @ConfigurableField(uiMin = 1, uiMax = 5)
+  private final float strokeWidth = 2f;
 
-  private Angle() {
-    super(it.units.erallab.hmsrobots.core.sensors.immutable.Angle.class);
+  private VoxelJoint() {
+    super(it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint.class);
   }
 
-  public static Angle build() {
-    return new Angle();
+  public static VoxelJoint build() {
+    return new VoxelJoint();
   }
 
   @Override
-  public boolean draw(it.units.erallab.hmsrobots.core.sensors.immutable.Angle immutable, Immutable parent, Graphics2D g) {
-    double angle = immutable.getValues()[0];
-    Voxel voxel = (Voxel) parent;
-    Point2 center = voxel.getShape().center();
-    double radius = Math.sqrt(((Poly) voxel.getShape()).area()) / 2d;
-    g.setColor(strokeColor);
-    g.draw(GraphicsDrawer.toPath(
-        center,
-        Point2.build(
-            center.x + radius * Math.cos(angle),
-            center.y + radius * Math.sin(angle)
-        )
-    ));
+  public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint immutable, Immutable parent, Graphics2D g) {
+    Vector vector = (Vector) immutable.getShape();
+    g.setStroke(new BasicStroke(strokeWidth / (float) g.getTransform().getScaleX()));
+    g.setColor(color);
+    g.draw(GraphicsDrawer.toPath(vector.getStart(), vector.getEnd()));
     return false;
   }
 }

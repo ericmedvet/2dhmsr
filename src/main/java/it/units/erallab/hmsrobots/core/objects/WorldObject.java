@@ -14,16 +14,18 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.core.objects;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import org.dyn4j.dynamics.World;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public interface SnapshotListener {
-
-  void listen(Snapshot snapshot);
-
+public interface WorldObject {
+  
+  Immutable immutable();
+  void addTo(World world);
+  
 }

@@ -17,14 +17,14 @@
 package it.units.erallab.hmsrobots.validation;
 
 import com.google.common.base.Stopwatch;
-import it.units.erallab.hmsrobots.controllers.TimeFunctions;
-import it.units.erallab.hmsrobots.objects.Ground;
-import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
-import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
+import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;

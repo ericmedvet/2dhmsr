@@ -14,16 +14,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.core.objects.immutable;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
-
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public interface SnapshotListener {
-
-  void listen(Snapshot snapshot);
-
+public class Robot extends Immutable {
+  public Robot() {
+  }
 }

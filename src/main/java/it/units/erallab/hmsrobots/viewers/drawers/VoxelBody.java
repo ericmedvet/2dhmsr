@@ -17,43 +17,40 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.util.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
+import java.awt.geom.Path2D;
 
-
-public class Angle extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.Angle> implements Configurable<Angle> {
+public class VoxelBody extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody> implements Configurable<VoxelBody> {
 
   @ConfigurableField
-  private final Color strokeColor = Color.BLACK;
+  private final Color strokeColor = Color.BLUE;
+  @ConfigurableField
+  private final Color fillColor = GraphicsDrawer.alphaed(Color.BLUE, 0.25f);
 
-  private Angle() {
-    super(it.units.erallab.hmsrobots.core.sensors.immutable.Angle.class);
+  private VoxelBody() {
+    super(it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody.class);
   }
 
-  public static Angle build() {
-    return new Angle();
+  public static VoxelBody build() {
+    return new VoxelBody();
   }
 
   @Override
-  public boolean draw(it.units.erallab.hmsrobots.core.sensors.immutable.Angle immutable, Immutable parent, Graphics2D g) {
-    double angle = immutable.getValues()[0];
-    Voxel voxel = (Voxel) parent;
-    Point2 center = voxel.getShape().center();
-    double radius = Math.sqrt(((Poly) voxel.getShape()).area()) / 2d;
-    g.setColor(strokeColor);
-    g.draw(GraphicsDrawer.toPath(
-        center,
-        Point2.build(
-            center.x + radius * Math.cos(angle),
-            center.y + radius * Math.sin(angle)
-        )
-    ));
+  public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody immutable, Immutable parent, Graphics2D g) {
+    Path2D path = GraphicsDrawer.toPath((Poly) immutable.getShape(), true);
+    if (strokeColor != null) {
+      g.setColor(strokeColor);
+      g.draw(path);
+    }
+    if (fillColor != null) {
+      g.setColor(fillColor);
+      g.fill(path);
+    }
     return false;
   }
 }

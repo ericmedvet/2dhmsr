@@ -14,16 +14,37 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public interface SnapshotListener {
+import java.io.Serializable;
 
-  void listen(Snapshot snapshot);
+public interface Sensor extends Serializable {
 
+  class Domain implements Serializable {
+    private final double min;
+    private final double max;
+
+    private Domain(double min, double max) {
+      this.min = min;
+      this.max = max;
+    }
+
+    public static Domain build(double min, double max) {
+      return new Domain(min, max);
+    }
+
+    public double getMin() {
+      return min;
+    }
+
+    public double getMax() {
+      return max;
+    }
+  }
+
+  Domain[] domains();
+
+  double[] sense(Voxel voxel, double t);
 }

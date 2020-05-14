@@ -14,16 +14,19 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.core.controllers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.util.Grid;
+
+import java.io.Serializable;
 
 /**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
+ * @author eric
  */
-public interface SnapshotListener {
+@FunctionalInterface
+public interface Controller<V extends ControllableVoxel> extends Serializable {
 
-  void listen(Snapshot snapshot);
+  void control(double t, Grid<V> voxels);
 
 }

@@ -14,16 +14,18 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.core.objects.immutable;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.Shape;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public interface SnapshotListener {
+public class ShapedImmutable extends Immutable {
+  private final Shape shape;
 
-  void listen(Snapshot snapshot);
+  public ShapedImmutable(Shape shape) {
+    this.shape = shape;
+  }
 
+  public Shape getShape() {
+    return shape;
+  }
 }

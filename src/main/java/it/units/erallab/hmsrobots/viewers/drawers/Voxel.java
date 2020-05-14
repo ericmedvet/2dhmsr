@@ -16,20 +16,22 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableVoxel;
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
+import it.units.erallab.hmsrobots.util.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 
-public class Voxel implements Configurable<Voxel>, Drawer {
+public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.Voxel> implements Configurable<Voxel> {
+
+  public enum FillType {APPLIED_FORCE, AREA_RATIO, CONTROL_ENERGY_DELTA, NONE}
 
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
-  private final boolean fill = true;
+  private final FillType fillType = FillType.AREA_RATIO;
   @ConfigurableField
   private final Color strokeColor = Color.BLUE;
   @ConfigurableField
@@ -44,6 +46,7 @@ public class Voxel implements Configurable<Voxel>, Drawer {
   private final float expandendRatio = 1.25f;
 
   private Voxel() {
+    super(it.units.erallab.hmsrobots.core.objects.immutable.Voxel.class);
   }
 
   public static Voxel build() {
@@ -51,25 +54,32 @@ public class Voxel implements Configurable<Voxel>, Drawer {
   }
 
   @Override
-  public boolean draw(ImmutableObject object, Graphics2D g) {
-    ImmutableVoxel voxel = (ImmutableVoxel) object;
-    Poly poly = (Poly) voxel.getShape();
+  public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.Voxel immutable, Immutable parent, Graphics2D g) {
+    Poly poly = (Poly) immutable.getShape();
     Path2D path = GraphicsDrawer.toPath(poly, true);
     g.setColor(strokeColor);
     g.draw(path);
-    if (fill) {
+    if (fillType.equals(FillType.AREA_RATIO)) {
       g.setColor(GraphicsDrawer.linear(
           shrunkFillColor, restFillColor, expandedFillColor,
           shrunkRatio, 1f, expandendRatio,
-          (float) (poly.area() / voxel.getRestArea())
+          (float) immutable.getAreaRatio()
+      ));
+      g.fill(path);
+    } else if (fillType.equals(FillType.APPLIED_FORCE) && (immutable instanceof ControllableVoxel)) {
+      g.setColor(GraphicsDrawer.linear(
+          shrunkFillColor, restFillColor, expandedFillColor,
+          -1f, 0f, 1f,
+          (float) ((ControllableVoxel) immutable).getAppliedForce()
+      ));
+      g.fill(path);
+    } else if (fillType.equals(FillType.CONTROL_ENERGY_DELTA) && (immutable instanceof ControllableVoxel)) {
+      g.setColor(GraphicsDrawer.linear(restFillColor, expandedFillColor,
+          0f, 1f,
+          (float) ((ControllableVoxel) immutable).getControlEnergyDelta()
       ));
       g.fill(path);
     }
     return true;
-  }
-
-  @Override
-  public boolean canDraw(Class c) {
-    return it.units.erallab.hmsrobots.objects.Voxel.class.isAssignableFrom(c);
   }
 }

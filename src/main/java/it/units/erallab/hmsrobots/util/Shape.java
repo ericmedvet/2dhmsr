@@ -14,16 +14,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.util;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import java.io.Serializable;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public interface SnapshotListener {
+public interface Shape extends Serializable {
+  BoundingBox boundingBox();
 
-  void listen(Snapshot snapshot);
-
+  Point2 center();
 }

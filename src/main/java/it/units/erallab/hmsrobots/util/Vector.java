@@ -14,16 +14,37 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.util;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+public class Vector implements Shape {
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public interface SnapshotListener {
+  private final Point2 start;
+  private final Point2 end;
 
-  void listen(Snapshot snapshot);
+  private Vector(Point2 start, Point2 end) {
+    this.start = start;
+    this.end = end;
+  }
 
+  public static Vector build(Point2 start, Point2 end) {
+    return new Vector(start, end);
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.build(start, end);
+  }
+
+  @Override
+  public Point2 center() {
+    return Point2.average(start, end);
+  }
+
+  public Point2 getStart() {
+    return start;
+  }
+
+  public Point2 getEnd() {
+    return end;
+  }
 }

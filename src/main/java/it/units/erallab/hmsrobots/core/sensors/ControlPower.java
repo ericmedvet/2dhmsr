@@ -14,16 +14,33 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers;
+package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 
-/**
- *
- * @author Eric Medvet <eric.medvet@gmail.com>
- */
-public interface SnapshotListener {
+public class ControlPower implements Sensor {
 
-  void listen(Snapshot snapshot);
+  private double lastT;
+  private final Domain[] domains;
+
+  public ControlPower(double controlInterval) {
+    domains = new Domain[]{
+        Domain.build(0, 1d / controlInterval)
+    };
+  }
+
+  @Override
+  public Domain[] domains() {
+    return domains;
+  }
+
+  @Override
+  public double[] sense(Voxel voxel, double t) {
+    if (voxel instanceof ControllableVoxel) {
+      return new double[]{((ControllableVoxel) voxel).getControlEnergyDelta() / (t - lastT)};
+    }
+    return new double[]{0d};
+  }
 
 }

@@ -17,18 +17,15 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.controllers.CentralizedMLP;
-import it.units.erallab.hmsrobots.controllers.Discontinuous;
-import it.units.erallab.hmsrobots.controllers.DistributedMLP;
-import it.units.erallab.hmsrobots.controllers.TimeFunctions;
-import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.Voxel;
-import it.units.erallab.hmsrobots.objects.immutable.ControllableVoxel;
-import it.units.erallab.hmsrobots.objects.immutable.SensingVoxel;
-import it.units.erallab.hmsrobots.sensors.AreaRatio;
-import it.units.erallab.hmsrobots.sensors.Average;
-import it.units.erallab.hmsrobots.sensors.Touch;
-import it.units.erallab.hmsrobots.sensors.Velocity;
+import it.units.erallab.hmsrobots.core.controllers.CentralizedMLP;
+import it.units.erallab.hmsrobots.core.controllers.Discontinuous;
+import it.units.erallab.hmsrobots.core.controllers.DistributedMLP;
+import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.sensors.*;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
@@ -78,7 +75,6 @@ public class Starter {
         Voxel.AREA_RATIO_MAX_DELTA,
         Voxel.SPRING_SCAFFOLDINGS,
         ControllableVoxel.MAX_FORCE,
-        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
         ControllableVoxel.ForceMethod.DISTANCE
     );
     final ControllableVoxel softMaterialVoxel = new ControllableVoxel(
@@ -96,7 +92,6 @@ public class Starter {
         Voxel.AREA_RATIO_MAX_DELTA,
         EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
         ControllableVoxel.MAX_FORCE,
-        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
         ControllableVoxel.ForceMethod.DISTANCE
     );
     int w = 4;
@@ -151,7 +146,6 @@ public class Starter {
         Voxel.AREA_RATIO_MAX_DELTA,
         Voxel.SPRING_SCAFFOLDINGS,
         ControllableVoxel.MAX_FORCE,
-        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
         ControllableVoxel.ForceMethod.DISTANCE
     );
     final ControllableVoxel softMaterialVoxel = new ControllableVoxel(
@@ -169,7 +163,6 @@ public class Starter {
         Voxel.AREA_RATIO_MAX_DELTA,
         EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
         ControllableVoxel.MAX_FORCE,
-        ControllableVoxel.AREA_RATIO_CONTROL_MAX_DELTA,
         ControllableVoxel.ForceMethod.DISTANCE
     );
     Robot<ControllableVoxel> multimaterial = new Robot<>(
@@ -199,7 +192,8 @@ public class Starter {
           ));
         }
         return new SensingVoxel(Arrays.asList(
-            new AreaRatio()
+            new AreaRatio(),
+            new ControlPower(settings.getStepFrequency())
         ));
       }
       return null;

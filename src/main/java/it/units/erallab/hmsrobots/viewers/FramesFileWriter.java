@@ -1,24 +1,24 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.util.Point2;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  */
 public class FramesFileWriter implements Flushable, SnapshotListener {
 
-  public static enum Direction {
+  public enum Direction {
     HORIZONTAL, VERTICAL
   }
 
@@ -75,7 +75,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
     graphicsDrawer = GraphicsDrawer.build();
-    framer = new VoxelCompoundFollower((int) frames, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX);
+    framer = new RobotFollower(frames, 1.5d, 100, RobotFollower.AggregateType.MAX);
     frameCount = 0;
   }
 

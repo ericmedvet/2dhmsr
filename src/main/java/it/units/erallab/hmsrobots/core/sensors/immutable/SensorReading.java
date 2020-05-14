@@ -14,24 +14,38 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.viewers.drawers;
+package it.units.erallab.hmsrobots.core.sensors.immutable;
 
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.sensors.Sensor;
 
-import java.awt.*;
+public class SensorReading extends Immutable {
 
-public abstract class Drawer<I extends Immutable> {
+  private final double[] values;
+  private final Sensor.Domain[] domains;
+  private final int sensorIndex;
+  private final int nOfSensors;
 
-  private final Class<I> drawableClass;
-
-  protected Drawer(Class<I> drawableClass) {
-    this.drawableClass = drawableClass;
+  public SensorReading(double[] values, Sensor.Domain[] domains, int sensorIndex, int nOfSensors) {
+    this.values = values;
+    this.domains = domains;
+    this.sensorIndex = sensorIndex;
+    this.nOfSensors = nOfSensors;
   }
 
-  public abstract boolean draw(I immutable, Immutable parent, Graphics2D g);
-
-  public boolean canDraw(Class<? extends Immutable> immutableClass) {
-    return drawableClass.isAssignableFrom(immutableClass);
+  public double[] getValues() {
+    return values;
   }
 
+  public Sensor.Domain[] getDomains() {
+    return domains;
+  }
+
+  public int getSensorIndex() {
+    return sensorIndex;
+  }
+
+  public int getnOfSensors() {
+    return nOfSensors;
+  }
 }

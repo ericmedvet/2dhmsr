@@ -16,13 +16,13 @@
  */
 package it.units.erallab.hmsrobots.tasks;
 
-import it.units.erallab.hmsrobots.objects.Ground;
-import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;

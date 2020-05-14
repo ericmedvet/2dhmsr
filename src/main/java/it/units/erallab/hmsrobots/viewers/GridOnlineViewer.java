@@ -1,26 +1,26 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
-import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.Point2;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
-  private final static int FRAME_RATE = 30;
+  private final static int FRAME_RATE = 20;
   private final static int INIT_WIN_WIDTH = 1000;
   private final static int INIT_WIN_HEIGHT = 600;
 
@@ -49,7 +49,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   private final ScheduledExecutorService executor;
 
   private double t;
-  private boolean running;
+  private final boolean running;
 
   public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
     super("World viewer");
@@ -63,7 +63,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     graphicsDrawer = GraphicsDrawer.build();
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
-        framerGrid.set(x, y, new VoxelCompoundFollower((int) FRAME_RATE * 3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
+        framerGrid.set(x, y, new RobotFollower(FRAME_RATE * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));
         queueGrid.set(x, y, new LinkedList<>());
       }
     }
@@ -74,7 +74,6 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     canvas.setPreferredSize(dimension);
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
-    //set layout and put components
     getContentPane().add(new ConfigurablePane(graphicsDrawer), BorderLayout.LINE_END);
     getContentPane().add(canvas, BorderLayout.CENTER);
     //pack
@@ -132,7 +131,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     canvas.createBufferStrategy(2);
     //start consumer of composed frames
     Runnable drawer = new Runnable() {
-      Stopwatch stopwatch = Stopwatch.createUnstarted();
+      final Stopwatch stopwatch = Stopwatch.createUnstarted();
 
       @Override
       public void run() {
