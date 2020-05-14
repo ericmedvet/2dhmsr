@@ -52,11 +52,11 @@ public class Starter {
 
   private static void sampleExecution() throws IOException {
     final Locomotion locomotion = new Locomotion(
-        60,
+        20,
         Locomotion.createTerrain("flat"),
         Lists.newArrayList(
             Locomotion.Metric.TRAVEL_X_VELOCITY,
-            Locomotion.Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS
+            Locomotion.Metric.RELATIVE_CONTROL_POWER
         ),
         new Settings()
     );
@@ -94,8 +94,8 @@ public class Starter {
         ControllableVoxel.MAX_FORCE,
         ControllableVoxel.ForceMethod.DISTANCE
     );
-    int w = 4;
-    int h = 2;
+    int w = 20;
+    int h = 5;
     Robot robot = new Robot(
         new TimeFunctions(Grid.create(
             w, h,
@@ -107,15 +107,20 @@ public class Starter {
         )
     );
     FramesFileWriter framesFileWriter = new FramesFileWriter(
-        5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.VERTICAL,
+        5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
         new File("/home/eric/experiments/2dhmsr/frames.v.png"),
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     );
-    List<Double> result = locomotion.apply(robot);
+    List<Double> result = locomotion.apply(robot, framesFileWriter);
     framesFileWriter.flush();
+    System.out.println("Outcome: " + result);
   }
 
   public static void main(String[] args) throws IOException {
+
+    sampleExecution();
+    System.exit(0);
+
     final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);

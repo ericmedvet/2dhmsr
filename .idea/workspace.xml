@@ -25,77 +25,11 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Big refactoring to voxel, controllers, robots: now voxels form a hierarchy. Power consumption still missing in ControllableVoxel.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Box.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/ControllableVoxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Ground.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Immutable.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Robot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/ShapedImmutable.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Voxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/VoxelBody.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/VoxelJoint.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Angle.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/ControlPower.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Angle.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Robot.java" afterDir="false" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Big refactoring to drawers and co.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/CentralizedMLP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/CentralizedMLP.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/Discontinuous.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/Discontinuous.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/DistributedMLP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/DistributedMLP.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/FlatSensing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/FlatSensing.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/MultiLayerPerceptron.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/MultiLayerPerceptron.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/PhaseSin.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/PhaseSin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/SensingController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/SensingController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/TimeFunctions.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/TimeFunctions.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Box.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Box.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Ground.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Ground.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Robot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/WorldObject.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/WorldObject.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/BoundingBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/BoundingBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ControllableVoxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ImmutableObject.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ImmutableReading.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/SensorReading.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ImmutableVoxel.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Point2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Point2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Poly.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Poly.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/SensingVoxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/SensingVoxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Shape.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Shape.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Snapshot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Snapshot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Vector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Vector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Angle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/ReadingAugmenter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/AppliedForce.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/AppliedForce.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/AreaRatio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/AreaRatio.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Average.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Average.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Breakdown.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Breakdown.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Derivative.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Derivative.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Normalization.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Normalization.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Sensor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Sensor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/TimeFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/TimeFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Touch.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Touch.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Velocity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Velocity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/CantileverBending.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/CantileverBending.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/RobotControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/RobotControl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/ConfigurablePane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/ConfigurablePane.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/Framer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/Framer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/FramesFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/FramesFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GraphicsDrawer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GraphicsDrawer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridOnlineViewer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridOnlineViewer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/SnapshotListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/SnapshotListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/VoxelCompoundFollower.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/RobotFollower.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Angle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Angle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Body.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelBody.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Drawer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Drawer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/GenericSensor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/SensorReading.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Ground.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Ground.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Joint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelJoint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/it/units/erallab/hmsrobots/controllers/MultiLayerPerceptronTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/it/units/erallab/hmsrobots/core/controllers/MultiLayerPerceptronTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -387,7 +321,14 @@
       <option name="project" value="LOCAL" />
       <updated>1588976937110</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Big refactoring to drawers and co.">
+      <created>1589448639907</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1589448639907</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -441,7 +382,8 @@
     <MESSAGE value="Project update." />
     <MESSAGE value="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected." />
     <MESSAGE value="Big refactoring to voxel, controllers, robots: now voxels form a hierarchy. Power consumption still missing in ControllableVoxel." />
-    <option name="LAST_COMMIT_MESSAGE" value="Big refactoring to voxel, controllers, robots: now voxels form a hierarchy. Power consumption still missing in ControllableVoxel." />
+    <MESSAGE value="Big refactoring to drawers and co." />
+    <option name="LAST_COMMIT_MESSAGE" value="Big refactoring to drawers and co." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -506,29 +448,29 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="2090" height="326" key="GridCell.Tab.0.bottom" timestamp="1589447131226">
+    <state width="2090" height="161" key="GridCell.Tab.0.bottom" timestamp="1589449697265">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
-    <state width="2090" height="326" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589447131226" />
+    <state width="2090" height="161" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697265" />
     <state width="2090" height="326" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="2090" height="326" key="GridCell.Tab.0.center" timestamp="1589447131226">
+    <state width="2090" height="161" key="GridCell.Tab.0.center" timestamp="1589449697264">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="326" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589447131226" />
+    <state width="2090" height="161" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
     <state width="2090" height="326" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="2090" height="326" key="GridCell.Tab.0.left" timestamp="1589447131226">
+    <state width="2090" height="161" key="GridCell.Tab.0.left" timestamp="1589449697264">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="326" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589447131226" />
+    <state width="2090" height="161" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
     <state width="2090" height="326" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="2090" height="326" key="GridCell.Tab.0.right" timestamp="1589447131226">
+    <state width="2090" height="161" key="GridCell.Tab.0.right" timestamp="1589449697264">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
-    <state width="2090" height="326" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589447131226" />
+    <state width="2090" height="161" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
     <state width="2090" height="326" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
     <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1588786491511">
       <screen x="56" y="27" width="2136" height="1206" />
