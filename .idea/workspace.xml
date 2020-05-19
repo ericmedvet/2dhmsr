@@ -25,11 +25,16 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Big refactoring to drawers and co.">
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="README updated; Locomotion now can compute power as a metric.">
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/SequentialBreakingController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/BreakableVoxel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/BreakableVoxel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelJoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelJoint.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +90,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="extract.method.default.visibility" value="private" />
-    <property name="last_directory_selection" value="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots" />
+    <property name="last_directory_selection" value="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/assets" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
@@ -116,19 +121,6 @@
     </option>
   </component>
   <component name="RunManager" selected="Application.Starter">
-    <configuration name="ConfMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.util.ConfMain" />
-      <module name="TwoDimHighlyModularSoftRobots" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="it.units.erallab.hmsrobots.util.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="GraphicsDrawer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.viewers.GraphicsDrawer" />
       <module name="2dhmsr" />
@@ -148,6 +140,19 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="it.units.erallab.hmsrobots.core.objects.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SequentialBreakingController" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.core.controllers.SequentialBreakingController" />
+      <module name="2dhmsr" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.units.erallab.hmsrobots.core.controllers.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -184,10 +189,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Application.Starter" />
+        <item itemvalue="Application.SequentialBreakingController" />
         <item itemvalue="Application.GraphicsDrawer" />
         <item itemvalue="Application.Robot" />
         <item itemvalue="Application.Vox" />
-        <item itemvalue="Application.ConfMain" />
       </list>
     </recent_temporary>
   </component>
@@ -328,7 +333,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589448639907</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="README updated; Locomotion now can compute power as a metric.">
+      <created>1589449824987</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1589449824987</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -383,7 +395,8 @@
     <MESSAGE value="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected." />
     <MESSAGE value="Big refactoring to voxel, controllers, robots: now voxels form a hierarchy. Power consumption still missing in ControllableVoxel." />
     <MESSAGE value="Big refactoring to drawers and co." />
-    <option name="LAST_COMMIT_MESSAGE" value="Big refactoring to drawers and co." />
+    <MESSAGE value="README updated; Locomotion now can compute power as a metric." />
+    <option name="LAST_COMMIT_MESSAGE" value="README updated; Locomotion now can compute power as a metric." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -408,11 +421,12 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="445" y="211" width="1084" height="798" key="#com.intellij.execution.impl.EditConfigurationsDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1585953461142" />
-    <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser" timestamp="1589389075666">
+    <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser" timestamp="1589920143595">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser/54.27.1866.1053@54.27.1866.1053" timestamp="1587745401810" />
     <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589389075666" />
+    <state x="904" y="22" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206@56.27.2136.1206" timestamp="1589920143595" />
     <state x="826" y="445" width="312" height="223" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog" timestamp="1585990308837">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -448,50 +462,54 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="2090" height="161" key="GridCell.Tab.0.bottom" timestamp="1589449697265">
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom" timestamp="1589921931073">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
-    <state width="2090" height="161" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697265" />
-    <state width="2090" height="326" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="2090" height="161" key="GridCell.Tab.0.center" timestamp="1589449697264">
+    <state width="2090" height="161" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
+    <state width="2090" height="337" key="GridCell.Tab.0.center" timestamp="1589921931073">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="161" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
-    <state width="2090" height="326" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="2090" height="161" key="GridCell.Tab.0.left" timestamp="1589449697264">
+    <state width="2090" height="161" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
+    <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
+    <state width="2090" height="337" key="GridCell.Tab.0.left" timestamp="1589921931073">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="161" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
-    <state width="2090" height="326" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="2090" height="161" key="GridCell.Tab.0.right" timestamp="1589449697264">
+    <state width="2090" height="161" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
+    <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right" timestamp="1589921931073">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
-    <state width="2090" height="161" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
-    <state width="2090" height="326" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1588786491511">
+    <state width="2090" height="161" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1589910913807">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
     <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1588786491511">
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913807" />
+    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1589910913805">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
     <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1588786491510">
+    <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913805" />
+    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1589910913804">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
     <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
-    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1588786491511">
+    <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913804" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1589910913806">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913806" />
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog" timestamp="1586934109675">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -501,17 +519,17 @@
     </state>
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="307" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1588976953248">
+    <state x="660" y="302" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1589449839225">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
-    <state x="660" y="307" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588976953248" />
-    <state x="846" y="352" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1589379694674">
+    <state x="660" y="302" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449839225" />
+    <state x="846" y="367" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1589905930689">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="744" y="333" width="476" height="448" key="chooseDestDirectoryDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586385553691" />
     <state x="846" y="352" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589379694674" />
-    <state x="846" y="372" key="chooseDestDirectoryDialog/56.27.2136.1206@56.27.2136.1206" timestamp="1588254296698" />
+    <state x="846" y="367" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206@56.27.2136.1206" timestamp="1589905930689" />
     <state x="746" y="473" width="481" height="179" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1586330192753">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>

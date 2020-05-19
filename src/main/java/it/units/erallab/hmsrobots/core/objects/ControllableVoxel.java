@@ -104,13 +104,15 @@ public class ControllableVoxel extends Voxel {
 
   @Override
   public Immutable immutable() {
-    it.units.erallab.hmsrobots.core.objects.immutable.Voxel immutable = (it.units.erallab.hmsrobots.core.objects.immutable.Voxel) super.immutable();
-    return new it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel(
-        immutable.getShape(),
-        immutable.getAreaRatio(),
+    it.units.erallab.hmsrobots.core.objects.immutable.Voxel superImmutable = (it.units.erallab.hmsrobots.core.objects.immutable.Voxel) super.immutable();
+    it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel(
+        superImmutable.getShape(),
+        superImmutable.getAreaRatio(),
         appliedForce,
         controlEnergy,
         controlEnergy - lastControlEnergy
     );
+    immutable.getChildren().addAll(superImmutable.getChildren());
+    return immutable;
   }
 }

@@ -17,14 +17,9 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.core.controllers.CentralizedMLP;
-import it.units.erallab.hmsrobots.core.controllers.Discontinuous;
-import it.units.erallab.hmsrobots.core.controllers.DistributedMLP;
-import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
+import com.google.common.collect.Maps;
+import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.objects.*;
 import it.units.erallab.hmsrobots.core.sensors.*;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -117,10 +112,6 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
-
-    sampleExecution();
-    System.exit(0);
-
     final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);
@@ -235,13 +226,26 @@ public class Starter {
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(2, 3);
-    namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
+    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(1, 2);
+    namedSolutionGrid.set(0, 0, Pair.of("dmlp", distributedMlpRobot2));
+    namedSolutionGrid.set(0, 1, Pair.of("dmlp-breakable", new Robot(
+        new SequentialBreakingController(
+            SerializationUtils.clone(distributedMlpRobot2.getController()),
+            2d,
+            random,
+            Maps.asMap(
+                EnumSet.of(BreakableVoxel.ComponentType.ACTUATOR, BreakableVoxel.ComponentType.SENSORS),
+                c -> EnumSet.of(BreakableVoxel.MalfunctionType.ZERO, BreakableVoxel.MalfunctionType.FROZEN)
+            )
+        ),
+        Grid.create(distributedMlpRobot2.getVoxels(), v -> v == null ? null : new BreakableVoxel(SerializationUtils.clone(v).getSensors(), random))
+    )));
+    /*namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
     namedSolutionGrid.set(1, 0, Pair.of("centralized", centralizedMlpRobot));
     namedSolutionGrid.set(0, 1, Pair.of("distributedMLP-impulse", distributedMlpRobot1));
     namedSolutionGrid.set(1, 1, Pair.of("distributedMLP-step", distributedMlpRobot2));
     namedSolutionGrid.set(0, 2, Pair.of("multimaterial", multimaterial));
-    namedSolutionGrid.set(1, 2, Pair.of("multimaterial", SerializationUtils.clone(multimaterial)));
+    namedSolutionGrid.set(1, 2, Pair.of("multimaterial", SerializationUtils.clone(multimaterial)));*/
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
