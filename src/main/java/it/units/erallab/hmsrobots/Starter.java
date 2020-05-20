@@ -227,6 +227,20 @@ public class Starter {
         settings
     );
     Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(1, 2);
+    namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
+    namedSolutionGrid.set(0, 1, Pair.of("phases-breakable", new Robot(
+        new SequentialBreakingController(
+            SerializationUtils.clone(phasesRobot.getController()),
+            2d,
+            random,
+            Maps.asMap(
+                EnumSet.of(BreakableVoxel.ComponentType.ACTUATOR, BreakableVoxel.ComponentType.STRUCTURE),
+                c -> EnumSet.of(BreakableVoxel.MalfunctionType.FROZEN)
+            )
+        ),
+        Grid.create(distributedMlpRobot2.getVoxels(), v -> v == null ? null : new BreakableVoxel(SerializationUtils.clone(v).getSensors(), random))
+    )));
+/*
     namedSolutionGrid.set(0, 0, Pair.of("dmlp", distributedMlpRobot2));
     namedSolutionGrid.set(0, 1, Pair.of("dmlp-breakable", new Robot(
         new SequentialBreakingController(
@@ -240,6 +254,7 @@ public class Starter {
         ),
         Grid.create(distributedMlpRobot2.getVoxels(), v -> v == null ? null : new BreakableVoxel(SerializationUtils.clone(v).getSensors(), random))
     )));
+*/
     /*namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
     namedSolutionGrid.set(1, 0, Pair.of("centralized", centralizedMlpRobot));
     namedSolutionGrid.set(0, 1, Pair.of("distributedMLP-impulse", distributedMlpRobot1));

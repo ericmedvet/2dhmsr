@@ -25,16 +25,10 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="README updated; Locomotion now can compute power as a metric.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/SequentialBreakingController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/BreakableVoxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/BreakableVoxel.java" afterDir="false" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="BreakableVoxel and SequentialBreakingController added.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelJoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelJoint.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -340,7 +334,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589449824987</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="BreakableVoxel and SequentialBreakingController added.">
+      <created>1589922174041</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1589922174041</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -396,7 +397,8 @@
     <MESSAGE value="Big refactoring to voxel, controllers, robots: now voxels form a hierarchy. Power consumption still missing in ControllableVoxel." />
     <MESSAGE value="Big refactoring to drawers and co." />
     <MESSAGE value="README updated; Locomotion now can compute power as a metric." />
-    <option name="LAST_COMMIT_MESSAGE" value="README updated; Locomotion now can compute power as a metric." />
+    <MESSAGE value="BreakableVoxel and SequentialBreakingController added." />
+    <option name="LAST_COMMIT_MESSAGE" value="BreakableVoxel and SequentialBreakingController added." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -462,54 +464,58 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="2090" height="337" key="GridCell.Tab.0.bottom" timestamp="1589921931073">
-      <screen x="56" y="27" width="2136" height="1206" />
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom" timestamp="1589962354881">
+      <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
     <state width="2090" height="161" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
-    <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
-    <state width="2090" height="337" key="GridCell.Tab.0.center" timestamp="1589921931073">
-      <screen x="56" y="27" width="2136" height="1206" />
+    <state width="2090" height="401" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199993" />
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
+    <state width="2090" height="337" key="GridCell.Tab.0.center" timestamp="1589962354881">
+      <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
     <state width="2090" height="161" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
-    <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
-    <state width="2090" height="337" key="GridCell.Tab.0.left" timestamp="1589921931073">
-      <screen x="56" y="27" width="2136" height="1206" />
+    <state width="2090" height="401" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199992" />
+    <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
+    <state width="2090" height="337" key="GridCell.Tab.0.left" timestamp="1589962354881">
+      <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
     <state width="2090" height="161" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
-    <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
-    <state width="2090" height="337" key="GridCell.Tab.0.right" timestamp="1589921931073">
-      <screen x="56" y="27" width="2136" height="1206" />
+    <state width="2090" height="401" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199991" />
+    <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right" timestamp="1589962354881">
+      <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
     <state width="2090" height="161" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
-    <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589921931073" />
-    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1589910913807">
+    <state width="2090" height="401" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199992" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1589922199998">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
     <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913807" />
-    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1589910913805">
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199998" />
+    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1589922199993">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
     <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913805" />
-    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1589910913804">
+    <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199993" />
+    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1589922199993">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
     <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
-    <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913804" />
-    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1589910913806">
+    <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199993" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1589922199997">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="340" key="GridCell.Tab.1.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589910913806" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199997" />
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog" timestamp="1586934109675">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -519,11 +525,12 @@
     </state>
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="302" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1589449839225">
+    <state x="660" y="297" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1589922185147">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
     <state x="660" y="302" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449839225" />
+    <state x="660" y="297" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1589922185147" />
     <state x="846" y="367" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1589905930689">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>

@@ -85,7 +85,7 @@ public class ControllableVoxel extends Voxel {
     //compute energy
     double areaRatio = getAreaRatio();
     lastControlEnergy = controlEnergy;
-    if (((areaRatio > 1d) && (f < 0)) || ((areaRatio < 1d) && (f > 0))) {
+    if (((areaRatio > 1d) && (f > 0)) || ((areaRatio < 1d) && (f < 0))) {
       controlEnergy = controlEnergy + f * f;
     }
   }
