@@ -16,16 +16,16 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
+import it.units.erallab.hmsrobots.util.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 
-public class Ground implements Configurable<Ground>, Drawer {
+public class Ground extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.Ground> implements Configurable<Ground> {
 
   @ConfigurableField
   private final Color strokeColor = Color.BLACK;
@@ -33,6 +33,7 @@ public class Ground implements Configurable<Ground>, Drawer {
   private final Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.25f);
 
   private Ground() {
+    super(it.units.erallab.hmsrobots.core.objects.immutable.Ground.class);
   }
 
   public static Ground build() {
@@ -40,8 +41,8 @@ public class Ground implements Configurable<Ground>, Drawer {
   }
 
   @Override
-  public boolean draw(ImmutableObject object, Graphics2D g) {
-    Path2D path = GraphicsDrawer.toPath((Poly) object.getShape(), true);
+  public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.Ground immutable, Immutable parent, Graphics2D g) {
+    Path2D path = GraphicsDrawer.toPath((Poly) immutable.getShape(), true);
     if (strokeColor != null) {
       g.setColor(strokeColor);
       g.draw(path);
@@ -51,10 +52,5 @@ public class Ground implements Configurable<Ground>, Drawer {
       g.fill(path);
     }
     return false;
-  }
-
-  @Override
-  public boolean canDraw(Class c) {
-    return c.isAssignableFrom(it.units.erallab.hmsrobots.objects.Ground.class);
   }
 }

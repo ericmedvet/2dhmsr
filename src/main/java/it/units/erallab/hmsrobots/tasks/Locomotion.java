@@ -16,13 +16,14 @@
  */
 package it.units.erallab.hmsrobots.tasks;
 
-import it.units.erallab.hmsrobots.objects.Ground;
-import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.WorldObject;
-import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
+public class Locomotion extends AbstractTask<Robot, List<Double>> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -44,8 +45,8 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
     TRAVEL_X_VELOCITY(false),
     TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
-    AVG_SUM_OF_SQUARED_CONTROL_SIGNALS(true),
-    AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS(true);
+    CONTROL_POWER(true),
+    RELATIVE_CONTROL_POWER(true);
 
     private final boolean toMinimize;
 
@@ -71,7 +72,7 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
   }
 
   @Override
-  public List<Double> apply(Robot.Description description, SnapshotListener listener) {
+  public List<Double> apply(Robot robot, SnapshotListener listener) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -81,7 +82,6 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
     ground.addTo(world);
     worldObjects.add(ground);
     //position robot: x of rightmost point is on 2nd point of profile
-    Robot robot = new Robot(0d, 0d, description);
     BoundingBox boundingBox = robot.boundingBox();
     double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
     double yGroundLeft = groundProfile[1][1];
@@ -103,27 +103,10 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
     Grid<Double> sumOfSquaredDeltaControlSignals = Grid.create(robot.getVoxels().getW(), robot.getVoxels().getH(), 0d);
     //run
     double t = 0d;
-    long steps = 0;
     while (t < finalT) {
       t = t + settings.getStepFrequency();
       world.step(1);
-      steps = steps + 1;
-      //control and update control signals metrics
-      Grid<Double> controlSignals = robot.act(t);
-      if (lastControlSignals == null) {
-        lastControlSignals = Grid.copy(controlSignals);
-      }
-      for (Grid.Entry<Double> entry : controlSignals) {
-        final int x = entry.getX();
-        final int y = entry.getY();
-        if (entry.getValue() != null) {
-          final double v = entry.getValue();
-          sumOfSquaredControlSignals.set(x, y, sumOfSquaredControlSignals.get(x, y) + v * v * settings.getStepFrequency());
-          double dV = v - lastControlSignals.get(x, y);
-          sumOfSquaredDeltaControlSignals.set(x, y, sumOfSquaredDeltaControlSignals.get(x, y) + dV * dV * settings.getStepFrequency());
-          lastControlSignals.set(x, y, entry.getValue());
-        }
-      }
+      robot.act(t);
       //update center position metrics
       centerPositions.add(Point2.build(robot.getCenter()));
       //possibly output snapshot
@@ -144,13 +127,23 @@ public class Locomotion extends AbstractTask<Robot.Description, List<Double>> {
           value = (robot.getCenter().x - initCenterX) / t / Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y);
           break;
         case CENTER_AVG_Y:
-          value = centerPositions.stream().mapToDouble((p) -> p.y).average().getAsDouble();
+          value = centerPositions.stream()
+              .mapToDouble((p) -> p.y)
+              .average()
+              .orElse(0);
           break;
-        case AVG_SUM_OF_SQUARED_CONTROL_SIGNALS:
-          value = sumOfSquaredControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
+        case CONTROL_POWER:
+          value = robot.getVoxels().values().stream()
+              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .mapToDouble(v -> ((ControllableVoxel) v).getControlEnergy())
+              .sum() / t;
           break;
-        case AVG_SUM_OF_SQUARED_DIFF_OF_CONTROL_SIGNALS:
-          value = sumOfSquaredDeltaControlSignals.values().stream().filter((d) -> d != null).mapToDouble(Double::doubleValue).average().getAsDouble();
+        case RELATIVE_CONTROL_POWER:
+
+          value = robot.getVoxels().values().stream()
+              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .mapToDouble(v -> ((ControllableVoxel) v).getControlEnergy())
+              .sum() / t / robot.getVoxels().values().stream().filter(v -> (v != null)).count();
           break;
       }
       results.add(value);

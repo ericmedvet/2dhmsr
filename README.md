@@ -45,36 +45,69 @@ On top of the GUI, a set of UI controls allows the user to customize the visuali
 ### Sample code
 A brief fragment of code using for setting up a VSR and assessing it in the task of locomotion.
 ```java
-Locomotion locomotion = new Locomotion(
-  60,
-  Locomotion.createTerrain("uneven10"),
-  Lists.newArrayList(
-    Locomotion.Metric.TRAVEL_X_VELOCITY,
-    Locomotion.Metric.AVG_SUM_OF_SQUARED_CONTROL_SIGNALS
-  ),
-  new Settings()
-);
-final Voxel.Description hardMaterial = Voxel.Description.build()
-    .setConfigurable("springF", 50)
-    .setConfigurable("springScaffoldings", EnumSet.allOf(Voxel.SpringScaffolding.class));
-final Voxel.Description softMaterial = Voxel.Description.build()
-    .setConfigurable("springF", 5)
-    .setConfigurable("springScaffoldings", EnumSet.of(
-        Voxel.SpringScaffolding.SIDE_EXTERNAL,
-        Voxel.SpringScaffolding.CENTRAL_CROSS));
-int w = 4;
-int h = 2;
-Robot.Description robot = new Robot.Description(
-    Grid.create(
-        w, h,
-        (x, y) -> (y == 0) ? hardMaterial : softMaterial
+final Locomotion locomotion = new Locomotion(
+    20,
+    Locomotion.createTerrain("flat"),
+    Lists.newArrayList(
+        Locomotion.Metric.TRAVEL_X_VELOCITY,
+        Locomotion.Metric.RELATIVE_CONTROL_POWER
     ),
+    new Settings()
+);
+final ControllableVoxel hardMaterialVoxel = new ControllableVoxel(
+    Voxel.SIDE_LENGTH,
+    Voxel.MASS_SIDE_LENGTH_RATIO,
+    50d,
+    Voxel.SPRING_D,
+    Voxel.MASS_LINEAR_DAMPING,
+    Voxel.MASS_ANGULAR_DAMPING,
+    Voxel.FRICTION,
+    Voxel.RESTITUTION,
+    Voxel.MASS,
+    Voxel.LIMIT_CONTRACTION_FLAG,
+    Voxel.MASS_COLLISION_FLAG,
+    Voxel.AREA_RATIO_MAX_DELTA,
+    Voxel.SPRING_SCAFFOLDINGS,
+    ControllableVoxel.MAX_FORCE,
+    ControllableVoxel.ForceMethod.DISTANCE
+);
+final ControllableVoxel softMaterialVoxel = new ControllableVoxel(
+    Voxel.SIDE_LENGTH,
+    Voxel.MASS_SIDE_LENGTH_RATIO,
+    5d,
+    Voxel.SPRING_D,
+    Voxel.MASS_LINEAR_DAMPING,
+    Voxel.MASS_ANGULAR_DAMPING,
+    Voxel.FRICTION,
+    Voxel.RESTITUTION,
+    Voxel.MASS,
+    Voxel.LIMIT_CONTRACTION_FLAG,
+    Voxel.MASS_COLLISION_FLAG,
+    Voxel.AREA_RATIO_MAX_DELTA,
+    EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
+    ControllableVoxel.MAX_FORCE,
+    ControllableVoxel.ForceMethod.DISTANCE
+);
+int w = 20;
+int h = 5;
+Robot robot = new Robot(
     new TimeFunctions(Grid.create(
         w, h,
         (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
-    ))
+    )),
+    Grid.create(
+        w, h,
+        (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
+    )
 );
-List<Double> result = locomotion.apply(robot);
+FramesFileWriter framesFileWriter = new FramesFileWriter(
+    5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
+    new File(pathToFile),
+    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+);
+List<Double> result = locomotion.apply(robot, framesFileWriter);
+framesFileWriter.flush();
+System.out.println("Outcome: " + result);
 ```
 
 ## References

@@ -98,6 +98,7 @@ public class ConfigurablePane extends JPanel {
     for (String key : configurable.configurables(ConfigurableField.Type.BASIC, ConfigurableField.Type.ADVANCED)) {
       add(forAny(key, configurable));
     }
+    add(Box.createVerticalGlue()); // TODO does not work as desired
   }
 
   private JComponent forAny(String key, Configurable<?> configurable) {
@@ -134,6 +135,12 @@ public class ConfigurablePane extends JPanel {
       checkBox.setSelected(((Boolean) value).booleanValue());
       checkBox.addActionListener(c -> configurable.setConfigurable(key, checkBox.isSelected()));
       return justified(new JLabel(key), null, checkBox);
+    } else if (value instanceof Enum) {
+      List<Object> values = List.of(value.getClass().getEnumConstants());
+      JComboBox comboBox = new JComboBox(values.stream().map(Object::toString).toArray());
+      comboBox.setSelectedIndex(values.indexOf(value));
+      comboBox.addActionListener(e -> configurable.setConfigurable(key, values.get(comboBox.getSelectedIndex())));
+      return justified(new JLabel(key), null, comboBox);
     } else if (value instanceof Collection) {
       List<MutablePair<Object, Boolean>> pairs;
       Collection<Object> collection = (Collection) value;

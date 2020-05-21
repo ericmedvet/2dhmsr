@@ -1,25 +1,25 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.objects.immutable.BoundingBox;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.Point2;
 import org.jcodec.api.awt.AWTSequenceEncoder;
 import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.io.SeekableByteChannel;
@@ -28,7 +28,6 @@ import org.jcodec.common.model.Rational;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -59,7 +58,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
-  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws FileNotFoundException, IOException {
+  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws IOException {
     this.w = w;
     this.h = h;
     this.namesGrid = namesGrid;
@@ -72,7 +71,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     graphicsDrawer = GraphicsDrawer.build();
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
-        framerGrid.set(x, y, new VoxelCompoundFollower((int) frameRate * 3, 1.5d, 100, VoxelCompoundFollower.AggregateType.MAX));
+        framerGrid.set(x, y, new RobotFollower((int) frameRate * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));
         queueGrid.set(x, y, new LinkedList<>());
       }
     }

@@ -16,50 +16,70 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableObject;
-import it.units.erallab.hmsrobots.objects.immutable.ImmutableReading;
-import it.units.erallab.hmsrobots.objects.immutable.Point2;
-import it.units.erallab.hmsrobots.objects.immutable.Poly;
+import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.util.Configuration;
+import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.util.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
-import java.util.LinkedHashMap;
+import java.awt.geom.Ellipse2D;
 
-public class Lidar implements Configurable<Lidar>, Drawer {
+public class Lidar extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.Lidar> implements Configurable<Lidar> {
 
     @ConfigurableField
     private final Color strokeColor = Color.RED;
 
     private Lidar() {
+        super(it.units.erallab.hmsrobots.core.sensors.immutable.Lidar.class);
     }
 
-    public static Lidar build()  {
+    public static Lidar build() {
         return new Lidar();
     }
 
     @Override
-    public boolean draw(ImmutableObject object, Graphics2D g) {
-        ImmutableReading reading = (ImmutableReading) object;
-        Poly voxelPoly = (Poly) object.getShape();
+    public boolean draw(it.units.erallab.hmsrobots.core.sensors.immutable.Lidar immutable, Immutable parent, Graphics2D g) {
+        Poly voxelPoly = (Poly) ((Voxel) parent).getShape();
         Point2 center = voxelPoly.center();
-        LinkedHashMap<String, Configuration> configuration = (LinkedHashMap<String, Configuration>) reading.getConfiguration().getValue();
-        double rayLength = (double) configuration.get("rayLength").getValue();
-        double[] rayDirections = (double[]) configuration.get("rayDirections").getValue();
-        g.setColor(strokeColor);
-        for (double rayDirection : rayDirections) {
+        double angle = immutable.getAngle();
+        double rayLength = immutable.getRayLength();
+        double[] rayDirections = immutable.getRayDirections();
+        double[] rayHits = immutable.getValues();
+
+        for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {
+            double direction = rayDirections[rayIdx];
+            // take into account rotation angle
+            direction += angle;
+            // clip direction in [-π, π]
+            if (Math.abs(direction) > Math.PI) {
+                direction = 2 * Math.PI - Math.abs(direction);
+            }
+            // Draw a ray from the given start point towards the given direction
+            g.setColor(strokeColor);
             g.draw(GraphicsDrawer.toPath(
                     center,
-                    Point2.build(center.x + rayLength * Math.cos(rayDirection), center.y + rayLength * Math.sin(rayDirection))
+                    Point2.build(
+                            center.x + rayLength * Math.cos(direction),
+                            center.y + rayLength * Math.sin(direction)
+                    )
             ));
+            // draw only hits
+            if (rayHits[rayIdx] < 1d) {
+                double width = 0.5;
+                double height = 0.5;
+                // transform the center point to the upper left corner
+                g.draw(new Ellipse2D.Double(
+                        (center.x + rayHits[rayIdx] * rayLength * Math.cos(direction)) - width / 2d,
+                        (center.y + rayHits[rayIdx] * rayLength * Math.sin(direction)) - height / 2d,
+                        width,
+                        height
+                ));
+            }
         }
-        return false;
-    }
 
-    @Override
-    public boolean canDraw(Class c) {
-        return it.units.erallab.hmsrobots.sensors.Lidar.class.isAssignableFrom(c);
+        return false;
     }
 }

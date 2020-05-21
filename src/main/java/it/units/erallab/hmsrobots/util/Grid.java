@@ -1,34 +1,28 @@
 /*
- * Copyright (C) 2019 Eric Medvet <eric.medvet@gmail.com>
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
@@ -84,10 +78,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
       if (this.y != other.y) {
         return false;
       }
-      if (!Objects.equals(this.value, other.value)) {
-        return false;
-      }
-      return true;
+      return Objects.equals(this.value, other.value);
     }
 
   }
@@ -258,10 +249,22 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     if (this.h != other.h) {
       return false;
     }
-    if (!Objects.equals(this.ts, other.ts)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(this.ts, other.ts);
   }
 
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("[");
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+        sb.append(String.format("(%d,%d)=%s", x, y, get(x, y)));
+        if ((x < (w - 1)) && (y < (h - 1))) {
+          sb.append(", ");
+        }
+      }
+    }
+    sb.append("]");
+    return sb.toString();
+  }
 }

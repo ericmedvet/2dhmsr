@@ -16,8 +16,6 @@
  */
 package it.units.erallab.hmsrobots.util;
 
-import it.units.erallab.hmsrobots.objects.Voxel;
-
 import java.io.Serializable;
 
 public class Configuration<T> implements Serializable {
@@ -44,9 +42,5 @@ public class Configuration<T> implements Serializable {
   @Override
   public String toString() {
     return "(" + type.getSimpleName() + ") " + value;
-  }
-
-  public static void main(String[] args) {
-    Voxel.Description d = Voxel.Description.build();
   }
 }

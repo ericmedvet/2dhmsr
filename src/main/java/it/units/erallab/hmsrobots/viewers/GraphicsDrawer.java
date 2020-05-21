@@ -16,10 +16,10 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.objects.Robot;
-import it.units.erallab.hmsrobots.objects.immutable.*;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
+import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.util.*;
+import it.units.erallab.hmsrobots.viewers.drawers.Robot;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
 
 import java.awt.*;
@@ -60,12 +60,13 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   private final float strokeWidth = 1f;
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
   private final List<Drawer> drawers = new ArrayList<>(List.of(
+      Robot.build(),
       Voxel.build(),
-      Body.build(),
+      VoxelBody.build(),
       Ground.build(),
-      Joint.build(),
+      VoxelJoint.build(),
       Lidar.build(),
-      GenericSensor.build()
+      SensorReading.build()
   ));
 
   private GraphicsDrawer() {
@@ -131,12 +132,12 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     //draw components
     List<Point2> compoundCenters = new ArrayList<>();
     Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
-    for (ImmutableObject object : snapshot.getObjects()) {
-      recursivelyDraw(object, g, basicStroke);
+    for (Immutable immutable : snapshot.getObjects()) {
+      recursivelyDraw(immutable, null, g, basicStroke);
       if (generalRenderingModes.contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
-        if (object.getObjectClass().equals(Robot.class)) {
-          Point2[] centers = new Point2[object.getChildren().size()];
-          centers = object.getChildren().stream().map(o -> o.getShape().center()).collect(Collectors.toList()).toArray(centers);
+        if (immutable instanceof it.units.erallab.hmsrobots.core.objects.immutable.Robot) {
+          Point2[] centers = new Point2[immutable.getChildren().size()];
+          centers = immutable.getChildren().stream().map(v -> ((it.units.erallab.hmsrobots.core.objects.immutable.Voxel) v).getShape().center()).collect(Collectors.toList()).toArray(centers);
           compoundCenters.add(Point2.average(centers));
         }
       }
@@ -187,18 +188,17 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return gridSize;
   }
 
-  private void recursivelyDraw(final ImmutableObject object, final Graphics2D g, Stroke basicStroke) {
-    boolean drawChildren = true;
+  private void recursivelyDraw(final Immutable immutable, final Immutable parent, final Graphics2D g, Stroke basicStroke) {
+    boolean drawChildren = false;
     for (Drawer drawer : drawers) {
-      if (drawer.canDraw(object.getObjectClass())) {
+      if (drawer.canDraw(immutable.getClass())) {
         g.setStroke(basicStroke);
         g.setColor(basicColor);
-        drawChildren = drawer.draw(object, g);
-        break;
+        drawChildren = drawChildren || drawer.draw(immutable, parent, g);
       }
     }
     if (drawChildren) {
-      object.getChildren().stream().forEach(c -> recursivelyDraw(c, g, basicStroke));
+      immutable.getChildren().stream().forEach(c -> recursivelyDraw(c, immutable, g, basicStroke));
     }
   }
 
