@@ -327,7 +327,7 @@ public class Starter {
         voxels.getW(),
         voxels.getH(),
         (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / voxels.getH()))]))
-    ))
+    );
     Robot<ControllableVoxel> robot = new Robot<>(controller, voxels);
     // set task
     Settings settings = new Settings();
