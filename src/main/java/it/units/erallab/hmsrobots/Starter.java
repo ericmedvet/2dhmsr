@@ -274,4 +274,73 @@ public class Starter {
     runner.run();
   }
 
+  public static double assessOnLocomotion(double[] weights) {
+    // set robot shape and sensors
+    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
+    Grid<SensingVoxel> voxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+      if (structure.get(x, y)) {
+        if (y > 2) {
+          return new SensingVoxel(Arrays.asList(
+              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+          ));
+        }
+        if (y == 0) {
+          return new SensingVoxel(Arrays.asList(
+              new Average(new Touch(), 1d)
+          ));
+        }
+        return new SensingVoxel(Arrays.asList(
+            new AreaRatio()
+        ));
+      }
+      return null;
+    });
+    // set controller
+    CentralizedMLP controller = new CentralizedMLP(
+        voxels,
+        new int[]{100},
+        t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)
+    );
+    controller.setParams(weights);
+    Robot<SensingVoxel> robot = new Robot(controller, voxels);
+    // set task
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        settings
+    );
+    // do task
+    List<Double> results = locomotion.apply(robot);
+    return results.get(0);
+  }
+
+  public static double assessOnLocomotion2(double[] phases) {
+    // set robot shape and sensors
+    Grid<ControllableVoxel> voxels = Grid.create(10, 4, (x, y) -> new ControllableVoxel());
+    // set controller
+    double f = 1d;
+    Controller<ControllableVoxel> controller = new TimeFunctions(Grid.create(
+        voxels.getW(),
+        voxels.getH(),
+        (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / voxels.getH()))]))
+    ))
+    Robot<ControllableVoxel> robot = new Robot<>(controller, voxels);
+    // set task
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        settings
+    );
+    // do task
+    List<Double> results = locomotion.apply(robot);
+    return results.get(0);
+  }
+
 }

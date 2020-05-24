@@ -25,10 +25,10 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="BreakableVoxel and SequentialBreakingController added.">
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Fixed bug in error computation.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +90,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Markdown" />
   </component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
@@ -341,7 +341,14 @@
       <option name="project" value="LOCAL" />
       <updated>1589922174041</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Fixed bug in error computation.">
+      <created>1589964438664</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1589964438664</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -398,7 +405,8 @@
     <MESSAGE value="Big refactoring to drawers and co." />
     <MESSAGE value="README updated; Locomotion now can compute power as a metric." />
     <MESSAGE value="BreakableVoxel and SequentialBreakingController added." />
-    <option name="LAST_COMMIT_MESSAGE" value="BreakableVoxel and SequentialBreakingController added." />
+    <MESSAGE value="Fixed bug in error computation." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed bug in error computation." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -407,6 +415,10 @@
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="759" y="240" width="726" height="811" key="#GraphicsDrawer/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589382368839" />
+    <state x="956" y="519" width="890" height="549" key="#Markdown" timestamp="1590349242569">
+      <screen x="56" y="27" width="2136" height="1206" />
+    </state>
+    <state x="956" y="519" width="890" height="549" key="#Markdown/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1590349242569" />
     <state x="582" y="215" width="800" height="684" key="#Notifications" timestamp="1585952109917">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -464,34 +476,34 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="2090" height="337" key="GridCell.Tab.0.bottom" timestamp="1589962354881">
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom" timestamp="1589964463975">
       <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
     <state width="2090" height="161" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
     <state width="2090" height="401" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199993" />
-    <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
-    <state width="2090" height="337" key="GridCell.Tab.0.center" timestamp="1589962354881">
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463975" />
+    <state width="2090" height="337" key="GridCell.Tab.0.center" timestamp="1589964463974">
       <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
     <state width="2090" height="161" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
     <state width="2090" height="401" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199992" />
-    <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
-    <state width="2090" height="337" key="GridCell.Tab.0.left" timestamp="1589962354881">
+    <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463974" />
+    <state width="2090" height="337" key="GridCell.Tab.0.left" timestamp="1589964463973">
       <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
     <state width="2090" height="161" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
     <state width="2090" height="401" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199991" />
-    <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
-    <state width="2090" height="337" key="GridCell.Tab.0.right" timestamp="1589962354881">
+    <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463973" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right" timestamp="1589964463975">
       <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
     <state width="2090" height="161" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589450135974" />
     <state width="2090" height="401" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199992" />
-    <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.4056.1206@56.27.4056.1206" timestamp="1589962354881" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463975" />
     <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1589922199998">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
@@ -520,17 +532,19 @@
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586934109675" />
-    <state x="447" y="212" width="1346" height="852" key="SettingsEditor" timestamp="1588276773234">
+    <state x="447" y="207" width="1346" height="852" key="SettingsEditor" timestamp="1590349299855">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
+    <state x="447" y="207" key="SettingsEditor/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1590349299855" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="297" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1589922185147">
-      <screen x="56" y="27" width="2136" height="1206" />
+    <state x="672" y="292" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1589964451771">
+      <screen x="56" y="27" width="4056" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
     <state x="660" y="302" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449839225" />
     <state x="660" y="297" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1589922185147" />
+    <state x="672" y="292" key="Vcs.Push.Dialog.v2/56.27.4056.1206@56.27.4056.1206" timestamp="1589964451771" />
     <state x="846" y="367" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1589905930689">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
