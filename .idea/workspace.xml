@@ -25,8 +25,9 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Improved README.md.">
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Small correction.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +55,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="develop" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -353,7 +354,14 @@
       <option name="project" value="LOCAL" />
       <updated>1590349781191</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Small correction.">
+      <created>1590349979289</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1590349979289</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -412,7 +420,8 @@
     <MESSAGE value="BreakableVoxel and SequentialBreakingController added." />
     <MESSAGE value="Fixed bug in error computation." />
     <MESSAGE value="Improved README.md." />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved README.md." />
+    <MESSAGE value="Small correction." />
+    <option name="LAST_COMMIT_MESSAGE" value="Small correction." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
