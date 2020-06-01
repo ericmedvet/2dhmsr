@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.apache.commons.lang3.Range;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
@@ -36,10 +37,14 @@ import java.util.stream.Collectors;
 
 public class Locomotion extends AbstractTask<Robot, List<Double>> {
 
-  private final static double INITIAL_PLACEMENT_X_GAP = 1d;
-  private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
+  private final static double INITIAL_PLACEMENT_X_GAP = 3d;
+  private final static double INITIAL_PLACEMENT_Y_GAP = 3d;
   private final static double TERRAIN_BORDER_HEIGHT = 100d;
   private final static int TERRAIN_POINTS = 50;
+  private final static int TERRAIN_START_PAD = 30;
+  private final static double TERRAIN_FLAT = 20d;
+  private final static double PIT_HEIGHT = 5;
+  private final static double STUMP_HEIGHT = 5;
 
   public enum Metric {
     TRAVEL_X_VELOCITY(false),
@@ -165,6 +170,120 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     return new double[][]{xs, ys};
   }
 
+  enum TerrainType {
+    FLAT,
+    UNEVEN,
+    STUMP,
+    PIT
+  }
+
+  public static double[][] hardcoreTerrain(double length,
+                                           Range<Double> unevenWidthRange,
+                                           double peak,
+                                           Range<Double> pitGapRange,
+                                           double pitHeight,
+                                           Range<Double> stumpWidthRange,
+                                           double stumpHeight,
+                                           double borderHeight,
+                                           Random random) {
+    double groundY = 0d;
+    boolean newTerrain = true;
+    int remaining = TERRAIN_START_PAD;
+    ArrayList<Double> xs = new ArrayList<>();
+    ArrayList<Double> ys = new ArrayList<>();
+    TerrainType terrainType = TerrainType.FLAT;
+
+    // add initial border
+    xs.add(0d);
+    ys.add(borderHeight);
+    double prevX = 0d;
+    double prevY = borderHeight;
+
+    for (int i = 1; i < Math.round(length); i++) {
+      double x = i;
+      double y = groundY;
+
+      if (terrainType == TerrainType.UNEVEN) {
+        if (newTerrain) {
+          // define uneven width
+          double min = unevenWidthRange.getMinimum();
+          double max = unevenWidthRange.getMaximum();
+          double unevenWidth = min + (max - min) * random.nextDouble();
+          remaining = (int) Math.ceil(unevenWidth);
+        } else {
+          y = random.nextDouble() * peak;
+        }
+      } else if (terrainType == TerrainType.PIT) {
+        if (newTerrain) {
+          // define pit gap
+          double min = pitGapRange.getMinimum();
+          double max = pitGapRange.getMaximum();
+          double pitGap = min + (max - min) * random.nextDouble();
+          remaining = (int) Math.ceil(pitGap);
+        } else {
+          // draw pit
+          y -= pitHeight;
+        }
+      } else if (terrainType == TerrainType.STUMP) {
+        if (newTerrain) {
+          // define stump width
+          double min = stumpWidthRange.getMinimum();
+          double max = stumpWidthRange.getMaximum();
+          double stumpWidth = min + (max - min) * random.nextDouble();
+          remaining = (int) Math.ceil(stumpWidth);
+        } else {
+          // draw stump
+          y += stumpHeight;
+        }
+      }
+
+      if (prevY != y) {
+        // ensure to draw initial and final positions of pits/stumps
+        if (prevX != xs.get(xs.size() - 1)) {
+          xs.add(prevX);
+          ys.add(prevY);
+        }
+        xs.add(x);
+        ys.add(y);
+      }
+
+      newTerrain = false;
+      remaining -= 1;
+      if (remaining == 0) {
+        double min = TERRAIN_FLAT / 2;
+        double max = TERRAIN_FLAT;
+        remaining = (int) Math.round(min + (max - min) * random.nextDouble());
+        if (terrainType == TerrainType.FLAT) {
+          int stateIdx = random.nextInt(TerrainType.values().length);
+          terrainType = TerrainType.values()[stateIdx];
+        } else {
+          terrainType = TerrainType.FLAT;
+        }
+        newTerrain = true;
+      }
+
+      prevX = x;
+      prevY = y;
+    }
+
+    // add final border
+    xs.add(length);
+    ys.add(borderHeight);
+
+    // convert to double array
+    double[] xsArray = new double[xs.size()];
+    for (int i = 0; i < xsArray.length; i++) {
+      xsArray[i] = xs.get(i);
+    }
+    // convert to double array
+    double[] ysArray = new double[ys.size()];
+    for (int i = 0; i < ysArray.length; i++) {
+      ysArray[i] = ys.get(i);
+    }
+
+    return new double[][]{xsArray, ysArray};
+  }
+
   public static double[][] createTerrain(String name) {
     Random random = new Random(1);
     if (name.equals("flat")) {
@@ -172,6 +291,16 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     } else if (name.startsWith("uneven")) {
       int h = Integer.parseInt(name.replace("uneven", ""));
       return randomTerrain(TERRAIN_POINTS, 2000, h, TERRAIN_BORDER_HEIGHT, random);
+    } else if (name.equals("hardcore")) {
+      return hardcoreTerrain(2000,
+              Range.between(10d, 20d),
+              1,
+              Range.between(3d, 12d),
+              PIT_HEIGHT,
+              Range.between(3d, 12d),
+              STUMP_HEIGHT,
+              TERRAIN_BORDER_HEIGHT,
+              random);
     }
     return null;
   }
