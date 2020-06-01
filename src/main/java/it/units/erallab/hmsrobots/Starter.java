@@ -246,7 +246,8 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-        Locomotion.createTerrain("uneven5"),
+//        Locomotion.createTerrain("uneven5"),
+        Locomotion.createTerrain("hardcore"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );

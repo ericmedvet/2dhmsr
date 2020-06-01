@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
+import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 
@@ -54,6 +55,21 @@ public class Lidar implements Sensor, ReadingAugmenter {
                 angleDiff = 360 - angleDiff;
             }
             return angleDiff;
+        }
+    }
+
+    public static class RaycastFilter implements Filter {
+
+        @Override
+        public boolean isAllowed(Filter f) {
+            // make sure the given filter is not null
+            if (f == null) return true;
+            // check the type
+            if (f instanceof Voxel.ParentFilter || f instanceof Voxel.RobotFilter) {
+                return false;
+            }
+            // if its not of right type always return true
+            return true;
         }
     }
 
@@ -111,7 +127,7 @@ public class Lidar implements Sensor, ReadingAugmenter {
             Ray ray = new Ray(voxel.getCenter(), direction);
             results.clear();
             // if the all flag is false, the results list will contain the closest result (if any)
-            voxel.getWorld().raycast(ray, rayLength, true, false, false, results);
+            voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
             if (results.isEmpty()) {
                 rayHits[rayIdx] = 1d;
             } else {

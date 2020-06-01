@@ -108,35 +108,20 @@ public class Voxel implements WorldObject, Serializable {
     @Override
     public boolean isAllowed(Filter f) {
       if (!(f instanceof ParentFilter)) {
-        return true;
+          return true;
       }
       return parent != ((ParentFilter) f).parent;
     }
 
   }
 
-  public static class RaycastFilter implements Filter {
-
-    private final Class aClass;
-
-    public RaycastFilter(Class aClass) {
-      this.aClass = aClass;
-    }
+  public static class RobotFilter implements Filter {
 
     @Override
-    public boolean isAllowed(Filter f) {
-      // make sure the given filter is not null
-      if (f == null) return true;
-      // check the type
-      if (f instanceof RaycastFilter) {
-        // cast the filter
-        RaycastFilter rf = (RaycastFilter) f;
-        // perform the check
-        return !(rf.aClass == aClass);
-      }
-      // if its not of right type always return true
+    public boolean isAllowed(Filter filter) {
       return true;
     }
+
   }
 
   public static final double SIDE_LENGTH = 3d;
@@ -352,14 +337,16 @@ public class Voxel implements WorldObject, Serializable {
   }
 
   public void setOwner(Robot robot) {
-    ParentFilter filter = new ParentFilter(robot);
+    Filter filter;
+    if (massCollisionFlag) {
+      filter = new ParentFilter(robot);
+    } else {
+      filter = new RobotFilter();
+    }
+
     for (Body vertexBody : vertexBodies) {
       vertexBody.setUserData(robot);
-      if (massCollisionFlag) {
-        vertexBody.getFixture(0).setFilter(filter);
-      }
-//      RaycastFilter filter2 = new RaycastFilter(Voxel.class);
-//      vertexBody.getFixture(0).setFilter(filter2);
+      vertexBody.getFixture(0).setFilter(filter);
     }
   }
 
