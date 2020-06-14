@@ -170,12 +170,7 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     return new double[][]{xs, ys};
   }
 
-  enum TerrainType {
-    FLAT,
-    UNEVEN,
-    STUMP,
-    PIT
-  }
+  enum TerrainType { FLAT, UNEVEN, STUMP, PIT }
 
   public static double[][] hardcoreTerrain(double length,
                                            Range<Double> unevenWidthRange,

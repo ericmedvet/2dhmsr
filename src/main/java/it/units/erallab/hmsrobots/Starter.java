@@ -37,11 +37,7 @@ import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -187,36 +183,27 @@ public class Starter {
     //centralized mlp
     Grid<SensingVoxel> sensingVoxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
       if (structure.get(x, y)) {
+        List<Sensor> sensors = new ArrayList<>();
+        double rayLength = structure.getW() * Voxel.SIDE_LENGTH;
+        LinkedHashMap<Lidar.Side, Integer> raysPerSide = new LinkedHashMap<>() {{
+          put(Lidar.Side.E, 5);
+        }};
         if (y > 2) {
-          return new SensingVoxel(Arrays.asList(
-              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
-              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
-          ));
+          sensors.add(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y));
+          sensors.add(new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d));
         }
         if (y == 0) {
-          if (x == 0) {
-            double rayLength = 5d;
-            LinkedHashMap<Lidar.Side, Integer> raysPerSide = new LinkedHashMap<>();
-//            raysPerSide.put(Lidar.Side.N, 5);
-            raysPerSide.put(Lidar.Side.E, 5);
-//            raysPerSide.put(Lidar.Side.S, 5);
-            raysPerSide.put(Lidar.Side.W, 5);
-            return new SensingVoxel(Arrays.asList(
-                    new Lidar(rayLength, raysPerSide),
-                    new Average(new Touch(), 1d)
-            ));
-          } else {
-            return new SensingVoxel(Arrays.asList(
-                    new Average(new Touch(), 1d)
-            ));
-          }
+          sensors.add(new Average(new Touch(), 1d));
         }
-        return new SensingVoxel(Arrays.asList(
-            new AreaRatio(),
-            new ControlPower(settings.getStepFrequency())
-        ));
+        if (x == structure.getW() - 1) {
+          sensors.add(new Lidar(rayLength, raysPerSide));
+        }
+        sensors.add(new AreaRatio());
+        sensors.add(new ControlPower(settings.getStepFrequency()));
+        return new SensingVoxel(sensors);
+      } else {
+        return null;
       }
-      return null;
     });
     Random random = new Random(1);
     Robot<SensingVoxel> centralizedMlpRobot = new Robot(

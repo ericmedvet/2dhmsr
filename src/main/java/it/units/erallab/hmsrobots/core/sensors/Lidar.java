@@ -22,15 +22,16 @@ import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class Lidar implements Sensor, ReadingAugmenter {
     public enum Side {
         // between -180 and 180 degrees
-        N(135, 45),
-        E(45, -45),
-        S(-45, -135),
-        W(-135, 135);
+        N(120, 60),
+        E(30, -30),
+        S(-120, -60),
+        W(-150, 150);
 
         // in degrees
         private final int startAngle;
@@ -58,7 +59,7 @@ public class Lidar implements Sensor, ReadingAugmenter {
         }
     }
 
-    public static class RaycastFilter implements Filter {
+    public static class RaycastFilter implements Filter, Serializable {
 
         @Override
         public boolean isAllowed(Filter f) {
@@ -76,11 +77,9 @@ public class Lidar implements Sensor, ReadingAugmenter {
     private final double rayLength;
     private final double[] rayDirections;
     private final Domain[] domains;
-    private final LinkedHashMap<Side, Integer> raysPerSide;
 
     public Lidar(double rayLength, LinkedHashMap<Side, Integer> raysPerSide) {
         this.rayLength = rayLength;
-        this.raysPerSide = raysPerSide;
         int numRays = 0;
         for (int rays : raysPerSide.values()) {
             numRays += rays;
