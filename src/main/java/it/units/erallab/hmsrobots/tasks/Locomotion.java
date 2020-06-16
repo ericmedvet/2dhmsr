@@ -16,10 +16,7 @@
  */
 package it.units.erallab.hmsrobots.tasks;
 
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.Ground;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.objects.*;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -41,10 +38,6 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
   private final static double INITIAL_PLACEMENT_Y_GAP = 3d;
   private final static double TERRAIN_BORDER_HEIGHT = 100d;
   private final static int TERRAIN_POINTS = 50;
-  private final static int TERRAIN_START_PAD = 30;
-  private final static double TERRAIN_FLAT = 20d;
-  private final static double PIT_HEIGHT = 5;
-  private final static double STUMP_HEIGHT = 5;
 
   public enum Metric {
     TRAVEL_X_VELOCITY(false),
@@ -173,17 +166,19 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
   enum TerrainType { FLAT, UNEVEN, STUMP, PIT }
 
   public static double[][] hardcoreTerrain(double length,
+                                           double terrainStartPad,
                                            Range<Double> unevenWidthRange,
                                            double peak,
                                            Range<Double> pitGapRange,
                                            double pitHeight,
                                            Range<Double> stumpWidthRange,
                                            double stumpHeight,
+                                           double maxTerrainFlat,
                                            double borderHeight,
                                            Random random) {
     double groundY = 0d;
     boolean newTerrain = true;
-    int remaining = TERRAIN_START_PAD;
+    int remaining = (int) Math.ceil(terrainStartPad);
     ArrayList<Double> xs = new ArrayList<>();
     ArrayList<Double> ys = new ArrayList<>();
     TerrainType terrainType = TerrainType.FLAT;
@@ -245,8 +240,8 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
       newTerrain = false;
       remaining -= 1;
       if (remaining == 0) {
-        double min = TERRAIN_FLAT / 2;
-        double max = TERRAIN_FLAT;
+        double min = maxTerrainFlat / 2;
+        double max = maxTerrainFlat;
         remaining = (int) Math.round(min + (max - min) * random.nextDouble());
         if (terrainType == TerrainType.FLAT) {
           int stateIdx = random.nextInt(TerrainType.values().length);
@@ -279,7 +274,7 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     return new double[][]{xsArray, ysArray};
   }
 
-  public static double[][] createTerrain(String name) {
+  public static double[][] createTerrain(String name, double robotWidth, double robotHeight) {
     Random random = new Random(1);
     if (name.equals("flat")) {
       return new double[][]{new double[]{0, 10, 1990, 2000}, new double[]{TERRAIN_BORDER_HEIGHT, 0, 0, TERRAIN_BORDER_HEIGHT}};
@@ -287,13 +282,24 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
       int h = Integer.parseInt(name.replace("uneven", ""));
       return randomTerrain(TERRAIN_POINTS, 2000, h, TERRAIN_BORDER_HEIGHT, random);
     } else if (name.equals("hardcore")) {
+      double terrainStartPad = robotWidth + 1d / 3d * robotWidth;
+      Range<Double> unevenWidthRange = Range.between(1d / 3d * robotWidth, robotWidth);
+      double peak = 1d;
+      Range<Double> pitGapRange = Range.between(1d / 3d * robotWidth, robotWidth);
+      double pitHeight = 1d / 2d * robotHeight;
+      Range<Double> stumpWidthRange = Range.between(1d / 3d * robotWidth, robotWidth);
+      double stumpHeight = 1d / 2d * robotHeight;
+      double maxTerrainFlat = 1d / 2d * robotWidth;
+
       return hardcoreTerrain(2000,
-              Range.between(10d, 20d),
-              1,
-              Range.between(3d, 12d),
-              PIT_HEIGHT,
-              Range.between(3d, 12d),
-              STUMP_HEIGHT,
+              terrainStartPad,
+              unevenWidthRange,
+              peak,
+              pitGapRange,
+              pitHeight,
+              stumpWidthRange,
+              stumpHeight,
+              maxTerrainFlat,
               TERRAIN_BORDER_HEIGHT,
               random);
     }

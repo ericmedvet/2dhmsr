@@ -48,9 +48,11 @@ import java.util.concurrent.ScheduledExecutorService;
 public class Starter {
 
   private static void sampleExecution() throws IOException {
+    int w = 20;
+    int h = 5;
     final Locomotion locomotion = new Locomotion(
         20,
-        Locomotion.createTerrain("flat"),
+        Locomotion.createTerrain("flat", w * Voxel.SIDE_LENGTH, h * Voxel.SIDE_LENGTH),
         Lists.newArrayList(
             Locomotion.Metric.TRAVEL_X_VELOCITY,
             Locomotion.Metric.RELATIVE_CONTROL_POWER
@@ -91,8 +93,6 @@ public class Starter {
         ControllableVoxel.MAX_FORCE,
         ControllableVoxel.ForceMethod.DISTANCE
     );
-    int w = 20;
-    int h = 5;
     Robot robot = new Robot(
         new TimeFunctions(Grid.create(
             w, h,
@@ -119,7 +119,7 @@ public class Starter {
 //    sampleExecution();
 //    System.exit(0);
 
-    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
+    final Grid<Boolean> structure = Grid.create(11, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);
     int controlInterval = 1;
@@ -233,8 +233,8 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-//        Locomotion.createTerrain("uneven5"),
-        Locomotion.createTerrain("hardcore"),
+//        Locomotion.createTerrain("uneven5", sensingVoxels.getW() * Voxel.SIDE_LENGTH, sensingVoxels.getH() * Voxel.SIDE_LENGTH),
+        Locomotion.createTerrain("hardcore", sensingVoxels.getW() * Voxel.SIDE_LENGTH, sensingVoxels.getH() * Voxel.SIDE_LENGTH),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
