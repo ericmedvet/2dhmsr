@@ -52,7 +52,7 @@ public class Starter {
     int h = 5;
     final Locomotion locomotion = new Locomotion(
         20,
-        Locomotion.createTerrain("flat", w * Voxel.SIDE_LENGTH, h * Voxel.SIDE_LENGTH),
+        Locomotion.createTerrain("flat"),
         Lists.newArrayList(
             Locomotion.Metric.TRAVEL_X_VELOCITY,
             Locomotion.Metric.RELATIVE_CONTROL_POWER
@@ -233,8 +233,8 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-//        Locomotion.createTerrain("uneven5", sensingVoxels.getW() * Voxel.SIDE_LENGTH, sensingVoxels.getH() * Voxel.SIDE_LENGTH),
-        Locomotion.createTerrain("hardcore", sensingVoxels.getW() * Voxel.SIDE_LENGTH, sensingVoxels.getH() * Voxel.SIDE_LENGTH),
+//        Locomotion.createTerrain("uneven5"),
+        Locomotion.createTerrain("hardcore"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );

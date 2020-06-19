@@ -201,6 +201,7 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
           double unevenWidth = min + (max - min) * random.nextDouble();
           remaining = (int) Math.ceil(unevenWidth);
         } else {
+          // draw peak
           y = random.nextDouble() * peak;
         }
       } else if (terrainType == TerrainType.PIT) {
@@ -274,7 +275,7 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     return new double[][]{xsArray, ysArray};
   }
 
-  public static double[][] createTerrain(String name, double robotWidth, double robotHeight) {
+  public static double[][] createTerrain(String name) {
     Random random = new Random(1);
     if (name.equals("flat")) {
       return new double[][]{new double[]{0, 10, 1990, 2000}, new double[]{TERRAIN_BORDER_HEIGHT, 0, 0, TERRAIN_BORDER_HEIGHT}};
@@ -282,14 +283,14 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
       int h = Integer.parseInt(name.replace("uneven", ""));
       return randomTerrain(TERRAIN_POINTS, 2000, h, TERRAIN_BORDER_HEIGHT, random);
     } else if (name.equals("hardcore")) {
-      double terrainStartPad = robotWidth + 1d / 3d * robotWidth;
-      Range<Double> unevenWidthRange = Range.between(1d / 3d * robotWidth, robotWidth);
+      double terrainStartPad = 44d;
+      Range<Double> unevenWidthRange = Range.between(11d, 33d);
       double peak = 1d;
-      Range<Double> pitGapRange = Range.between(1d / 3d * robotWidth, robotWidth);
-      double pitHeight = 1d / 2d * robotHeight;
-      Range<Double> stumpWidthRange = Range.between(1d / 3d * robotWidth, robotWidth);
-      double stumpHeight = 1d / 2d * robotHeight;
-      double maxTerrainFlat = 1d / 2d * robotWidth;
+      Range<Double> pitGapRange = Range.between(11d, 33d);
+      double pitHeight = 6d;
+      Range<Double> stumpWidthRange = Range.between(11d, 33d);
+      double stumpHeight = 6d;
+      double maxTerrainFlat = 16.5d;
 
       return hardcoreTerrain(2000,
               terrainStartPad,
