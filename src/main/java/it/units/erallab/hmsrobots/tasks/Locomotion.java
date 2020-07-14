@@ -62,12 +62,18 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
 
   private final double finalT;
   private final double[][] groundProfile;
+  private final double initialPlacementXGap;
   private final List<Metric> metrics;
 
   public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, Settings settings) {
+    this(finalT, groundProfile, INITIAL_PLACEMENT_X_GAP, metrics, settings);
+  }
+
+  public Locomotion(double finalT, double[][] groundProfile, double initialPlacementXGap, List<Metric> metrics, Settings settings) {
     super(settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
+    this.initialPlacementXGap = initialPlacementXGap;
     this.metrics = metrics;
   }
 
@@ -83,7 +89,7 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     worldObjects.add(ground);
     //position robot: x of rightmost point is on 2nd point of profile
     BoundingBox boundingBox = robot.boundingBox();
-    double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
+    double xLeft = groundProfile[0][1] + initialPlacementXGap;
     double yGroundLeft = groundProfile[1][1];
     double xRight = xLeft + boundingBox.max.x - boundingBox.min.x;
     double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
@@ -139,7 +145,6 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
               .sum() / t;
           break;
         case RELATIVE_CONTROL_POWER:
-
           value = robot.getVoxels().values().stream()
               .filter(v -> (v != null) && (v instanceof ControllableVoxel))
               .mapToDouble(v -> ((ControllableVoxel) v).getControlEnergy())
