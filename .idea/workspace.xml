@@ -31,6 +31,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Git ignore update.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -186,11 +187,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Vox" />
         <item itemvalue="Application.Starter" />
+        <item itemvalue="Application.SequentialBreakingController" />
         <item itemvalue="Application.Ground" />
         <item itemvalue="Application.FineLocomotionStarter" />
-        <item itemvalue="Application.Vox" />
-        <item itemvalue="Application.SequentialBreakingController" />
       </list>
     </recent_temporary>
   </component>
@@ -567,12 +568,12 @@
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
     <state x="447" y="187" width="1024" height="857" key="SettingsEditor/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743332440" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="277" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1594743972753">
+    <state x="660" y="292" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1595020585611">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
     <state x="660" y="277" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743972753" />
-    <state x="660" y="297" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1589922185147" />
+    <state x="660" y="292" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1595020585611" />
     <state x="672" y="292" key="Vcs.Push.Dialog.v2/56.27.4056.1206@56.27.4056.1206" timestamp="1589964451771" />
     <state x="846" y="342" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1594740816124">
       <screen x="56" y="27" width="2136" height="1206" />
