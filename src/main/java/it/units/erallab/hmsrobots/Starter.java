@@ -226,7 +226,7 @@ public class Starter {
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(1, 2);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 2);
     namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
     namedSolutionGrid.set(0, 1, Pair.of("phases-breakable", new Robot(
         new SequentialBreakingController(
@@ -265,7 +265,7 @@ public class Starter {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot> runner = new GridEpisodeRunner<>(
+    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<Robot<?>>(
         namedSolutionGrid,
         locomotion,
         gridOnlineViewer,

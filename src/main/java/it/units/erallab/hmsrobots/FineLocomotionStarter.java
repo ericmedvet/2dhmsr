@@ -16,11 +16,18 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
+import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
+import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
 import java.io.BufferedReader;
@@ -29,6 +36,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author eric
@@ -38,10 +48,10 @@ import java.util.List;
 public class FineLocomotionStarter {
 
   public static void main(String[] args) {
-    //stdin: description of the robot: grid coords, amplitude, frequency, phase
-    //stout: position/rotation of voxels at each time step
-    //args: type (video/headless), terrain string, starting y, simulation time
-    //example: java -cp classes/artifacts/2dhmsr_jar/2dhmsr.jar it.units.erallab.hmsrobots.FineLocomotionStarter csv 1,0:1000,100:2000,10 10
+    //stdin: description of the robot: grid x, grid y, amplitude, frequency, phase (one line per voxel, ended by an empty line)
+    //stout: time, x, y, area ratio (one line per voxel)
+    //args: type (csv/gui/summary), terrain string, starting y, simulation time
+    //example: java -cp classes/artifacts/2dhmsr_jar/2dhmsr.jar it.units.erallab.hmsrobots.FineLocomotionStarter csv 1,0:1000,100:2000,10 1 10
 
     //create locomotion task
     Locomotion locomotion = new Locomotion(
@@ -56,6 +66,7 @@ public class FineLocomotionStarter {
                 .mapToDouble(Double::parseDouble)
                 .toArray()
         },
+        Double.parseDouble(args[2]),
         List.of(Locomotion.Metric.values()),
         new Settings()
     );
@@ -88,11 +99,57 @@ public class FineLocomotionStarter {
         timeFunctionGrid.set(e.getX() - minX, e.getY() - minY, e.getValue());
       });
     } catch (IOException e) {
-      System.err.printf(String.format("Cannot read robot description from standard input: %s%n", e));
+      System.err.printf("Cannot read robot description from standard input: %s%n", e);
       return;
     }
-    Robot<ControllableVoxel> robot;
-
-    System.out.println(timeFunctionGrid);
+    Robot<ControllableVoxel> robot = new Robot<>(
+        new TimeFunctions(timeFunctionGrid),
+        Grid.create(
+            timeFunctionGrid.getW(),
+            timeFunctionGrid.getH(),
+            (x, y) -> timeFunctionGrid.get(x, y) != null ? (new ControllableVoxel()) : null
+        )
+    );
+    //run simulation
+    if (args[0].equals("csv")) {
+      SnapshotListener listener = snapshot -> {
+        for (Immutable immutable : snapshot.getObjects()) {
+          if (immutable instanceof it.units.erallab.hmsrobots.core.objects.immutable.Robot) {
+            for (Immutable child : immutable.getChildren()) {
+              if (child instanceof Voxel) {
+                Voxel voxel = (Voxel) child;
+                System.out.printf("%f;%f;%f;%f%n",
+                    snapshot.getTime(),
+                    voxel.getShape().center().x,
+                    voxel.getShape().center().y,
+                    voxel.getAreaRatio()
+                );
+              }
+            }
+          }
+        }
+      };
+      locomotion.apply(robot, listener);
+    } else if (args[0].equals("gui")) {
+      ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+      ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+      GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
+          Grid.create(1, 1, "Simulation"),
+          uiExecutor
+      );
+      gridOnlineViewer.start(5);
+      GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
+          Grid.create(1, 1, Pair.of("Robot", robot)),
+          locomotion,
+          gridOnlineViewer,
+          executor
+      );
+      runner.run();
+    } else {
+      List<Double> result = locomotion.apply(robot);
+      for (int i = 0; i < locomotion.getMetrics().size(); i++) {
+        System.out.printf("%s = %f%n", locomotion.getMetrics().get(i), result.get(i));
+      }
+    }
   }
 }
