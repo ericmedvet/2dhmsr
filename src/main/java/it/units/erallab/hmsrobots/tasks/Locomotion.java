@@ -48,7 +48,9 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
     CONTROL_POWER(true),
-    RELATIVE_CONTROL_POWER(true);
+    RELATIVE_CONTROL_POWER(true),
+    AREA_RATIO_POWER(true),
+    RELATIVE_AREA_RATIO_POWER(true);
 
     private final boolean toMinimize;
 
@@ -141,14 +143,26 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
         case CONTROL_POWER:
           value = robot.getVoxels().values().stream()
               .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(v -> v.getControlEnergy())
+              .mapToDouble(ControllableVoxel::getControlEnergy)
               .sum() / t;
           break;
         case RELATIVE_CONTROL_POWER:
           value = robot.getVoxels().values().stream()
               .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(v -> v.getControlEnergy())
-              .sum() / t / robot.getVoxels().values().stream().filter(v -> (v != null)).count();
+              .mapToDouble(ControllableVoxel::getControlEnergy)
+              .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
+          break;
+        case AREA_RATIO_POWER:
+          value = robot.getVoxels().values().stream()
+              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+              .sum() / t;
+          break;
+        case RELATIVE_AREA_RATIO_POWER:
+          value = robot.getVoxels().values().stream()
+              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+              .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
           break;
       }
       results.add(value);

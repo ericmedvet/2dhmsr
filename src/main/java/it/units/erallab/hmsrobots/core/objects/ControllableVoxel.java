@@ -36,8 +36,10 @@ public class ControllableVoxel extends Voxel {
   private final ForceMethod forceMethod;
 
   private transient double controlEnergy = 0d;
-  private transient double appliedForce = 0d;
   private transient double lastControlEnergy = 0d;
+  private transient double areaRatioEnergy = 0d;
+  private transient double lastAreaRatio = 1d;
+  private transient double appliedForce = 0d;
 
   public ControllableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings);
@@ -88,6 +90,8 @@ public class ControllableVoxel extends Voxel {
     if (((areaRatio > 1d) && (f > 0)) || ((areaRatio < 1d) && (f < 0))) {
       controlEnergy = controlEnergy + f * f;
     }
+    areaRatioEnergy = areaRatioEnergy + Math.pow(areaRatio - lastAreaRatio, 2d);
+    lastAreaRatio = areaRatio;
   }
 
   public double getAppliedForce() {
@@ -96,6 +100,10 @@ public class ControllableVoxel extends Voxel {
 
   public double getControlEnergy() {
     return controlEnergy;
+  }
+
+  public double getAreaRatioEnergy() {
+    return areaRatioEnergy;
   }
 
   public double getControlEnergyDelta() {
