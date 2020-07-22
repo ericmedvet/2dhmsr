@@ -31,17 +31,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Lib update (guava, commons-beanutils).">
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_errorprone_error_prone_annotations_2_3_4.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_guava_failureaccess_1_0_1.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_guava_listenablefuture_9999_0_empty_to_avoid_conflict_with_guava.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_j2objc_j2objc_annotations_1_3.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_checkerframework_checker_qual_2_11_1.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/2dhmsr.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/2dhmsr.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_guava_guava_19_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_guava_guava_29_0_jre.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__commons_beanutils_commons_beanutils_1_9_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_beanutils_commons_beanutils_1_9_4.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -404,7 +394,14 @@
       <option name="project" value="LOCAL" />
       <updated>1595021595774</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="New metric available for Voxel (areaRatioEnergy); used in Locomotion.">
+      <created>1595428436940</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1595428436940</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -442,7 +439,6 @@
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
-    <MESSAGE value="Refactored snapshot building." />
     <MESSAGE value="Just a new IDEA file." />
     <MESSAGE value="Working on GraphicsDrawer." />
     <MESSAGE value="Refactoring on snapshot/immutable things done." />
@@ -467,7 +463,8 @@
     <MESSAGE value="Working on a customized command line starter for non-sensing robot on locomotion task." />
     <MESSAGE value="Git ignore update." />
     <MESSAGE value="Lib update (guava, commons-beanutils)." />
-    <option name="LAST_COMMIT_MESSAGE" value="Lib update (guava, commons-beanutils)." />
+    <MESSAGE value="New metric available for Voxel (areaRatioEnergy); used in Locomotion." />
+    <option name="LAST_COMMIT_MESSAGE" value="New metric available for Voxel (areaRatioEnergy); used in Locomotion." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
