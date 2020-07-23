@@ -103,6 +103,32 @@ public class Lidar implements Sensor, ReadingAugmenter {
         Arrays.fill(domains, Domain.build(0d, 1d));
     }
 
+    public Lidar(double rayLength, LinkedHashMap<Side, Integer> raysPerSide, double[] rayDir) {
+        this.rayLength = rayLength;
+        int numRays = 0;
+        for (int rays : raysPerSide.values()) {
+            numRays += rays;
+        }
+
+        int rayIdx = 0;
+        rayDirections = new double[numRays];
+        for (Map.Entry<Side, Integer> entry : raysPerSide.entrySet()) {
+            Side side = entry.getKey();
+            Integer numSideRays = entry.getValue();
+            for (int i = 0; i < numSideRays; i++) {
+                double direction = Math.toRadians(side.getStartAngle() - (side.startAngle-rayDir[i]));
+                // clip direction in [-π, π]
+                if (Math.abs(direction) > Math.PI) {
+                    direction = 2 * Math.PI - Math.abs(direction);
+                }
+                rayDirections[rayIdx] = direction;
+                rayIdx++;
+            }
+        }
+        domains = new Domain[numRays];
+        Arrays.fill(domains, Domain.build(0d, 1d));
+    }
+
     @Override
     public Domain[] domains()  {
         return domains;
