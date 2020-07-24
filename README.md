@@ -43,7 +43,8 @@ The GUI for `GridOnlineViewer`:
 On top of the GUI, a set of UI controls allows the user to customize the visualization with immediate effect. Sensor readings can be visualized as well as voxels SDSs and masses.
 
 ### Sample code
-A brief fragment of code using for setting up a VSR and assessing it in the task of locomotion.
+A brief fragment of code using for setting up a VSR, testing it in the task of locomotion and saving an image with a few frames of the resulting behavior.
+This VSR is composed of voxel of two different materials that are actuated with a periodic sinusoidal signal whose phase changes along the x-direction of the robot. 
 ```java
 final Locomotion locomotion = new Locomotion(
     20,
@@ -108,6 +109,94 @@ FramesFileWriter framesFileWriter = new FramesFileWriter(
 List<Double> result = locomotion.apply(robot, framesFileWriter);
 framesFileWriter.flush();
 System.out.println("Outcome: " + result);
+```
+
+#### Optimization examples: optimize phases
+
+This piece of code shows a method for assessing a VSR whose voxels are actuated with a sinusoidal signal with different phases given the vector of phases.
+This method might be the one being called by an external optimization software.
+In this example, the VSR is a 10x4 worm that is assessed on locomotion on a flat terrain: the single objective is the traveled distance.
+
+```java
+public static double assessOnLocomotion(double[] phases) {
+    // set robot shape and sensors
+    Grid<ControllableVoxel> voxels = Grid.create(10, 4, (x, y) -> new ControllableVoxel());
+    // set controller
+    double f = 1d;
+    Controller<ControllableVoxel> controller = new TimeFunctions(Grid.create(
+        voxels.getW(),
+        voxels.getH(),
+        (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / voxels.getH()))]))
+    ));
+    Robot<ControllableVoxel> robot = new Robot<>(controller, voxels);
+    // set task
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        settings
+    );
+    // do task
+    List<Double> results = locomotion.apply(robot);
+    return results.get(0);
+}
+``` 
+
+#### Optimization examples: optimize neural network weights
+
+This example is similar to the one above, but here the controller of the robot is a *neural network* whose wights are subjected to optimization.
+Here the robot is a 7x4 biped with a 7x2 trunk and two 2x2 legs.
+The voxels have different sensors dependin on their position:
+- "feet" have touch sensors (whose signal is averaged in a 1 second time window)
+- "spine", i.e., the top-row of trunk have velocity (along the 2-axes) and average velocity sensors
+- the remaining voxels have an area ratio sensor
+
+```java
+public static double assessOnLocomotion(double[] weights) {
+    // set robot shape and sensors
+    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
+    Grid<SensingVoxel> voxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+      if (structure.get(x, y)) {
+        if (y > 2) {
+          return new SensingVoxel(Arrays.asList(
+              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+          ));
+        }
+        if (y == 0) {
+          return new SensingVoxel(Arrays.asList(
+              new Average(new Touch(), 1d)
+          ));
+        }
+        return new SensingVoxel(Arrays.asList(
+            new AreaRatio()
+        ));
+      }
+      return null;
+    });
+    // set controller
+    CentralizedMLP controller = new CentralizedMLP(
+        voxels,
+        new int[]{100},
+        t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)
+    );
+    controller.setParams(weights);
+    Robot<SensingVoxel> robot = new Robot(controller, voxels);
+    // set task
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        settings
+    );
+    // do task
+    List<Double> results = locomotion.apply(robot);
+    return results.get(0);
+}
 ```
 
 ## References

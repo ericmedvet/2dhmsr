@@ -17,14 +17,9 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import it.units.erallab.hmsrobots.core.controllers.CentralizedMLP;
-import it.units.erallab.hmsrobots.core.controllers.Discontinuous;
-import it.units.erallab.hmsrobots.core.controllers.DistributedMLP;
-import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
+import com.google.common.collect.Maps;
+import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.objects.*;
 import it.units.erallab.hmsrobots.core.sensors.*;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -48,8 +43,6 @@ import java.util.concurrent.ScheduledExecutorService;
 public class Starter {
 
   private static void sampleExecution() throws IOException {
-    int w = 20;
-    int h = 5;
     final Locomotion locomotion = new Locomotion(
         20,
         Locomotion.createTerrain("flat"),
@@ -93,6 +86,8 @@ public class Starter {
         ControllableVoxel.MAX_FORCE,
         ControllableVoxel.ForceMethod.DISTANCE
     );
+    int w = 20;
+    int h = 5;
     Robot robot = new Robot(
         new TimeFunctions(Grid.create(
             w, h,
@@ -105,8 +100,7 @@ public class Starter {
     );
     FramesFileWriter framesFileWriter = new FramesFileWriter(
         5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
-//        new File("/home/eric/experiments/2dhmsr/frames.v.png"),
-        new File("/home/luca/University/2_year/2_semester/Project-Course/experiments/2dhmsr/frames.v.png"),
+        new File("/home/eric/experiments/2dhmsr/frames.v.png"),
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     );
     List<Double> result = locomotion.apply(robot, framesFileWriter);
@@ -115,11 +109,7 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
-
-//    sampleExecution();
-//    System.exit(0);
-
-    final Grid<Boolean> structure = Grid.create(11, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
+    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);
     int controlInterval = 1;
@@ -183,32 +173,28 @@ public class Starter {
     //centralized mlp
     Grid<SensingVoxel> sensingVoxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
       if (structure.get(x, y)) {
-        List<Sensor> sensors = new ArrayList<>();
-        double rayLength = structure.getW() * Voxel.SIDE_LENGTH;
-        LinkedHashMap<Lidar.Side, Integer> raysPerSide = new LinkedHashMap<>() {{
-          put(Lidar.Side.E, 5);
-        }};
         if (y > 2) {
-          sensors.add(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y));
-          sensors.add(new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d));
+          return new SensingVoxel(Arrays.asList(
+                  new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+                  new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+          ));
         }
         if (y == 0) {
-          sensors.add(new Average(new Touch(), 1d));
+          return new SensingVoxel(Arrays.asList(
+                  new Average(new Touch(), 1d)
+          ));
         }
-        if (x == structure.getW() - 1) {
-          sensors.add(new Lidar(rayLength, raysPerSide));
-        }
-        sensors.add(new AreaRatio());
-        sensors.add(new ControlPower(settings.getStepFrequency()));
-        return new SensingVoxel(sensors);
-      } else {
-        return null;
+        return new SensingVoxel(Arrays.asList(
+                new AreaRatio(),
+                new ControlPower(settings.getStepFrequency())
+        ));
       }
+      return null;
     });
     Random random = new Random(1);
     Robot<SensingVoxel> centralizedMlpRobot = new Robot(
-        new CentralizedMLP(sensingVoxels, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)),
-        SerializationUtils.clone(sensingVoxels)
+            new CentralizedMLP(sensingVoxels, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)),
+            SerializationUtils.clone(sensingVoxels)
     );
     double[] weights = ((CentralizedMLP) centralizedMlpRobot.getController()).getParams();
     for (int i = 0; i < weights.length; i++) {
@@ -233,29 +219,125 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-//        Locomotion.createTerrain("uneven5"),
-        Locomotion.createTerrain("hardcore"),
+        Locomotion.createTerrain("uneven5"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(2, 3);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 2);
     namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
+    namedSolutionGrid.set(0, 1, Pair.of("phases-breakable", new Robot(
+        new SequentialBreakingController(
+            SerializationUtils.clone(phasesRobot.getController()),
+            2d,
+            random,
+            Maps.asMap(
+                EnumSet.of(BreakableVoxel.ComponentType.ACTUATOR, BreakableVoxel.ComponentType.STRUCTURE),
+                c -> EnumSet.of(BreakableVoxel.MalfunctionType.FROZEN)
+            )
+        ),
+        Grid.create(distributedMlpRobot2.getVoxels(), v -> v == null ? null : new BreakableVoxel(SerializationUtils.clone(v).getSensors(), random))
+    )));
+/*
+    namedSolutionGrid.set(0, 0, Pair.of("dmlp", distributedMlpRobot2));
+    namedSolutionGrid.set(0, 1, Pair.of("dmlp-breakable", new Robot(
+        new SequentialBreakingController(
+            SerializationUtils.clone(distributedMlpRobot2.getController()),
+            2d,
+            random,
+            Maps.asMap(
+                EnumSet.of(BreakableVoxel.ComponentType.ACTUATOR, BreakableVoxel.ComponentType.SENSORS),
+                c -> EnumSet.of(BreakableVoxel.MalfunctionType.ZERO, BreakableVoxel.MalfunctionType.FROZEN)
+            )
+        ),
+        Grid.create(distributedMlpRobot2.getVoxels(), v -> v == null ? null : new BreakableVoxel(SerializationUtils.clone(v).getSensors(), random))
+    )));
+*/
+    /*namedSolutionGrid.set(0, 0, Pair.of("phases", phasesRobot));
     namedSolutionGrid.set(1, 0, Pair.of("centralized", centralizedMlpRobot));
     namedSolutionGrid.set(0, 1, Pair.of("distributedMLP-impulse", distributedMlpRobot1));
     namedSolutionGrid.set(1, 1, Pair.of("distributedMLP-step", distributedMlpRobot2));
     namedSolutionGrid.set(0, 2, Pair.of("multimaterial", multimaterial));
-    namedSolutionGrid.set(1, 2, Pair.of("multimaterial", SerializationUtils.clone(multimaterial)));
+    namedSolutionGrid.set(1, 2, Pair.of("multimaterial", SerializationUtils.clone(multimaterial)));*/
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot> runner = new GridEpisodeRunner<>(
+    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<Robot<?>>(
         namedSolutionGrid,
         locomotion,
         gridOnlineViewer,
         executor
     );
     runner.run();
+  }
+
+  public static double assessOnLocomotion(double[] weights) {
+    // set robot shape and sensors
+    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
+    Grid<SensingVoxel> voxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+      if (structure.get(x, y)) {
+        if (y > 2) {
+          return new SensingVoxel(Arrays.asList(
+              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+          ));
+        }
+        if (y == 0) {
+          return new SensingVoxel(Arrays.asList(
+              new Average(new Touch(), 1d)
+          ));
+        }
+        return new SensingVoxel(Arrays.asList(
+            new AreaRatio()
+        ));
+      }
+      return null;
+    });
+    // set controller
+    CentralizedMLP controller = new CentralizedMLP(
+        voxels,
+        new int[]{100},
+        t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)
+    );
+    controller.setParams(weights);
+    Robot<SensingVoxel> robot = new Robot(controller, voxels);
+    // set task
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        settings
+    );
+    // do task
+    List<Double> results = locomotion.apply(robot);
+    return results.get(0);
+  }
+
+  public static double assessOnLocomotion2(double[] phases) {
+    // set robot shape and sensors
+    Grid<ControllableVoxel> voxels = Grid.create(10, 4, (x, y) -> new ControllableVoxel());
+    // set controller
+    double f = 1d;
+    Controller<ControllableVoxel> controller = new TimeFunctions(Grid.create(
+        voxels.getW(),
+        voxels.getH(),
+        (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / voxels.getH()))]))
+    );
+    Robot<ControllableVoxel> robot = new Robot<>(controller, voxels);
+    // set task
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        settings
+    );
+    // do task
+    List<Double> results = locomotion.apply(robot);
+    return results.get(0);
   }
 
 }

@@ -140,7 +140,7 @@ public class Voxel implements WorldObject, Serializable {
 
   private final double sideLength;
   private final double massSideLengthRatio;
-  private final double springF;
+  protected final double springF;
   private final double springD;
   private final double massLinearDamping;
   private final double massAngularDamping;

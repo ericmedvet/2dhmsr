@@ -16,10 +16,12 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
+import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
+import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.util.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
@@ -40,6 +42,10 @@ public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immuta
   private final Color shrunkFillColor = GraphicsDrawer.alphaed(Color.RED, 0.5f);
   @ConfigurableField
   private final Color expandedFillColor = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
+  @ConfigurableField
+  private final Color malfunctionColor = GraphicsDrawer.alphaed(Color.BLACK, 0.75f);
+  @ConfigurableField(uiMin = 5, uiMax = 20)
+  private final float malfunctionStrokeWidth = 10f;
   @ConfigurableField(uiMin = 0.1f, uiMax = 0.999f)
   private final float shrunkRatio = 0.75f;
   @ConfigurableField(uiMin = 1.001f, uiMax = 2f)
@@ -79,6 +85,23 @@ public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immuta
           (float) ((ControllableVoxel) immutable).getControlEnergyDelta()
       ));
       g.fill(path);
+    }
+    if (immutable instanceof it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel) {
+      g.setColor(malfunctionColor);
+      g.setStroke(new BasicStroke(malfunctionStrokeWidth / (float) g.getTransform().getScaleX()));
+      it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel breakableVoxel = (it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel) immutable;
+      if (!breakableVoxel.getActuatorMalfunctionType().equals(BreakableVoxel.MalfunctionType.NONE)) {
+        g.draw(GraphicsDrawer.toPath(poly.getVertexes()[0], poly.getVertexes()[2]));
+      }
+      if (!breakableVoxel.getSensorsMalfunctionType().equals(BreakableVoxel.MalfunctionType.NONE)) {
+        g.draw(GraphicsDrawer.toPath(poly.getVertexes()[1], poly.getVertexes()[3]));
+      }
+      if (!breakableVoxel.getStructureMalfunctionType().equals(BreakableVoxel.MalfunctionType.NONE)) {
+        g.draw(GraphicsDrawer.toPath(
+            Point2.average(poly.getVertexes()[0], poly.getVertexes()[3]),
+            Point2.average(poly.getVertexes()[1], poly.getVertexes()[2])
+        ));
+      }
     }
     return true;
   }

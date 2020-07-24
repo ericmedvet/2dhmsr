@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="ArtifactsWorkspaceSettings">
+    <artifacts-to-build>
+      <artifact name="2dhmsr:jar" />
+    </artifacts-to-build>
+  </component>
   <component name="BranchesTreeState">
     <expand>
       <path>
@@ -25,91 +30,8 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Big refactoring to drawers and co.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/Discontinuous.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/SensingController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Box.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/ControllableVoxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Robot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/SensingVoxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/WorldObject.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Box.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/ControllableVoxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Ground.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Immutable.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Robot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/ShapedImmutable.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Snapshot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/Voxel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/VoxelBody.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/immutable/VoxelJoint.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/ControlPower.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Lidar.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/ReadingAugmenter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Angle.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Lidar.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Shape.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Robot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Lib update (guava, commons-beanutils).">
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/CentralizedMLP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/CentralizedMLP.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/DistributedMLP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/DistributedMLP.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/FlatSensing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/FlatSensing.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/MultiLayerPerceptron.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/MultiLayerPerceptron.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/PhaseSin.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/PhaseSin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/controllers/TimeFunctions.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/controllers/TimeFunctions.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Box.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Ground.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Ground.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Robot.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/WorldObject.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/BoundingBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/BoundingBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ImmutableObject.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ImmutableReading.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/SensorReading.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/ImmutableVoxel.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Point2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Point2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Poly.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Poly.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Shape.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Snapshot.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/objects/immutable/Vector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Vector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Angle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Angle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/AppliedForce.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/AppliedForce.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/AreaRatio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/AreaRatio.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Average.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Average.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Breakdown.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Breakdown.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Derivative.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Derivative.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Lidar.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Normalization.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Normalization.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Sensor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Sensor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/TimeFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/TimeFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Touch.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Touch.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/sensors/Velocity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Velocity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/tasks/Locomotion.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Configuration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Grid.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/util/Grid.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/CantileverBending.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/CantileverBending.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/RobotControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/validation/RobotControl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/ConfigurablePane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/ConfigurablePane.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/Framer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/Framer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/FramesFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/FramesFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GraphicsDrawer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GraphicsDrawer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridOnlineViewer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/GridOnlineViewer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/SnapshotListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/SnapshotListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/VoxelCompoundFollower.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/RobotFollower.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Angle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Angle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Body.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelBody.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Drawer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Drawer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/GenericSensor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/SensorReading.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Ground.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Ground.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Joint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/VoxelJoint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Lidar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/it/units/erallab/hmsrobots/controllers/MultiLayerPerceptronTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/it/units/erallab/hmsrobots/core/controllers/MultiLayerPerceptronTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,7 +59,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="develop" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -164,8 +86,7 @@
     <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="aspect.path.notification.shown" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="extract.method.default.visibility" value="private" />
     <property name="last_directory_selection" value="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/assets" />
@@ -173,7 +94,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="settings.editor.selected.configurable" value="copyright.profiles" />
   </component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
@@ -198,25 +119,12 @@
     </option>
   </component>
   <component name="RunManager" selected="Application.Starter">
-    <configuration name="ConfMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.util.ConfMain" />
-      <module name="TwoDimHighlyModularSoftRobots" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="it.units.erallab.hmsrobots.util.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="GraphicsDrawer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.viewers.GraphicsDrawer" />
+    <configuration name="FineLocomotionStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.FineLocomotionStarter" />
       <module name="2dhmsr" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="it.units.erallab.hmsrobots.viewers.*" />
+          <option name="PATTERN" value="it.units.erallab.hmsrobots.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -224,12 +132,25 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Robot" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.core.objects.Robot" />
+    <configuration name="Ground" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.core.objects.Ground" />
       <module name="2dhmsr" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="it.units.erallab.hmsrobots.core.objects.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SequentialBreakingController" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="it.units.erallab.hmsrobots.core.controllers.SequentialBreakingController" />
+      <module name="2dhmsr" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.units.erallab.hmsrobots.core.controllers.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -265,11 +186,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Starter" />
-        <item itemvalue="Application.GraphicsDrawer" />
-        <item itemvalue="Application.Robot" />
         <item itemvalue="Application.Vox" />
-        <item itemvalue="Application.ConfMain" />
+        <item itemvalue="Application.Starter" />
+        <item itemvalue="Application.SequentialBreakingController" />
+        <item itemvalue="Application.Ground" />
+        <item itemvalue="Application.FineLocomotionStarter" />
       </list>
     </recent_temporary>
   </component>
@@ -283,12 +204,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1585951913198</updated>
-      <workItem from="1589617352905" duration="23129000" />
-      <workItem from="1589726885005" duration="4759000" />
-      <workItem from="1589820593159" duration="2302000" />
-      <workItem from="1589835237605" duration="1448000" />
-      <workItem from="1589908347735" duration="7974000" />
-      <workItem from="1590047270190" duration="1252000" />
     </task>
     <task id="LOCAL-00001" summary="Refactored snapshot building.">
       <created>1585958997291</created>
@@ -416,11 +331,78 @@
       <option name="project" value="LOCAL" />
       <updated>1589448639907</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="README updated; Locomotion now can compute power as a metric.">
+      <created>1589449824987</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1589449824987</updated>
+    </task>
+    <task id="LOCAL-00020" summary="BreakableVoxel and SequentialBreakingController added.">
+      <created>1589922174041</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1589922174041</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Fixed bug in error computation.">
+      <created>1589964438664</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1589964438664</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Improved README.md.">
+      <created>1590349781191</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1590349781191</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Small correction.">
+      <created>1590349979289</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1590349979289</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Working on a customized command line starter for non-sensing robot on locomotion task.">
+      <created>1594743895578</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1594743895578</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Git ignore update.">
+      <created>1594743954150</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1594743954150</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Git ignore update.">
+      <created>1595020395424</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1595020395424</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Lib update (guava, commons-beanutils).">
+      <created>1595021595774</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1595021595774</updated>
+    </task>
+    <task id="LOCAL-00028" summary="New metric available for Voxel (areaRatioEnergy); used in Locomotion.">
+      <created>1595428436940</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1595428436940</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
-  </component>
-  <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="2" />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
     <option name="UPDATE_COPYRIGHT" value="true" />
@@ -436,11 +418,6 @@
         <entry key="MAIN">
           <value>
             <State>
-              <option name="CUSTOM_BOOLEAN_PROPERTIES">
-                <map>
-                  <entry key="Show.Git.Branches" value="true" />
-                </map>
-              </option>
               <option name="FILTERS">
                 <map>
                   <entry key="branch">
@@ -462,7 +439,6 @@
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
-    <MESSAGE value="Refactored snapshot building." />
     <MESSAGE value="Just a new IDEA file." />
     <MESSAGE value="Working on GraphicsDrawer." />
     <MESSAGE value="Refactoring on snapshot/immutable things done." />
@@ -479,7 +455,16 @@
     <MESSAGE value="New Discontinuous controller that applies inner controller only every t seconds. Bug (likely not expressed) in Voxel.applyForce corrected." />
     <MESSAGE value="Big refactoring to voxel, controllers, robots: now voxels form a hierarchy. Power consumption still missing in ControllableVoxel." />
     <MESSAGE value="Big refactoring to drawers and co." />
-    <option name="LAST_COMMIT_MESSAGE" value="Big refactoring to drawers and co." />
+    <MESSAGE value="README updated; Locomotion now can compute power as a metric." />
+    <MESSAGE value="BreakableVoxel and SequentialBreakingController added." />
+    <MESSAGE value="Fixed bug in error computation." />
+    <MESSAGE value="Improved README.md." />
+    <MESSAGE value="Small correction." />
+    <MESSAGE value="Working on a customized command line starter for non-sensing robot on locomotion task." />
+    <MESSAGE value="Git ignore update." />
+    <MESSAGE value="Lib update (guava, commons-beanutils)." />
+    <MESSAGE value="New metric available for Voxel (areaRatioEnergy); used in Locomotion." />
+    <option name="LAST_COMMIT_MESSAGE" value="New metric available for Voxel (areaRatioEnergy); used in Locomotion." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
@@ -488,32 +473,30 @@
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="759" y="240" width="726" height="811" key="#GraphicsDrawer/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589382368839" />
-    <state x="582" y="215" width="800" height="684" key="#Notifications" timestamp="1585952109917">
-      <screen x="54" y="27" width="1866" height="1053" />
+    <state x="956" y="519" width="890" height="549" key="#Markdown" timestamp="1590349242569">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="582" y="215" width="800" height="684" key="#Notifications/54.27.1866.1053@54.27.1866.1053" timestamp="1585952109917" />
-    <state x="582" y="215" width="873" height="684" key="#Project_Structure" timestamp="1586933924840">
-      <screen x="54" y="27" width="1866" height="1053" />
+    <state x="956" y="519" width="890" height="549" key="#Markdown/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1590349242569" />
+    <state x="660" y="232" width="873" height="684" key="#Project_Structure" timestamp="1595015980208">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="215" width="873" height="684" key="#Project_Structure/54.27.1866.1053@54.27.1866.1053" timestamp="1586933924840" />
+    <state x="660" y="237" key="#Project_Structure/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743398854" />
+    <state x="660" y="232" key="#Project_Structure/56.27.2136.1206@56.27.2136.1206" timestamp="1595015980208" />
     <state x="635" y="191" width="765" height="732" key="#Starter" timestamp="1586934150428">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="635" y="191" width="765" height="732" key="#Starter/54.27.1866.1053@54.27.1866.1053" timestamp="1586934150428" />
-    <state x="445" y="211" width="1084" height="798" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1585953461142">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="445" y="211" width="1084" height="798" key="#com.intellij.execution.impl.EditConfigurationsDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1585953461142" />
-    <state x="804" y="32" width="374" height="592" key="#com.intellij.ide.util.MemberChooser" timestamp="1589727381636">
-      <screen x="69" y="32" width="1851" height="1048" />
+    <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser" timestamp="1595428188467">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser/54.27.1866.1053@54.27.1866.1053" timestamp="1587745401810" />
-    <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589389075666" />
-    <state x="804" y="32" width="374" height="592" key="#com.intellij.ide.util.MemberChooser/69.32.1851.1048@69.32.1851.1048" timestamp="1589727381636" />
-    <state x="826" y="445" width="312" height="223" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog" timestamp="1585990308837">
-      <screen x="54" y="27" width="1866" height="1053" />
+    <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595428188467" />
+    <state x="904" y="22" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206@56.27.2136.1206" timestamp="1595015927593" />
+    <state x="692" y="425" width="525" height="428" key="#com.intellij.ide.util.TreeClassChooserDialog" timestamp="1594743130488">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="826" y="445" width="312" height="223" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1585990308837" />
+    <state x="692" y="425" width="525" height="428" key="#com.intellij.ide.util.TreeClassChooserDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743130488" />
     <state x="791" y="443" width="610" height="312" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1589380771545">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
@@ -523,134 +506,98 @@
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="880" y="512" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.packages/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589379718187" />
-    <state x="56" y="22" width="1856" height="1053" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1589389043627">
+    <state x="56" y="22" width="1856" height="1053" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1595019602775">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="54" y="27" width="1856" height="1053" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586367823989" />
     <state x="56" y="22" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589389043627" />
+    <state x="56" y="22" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/56.27.2136.1206@56.27.2136.1206" timestamp="1595019602775" />
     <state x="818" y="332" width="524" height="514" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1589377248684">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="720" y="302" width="524" height="510" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586381026722" />
     <state x="818" y="332" width="524" height="514" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589377248684" />
-    <state x="1361" y="570" width="481" height="510" key="#xdebugger.evaluate" timestamp="1589921695608">
-      <screen x="69" y="32" width="1851" height="1048" />
-    </state>
-    <state x="1361" y="570" width="481" height="510" key="#xdebugger.evaluate/69.32.1851.1048@69.32.1851.1048" timestamp="1589921695608" />
-    <state x="668" y="392" width="628" height="330" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1586298738705">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="668" y="392" width="628" height="330" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/54.27.1866.1053@54.27.1866.1053" timestamp="1586298738705" />
     <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2" timestamp="1586934049116">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2/54.27.1866.1053@54.27.1866.1053" timestamp="1586934049116" />
-    <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl" timestamp="1585990173297">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="770" y="311" width="416" height="498" key="FileChooserDialogImpl/54.27.1866.1053@54.27.1866.1053" timestamp="1585990173297" />
-    <state width="1251" height="547" key="GridCell.Tab.0.bottom" timestamp="1590048254219">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="1079" height="337" key="GridCell.Tab.0.bottom" timestamp="1595022274513">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
-    <state width="2090" height="161" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697265" />
-    <state width="2090" height="326" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="1251" height="547" key="GridCell.Tab.0.bottom/69.32.1297.736@69.32.1297.736" timestamp="1590048254219" />
-    <state width="1805" height="220" key="GridCell.Tab.0.bottom/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492458" />
-    <state width="1251" height="547" key="GridCell.Tab.0.center" timestamp="1590048254218">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="1081" height="337" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984447" />
+    <state width="1079" height="337" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274513" />
+    <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463975" />
+    <state width="1079" height="337" key="GridCell.Tab.0.center" timestamp="1595022274512">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="161" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
-    <state width="2090" height="326" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="1251" height="547" key="GridCell.Tab.0.center/69.32.1297.736@69.32.1297.736" timestamp="1590048254218" />
-    <state width="1805" height="220" key="GridCell.Tab.0.center/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492458" />
-    <state width="1251" height="547" key="GridCell.Tab.0.left" timestamp="1590048254217">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="1081" height="337" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984446" />
+    <state width="1079" height="337" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274512" />
+    <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463974" />
+    <state width="1079" height="337" key="GridCell.Tab.0.left" timestamp="1595022274512">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
-    <state width="2090" height="161" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
-    <state width="2090" height="326" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834668" />
-    <state width="1251" height="547" key="GridCell.Tab.0.left/69.32.1297.736@69.32.1297.736" timestamp="1590048254217" />
-    <state width="1805" height="220" key="GridCell.Tab.0.left/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492457" />
-    <state width="1251" height="547" key="GridCell.Tab.0.right" timestamp="1590048254219">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="1081" height="337" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984446" />
+    <state width="1079" height="337" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274512" />
+    <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463973" />
+    <state width="1079" height="337" key="GridCell.Tab.0.right" timestamp="1595022274513">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
-    <state width="2090" height="161" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589449697264" />
-    <state width="2090" height="326" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1588276834669" />
-    <state width="1251" height="547" key="GridCell.Tab.0.right/69.32.1297.736@69.32.1297.736" timestamp="1590048254219" />
-    <state width="1805" height="220" key="GridCell.Tab.0.right/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492458" />
-    <state width="1251" height="295" key="GridCell.Tab.1.bottom" timestamp="1590047650328">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="1081" height="337" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984447" />
+    <state width="1079" height="337" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274513" />
+    <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463975" />
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom" timestamp="1589922199998">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="340" key="GridCell.Tab.1.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
     <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="1251" height="295" key="GridCell.Tab.1.bottom/69.32.1297.736@69.32.1297.736" timestamp="1590047650328" />
-    <state width="1805" height="220" key="GridCell.Tab.1.bottom/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492459" />
-    <state width="1251" height="295" key="GridCell.Tab.1.center" timestamp="1590047650327">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="2090" height="401" key="GridCell.Tab.1.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199998" />
+    <state width="2090" height="401" key="GridCell.Tab.1.center" timestamp="1589922199993">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="340" key="GridCell.Tab.1.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
     <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="1251" height="295" key="GridCell.Tab.1.center/69.32.1297.736@69.32.1297.736" timestamp="1590047650327" />
-    <state width="1805" height="220" key="GridCell.Tab.1.center/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492459" />
-    <state width="1251" height="295" key="GridCell.Tab.1.left" timestamp="1590047650327">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="2090" height="401" key="GridCell.Tab.1.center/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199993" />
+    <state width="2090" height="401" key="GridCell.Tab.1.left" timestamp="1589922199993">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="340" key="GridCell.Tab.1.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828163" />
     <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491510" />
-    <state width="1251" height="295" key="GridCell.Tab.1.left/69.32.1297.736@69.32.1297.736" timestamp="1590047650327" />
-    <state width="1805" height="220" key="GridCell.Tab.1.left/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492459" />
-    <state width="1251" height="295" key="GridCell.Tab.1.right" timestamp="1590047650327">
-      <screen x="69" y="32" width="1297" height="736" />
+    <state width="2090" height="401" key="GridCell.Tab.1.left/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199993" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right" timestamp="1589922199997">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="340" key="GridCell.Tab.1.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586457828164" />
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
-    <state width="1251" height="295" key="GridCell.Tab.1.right/69.32.1297.736@69.32.1297.736" timestamp="1590047650327" />
-    <state width="1805" height="220" key="GridCell.Tab.1.right/69.32.1851.1048@69.32.1851.1048" timestamp="1589922492459" />
+    <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199997" />
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog" timestamp="1586934109675">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
     <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586934109675" />
-    <state x="447" y="212" width="1346" height="852" key="SettingsEditor" timestamp="1588276773234">
+    <state x="447" y="182" width="1024" height="857" key="SettingsEditor" timestamp="1595414519046">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
+    <state x="447" y="182" width="1024" height="857" key="SettingsEditor/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595414519045" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="307" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1588976953248">
+    <state x="660" y="287" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1595021652653">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
-    <state x="660" y="307" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588976953248" />
-    <state width="925" height="524" key="XDebugger.FullValuePopup" timestamp="1589641502604">
-      <screen x="69" y="32" width="1851" height="1048" />
-    </state>
-    <state width="925" height="524" key="XDebugger.FullValuePopup/69.32.1851.1048@69.32.1851.1048" timestamp="1589641502604" />
-    <state x="846" y="352" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1589379694674">
+    <state x="660" y="277" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743972753" />
+    <state x="660" y="287" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1595021652653" />
+    <state x="672" y="292" key="Vcs.Push.Dialog.v2/56.27.4056.1206@56.27.4056.1206" timestamp="1589964451771" />
+    <state x="846" y="342" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1594740816124">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="744" y="333" width="476" height="448" key="chooseDestDirectoryDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586385553691" />
-    <state x="846" y="352" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589379694674" />
-    <state x="846" y="372" key="chooseDestDirectoryDialog/56.27.2136.1206@56.27.2136.1206" timestamp="1588254296698" />
-    <state x="746" y="473" width="481" height="179" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1586330192753">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="746" y="473" width="481" height="179" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586330192753" />
-    <state x="696" y="290" width="572" height="534" key="com.intellij.testIntegration.createTest.CreateTestDialog" timestamp="1586334474186">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="696" y="290" width="572" height="534" key="com.intellij.testIntegration.createTest.CreateTestDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586334474186" />
+    <state x="846" y="342" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594740816124" />
+    <state x="846" y="367" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206@56.27.2136.1206" timestamp="1589905930689" />
     <state x="1044" y="500" width="524" height="485" key="extract.method.dialog" timestamp="1588887496732">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="917" y="449" width="524" height="490" key="extract.method.dialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586901484166" />
     <state x="1044" y="500" width="524" height="485" key="extract.method.dialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588887496732" />
-    <state x="894" y="269" width="637" height="622" key="find.popup" timestamp="1589922105228">
-      <screen x="69" y="32" width="1851" height="1048" />
+    <state x="813" y="236" width="621" height="783" key="find.popup" timestamp="1595428170446">
+      <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="778" y="194" width="588" height="522" key="find.popup/69.32.1297.736@69.32.1297.736" timestamp="1589822264615" />
-    <state x="894" y="269" width="637" height="622" key="find.popup/69.32.1851.1048@69.32.1851.1048" timestamp="1589922105228" />
+    <state x="813" y="236" width="621" height="783" key="find.popup/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595428170446" />
     <state x="703" y="236" width="557" height="641" key="git4idea.branch.GitSmartOperationDialog" timestamp="1586933742073">
       <screen x="54" y="27" width="1866" height="1053" />
     </state>
@@ -660,44 +607,23 @@
     </state>
     <state x="650" y="340" width="663" height="434" key="git4idea.merge.GitPullDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586933465045" />
     <state x="738" y="380" key="git4idea.merge.GitPullDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588778325002" />
-    <state x="873" y="445" width="438" height="322" key="git4idea.ui.GitTagDialog" timestamp="1588883953536">
+    <state x="873" y="440" width="416" height="326" key="git4idea.ui.GitTagDialog" timestamp="1590350113955">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="768" y="396" width="438" height="322" key="git4idea.ui.GitTagDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1585952211835" />
-    <state x="873" y="445" key="git4idea.ui.GitTagDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588883953536" />
-    <state width="600" height="424" key="javadoc.popup" timestamp="1586006597535">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state width="600" height="424" key="javadoc.popup/54.27.1866.1053@54.27.1866.1053" timestamp="1586006597535" />
-    <state x="432" y="232" width="1380" height="808" key="new project wizard" timestamp="1588254366375">
+    <state x="873" y="440" width="416" height="326" key="git4idea.ui.GitTagDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1590350113955" />
+    <state x="432" y="227" width="1380" height="808" key="new project wizard" timestamp="1591623162082">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
+    <state x="432" y="227" key="new project wizard/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1591623162082" />
     <state x="432" y="232" width="1380" height="808" key="new project wizard/56.27.2136.1206@56.27.2136.1206" timestamp="1588254366375" />
     <state x="739" y="285" width="770" height="776" key="run.anything.popup" timestamp="1589388985236">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="651" y="252" width="672" height="677" key="run.anything.popup/54.27.1866.1053@54.27.1866.1053" timestamp="1585953524520" />
     <state x="739" y="285" width="770" height="776" key="run.anything.popup/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589388985236" />
     <state x="738" y="293" width="770" height="777" key="search.everywhere.popup" timestamp="1588972150205">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="650" y="259" width="672" height="678" key="search.everywhere.popup/54.27.1866.1053@54.27.1866.1053" timestamp="1586933332742" />
     <state x="738" y="293" width="770" height="777" key="search.everywhere.popup/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588972150205" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java</url>
-          <line>128</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java</url>
-          <line>109</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

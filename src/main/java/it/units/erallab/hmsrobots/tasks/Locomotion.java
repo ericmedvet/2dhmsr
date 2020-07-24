@@ -16,26 +16,30 @@
  */
 package it.units.erallab.hmsrobots.tasks;
 
-import it.units.erallab.hmsrobots.core.objects.*;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
-import org.apache.commons.lang3.Range;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class Locomotion extends AbstractTask<Robot, List<Double>> {
+public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
 
-  private final static double INITIAL_PLACEMENT_X_GAP = 3d;
-  private final static double INITIAL_PLACEMENT_Y_GAP = 3d;
+  private final static double INITIAL_PLACEMENT_X_GAP = 1d;
+  private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
   private final static double TERRAIN_BORDER_HEIGHT = 100d;
   private final static int TERRAIN_POINTS = 50;
 
@@ -44,7 +48,9 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
     CONTROL_POWER(true),
-    RELATIVE_CONTROL_POWER(true);
+    RELATIVE_CONTROL_POWER(true),
+    AREA_RATIO_POWER(true),
+    RELATIVE_AREA_RATIO_POWER(true);
 
     private final boolean toMinimize;
 
@@ -60,17 +66,23 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
 
   private final double finalT;
   private final double[][] groundProfile;
+  private final double initialPlacement;
   private final List<Metric> metrics;
 
   public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, Settings settings) {
+    this(finalT, groundProfile, groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP, metrics, settings);
+  }
+
+  public Locomotion(double finalT, double[][] groundProfile, double initialPlacement, List<Metric> metrics, Settings settings) {
     super(settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
+    this.initialPlacement = initialPlacement;
     this.metrics = metrics;
   }
 
   @Override
-  public List<Double> apply(Robot robot, SnapshotListener listener) {
+  public List<Double> apply(Robot<?> robot, SnapshotListener listener) {
     List<Point2> centerPositions = new ArrayList<>();
     //init world
     World world = new World();
@@ -79,17 +91,15 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
     ground.addTo(world);
     worldObjects.add(ground);
-    //position robot: x of rightmost point is on 2nd point of profile
+    //position robot: translate on x
     BoundingBox boundingBox = robot.boundingBox();
-    double xLeft = groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP;
-    double yGroundLeft = groundProfile[1][1];
-    double xRight = xLeft + boundingBox.max.x - boundingBox.min.x;
-    double yGroundRight = yGroundLeft + (groundProfile[1][2] - yGroundLeft) * (xRight - xLeft) / (groundProfile[0][2] - xLeft);
-    double topmostGroundY = Math.max(yGroundLeft, yGroundRight);
-    Vector2 targetPoint = new Vector2(xLeft, topmostGroundY + INITIAL_PLACEMENT_Y_GAP);
-    Vector2 currentPoint = new Vector2(boundingBox.min.x, boundingBox.min.y);
-    Vector2 movement = targetPoint.subtract(currentPoint);
-    robot.translate(movement);
+    robot.translate(new Vector2(initialPlacement - boundingBox.min.x, 0));
+    //translate on y
+    double minYGap = robot.getVoxels().values().stream()
+        .filter(Objects::nonNull)
+        .mapToDouble(v -> ((Voxel) v.immutable()).getShape().boundingBox().min.y - ground.yAt(v.getCenter().x))
+        .min().orElse(0d);
+    robot.translate(new Vector2(0, INITIAL_PLACEMENT_Y_GAP - minYGap));
     //get initial x
     double initCenterX = robot.getCenter().x;
     //add robot to world
@@ -133,15 +143,26 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
         case CONTROL_POWER:
           value = robot.getVoxels().values().stream()
               .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(v -> ((ControllableVoxel) v).getControlEnergy())
+              .mapToDouble(ControllableVoxel::getControlEnergy)
               .sum() / t;
           break;
         case RELATIVE_CONTROL_POWER:
-
           value = robot.getVoxels().values().stream()
               .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(v -> ((ControllableVoxel) v).getControlEnergy())
-              .sum() / t / robot.getVoxels().values().stream().filter(v -> (v != null)).count();
+              .mapToDouble(ControllableVoxel::getControlEnergy)
+              .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
+          break;
+        case AREA_RATIO_POWER:
+          value = robot.getVoxels().values().stream()
+              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+              .sum() / t;
+          break;
+        case RELATIVE_AREA_RATIO_POWER:
+          value = robot.getVoxels().values().stream()
+              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+              .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
           break;
       }
       results.add(value);
@@ -163,118 +184,6 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     return new double[][]{xs, ys};
   }
 
-  enum TerrainType { FLAT, UNEVEN, STUMP, PIT }
-
-  public static double[][] hardcoreTerrain(double length,
-                                           double terrainStartPad,
-                                           Range<Double> unevenWidthRange,
-                                           double peak,
-                                           Range<Double> pitGapRange,
-                                           double pitHeight,
-                                           Range<Double> stumpWidthRange,
-                                           double stumpHeight,
-                                           double maxTerrainFlat,
-                                           double borderHeight,
-                                           Random random) {
-    double groundY = 0d;
-    boolean newTerrain = true;
-    int remaining = (int) Math.ceil(terrainStartPad);
-    ArrayList<Double> xs = new ArrayList<>();
-    ArrayList<Double> ys = new ArrayList<>();
-    TerrainType terrainType = TerrainType.FLAT;
-
-    // add initial border
-    xs.add(0d);
-    ys.add(borderHeight);
-    double prevX = 0d;
-    double prevY = borderHeight;
-
-    for (int i = 1; i < Math.round(length); i++) {
-      double x = i;
-      double y = groundY;
-
-      if (terrainType == TerrainType.UNEVEN) {
-        if (newTerrain) {
-          // define uneven width
-          double min = unevenWidthRange.getMinimum();
-          double max = unevenWidthRange.getMaximum();
-          double unevenWidth = min + (max - min) * random.nextDouble();
-          remaining = (int) Math.ceil(unevenWidth);
-        } else {
-          // draw peak
-          y = random.nextDouble() * peak;
-        }
-      } else if (terrainType == TerrainType.PIT) {
-        if (newTerrain) {
-          // define pit gap
-          double min = pitGapRange.getMinimum();
-          double max = pitGapRange.getMaximum();
-          double pitGap = min + (max - min) * random.nextDouble();
-          remaining = (int) Math.ceil(pitGap);
-        } else {
-          // draw pit
-          y -= pitHeight;
-        }
-      } else if (terrainType == TerrainType.STUMP) {
-        if (newTerrain) {
-          // define stump width
-          double min = stumpWidthRange.getMinimum();
-          double max = stumpWidthRange.getMaximum();
-          double stumpWidth = min + (max - min) * random.nextDouble();
-          remaining = (int) Math.ceil(stumpWidth);
-        } else {
-          // draw stump
-          y += stumpHeight;
-        }
-      }
-
-      if (prevY != y) {
-        // ensure to draw initial and final positions of pits/stumps
-        if (prevX != xs.get(xs.size() - 1)) {
-          xs.add(prevX);
-          ys.add(prevY);
-        }
-        xs.add(x);
-        ys.add(y);
-      }
-
-      newTerrain = false;
-      remaining -= 1;
-      if (remaining == 0) {
-        double min = maxTerrainFlat / 2;
-        double max = maxTerrainFlat;
-        remaining = (int) Math.round(min + (max - min) * random.nextDouble());
-        if (terrainType == TerrainType.FLAT) {
-          int stateIdx = random.nextInt(TerrainType.values().length);
-          terrainType = TerrainType.values()[stateIdx];
-        } else {
-          terrainType = TerrainType.FLAT;
-        }
-        newTerrain = true;
-      }
-
-      prevX = x;
-      prevY = y;
-    }
-
-    // add final border
-    xs.add(length);
-    ys.add(borderHeight);
-
-    // convert to double array
-    double[] xsArray = new double[xs.size()];
-    for (int i = 0; i < xsArray.length; i++) {
-      xsArray[i] = xs.get(i);
-    }
-    // convert to double array
-    double[] ysArray = new double[ys.size()];
-    for (int i = 0; i < ysArray.length; i++) {
-      ysArray[i] = ys.get(i);
-    }
-
-    return new double[][]{xsArray, ysArray};
-  }
-
   public static double[][] createTerrain(String name) {
     Random random = new Random(1);
     if (name.equals("flat")) {
@@ -282,29 +191,11 @@ public class Locomotion extends AbstractTask<Robot, List<Double>> {
     } else if (name.startsWith("uneven")) {
       int h = Integer.parseInt(name.replace("uneven", ""));
       return randomTerrain(TERRAIN_POINTS, 2000, h, TERRAIN_BORDER_HEIGHT, random);
-    } else if (name.equals("hardcore")) {
-      double terrainStartPad = 44d;
-      Range<Double> unevenWidthRange = Range.between(11d, 33d);
-      double peak = 1d;
-      Range<Double> pitGapRange = Range.between(11d, 33d);
-      double pitHeight = 6d;
-      Range<Double> stumpWidthRange = Range.between(11d, 33d);
-      double stumpHeight = 6d;
-      double maxTerrainFlat = 16.5d;
-
-      return hardcoreTerrain(2000,
-              terrainStartPad,
-              unevenWidthRange,
-              peak,
-              pitGapRange,
-              pitHeight,
-              stumpWidthRange,
-              stumpHeight,
-              maxTerrainFlat,
-              TERRAIN_BORDER_HEIGHT,
-              random);
     }
     return null;
   }
 
+  public List<Metric> getMetrics() {
+    return metrics;
+  }
 }
