@@ -108,9 +108,18 @@ public class Voxel implements WorldObject, Serializable {
     @Override
     public boolean isAllowed(Filter f) {
       if (!(f instanceof ParentFilter)) {
-        return true;
+          return true;
       }
       return parent != ((ParentFilter) f).parent;
+    }
+
+  }
+
+  public static class RobotFilter implements Filter {
+
+    @Override
+    public boolean isAllowed(Filter filter) {
+      return true;
     }
 
   }
@@ -328,12 +337,16 @@ public class Voxel implements WorldObject, Serializable {
   }
 
   public void setOwner(Robot robot) {
-    ParentFilter filter = new ParentFilter(robot);
+    Filter filter;
+    if (massCollisionFlag) {
+      filter = new ParentFilter(robot);
+    } else {
+      filter = new RobotFilter();
+    }
+
     for (Body vertexBody : vertexBodies) {
       vertexBody.setUserData(robot);
-      if (massCollisionFlag) {
-        vertexBody.getFixture(0).setFilter(filter);
-      }
+      vertexBody.getFixture(0).setFilter(filter);
     }
   }
 
@@ -432,7 +445,7 @@ public class Voxel implements WorldObject, Serializable {
 
   public double getAngle() {
     Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
-    Vector2 downSide = vertexBodies[3].getWorldCenter().copy().subtract(vertexBodies[2].getWorldCenter());
+    Vector2 downSide = vertexBodies[2].getWorldCenter().copy().subtract(vertexBodies[3].getWorldCenter());
     return (upSide.getDirection() + downSide.getDirection()) / 2d;
   }
 

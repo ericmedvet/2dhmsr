@@ -65,6 +65,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       VoxelBody.build(),
       Ground.build(),
       VoxelJoint.build(),
+      Lidar.build(),
       SensorReading.build()
   ));
 
