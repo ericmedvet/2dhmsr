@@ -33,8 +33,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Lib update (guava, commons-beanutils).">
-      <change beforePath="$PROJECT_DIR$/.idea/2dhmsr.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/2dhmsr.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Lidar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Lidar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Lidar.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -410,7 +414,14 @@
       <option name="project" value="LOCAL" />
       <updated>1595428436940</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Version update">
+      <created>1596449960137</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1596449960137</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="UpdateCopyrightCheckinHandler">
@@ -436,7 +447,6 @@
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
-    <MESSAGE value="Just a new IDEA file." />
     <MESSAGE value="Working on GraphicsDrawer." />
     <MESSAGE value="Refactoring on snapshot/immutable things done." />
     <MESSAGE value="Restructuring GraphicsDrawer with Drawers." />
@@ -461,7 +471,8 @@
     <MESSAGE value="Git ignore update." />
     <MESSAGE value="Lib update (guava, commons-beanutils)." />
     <MESSAGE value="New metric available for Voxel (areaRatioEnergy); used in Locomotion." />
-    <option name="LAST_COMMIT_MESSAGE" value="New metric available for Voxel (areaRatioEnergy); used in Locomotion." />
+    <MESSAGE value="Version update" />
+    <option name="LAST_COMMIT_MESSAGE" value="Version update" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>

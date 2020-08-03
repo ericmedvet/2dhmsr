@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as luca)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -20,32 +20,32 @@ import it.units.erallab.hmsrobots.core.sensors.Sensor;
 
 public class Lidar extends SensorReading {
 
-    private final double angle;
-    private final double rayLength;
-    private final double[] rayDirections;
+  private final double angle;
+  private final double rayLength;
+  private final double[] rayDirections;
 
-    public Lidar(double[] values,
-                 Sensor.Domain[] domains,
-                 int sensorIndex,
-                 int nOfSensors,
-                 double angle,
-                 double rayLength,
-                 double[] rayDirections) {
-        super(values, domains, sensorIndex, nOfSensors);
-        this.angle = angle;
-        this.rayLength = rayLength;
-        this.rayDirections = rayDirections;
-    }
+  public Lidar(double[] values,
+               Sensor.Domain[] domains,
+               int sensorIndex,
+               int nOfSensors,
+               double angle,
+               double rayLength,
+               double[] rayDirections) {
+    super(values, domains, sensorIndex, nOfSensors);
+    this.angle = angle;
+    this.rayLength = rayLength;
+    this.rayDirections = rayDirections;
+  }
 
-    public double getAngle()  {
-        return angle;
-    }
+  public double getAngle() {
+    return angle;
+  }
 
-    public double getRayLength()  {
-        return rayLength;
-    }
+  public double getRayLength() {
+    return rayLength;
+  }
 
-    public double[] getRayDirections()   {
-        return rayDirections;
-    }
+  public double[] getRayDirections() {
+    return rayDirections;
+  }
 }

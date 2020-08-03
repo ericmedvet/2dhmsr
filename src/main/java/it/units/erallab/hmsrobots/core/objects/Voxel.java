@@ -108,7 +108,7 @@ public class Voxel implements WorldObject, Serializable {
     @Override
     public boolean isAllowed(Filter f) {
       if (!(f instanceof ParentFilter)) {
-          return true;
+        return true;
       }
       return parent != ((ParentFilter) f).parent;
     }

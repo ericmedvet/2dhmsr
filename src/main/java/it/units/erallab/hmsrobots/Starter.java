@@ -32,7 +32,10 @@ import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -175,26 +178,26 @@ public class Starter {
       if (structure.get(x, y)) {
         if (y > 2) {
           return new SensingVoxel(Arrays.asList(
-                  new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
-                  new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
           ));
         }
         if (y == 0) {
           return new SensingVoxel(Arrays.asList(
-                  new Average(new Touch(), 1d)
+              new Average(new Touch(), 1d)
           ));
         }
         return new SensingVoxel(Arrays.asList(
-                new AreaRatio(),
-                new ControlPower(settings.getStepFrequency())
+            new AreaRatio(),
+            new ControlPower(settings.getStepFrequency())
         ));
       }
       return null;
     });
     Random random = new Random(1);
     Robot<SensingVoxel> centralizedMlpRobot = new Robot(
-            new CentralizedMLP(sensingVoxels, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)),
-            SerializationUtils.clone(sensingVoxels)
+        new CentralizedMLP(sensingVoxels, new int[]{100}, t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)),
+        SerializationUtils.clone(sensingVoxels)
     );
     double[] weights = ((CentralizedMLP) centralizedMlpRobot.getController()).getParams();
     for (int i = 0; i < weights.length; i++) {
