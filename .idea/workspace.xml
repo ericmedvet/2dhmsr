@@ -5,6 +5,9 @@
       <artifact name="2dhmsr:jar" />
     </artifacts-to-build>
   </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="BranchesTreeState">
     <expand>
       <path>
@@ -24,14 +27,14 @@
     <select>
       <path>
         <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="BRANCH:develop" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
       </path>
     </select>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Lib update (guava, commons-beanutils).">
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/2dhmsr.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/2dhmsr.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,12 +62,17 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="develop" />
+        <entry key="$PROJECT_DIR$" value="feature-lidar-sensor" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="$APPLICATION_HOME_DIR$/plugins/maven/lib/maven3" />
+      </MavenGeneralSettings>
+    </option>
     <option name="importingSettings">
       <MavenImportingSettings>
         <option name="downloadDocsAutomatically" value="true" />
@@ -194,6 +202,7 @@
       </list>
     </recent_temporary>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -417,19 +426,7 @@
         </entry>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="FILTERS">
-                <map>
-                  <entry key="branch">
-                    <value>
-                      <list>
-                        <option value="develop" />
-                      </list>
-                    </value>
-                  </entry>
-                </map>
-              </option>
-            </State>
+            <State />
           </value>
         </entry>
       </map>
@@ -480,17 +477,11 @@
     <state x="660" y="232" width="873" height="684" key="#Project_Structure" timestamp="1595015980208">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="582" y="215" width="873" height="684" key="#Project_Structure/54.27.1866.1053@54.27.1866.1053" timestamp="1586933924840" />
     <state x="660" y="237" key="#Project_Structure/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743398854" />
     <state x="660" y="232" key="#Project_Structure/56.27.2136.1206@56.27.2136.1206" timestamp="1595015980208" />
-    <state x="635" y="191" width="765" height="732" key="#Starter" timestamp="1586934150428">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="635" y="191" width="765" height="732" key="#Starter/54.27.1866.1053@54.27.1866.1053" timestamp="1586934150428" />
     <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser" timestamp="1595428188467">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="795" y="272" width="571" height="576" key="#com.intellij.ide.util.MemberChooser/54.27.1866.1053@54.27.1866.1053" timestamp="1587745401810" />
     <state x="904" y="22" width="551" height="681" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595428188467" />
     <state x="904" y="22" key="#com.intellij.ide.util.MemberChooser/56.27.2136.1206@56.27.2136.1206" timestamp="1595015927593" />
     <state x="692" y="425" width="525" height="428" key="#com.intellij.ide.util.TreeClassChooserDialog" timestamp="1594743130488">
@@ -500,7 +491,6 @@
     <state x="791" y="443" width="610" height="312" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1589380771545">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="696" y="412" width="609" height="302" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/54.27.1866.1053@54.27.1866.1053" timestamp="1586867559928" />
     <state x="791" y="443" width="610" height="312" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589380771545" />
     <state x="880" y="512" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.packages" timestamp="1589379718187">
       <screen x="56" y="27" width="2136" height="1206" />
@@ -515,35 +505,27 @@
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="818" y="332" width="524" height="514" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1589377248684" />
-    <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2" timestamp="1586934049116">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="524" y="116" width="948" height="881" key="CommitChangelistDialog2/54.27.1866.1053@54.27.1866.1053" timestamp="1586934049116" />
     <state width="1079" height="337" key="GridCell.Tab.0.bottom" timestamp="1595022274513">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.bottom/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447801" />
     <state width="1081" height="337" key="GridCell.Tab.0.bottom/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984447" />
     <state width="1079" height="337" key="GridCell.Tab.0.bottom/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274513" />
     <state width="2090" height="337" key="GridCell.Tab.0.bottom/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463975" />
     <state width="1079" height="337" key="GridCell.Tab.0.center" timestamp="1595022274512">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.center/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
     <state width="1081" height="337" key="GridCell.Tab.0.center/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984446" />
     <state width="1079" height="337" key="GridCell.Tab.0.center/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274512" />
     <state width="2090" height="337" key="GridCell.Tab.0.center/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463974" />
     <state width="1079" height="337" key="GridCell.Tab.0.left" timestamp="1595022274512">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.left/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447799" />
     <state width="1081" height="337" key="GridCell.Tab.0.left/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984446" />
     <state width="1079" height="337" key="GridCell.Tab.0.left/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274512" />
     <state width="2090" height="337" key="GridCell.Tab.0.left/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463973" />
     <state width="1079" height="337" key="GridCell.Tab.0.right" timestamp="1595022274513">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state width="1820" height="274" key="GridCell.Tab.0.right/54.27.1866.1053@54.27.1866.1053" timestamp="1586936447800" />
     <state width="1081" height="337" key="GridCell.Tab.0.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743984447" />
     <state width="1079" height="337" key="GridCell.Tab.0.right/56.27.2136.1206@56.27.2136.1206" timestamp="1595022274513" />
     <state width="2090" height="337" key="GridCell.Tab.0.right/56.27.4056.1206@56.27.4056.1206" timestamp="1589964463975" />
@@ -567,21 +549,15 @@
     </state>
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199997" />
-    <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog" timestamp="1586934109675">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="585" y="414" width="768" height="311" key="MultipleFileMergeDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586934109675" />
     <state x="447" y="182" width="1024" height="857" key="SettingsEditor" timestamp="1595414519046">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="396" y="193" width="1346" height="852" key="SettingsEditor/54.27.1866.1053@54.27.1866.1053" timestamp="1586936398265" />
     <state x="447" y="182" width="1024" height="857" key="SettingsEditor/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595414519045" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="287" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1595021652653">
+    <state x="660" y="257" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1595429038054">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="582" y="289" width="1005" height="590" key="Vcs.Push.Dialog.v2/54.27.1866.1053@54.27.1866.1053" timestamp="1586935973446" />
-    <state x="660" y="277" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594743972753" />
+    <state x="660" y="257" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595429038054" />
     <state x="660" y="287" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1595021652653" />
     <state x="672" y="292" key="Vcs.Push.Dialog.v2/56.27.4056.1206@56.27.4056.1206" timestamp="1589964451771" />
     <state x="846" y="342" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1594740816124">
@@ -589,23 +565,21 @@
     </state>
     <state x="846" y="342" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1594740816124" />
     <state x="846" y="367" width="455" height="452" key="chooseDestDirectoryDialog/56.27.2136.1206@56.27.2136.1206" timestamp="1589905930689" />
+    <state x="908" y="545" width="428" height="182" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1596449815592">
+      <screen x="56" y="27" width="2136" height="1206" />
+    </state>
+    <state x="908" y="545" width="428" height="182" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1596449815592" />
     <state x="1044" y="500" width="524" height="485" key="extract.method.dialog" timestamp="1588887496732">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="917" y="449" width="524" height="490" key="extract.method.dialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586901484166" />
     <state x="1044" y="500" width="524" height="485" key="extract.method.dialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588887496732" />
     <state x="813" y="236" width="621" height="783" key="find.popup" timestamp="1595428170446">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="813" y="236" width="621" height="783" key="find.popup/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595428170446" />
-    <state x="703" y="236" width="557" height="641" key="git4idea.branch.GitSmartOperationDialog" timestamp="1586933742073">
-      <screen x="54" y="27" width="1866" height="1053" />
-    </state>
-    <state x="703" y="236" width="557" height="641" key="git4idea.branch.GitSmartOperationDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586933742073" />
     <state x="738" y="380" width="663" height="434" key="git4idea.merge.GitPullDialog" timestamp="1588778325002">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="650" y="340" width="663" height="434" key="git4idea.merge.GitPullDialog/54.27.1866.1053@54.27.1866.1053" timestamp="1586933465045" />
     <state x="738" y="380" key="git4idea.merge.GitPullDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588778325002" />
     <state x="873" y="440" width="416" height="326" key="git4idea.ui.GitTagDialog" timestamp="1590350113955">
       <screen x="56" y="27" width="2136" height="1206" />
@@ -623,7 +597,6 @@
     <state x="738" y="293" width="770" height="777" key="search.everywhere.popup" timestamp="1588972150205">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="650" y="259" width="672" height="678" key="search.everywhere.popup/54.27.1866.1053@54.27.1866.1053" timestamp="1586933332742" />
     <state x="738" y="293" width="770" height="777" key="search.everywhere.popup/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588972150205" />
   </component>
 </project>
