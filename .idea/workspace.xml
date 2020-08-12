@@ -27,18 +27,15 @@
     <select>
       <path>
         <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
       </path>
     </select>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d54cfd5-762d-4366-8f3d-9e331e367a48" name="Default Changelist" comment="Lib update (guava, commons-beanutils).">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/Starter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/objects/Voxel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/Lidar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/core/sensors/immutable/Lidar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots/viewers/drawers/Lidar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +63,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="feature-lidar-sensor" />
+        <entry key="$PROJECT_DIR$" value="develop" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -102,7 +99,7 @@
     <property name="extract.method.default.visibility" value="private" />
     <property name="last_directory_selection" value="$PROJECT_DIR$/src/main/java/it/units/erallab/hmsrobots" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/assets" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
@@ -560,15 +557,19 @@
     </state>
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1588786491511" />
     <state width="2090" height="401" key="GridCell.Tab.1.right/56.27.2136.1206@56.27.2136.1206" timestamp="1589922199997" />
-    <state x="447" y="182" width="1024" height="857" key="SettingsEditor" timestamp="1595414519046">
+    <state x="268" y="128" width="1708" height="1006" key="MergeDialog" timestamp="1596451380066">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="447" y="182" width="1024" height="857" key="SettingsEditor/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595414519045" />
+    <state x="268" y="128" width="1708" height="1006" key="MergeDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1596451380066" />
+    <state x="447" y="177" width="1024" height="857" key="SettingsEditor" timestamp="1596665555381">
+      <screen x="56" y="27" width="2136" height="1206" />
+    </state>
+    <state x="447" y="177" width="1024" height="857" key="SettingsEditor/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1596665555381" />
     <state x="447" y="212" key="SettingsEditor/56.27.2136.1206@56.27.2136.1206" timestamp="1588276773234" />
-    <state x="660" y="257" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1595429038054">
+    <state x="660" y="247" width="800" height="540" key="Vcs.Push.Dialog.v2" timestamp="1596451386044">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
-    <state x="660" y="257" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595429038054" />
+    <state x="660" y="247" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1596451386044" />
     <state x="660" y="287" width="800" height="540" key="Vcs.Push.Dialog.v2/56.27.2136.1206@56.27.2136.1206" timestamp="1595021652653" />
     <state x="672" y="292" key="Vcs.Push.Dialog.v2/56.27.4056.1206@56.27.4056.1206" timestamp="1589964451771" />
     <state x="846" y="342" width="455" height="452" key="chooseDestDirectoryDialog" timestamp="1594740816124">
@@ -588,6 +589,10 @@
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
     <state x="813" y="236" width="621" height="783" key="find.popup/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1595428170446" />
+    <state x="849" y="319" width="545" height="624" key="git4idea.branch.GitSmartOperationDialog" timestamp="1596451378406">
+      <screen x="56" y="27" width="2136" height="1206" />
+    </state>
+    <state x="849" y="319" width="545" height="624" key="git4idea.branch.GitSmartOperationDialog/56.27.2136.1206/2192.0.1920.1080@56.27.2136.1206" timestamp="1596451378406" />
     <state x="738" y="380" width="663" height="434" key="git4idea.merge.GitPullDialog" timestamp="1588778325002">
       <screen x="56" y="27" width="2136" height="1206" />
     </state>
