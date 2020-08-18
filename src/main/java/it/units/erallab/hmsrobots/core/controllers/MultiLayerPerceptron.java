@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author eric
@@ -55,10 +56,13 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   private final double[][][] weights;
   private final int[] neurons;
 
-  public MultiLayerPerceptron(ActivationFunction activationFunction, int[] neurons, double[] weights) {
+  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput) {
     this.activationFunction = activationFunction;
-    this.neurons = neurons;
-    this.weights = unflat(weights, neurons);
+    neurons = new int[2 + innerNeurons.length];
+    System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
+    neurons[0] = nOfInput + 1;
+    neurons[neurons.length - 1] = nOfOutput;
+    this.weights = unflat(new double[countWeights(neurons)], neurons);
   }
 
   public static double[][][] unflat(double[] flatWeights, int[] neurons) {
@@ -101,14 +105,6 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     Arrays.fill(fakeLayerWeights, new double[largestLayerSize]);
     Arrays.fill(fakeWeights, fakeLayerWeights);
     return flat(fakeWeights, neurons).length;
-  }
-
-  public static int[] neurons(int nOfInputs, int[] innerNeurons, int nOfOutputs) {
-    int[] neurons = new int[innerNeurons.length + 2];
-    neurons[0] = nOfInputs;
-    neurons[neurons.length - 1] = nOfOutputs;
-    System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
-    return neurons;
   }
 
   @Override
@@ -188,4 +184,10 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     return Arrays.equals(this.neurons, other.neurons);
   }
 
+  @Override
+  public String toString() {
+    return "MLP." + activationFunction.toString().toLowerCase() + "[" +
+        Arrays.stream(neurons).mapToObj(Integer::toString).collect(Collectors.joining(","))
+        + "]";
+  }
 }

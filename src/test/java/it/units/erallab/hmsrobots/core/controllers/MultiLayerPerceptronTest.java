@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
- *
  * @author eric
  */
 public class MultiLayerPerceptronTest {
@@ -82,9 +81,9 @@ public class MultiLayerPerceptronTest {
   public void testApply() {
     System.out.println("apply");
     double[] input = new double[]{2};
-    int[] neurons = new int[]{2, 2, 1};
     double[] weights = new double[]{1, 0, 1, 2, 1, -1};
-    MultiLayerPerceptron instance = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.RELU, neurons, weights);
+    MultiLayerPerceptron instance = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.RELU, 1, new int[]{2}, 1);
+    instance.setParams(weights);
     double[] expResult = new double[]{1};
     double[] result = instance.apply(input);
     assertArrayEquals(expResult, result);
