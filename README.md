@@ -1,13 +1,25 @@
 # 2D-VSR-Sim
 2D-VSR-Sim is a Java framework for experimenting with a 2-D version of the *voxel-based soft robots* (VSRs) [1].
 
-If you use this software, please cite: Medvet, Bartoli, De Lorenzo, Seriani. "[Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617)" arXiv cs.RO: 2001.08617
+If you use this software, please cite one or both of the following papers:
+- Medvet, Bartoli, De Lorenzo, Seriani. "[2D-VSR-Sim: a Simulation Tool for the Optimization of 2-D Voxel-based Soft Robots](https://doi.org/10.1016/j.softx.2020.100573)", SoftwareX, 12:100573, 2020
 ```bibtex
 @article{medvet20202d,
-  title={Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots},
-  author={Medvet, Eric and Bartoli, Alberto and De Lorenzo, Andrea and Seriani, Stefano},
-  journal={arXiv preprint arXiv:2001.08617},
-  year={2020}
+    title = {{2D-VSR-Sim: A simulation tool for the optimization of 2-D voxel-based soft robots}},
+    author={Medvet, Eric and Bartoli, Alberto and De Lorenzo, Andrea and Seriani, Stefano},
+    journal = {{SoftwareX}},
+    volume = {12},
+    year = {2020},
+    doi = {https://doi.org/10.1016/j.softx.2020.100573},
+}
+```
+- Medvet, Bartoli, De Lorenzo, Seriani. "[Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617)", arXiv cs.RO: 2001.08617, 2020
+```bibtex
+@article{medvet2020design,
+    title = {{Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots}},
+    author = {Medvet, Eric and Bartoli, Alberto and De Lorenzo, Andrea and Seriani, Stefano},
+    journal = {{arXiv preprint arXiv:2001.08617}},
+    year = {2020}
 }
 ```
 
