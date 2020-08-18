@@ -38,16 +38,29 @@ public class CentralizedSensing<V extends SensingVoxel> implements Controller<V>
 
   private Function<double[], double[]> function;
 
-  public CentralizedSensing(Grid<SensingVoxel> voxels) {
-    nOfInputs = voxels.values().stream()
+  public static int nOfInputs(Grid<SensingVoxel> voxels) {
+    return voxels.values().stream()
         .filter(Objects::nonNull)
         .mapToInt(v -> v.getSensors().stream()
             .mapToInt(s -> s.domains().length)
             .sum())
         .sum();
-    nOfOutputs = (int) voxels.values().stream()
+  }
+
+  public static int nOfOutputs(Grid<SensingVoxel> voxels) {
+    return (int) voxels.values().stream()
         .filter(Objects::nonNull)
         .count();
+  }
+
+  public CentralizedSensing(Grid<SensingVoxel> voxels) {
+    nOfInputs = nOfInputs(voxels);
+    nOfOutputs = nOfInputs(voxels);
+  }
+
+  public CentralizedSensing(Grid<SensingVoxel> voxels, Function<double[], double[]> function) {
+    this(voxels);
+    setFunction(function);
   }
 
   public int nOfInputs() {

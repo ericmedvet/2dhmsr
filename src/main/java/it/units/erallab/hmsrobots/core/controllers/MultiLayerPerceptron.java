@@ -58,11 +58,22 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
   public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput) {
     this.activationFunction = activationFunction;
+    neurons = countNeurons(nOfInput, innerNeurons, nOfOutput);
+    this.weights = unflat(new double[countWeights(neurons)], neurons);
+  }
+
+  public static int[] countNeurons(int nOfInput, int[] innerNeurons, int nOfOutput) {
+    final int[] neurons;
     neurons = new int[2 + innerNeurons.length];
     System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
     neurons[0] = nOfInput + 1;
     neurons[neurons.length - 1] = nOfOutput;
-    this.weights = unflat(new double[countWeights(neurons)], neurons);
+    return neurons;
+  }
+
+  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights) {
+    this(activationFunction, nOfInput, innerNeurons, nOfOutput);
+    setParams(weights);
   }
 
   public static double[][][] unflat(double[] flatWeights, int[] neurons) {
@@ -105,6 +116,10 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     Arrays.fill(fakeLayerWeights, new double[largestLayerSize]);
     Arrays.fill(fakeWeights, fakeLayerWeights);
     return flat(fakeWeights, neurons).length;
+  }
+
+  public static int countWeights(int nOfInput, int[] innerNeurons, int nOfOutput) {
+    return countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput));
   }
 
   @Override
