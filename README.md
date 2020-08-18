@@ -189,12 +189,18 @@ public static double assessOnLocomotion(double[] weights) {
       return null;
     });
     // set controller
-    CentralizedMLP controller = new CentralizedMLP(
-        voxels,
-        new int[]{100},
-        t -> 1d * Math.sin(-2d * Math.PI * t * 0.5d)
+    CentralizedSensing<SensingVoxel> controller = new CentralizedSensing<>(SerializationUtils.clone(voxels));
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[0],
+        centralizedSensing.nOfOutputs()
     );
-    controller.setParams(weights);
+    double[] ws = mlp.getParams();
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
+    mlp.setParams(ws);
+    centralizedSensing.setFunction(mlp);
+    // build robot
     Robot<SensingVoxel> robot = new Robot(controller, voxels);
     // set task
     Settings settings = new Settings();
