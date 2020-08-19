@@ -59,6 +59,10 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
   public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws IOException {
+    this(w, h, frameRate, file, namesGrid, executor, GraphicsDrawer.build());
+  }
+
+  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer graphicsDrawer) throws IOException {
     this.w = w;
     this.h = h;
     this.namesGrid = namesGrid;
@@ -68,7 +72,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     //prepare things
     channel = NIOUtils.writableChannel(file);
     encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
-    graphicsDrawer = GraphicsDrawer.build();
+    this.graphicsDrawer = graphicsDrawer;
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
         framerGrid.set(x, y, new RobotFollower((int) frameRate * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));

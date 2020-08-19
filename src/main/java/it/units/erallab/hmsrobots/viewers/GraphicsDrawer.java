@@ -42,24 +42,24 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   }
 
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
-  private final Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
+  private Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
       GeneralRenderingMode.GRID_MAJOR,
       GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO,
       GeneralRenderingMode.TIME_INFO
   ));
   @ConfigurableField
-  private final Color gridColor = Color.GRAY;
+  private Color gridColor = Color.GRAY;
   @ConfigurableField
-  private final Color infoColor = Color.BLUE;
+  private Color infoColor = Color.BLUE;
   @ConfigurableField
-  private final Color backgroundColor = Color.WHITE;
+  private Color backgroundColor = Color.WHITE;
   @ConfigurableField
-  private final Color basicColor = Color.BLUE;
-  private final double[] gridSizes = new double[]{2, 5, 10};
+  private Color basicColor = Color.BLUE;
+  private double[] gridSizes = new double[]{2, 5, 10};
   @ConfigurableField(uiMin = 1, uiMax = 5)
-  private final float strokeWidth = 1f;
+  private float strokeWidth = 1f;
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
-  private final List<Drawer> drawers = new ArrayList<>(List.of(
+  private List<Drawer> drawers = new ArrayList<>(List.of(
       Robot.build(),
       Voxel.build(),
       VoxelBody.build(),

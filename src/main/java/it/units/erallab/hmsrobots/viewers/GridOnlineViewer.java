@@ -51,7 +51,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   private double t;
   private final boolean running;
 
-  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
+  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor, GraphicsDrawer graphicsDrawer) {
     super("World viewer");
     this.namesGrid = namesGrid;
     this.executor = executor;
@@ -60,7 +60,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
     //create drawer
-    graphicsDrawer = GraphicsDrawer.build();
+    this.graphicsDrawer = graphicsDrawer;
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
         framerGrid.set(x, y, new RobotFollower(FRAME_RATE * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));
@@ -123,6 +123,10 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
           }
         }
     );
+  }
+
+  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
+    this(namesGrid, executor, GraphicsDrawer.build());
   }
 
   public void start(int delay) {
