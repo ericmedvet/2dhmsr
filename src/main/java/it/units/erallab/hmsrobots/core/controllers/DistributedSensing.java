@@ -86,8 +86,8 @@ public class DistributedSensing<V extends SensingVoxel> implements Controller<V>
   }
 
   @Override
-  public void control(double t, Grid<V> voxels) {
-    for (Grid.Entry<V> entry : voxels) {
+  public void control(double t, Grid<? extends V> voxels) {
+    for (Grid.Entry<? extends V> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
       }

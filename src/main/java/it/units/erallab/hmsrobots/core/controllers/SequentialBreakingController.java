@@ -44,7 +44,7 @@ public class SequentialBreakingController<V extends BreakableVoxel> implements C
   }
 
   @Override
-  public void control(double t, Grid<V> voxels) {
+  public void control(double t, Grid<? extends V> voxels) {
     double controlInterval = t - lastT;
     lastT = t;
     double n = breakingInterval / controlInterval;

@@ -32,8 +32,8 @@ public class TimeFunctions implements Controller<ControllableVoxel> {
   }
 
   @Override
-  public void control(double t, Grid<ControllableVoxel> voxels) {
-    for (Grid.Entry<ControllableVoxel> entry : voxels) {
+  public void control(double t, Grid<? extends ControllableVoxel> voxels) {
+    for (Grid.Entry<? extends ControllableVoxel> entry : voxels) {
       SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
       if ((entry.getValue() != null) && (function != null)) {
         entry.getValue().applyForce(function.apply(t));

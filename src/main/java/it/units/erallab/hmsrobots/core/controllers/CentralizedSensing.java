@@ -80,7 +80,7 @@ public class CentralizedSensing<V extends SensingVoxel> implements Controller<V>
   }
 
   @Override
-  public void control(double t, Grid<V> voxels) {
+  public void control(double t, Grid<? extends V> voxels) {
     //collect inputs
     double[] inputs = new double[nOfInputs];
     int c = 0;

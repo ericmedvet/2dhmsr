@@ -37,12 +37,12 @@ import java.util.List;
  */
 public class Robot<V extends ControllableVoxel> implements WorldObject, Serializable {
 
-  private final Controller<V> controller;
+  private final Controller<? super V> controller;
   private final Grid<V> voxels;
 
   private transient List<Joint> joints;
 
-  public Robot(Controller<V> controller, Grid<V> voxels) {
+  public Robot(Controller<? super V> controller, Grid<V> voxels) {
     this.controller = controller;
     this.voxels = voxels;
     assemble();
@@ -145,7 +145,7 @@ public class Robot<V extends ControllableVoxel> implements WorldObject, Serializ
         .reduce((b1, b2) -> BoundingBox.largest(b1, b2)).get();
   }
 
-  public Controller<V> getController() {
+  public Controller<? super V> getController() {
     return controller;
   }
 

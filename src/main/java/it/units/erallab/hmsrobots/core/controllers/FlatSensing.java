@@ -68,12 +68,12 @@ public abstract class FlatSensing extends SensingController<Double, SensingVoxel
   }
 
   @Override
-  public void control(double t, Grid<SensingVoxel> voxels) {
+  public void control(double t, Grid<? extends SensingVoxel> voxels) {
     Grid<List<Pair<Sensor, double[]>>> sensorsValues = Grid.create(voxels, v -> v == null ? null : v.sense(t));
     double[] inputs = flatten(sensorsValues);
     double[] outputs = control(t, inputs);
     int c = 0;
-    for (Grid.Entry<SensingVoxel> entry : voxels) {
+    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() != null) {
         entry.getValue().applyForce(outputs[c]);
         c = c + 1;

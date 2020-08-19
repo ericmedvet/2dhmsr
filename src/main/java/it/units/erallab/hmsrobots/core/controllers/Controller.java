@@ -27,6 +27,6 @@ import java.io.Serializable;
 @FunctionalInterface
 public interface Controller<V extends ControllableVoxel> extends Serializable {
 
-  void control(double t, Grid<V> voxels);
+  void control(double t, Grid<? extends V> voxels);
 
 }

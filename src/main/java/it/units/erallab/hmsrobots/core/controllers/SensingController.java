@@ -26,10 +26,10 @@ import java.util.List;
 public abstract class SensingController<C, V extends SensingVoxel> implements Controller<V> {
 
   @Override
-  public void control(double t, Grid<V> voxels) {
+  public void control(double t, Grid<? extends V> voxels) {
     Grid<List<Pair<Sensor, double[]>>> sensorsValues = Grid.create(voxels, v -> v == null ? null : v.sense(t));
     Grid<C> controls = computeControlValues(t, sensorsValues);
-    for (Grid.Entry<V> entry : voxels) {
+    for (Grid.Entry<? extends V> entry : voxels) {
       if (entry.getValue() != null) {
         control(controls.get(entry.getX(), entry.getY()), entry.getValue());
       }
