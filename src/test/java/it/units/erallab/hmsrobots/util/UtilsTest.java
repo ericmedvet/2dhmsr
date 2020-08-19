@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class UtilTest {
+public class UtilsTest {
 
   @BeforeAll
   public static void setUpClass() throws Exception {
@@ -69,7 +69,7 @@ public class UtilTest {
     expResult.set(3, 1, true);
     expResult.set(3, 2, true);
     expResult.set(2, 2, true);
-    Grid<Boolean> result = Util.gridLargestConnected(kGrid, b -> b);
+    Grid<Boolean> result = Utils.gridLargestConnected(kGrid, b -> b);
     assertEquals(expResult, result);
   }
 
@@ -89,7 +89,7 @@ public class UtilTest {
     expResult.set(1, 1, 2);
     expResult.set(0, 2, 2);
     expResult.set(2, 2, 3);
-    Grid<Integer> result = Util.cropGrid(inGrid, i -> i > 0);
+    Grid<Integer> result = Utils.cropGrid(inGrid, i -> i > 0);
     assertEquals(expResult, result);
   }
 

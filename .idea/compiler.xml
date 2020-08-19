@@ -11,7 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="2dhmsr" target="11" />
+      <module name="2dhmsr" target="14" />
       <module name="TwoDimHighlyModularSoftRobots" target="11" />
     </bytecodeTargetLevel>
   </component>

@@ -18,70 +18,20 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Base64;
+
 import java.util.function.Predicate;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Util {
+public class Utils {
 
-  private static final Logger L = Logger.getLogger(Util.class.getName());
-
-  public static <T extends Serializable> String serialize(T t, boolean compress) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos;
-    if (compress) {
-      oos = new ObjectOutputStream(new GZIPOutputStream(baos, true));
-    } else {
-      oos = new ObjectOutputStream(baos);
-    }
-    oos.writeObject(t);
-    oos.flush();
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+  private Utils() {
   }
 
-  public static <T> T deserialize(String s, boolean compress) throws IOException, ClassNotFoundException {
-    ByteArrayInputStream bais = new ByteArrayInputStream(Base64.getDecoder().decode(s));
-    ObjectInputStream ois;
-    if (compress) {
-      ois = new ObjectInputStream(new GZIPInputStream(bais));
-    } else {
-      ois = new ObjectInputStream(bais);
-    }
-    Object o =  ois.readObject();
-    return (T) o;
-  }
-
-  public static <T extends Serializable> String lazilySerialize(T t) {
-    try {
-      return serialize(t, true);
-    } catch (IOException e) {
-      L.log(Level.SEVERE, String.format("Cannot serialize due to %s", e), e);
-      return e.getClass().getSimpleName();
-    }
-  }
-
-  public static <T> T lazilyDeserialize(String s) {
-    try {
-      return (T)deserialize(s, true);
-    } catch (IOException | ClassNotFoundException e) {
-      L.log(Level.SEVERE, String.format("Cannot serialize due to %s", e), e);
-      return null;
-    }
-  }
+  private static final Logger L = Logger.getLogger(Utils.class.getName());
 
   public static <K> Grid<K> gridLargestConnected(Grid<K> kGrid, Predicate<K> p) {
     Grid<Integer> iGrid = partitionGrid(kGrid, p);

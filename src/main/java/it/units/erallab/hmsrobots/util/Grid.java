@@ -21,6 +21,8 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -189,6 +191,10 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   @Override
   public Iterator<Entry<T>> iterator() {
     return new GridIterator<>(this);
+  }
+
+  public Stream<Entry<T>> stream() {
+    return StreamSupport.stream(spliterator(), false);
   }
 
   public Collection<T> values() {
