@@ -23,7 +23,6 @@ import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.util.BoundingBox;
-import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Settings;
@@ -44,6 +43,8 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
   private final static int TERRAIN_POINTS = 50;
 
   public enum Metric {
+    TRAVELED_X_DISTANCE(false),
+    CENTER_MAX_Y(true),
     TRAVEL_X_VELOCITY(false),
     TRAVEL_X_RELATIVE_VELOCITY(false),
     CENTER_AVG_Y(true),
@@ -105,10 +106,6 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
-    //prepare storage objects
-    Grid<Double> lastControlSignals = null;
-    Grid<Double> sumOfSquaredControlSignals = Grid.create(robot.getVoxels().getW(), robot.getVoxels().getH(), 0d);
-    Grid<Double> sumOfSquaredDeltaControlSignals = Grid.create(robot.getVoxels().getW(), robot.getVoxels().getH(), 0d);
     //run
     double t = 0d;
     while (t < finalT) {
@@ -128,11 +125,20 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     for (Metric metric : metrics) {
       double value = Double.NaN;
       switch (metric) {
+        case TRAVELED_X_DISTANCE:
+          value = (robot.getCenter().x - initCenterX);
+          break;
         case TRAVEL_X_VELOCITY:
           value = (robot.getCenter().x - initCenterX) / t;
           break;
         case TRAVEL_X_RELATIVE_VELOCITY:
           value = (robot.getCenter().x - initCenterX) / t / Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y);
+          break;
+        case CENTER_MAX_Y:
+          value = centerPositions.stream()
+              .mapToDouble((p) -> p.y)
+              .max()
+              .orElse(0);
           break;
         case CENTER_AVG_Y:
           value = centerPositions.stream()
@@ -142,7 +148,7 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
           break;
         case CONTROL_POWER:
           value = robot.getVoxels().values().stream()
-              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
+              .filter(v -> (v instanceof ControllableVoxel))
               .mapToDouble(ControllableVoxel::getControlEnergy)
               .sum() / t;
           break;
