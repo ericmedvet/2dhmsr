@@ -123,54 +123,35 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     //compute metrics
     List<Double> results = new ArrayList<>(metrics.size());
     for (Metric metric : metrics) {
-      double value = Double.NaN;
-      switch (metric) {
-        case TRAVELED_X_DISTANCE:
-          value = (robot.getCenter().x - initCenterX);
-          break;
-        case TRAVEL_X_VELOCITY:
-          value = (robot.getCenter().x - initCenterX) / t;
-          break;
-        case TRAVEL_X_RELATIVE_VELOCITY:
-          value = (robot.getCenter().x - initCenterX) / t / Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y);
-          break;
-        case CENTER_MAX_Y:
-          value = centerPositions.stream()
-              .mapToDouble((p) -> p.y)
-              .max()
-              .orElse(0);
-          break;
-        case CENTER_AVG_Y:
-          value = centerPositions.stream()
-              .mapToDouble((p) -> p.y)
-              .average()
-              .orElse(0);
-          break;
-        case CONTROL_POWER:
-          value = robot.getVoxels().values().stream()
-              .filter(v -> (v instanceof ControllableVoxel))
-              .mapToDouble(ControllableVoxel::getControlEnergy)
-              .sum() / t;
-          break;
-        case RELATIVE_CONTROL_POWER:
-          value = robot.getVoxels().values().stream()
-              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(ControllableVoxel::getControlEnergy)
-              .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
-          break;
-        case AREA_RATIO_POWER:
-          value = robot.getVoxels().values().stream()
-              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
-              .sum() / t;
-          break;
-        case RELATIVE_AREA_RATIO_POWER:
-          value = robot.getVoxels().values().stream()
-              .filter(v -> (v != null) && (v instanceof ControllableVoxel))
-              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
-              .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
-          break;
-      }
+      double value = switch (metric) {
+        case TRAVELED_X_DISTANCE -> (robot.getCenter().x - initCenterX);
+        case TRAVEL_X_VELOCITY -> (robot.getCenter().x - initCenterX) / t;
+        case TRAVEL_X_RELATIVE_VELOCITY -> (robot.getCenter().x - initCenterX) / t / Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y);
+        case CENTER_MAX_Y -> centerPositions.stream()
+            .mapToDouble((p) -> p.y)
+            .max()
+            .orElse(0);
+        case CENTER_AVG_Y -> centerPositions.stream()
+            .mapToDouble((p) -> p.y)
+            .average()
+            .orElse(0);
+        case CONTROL_POWER -> robot.getVoxels().values().stream()
+            .filter(v -> (v instanceof ControllableVoxel))
+            .mapToDouble(ControllableVoxel::getControlEnergy)
+            .sum() / t;
+        case RELATIVE_CONTROL_POWER -> robot.getVoxels().values().stream()
+            .filter(v -> (v instanceof ControllableVoxel))
+            .mapToDouble(ControllableVoxel::getControlEnergy)
+            .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
+        case AREA_RATIO_POWER -> robot.getVoxels().values().stream()
+            .filter(v -> (v instanceof ControllableVoxel))
+            .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+            .sum() / t;
+        case RELATIVE_AREA_RATIO_POWER -> robot.getVoxels().values().stream()
+            .filter(v -> (v instanceof ControllableVoxel))
+            .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+            .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
+      };
       results.add(value);
     }
     return results;
