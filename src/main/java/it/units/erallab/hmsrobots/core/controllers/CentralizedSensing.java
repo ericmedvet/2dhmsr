@@ -55,7 +55,7 @@ public class CentralizedSensing<V extends SensingVoxel> implements Controller<V>
 
   public CentralizedSensing(Grid<SensingVoxel> voxels) {
     nOfInputs = nOfInputs(voxels);
-    nOfOutputs = nOfInputs(voxels);
+    nOfOutputs = nOfOutputs(voxels);
   }
 
   public CentralizedSensing(Grid<SensingVoxel> voxels, Function<double[], double[]> function) {
