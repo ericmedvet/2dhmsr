@@ -73,7 +73,7 @@ public class DistributedSensing<V extends SensingVoxel> implements Controller<V>
   private final Grid<Integer> nOfOutputGrid;
 
 
-  public DistributedSensing(Grid<SensingVoxel> voxels, int signals) {
+  public DistributedSensing(Grid<V> voxels, int signals) {
     this.signals = signals;
     this.functions = Grid.create(voxels.getW(), voxels.getH());
     lastSignalsGrid = Grid.create(voxels, v -> new double[signals * Dir.values().length]);

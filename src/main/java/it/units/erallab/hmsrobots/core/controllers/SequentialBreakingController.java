@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class SequentialBreakingController<V extends BreakableVoxel> implements Controller<V> {
 
-  private final Controller<V> controller;
+  private final Controller<? super V> controller;
   private final double breakingInterval;
   private final Random random;
   private final Map<BreakableVoxel.ComponentType, Set<BreakableVoxel.MalfunctionType>> malfunctions;
@@ -33,7 +33,7 @@ public class SequentialBreakingController<V extends BreakableVoxel> implements C
   private double lastBreakT = 0d;
   private double lastT = 0d;
 
-  public SequentialBreakingController(Controller<V> controller, double breakingInterval, Random random, Map<BreakableVoxel.ComponentType, Set<BreakableVoxel.MalfunctionType>> malfunctions) {
+  public SequentialBreakingController(Controller<? super V> controller, double breakingInterval, Random random, Map<BreakableVoxel.ComponentType, Set<BreakableVoxel.MalfunctionType>> malfunctions) {
     this.controller = controller;
     this.breakingInterval = breakingInterval;
     this.random = random;

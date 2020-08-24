@@ -17,9 +17,11 @@
 package it.units.erallab.hmsrobots;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import it.units.erallab.hmsrobots.core.controllers.*;
-import it.units.erallab.hmsrobots.core.objects.*;
+import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.*;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -28,19 +30,14 @@ import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.checkerframework.common.value.qual.IntRange;
 import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /**
@@ -129,37 +126,34 @@ public class Starter {
         Grid.create(structure, b -> b ? new ControllableVoxel() : null)
     );
     //sensing
-    Grid<SensingVoxel> sensingVoxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+    Random random = new Random();
+    Grid<BreakableVoxel> voxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
       if (structure.get(x, y)) {
         if (x == 0 && y == 0) {
-          return new SensingVoxel(Arrays.asList(
+          return new BreakableVoxel(List.of(
               new TimeFunction(t -> Math.sin(2 * Math.PI * t), -1d, 1d)
-          ));
+          ), random);
         }
         if (y > 2) {
-          return new SensingVoxel(Arrays.asList(
+          return new BreakableVoxel(List.of(
               new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
               new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
-          ));
+          ), random);
         }
         if (y == 0) {
-          return new SensingVoxel(Arrays.asList(
+          return new BreakableVoxel(List.of(
               new Average(new Touch(), 1d)
-          ));
+          ), random);
         }
-        return new SensingVoxel(Arrays.asList(
+        return new BreakableVoxel(List.of(
             new AreaRatio(),
             new ControlPower(settings.getStepFrequency())
-        ));
+        ), random);
       }
       return null;
     });
-    Random random = new Random(1);
-    DistributedSensing<SensingVoxel> distributedSensing = new DistributedSensing<>(SerializationUtils.clone(sensingVoxels), 1);
-    for (Grid.Entry<SensingVoxel> entry : sensingVoxels) {
-      if (sensingVoxels == null) {
-        continue;
-      }
+    DistributedSensing<BreakableVoxel> distributedSensing = new DistributedSensing<BreakableVoxel>(SerializationUtils.clone(voxels), 1);
+    for (Grid.Entry<BreakableVoxel> entry : voxels) {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
           MultiLayerPerceptron.ActivationFunction.TANH,
           distributedSensing.nOfInputs(entry.getX(), entry.getY()),
@@ -171,11 +165,11 @@ public class Starter {
       mlp.setParams(ws);
       distributedSensing.getFunctions().set(entry.getX(), entry.getY(), mlp);
     }
-    Robot<SensingVoxel> distHetero = new Robot<>(
+    Robot<BreakableVoxel> distHetero = new Robot<>(
         distributedSensing,
-        SerializationUtils.clone(sensingVoxels)
+        SerializationUtils.clone(voxels)
     );
-    CentralizedSensing<SensingVoxel> centralizedSensing = new CentralizedSensing<>(SerializationUtils.clone(sensingVoxels));
+    CentralizedSensing<BreakableVoxel> centralizedSensing = new CentralizedSensing<>(SerializationUtils.clone(voxels));
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
@@ -186,9 +180,17 @@ public class Starter {
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
-    Robot<SensingVoxel> centralized = new Robot<>(
-        centralizedSensing,
-        SerializationUtils.clone(sensingVoxels)
+    Robot<BreakableVoxel> centralized = new Robot<>(
+        new SequentialBreakingController<>(
+            centralizedSensing,
+            3,
+            new Random(),
+            Map.of(
+                BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN, BreakableVoxel.MalfunctionType.ZERO),
+                BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO, BreakableVoxel.MalfunctionType.RANDOM)
+            )
+        ),
+        SerializationUtils.clone(voxels)
     );
     //episode
     Locomotion locomotion = new Locomotion(
