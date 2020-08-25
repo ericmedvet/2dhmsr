@@ -180,7 +180,7 @@ public class Starter {
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
-    Robot<BreakableVoxel> centralized = new Robot<>(
+    Robot<SensingVoxel> centralized = new Robot<>(
         centralizedSensing,
         Grid.create(voxels, v -> v == null ? null : new BreakableVoxel(
             v.getSensors(),

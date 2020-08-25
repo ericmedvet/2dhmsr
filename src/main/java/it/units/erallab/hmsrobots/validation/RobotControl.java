@@ -173,7 +173,7 @@ public class RobotControl extends AbstractTask<Grid<ControllableVoxel>, RobotCon
         listener.listen(snapshot);
       }
       //collect data
-      for (Grid.Entry<ControllableVoxel> entry : robot.getVoxels()) {
+      for (Grid.Entry<? extends ControllableVoxel> entry : robot.getVoxels()) {
         if (entry.getValue() != null) {
           double velocityMagnitude = 0d; //TODO fix me! entry.getValue().getSensorReading(Voxel.Sensor.VELOCITY_MAGNITUDE);
           double brokenRatio = 0d; //TODO fix me! entry.getValue().getSensorReading(Voxel.Sensor.BROKEN_RATIO);

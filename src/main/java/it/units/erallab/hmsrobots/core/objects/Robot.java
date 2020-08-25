@@ -37,12 +37,12 @@ import java.util.List;
  */
 public class Robot<V extends ControllableVoxel> implements WorldObject, Serializable {
 
-  private final Controller<? super V> controller;
-  private final Grid<V> voxels;
+  private final Controller<V> controller;
+  private final Grid<? extends V> voxels;
 
   private transient List<Joint> joints;
 
-  public Robot(Controller<? super V> controller, Grid<V> voxels) {
+  public Robot(Controller<V> controller, Grid<? extends V> voxels) {
     this.controller = controller;
     this.voxels = voxels;
     assemble();
@@ -149,7 +149,7 @@ public class Robot<V extends ControllableVoxel> implements WorldObject, Serializ
     return controller;
   }
 
-  public Grid<V> getVoxels() {
+  public Grid<? extends V> getVoxels() {
     return voxels;
   }
 
