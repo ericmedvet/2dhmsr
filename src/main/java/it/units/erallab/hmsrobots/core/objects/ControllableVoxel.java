@@ -38,6 +38,7 @@ public class ControllableVoxel extends Voxel {
   private transient double controlEnergy = 0d;
   private transient double lastControlEnergy = 0d;
   private transient double areaRatioEnergy = 0d;
+  private transient double lastAreaRatioEnergy = 0d;
   private transient double lastAreaRatio = 1d;
   private transient double appliedForce = 0d;
 
@@ -90,6 +91,7 @@ public class ControllableVoxel extends Voxel {
     if (((areaRatio > 1d) && (f > 0)) || ((areaRatio < 1d) && (f < 0))) {
       controlEnergy = controlEnergy + f * f;
     }
+    lastAreaRatioEnergy = areaRatioEnergy;
     areaRatioEnergy = areaRatioEnergy + Math.pow(areaRatio - lastAreaRatio, 2d);
     lastAreaRatio = areaRatio;
   }
@@ -108,6 +110,10 @@ public class ControllableVoxel extends Voxel {
 
   public double getControlEnergyDelta() {
     return controlEnergy - lastControlEnergy;
+  }
+
+  public double getAreaEnergyDelta() {
+    return areaRatioEnergy - lastAreaRatioEnergy;
   }
 
   @Override

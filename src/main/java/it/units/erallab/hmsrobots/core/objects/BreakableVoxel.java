@@ -22,10 +22,7 @@ import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BreakableVoxel extends SensingVoxel {
@@ -38,40 +35,88 @@ public class BreakableVoxel extends SensingVoxel {
     NONE, ZERO, FROZEN, RANDOM
   }
 
+  public enum MalfunctionTrigger {
+    CONTROL, AREA, TIME
+  }
+
   private final Random random;
+  private final Map<ComponentType, Set<MalfunctionType>> malfunctions;
+  private final Map<MalfunctionTrigger, Double> triggerThresholds;
 
-  private MalfunctionType actuatorMalfunctionType = MalfunctionType.NONE;
-  private MalfunctionType sensorsMalfunctionType = MalfunctionType.NONE;
-  private MalfunctionType structureMalfunctionType = MalfunctionType.NONE;
   private List<Pair<Sensor, double[]>> lastSensorReadings;
+  private final EnumMap<MalfunctionTrigger, Double> triggerCounters;
+  private final EnumMap<ComponentType, MalfunctionType> state;
+  private double lastControlT = 0d;
 
-  public BreakableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random) {
+  public BreakableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings, maxForce, forceMethod, sensors);
     this.random = random;
+    this.malfunctions = malfunctions;
+    this.triggerThresholds = triggerThresholds;
+    triggerCounters = new EnumMap<>(MalfunctionTrigger.class);
+    Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
+    state = new EnumMap<>(ComponentType.class);
+    Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
   }
 
-  public BreakableVoxel(double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random) {
+  public BreakableVoxel(double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds) {
     super(maxForce, forceMethod, sensors);
     this.random = random;
+    this.malfunctions = malfunctions;
+    this.triggerThresholds = triggerThresholds;
+    triggerCounters = new EnumMap<>(MalfunctionTrigger.class);
+    Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
+    state = new EnumMap<>(ComponentType.class);
+    Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
   }
 
-  public BreakableVoxel(List<Sensor> sensors, Random random) {
+  public BreakableVoxel(List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds) {
     super(sensors);
     this.random = random;
+    this.malfunctions = malfunctions;
+    this.triggerThresholds = triggerThresholds;
+    triggerCounters = new EnumMap<>(MalfunctionTrigger.class);
+    Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
+    state = new EnumMap<>(ComponentType.class);
+    Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
   }
 
   @Override
   public List<Pair<Sensor, double[]>> sense(double t) {
+    //update counters
+    triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastControlT);
+    triggerCounters.put(MalfunctionTrigger.CONTROL, triggerCounters.get(MalfunctionTrigger.CONTROL) + getControlEnergyDelta());
+    triggerCounters.put(MalfunctionTrigger.AREA, triggerCounters.get(MalfunctionTrigger.AREA) + getAreaEnergyDelta());
+    lastControlT = t;
+    //check if malfunction is applicable
+    for (Map.Entry<MalfunctionTrigger, Double> triggerThreshold : triggerThresholds.entrySet()) {
+      if (random.nextDouble() < 1d - Math.tanh(triggerThreshold.getValue() / triggerCounters.get(triggerThreshold.getKey()))) {
+        //reset counters
+        Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
+        //choose component and malfunction
+        ComponentType[] componentTypes = malfunctions.keySet().toArray(ComponentType[]::new);
+        if (componentTypes.length > 0) {
+          ComponentType componentType = componentTypes[random.nextInt(componentTypes.length)];
+          MalfunctionType[] malfunctionTypes = malfunctions.get(componentType).toArray(MalfunctionType[]::new);
+          MalfunctionType malfunctionType = malfunctionTypes[random.nextInt(malfunctionTypes.length)];
+          state.put(componentType, malfunctionType);
+          if (componentType.equals(ComponentType.STRUCTURE)) {
+            setStructureMalfunctionType(malfunctionType);
+          }
+        }
+      }
+    }
+    //sense
     List<Pair<Sensor, double[]>> sensorReadings = getSensors().stream()
         .map(s -> Pair.of(s, Arrays.stream(s.domains())
             .mapToDouble(d -> (d.getMin() + d.getMax()) / 2d)
             .toArray()
         )).collect(Collectors.toList());
-    if (sensorsMalfunctionType.equals(MalfunctionType.NONE)) {
+    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE)) {
       sensorReadings = super.sense(t);
-    } else if (sensorsMalfunctionType.equals(MalfunctionType.FROZEN)) {
+    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.FROZEN)) {
       sensorReadings = lastSensorReadings;
-    } else if (sensorsMalfunctionType.equals(MalfunctionType.RANDOM)) {
+    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.RANDOM)) {
       sensorReadings = getSensors().stream()
           .map(s -> Pair.of(s, random(s.domains())))
           .collect(Collectors.toList());
@@ -83,38 +128,18 @@ public class BreakableVoxel extends SensingVoxel {
   @Override
   public void applyForce(double f) {
     double innerF = f;
-    if (actuatorMalfunctionType.equals(MalfunctionType.ZERO)) {
+    if (state.get(ComponentType.ACTUATOR).equals(MalfunctionType.ZERO)) {
       f = 0;
-    } else if (actuatorMalfunctionType.equals(MalfunctionType.FROZEN)) {
+    } else if (state.get(ComponentType.ACTUATOR).equals(MalfunctionType.FROZEN)) {
       f = getAppliedForce();
-    } else if (actuatorMalfunctionType.equals(MalfunctionType.RANDOM)) {
+    } else if (state.get(ComponentType.ACTUATOR).equals(MalfunctionType.RANDOM)) {
       f = random.nextDouble() * 2d - 1d;
     }
     super.applyForce(f);
   }
 
-  public MalfunctionType getActuatorMalfunctionType() {
-    return actuatorMalfunctionType;
-  }
-
-  public void setActuatorMalfunctionType(MalfunctionType actuatorMalfunctionType) {
-    this.actuatorMalfunctionType = actuatorMalfunctionType;
-  }
-
-  public MalfunctionType getSensorsMalfunctionType() {
-    return sensorsMalfunctionType;
-  }
-
-  public void setSensorsMalfunctionType(MalfunctionType sensorsMalfunctionType) {
-    this.sensorsMalfunctionType = sensorsMalfunctionType;
-  }
-
-  public MalfunctionType getStructureMalfunctionType() {
-    return structureMalfunctionType;
-  }
-
-  public void setStructureMalfunctionType(MalfunctionType structureMalfunctionType) {
-    this.structureMalfunctionType = structureMalfunctionType;
+  private void setStructureMalfunctionType(MalfunctionType structureMalfunctionType) {
+    state.put(ComponentType.STRUCTURE, structureMalfunctionType);
     if (structureMalfunctionType.equals(MalfunctionType.NONE)) {
       for (DistanceJoint springJoint : springJoints) {
         springJoint.setFrequency(springF);
@@ -129,35 +154,11 @@ public class BreakableVoxel extends SensingVoxel {
     }
   }
 
-  public MalfunctionType getMalfunctionType(ComponentType componentType) {
-    if (componentType.equals(ComponentType.ACTUATOR)) {
-      return getActuatorMalfunctionType();
-    }
-    if (componentType.equals(ComponentType.SENSORS)) {
-      return getSensorsMalfunctionType();
-    }
-    if (componentType.equals(ComponentType.STRUCTURE)) {
-      return getStructureMalfunctionType();
-    }
-    return null;
-  }
-
-  public void setMalfunctionType(ComponentType componentType, MalfunctionType malfunctionType) {
-    if (componentType.equals(ComponentType.ACTUATOR)) {
-      setActuatorMalfunctionType(malfunctionType);
-    }
-    if (componentType.equals(ComponentType.SENSORS)) {
-      setSensorsMalfunctionType(malfunctionType);
-    }
-    if (componentType.equals(ComponentType.STRUCTURE)) {
-      setStructureMalfunctionType(malfunctionType);
-    }
-  }
 
   public boolean isBroken() {
-    return !actuatorMalfunctionType.equals(MalfunctionType.NONE)
-        || !sensorsMalfunctionType.equals(MalfunctionType.NONE)
-        || !structureMalfunctionType.equals(MalfunctionType.NONE);
+    return !state.get(ComponentType.ACTUATOR).equals(MalfunctionType.NONE)
+        || !state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE)
+        || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
   }
 
   private double[] random(Sensor.Domain[] domains) {
@@ -177,9 +178,9 @@ public class BreakableVoxel extends SensingVoxel {
         superImmutable.getAppliedForce(),
         superImmutable.getControlEnergy(),
         superImmutable.getControlEnergyDelta(),
-        actuatorMalfunctionType,
-        sensorsMalfunctionType,
-        structureMalfunctionType
+        state.get(ComponentType.ACTUATOR),
+        state.get(ComponentType.SENSORS),
+        state.get(ComponentType.STRUCTURE)
     );
     immutable.getChildren().addAll(superImmutable.getChildren());
     return immutable;
