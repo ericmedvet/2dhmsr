@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * @created 2020/08/18
  * @project TwoDimHighlyModularSoftRobots
  */
-public class CentralizedSensing<V extends SensingVoxel> implements Controller<V> {
+public class CentralizedSensing implements Controller<SensingVoxel> {
 
   private final int nOfInputs;
   private final int nOfOutputs;
@@ -53,12 +53,12 @@ public class CentralizedSensing<V extends SensingVoxel> implements Controller<V>
         .count();
   }
 
-  public CentralizedSensing(Grid<V> voxels) {
+  public CentralizedSensing(Grid<? extends SensingVoxel> voxels) {
     nOfInputs = nOfInputs(voxels);
     nOfOutputs = nOfOutputs(voxels);
   }
 
-  public CentralizedSensing(Grid<V> voxels, Function<double[], double[]> function) {
+  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, Function<double[], double[]> function) {
     this(voxels);
     setFunction(function);
   }
@@ -80,7 +80,7 @@ public class CentralizedSensing<V extends SensingVoxel> implements Controller<V>
   }
 
   @Override
-  public void control(double t, Grid<? extends V> voxels) {
+  public void control(double t, Grid<? extends SensingVoxel> voxels) {
     //collect inputs
     double[] inputs = new double[nOfInputs];
     int c = 0;
@@ -99,7 +99,7 @@ public class CentralizedSensing<V extends SensingVoxel> implements Controller<V>
     double[] outputs = function != null ? function.apply(inputs) : new double[nOfOutputs];
     //apply inputs
     c = 0;
-    for (V voxel : voxels.values()) {
+    for (SensingVoxel voxel : voxels.values()) {
       if (voxel != null) {
         if (c < outputs.length) {
           voxel.applyForce(outputs[c]);

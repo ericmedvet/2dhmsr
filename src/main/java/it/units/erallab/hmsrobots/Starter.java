@@ -152,7 +152,7 @@ public class Starter {
       }
       return null;
     });
-    DistributedSensing<SensingVoxel> distributedSensing = new DistributedSensing<>(SerializationUtils.clone(voxels), 1);
+    DistributedSensing distributedSensing = new DistributedSensing(SerializationUtils.clone(voxels), 1);
     for (Grid.Entry<SensingVoxel> entry : voxels) {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
           MultiLayerPerceptron.ActivationFunction.TANH,
@@ -169,7 +169,7 @@ public class Starter {
         distributedSensing,
         SerializationUtils.clone(voxels)
     );
-    CentralizedSensing<SensingVoxel> centralizedSensing = new CentralizedSensing<>(SerializationUtils.clone(voxels));
+    CentralizedSensing centralizedSensing = new CentralizedSensing(SerializationUtils.clone(voxels));
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),

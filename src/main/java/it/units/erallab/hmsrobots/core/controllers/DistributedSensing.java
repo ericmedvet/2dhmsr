@@ -16,13 +16,11 @@
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
-import com.google.common.graph.Graphs;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -31,7 +29,7 @@ import java.util.function.Function;
  * @created 2020/08/18
  * @project TwoDimHighlyModularSoftRobots
  */
-public class DistributedSensing<V extends SensingVoxel> implements Controller<V> {
+public class DistributedSensing implements Controller<SensingVoxel> {
 
   private enum Dir {
 
@@ -73,7 +71,7 @@ public class DistributedSensing<V extends SensingVoxel> implements Controller<V>
   private final Grid<Integer> nOfOutputGrid;
 
 
-  public DistributedSensing(Grid<V> voxels, int signals) {
+  public DistributedSensing(Grid<? extends SensingVoxel> voxels, int signals) {
     this.signals = signals;
     this.functions = Grid.create(voxels.getW(), voxels.getH());
     lastSignalsGrid = Grid.create(voxels, v -> new double[signals * Dir.values().length]);
@@ -86,8 +84,8 @@ public class DistributedSensing<V extends SensingVoxel> implements Controller<V>
   }
 
   @Override
-  public void control(double t, Grid<? extends V> voxels) {
-    for (Grid.Entry<? extends V> entry : voxels) {
+  public void control(double t, Grid<? extends SensingVoxel> voxels) {
+    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
       }
