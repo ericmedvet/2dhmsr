@@ -35,12 +35,12 @@ public class ControllableVoxel extends Voxel {
   private final double maxForce; //not used in distance forceMethod
   private final ForceMethod forceMethod;
 
-  private transient double controlEnergy = 0d;
-  private transient double lastControlEnergy = 0d;
-  private transient double areaRatioEnergy = 0d;
-  private transient double lastAreaRatioEnergy = 0d;
-  private transient double lastAreaRatio = 1d;
-  private transient double appliedForce = 0d;
+  private transient double controlEnergy;
+  private transient double lastControlEnergy;
+  private transient double areaRatioEnergy;
+  private transient double lastAreaRatioEnergy;
+  private transient double lastAreaRatio;
+  private transient double appliedForce;
 
   public ControllableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings);
@@ -128,5 +128,16 @@ public class ControllableVoxel extends Voxel {
     );
     immutable.getChildren().addAll(superImmutable.getChildren());
     return immutable;
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    controlEnergy = 0d;
+    lastControlEnergy = 0d;
+    areaRatioEnergy = 0d;
+    lastAreaRatioEnergy = 0d;
+    lastAreaRatio = 1d;
+    appliedForce = 0d;
   }
 }
