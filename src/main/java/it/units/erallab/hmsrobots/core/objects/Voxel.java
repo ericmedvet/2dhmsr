@@ -334,7 +334,6 @@ public class Voxel implements WorldObject, Serializable {
       joint.setDampingRatio(springD);
     }
     springJoints = allSpringJoints.toArray(new DistanceJoint[0]);
-    reset();
   }
 
   public void setOwner(Robot robot) {
@@ -408,6 +407,7 @@ public class Voxel implements WorldObject, Serializable {
     for (Joint joint : ropeJoints) {
       world.addJoint(joint);
     }
+    reset();
   }
 
   public Body[] getVertexBodies() {

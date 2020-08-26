@@ -189,7 +189,7 @@ public class Starter {
                 BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
                 BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
             ),
-            Map.of(BreakableVoxel.MalfunctionTrigger.AREA, 50d)
+            Map.of(BreakableVoxel.MalfunctionTrigger.AREA, 10d)
         ))
     );
     //episode
