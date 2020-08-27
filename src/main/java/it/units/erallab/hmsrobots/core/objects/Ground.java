@@ -59,26 +59,26 @@ public class Ground implements WorldObject {
     bodies = new ArrayList<>(xs.length - 1);
     polygon = new ArrayList<>(xs.length + 2);
     //find min y
-    double minY = Arrays.stream(ys).min().orElse(0d);
-    polygon.add(new Vector2(0, -MIN_Y_THICKNESS));
+    double baseY = Arrays.stream(ys).min().getAsDouble()-MIN_Y_THICKNESS;
+    polygon.add(new Vector2(0, baseY));
     //build bodies and polygon
     for (int i = 1; i < xs.length; i++) {
       Polygon bodyPoly = new Polygon(
           new Vector2(0, ys[i - 1]),
-          new Vector2(0, minY - MIN_Y_THICKNESS),
-          new Vector2(xs[i] - xs[i - 1], minY - MIN_Y_THICKNESS),
+          new Vector2(0, baseY),
+          new Vector2(xs[i] - xs[i - 1], baseY),
           new Vector2(xs[i] - xs[i - 1], ys[i])
       );
       Body body = new Body(1);
       body.addFixture(bodyPoly);
       body.setMass(MassType.INFINITE);
       body.translate(xs[i - 1], 0);
-      body.translate(-xs[0], -minY);
+      //body.translate(-xs[0], -minY);
       bodies.add(body);
-      polygon.add(new Vector2(xs[i - 1] - xs[0], ys[i - 1] - minY));
+      polygon.add(new Vector2(xs[i - 1], ys[i - 1]));
     }
-    polygon.add(new Vector2(xs[xs.length - 1] - xs[0], ys[xs.length - 1] - minY));
-    polygon.add(new Vector2(xs[xs.length - 1] - xs[0], -MIN_Y_THICKNESS));
+    polygon.add(new Vector2(xs[xs.length - 1], ys[xs.length - 1]));
+    polygon.add(new Vector2(xs[xs.length - 1], baseY));
   }
 
   @Override

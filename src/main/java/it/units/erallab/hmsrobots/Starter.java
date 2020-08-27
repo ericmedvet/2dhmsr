@@ -195,19 +195,20 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-        Locomotion.createTerrain("uneven5"),
+        Locomotion.createTerrain("hilly-1-5-0"),
+        //Locomotion.createTerrain("flat"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
-    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
-    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
+    /*namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
+    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));*/
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<Robot<?>>(
+    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
         namedSolutionGrid,
         locomotion,
         gridOnlineViewer,
