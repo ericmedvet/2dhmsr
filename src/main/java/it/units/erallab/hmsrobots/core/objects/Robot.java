@@ -145,7 +145,7 @@ public class Robot<V extends ControllableVoxel> implements WorldObject, Serializ
         .reduce((b1, b2) -> BoundingBox.largest(b1, b2)).get();
   }
 
-  public Controller<? super V> getController() {
+  public Controller<V> getController() {
     return controller;
   }
 
