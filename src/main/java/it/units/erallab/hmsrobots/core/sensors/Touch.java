@@ -23,7 +23,7 @@ import java.util.List;
 
 public class Touch implements Sensor {
   private final Domain[] domains = new Domain[]{
-      Domain.build(0d, 1d)
+      Domain.of(0d, 1d)
   };
 
   @Override

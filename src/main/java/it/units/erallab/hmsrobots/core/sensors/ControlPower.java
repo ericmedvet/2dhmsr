@@ -26,7 +26,7 @@ public class ControlPower implements Sensor {
 
   public ControlPower(double controlInterval) {
     domains = new Domain[]{
-        Domain.build(0, 1d / controlInterval)
+        Domain.of(0, 1d / controlInterval)
     };
   }
 

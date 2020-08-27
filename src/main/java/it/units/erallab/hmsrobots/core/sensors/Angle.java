@@ -21,7 +21,7 @@ import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
 public class Angle implements Sensor, ReadingAugmenter {
   private final Domain[] domains = new Domain[]{
-      Domain.build(-Math.PI, Math.PI)
+      Domain.of(-Math.PI, Math.PI)
   };
 
   @Override

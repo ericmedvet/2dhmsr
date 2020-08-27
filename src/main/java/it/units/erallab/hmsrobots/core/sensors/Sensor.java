@@ -31,7 +31,7 @@ public interface Sensor extends Serializable {
       this.max = max;
     }
 
-    public static Domain build(double min, double max) {
+    public static Domain of(double min, double max) {
       return new Domain(min, max);
     }
 

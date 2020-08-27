@@ -47,7 +47,7 @@ public class Velocity implements Sensor, Configurable<Velocity> {
     this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;
     domains = new Domain[this.axes.size()];
-    Arrays.fill(domains, Domain.build(-maxVelocityNorm, maxVelocityNorm));
+    Arrays.fill(domains, Domain.of(-maxVelocityNorm, maxVelocityNorm));
   }
 
   @Override

@@ -97,7 +97,7 @@ public class Lidar implements Sensor, ReadingAugmenter {
       }
     }
     domains = new Domain[numRays];
-    Arrays.fill(domains, Domain.build(0d, 1d));
+    Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   public Lidar(double rayLength, LinkedHashMap<Side, Integer> raysPerSide, double[] rayDir) {
@@ -123,7 +123,7 @@ public class Lidar implements Sensor, ReadingAugmenter {
       }
     }
     domains = new Domain[numRays];
-    Arrays.fill(domains, Domain.build(0d, 1d));
+    Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   @Override

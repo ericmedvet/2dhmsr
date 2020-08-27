@@ -22,7 +22,7 @@ public class AreaRatio implements Sensor {
   private final static double RATIO_DELTA = 0.5d;
 
   private final Domain[] domains = new Domain[]{
-      Domain.build(1d - RATIO_DELTA, 1d + RATIO_DELTA)
+      Domain.of(1d - RATIO_DELTA, 1d + RATIO_DELTA)
   };
 
   @Override

@@ -25,7 +25,7 @@ public class Normalization implements Sensor, Configurable<Normalization> {
   @ConfigurableField
   private final Sensor sensor;
   private final Domain[] domains = new Domain[]{
-      Domain.build(0d, 1d)
+      Domain.of(0d, 1d)
   };
 
   public Normalization(Sensor sensor) {

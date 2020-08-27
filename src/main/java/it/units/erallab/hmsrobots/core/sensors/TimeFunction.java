@@ -29,7 +29,7 @@ public class TimeFunction implements Sensor, Configurable<TimeFunction> {
 
   public TimeFunction(SerializableFunction<Double, Double> function, double min, double max) {
     this.function = function;
-    domains = new Domain[]{Domain.build(min, max)};
+    domains = new Domain[]{Domain.of(min, max)};
   }
 
   @Override

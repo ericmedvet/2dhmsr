@@ -18,11 +18,11 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 
-public class Breakdown implements Sensor {
+public class Crumpling implements Sensor {
   private final static double THRESHOLD = 0.2d;
 
   private final Domain[] domains = new Domain[]{
-      Domain.build(0d, 1d)
+      Domain.of(0d, 1d)
   };
 
   @Override
