@@ -195,7 +195,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-        Locomotion.createTerrain("hilly-1-5-0"),
+        Locomotion.createTerrain("hilly-1-5-2"),
         //Locomotion.createTerrain("flat"),
         Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
