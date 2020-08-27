@@ -43,26 +43,16 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
   private final static int TERRAIN_POINTS = 50;
 
   public enum Metric {
-    TRAVELED_X_DISTANCE(false),
-    CENTER_MAX_Y(true),
-    TRAVEL_X_VELOCITY(false),
-    TRAVEL_X_RELATIVE_VELOCITY(false),
-    CENTER_AVG_Y(true),
-    CONTROL_POWER(true),
-    RELATIVE_CONTROL_POWER(true),
-    AREA_RATIO_POWER(true),
-    RELATIVE_AREA_RATIO_POWER(true);
-
-    private final boolean toMinimize;
-
-    Metric(boolean toMinimize) {
-      this.toMinimize = toMinimize;
-    }
-
-    public boolean isToMinimize() {
-      return toMinimize;
-    }
-
+    TRAVELED_X_DISTANCE,
+    CENTER_MAX_Y,
+    TRAVEL_X_VELOCITY,
+    TRAVEL_X_RELATIVE_VELOCITY,
+    CENTER_AVG_Y,
+    CONTROL_POWER,
+    RELATIVE_CONTROL_POWER,
+    AREA_RATIO_POWER,
+    RELATIVE_AREA_RATIO_POWER,
+    X_DISTANCE_CORRECTED_EFFICIENCY;
   }
 
   private final double finalT;
@@ -151,6 +141,9 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
             .filter(v -> (v instanceof ControllableVoxel))
             .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
             .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
+        case X_DISTANCE_CORRECTED_EFFICIENCY -> (robot.getCenter().x - initCenterX) / (1d + robot.getVoxels().values().stream()
+            .filter(v -> (v instanceof ControllableVoxel))
+            .mapToDouble(ControllableVoxel::getControlEnergy).sum());
       };
       results.add(value);
     }
