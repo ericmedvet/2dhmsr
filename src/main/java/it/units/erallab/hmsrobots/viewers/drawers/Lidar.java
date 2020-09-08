@@ -30,7 +30,7 @@ import java.awt.geom.Ellipse2D;
 public class Lidar extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.Lidar> implements Configurable<Lidar> {
 
   @ConfigurableField
-  private final Color strokeColor = Color.RED;
+  private Color strokeColor = Color.RED;
 
   private Lidar() {
     super(it.units.erallab.hmsrobots.core.sensors.immutable.Lidar.class);
@@ -53,10 +53,6 @@ public class Lidar extends Drawer<it.units.erallab.hmsrobots.core.sensors.immuta
       double direction = rayDirections[rayIdx];
       // take into account rotation angle
       direction += angle;
-      // clip direction in [-π, π]
-      if (Math.abs(direction) > Math.PI) {
-        direction = 2 * Math.PI - Math.abs(direction);
-      }
       // Draw a ray from the given start point towards the given direction
       g.setColor(strokeColor);
       g.draw(GraphicsDrawer.toPath(

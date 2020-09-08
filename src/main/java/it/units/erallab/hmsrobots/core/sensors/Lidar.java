@@ -27,20 +27,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 public class Lidar implements Sensor, ReadingAugmenter {
   public enum Side {
-    // between -180 and 180 degrees
-    N(120, 60),
-    E(30, -30),
-    S(-120, -60),
-    W(-150, 150);
 
-    // in degrees
-    private final int startAngle;
-    private final int endAngle;
+    N(Math.PI * 1d / 4d, Math.PI * 3d / 4d),
 
-    Side(int startAngle, int endAngle) {
+    E(Math.PI * -1d / 4d, Math.PI * 1d / 4d),
+
+    S(Math.PI * 5d / 4d, Math.PI * 7d / 4d),
+
+    W(Math.PI * 3d / 4d, Math.PI * 5d / 4d);
+
+    private final double startAngle;
+    private final double endAngle;
+
+    Side(double startAngle, double endAngle) {
       this.startAngle = startAngle;
       this.endAngle = endAngle;
     }
@@ -53,13 +58,6 @@ public class Lidar implements Sensor, ReadingAugmenter {
       return endAngle;
     }
 
-    public double angleDifference() {
-      double angleDiff = Math.abs(endAngle - startAngle);
-      if (angleDiff > 180) {
-        angleDiff = 360 - angleDiff;
-      }
-      return angleDiff;
-    }
   }
 
   public static class RaycastFilter implements Filter, Serializable {
@@ -72,61 +70,37 @@ public class Lidar implements Sensor, ReadingAugmenter {
       return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
       // if its not of right type always return true
     }
+
   }
 
   private final double rayLength;
   private final double[] rayDirections;
   private final Domain[] domains;
 
-  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
+  public Lidar(double rayLength, double... rayDirections) {
     this.rayLength = rayLength;
-    int numRays = 0;
-    for (int rays : raysPerSide.values()) {
-      numRays += rays;
-    }
-    rayDirections = new double[numRays];
-    int rayIdx = 0;
-    for (Map.Entry<Side, Integer> entry : raysPerSide.entrySet()) {
-      Side side = entry.getKey();
-      Integer numSideRays = entry.getValue();
-      for (int i = 0; i < numSideRays; i++) {
-        double direction = Math.toRadians(side.getStartAngle() - i * (Math.abs(side.angleDifference()) / numSideRays));
-        // clip direction in [-π, π]
-        if (Math.abs(direction) > Math.PI) {
-          direction = 2 * Math.PI - Math.abs(direction);
-        }
-        rayDirections[rayIdx] = direction;
-        rayIdx++;
-      }
-    }
-    domains = new Domain[numRays];
+    this.rayDirections = rayDirections;
+    domains = new Domain[rayDirections.length];
     Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
-  public Lidar(double rayLength, Map<Side, Integer> raysPerSide, double[] rayDir) {
-    this.rayLength = rayLength;
-    int numRays = 0;
-    for (int rays : raysPerSide.values()) {
-      numRays += rays;
-    }
-
-    int rayIdx = 0;
-    rayDirections = new double[numRays];
-    for (Map.Entry<Side, Integer> entry : raysPerSide.entrySet()) {
-      Side side = entry.getKey();
-      Integer numSideRays = entry.getValue();
-      for (int i = 0; i < numSideRays; i++) {
-        double direction = Math.toRadians(side.getStartAngle() - (side.startAngle - rayDir[i]));
-        // clip direction in [-π, π]
-        if (Math.abs(direction) > Math.PI) {
-          direction = 2 * Math.PI - Math.abs(direction);
-        }
-        rayDirections[rayIdx] = direction;
-        rayIdx++;
-      }
-    }
-    domains = new Domain[numRays];
-    Arrays.fill(domains, Domain.of(0d, 1d));
+  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
+    this(
+        rayLength,
+        raysPerSide.entrySet().stream()
+            .map(e -> DoubleStream.iterate(
+                e.getKey().getStartAngle() + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue()) / 2d,
+                d -> d + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue())
+            )
+                .limit(e.getValue())
+                .boxed()
+                .collect(Collectors.toList()))
+            .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
+            .orElse(List.of(0d))
+            .stream()
+            .mapToDouble(d -> d)
+            .toArray()
+    );
   }
 
   @Override
@@ -144,10 +118,6 @@ public class Lidar implements Sensor, ReadingAugmenter {
       double direction = rayDirections[rayIdx];
       // take into account rotation angle
       direction += voxel.getAngle();
-      // clip direction in [-π, π]
-      if (Math.abs(direction) > Math.PI) {
-        direction = 2 * Math.PI - Math.abs(direction);
-      }
       // Create a ray from the given start point towards the given direction
       Ray ray = new Ray(voxel.getCenter(), direction);
       results.clear();

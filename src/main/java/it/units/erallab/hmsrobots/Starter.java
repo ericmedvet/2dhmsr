@@ -26,8 +26,10 @@ import it.units.erallab.hmsrobots.core.sensors.*;
 import it.units.erallab.hmsrobots.tasks.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
+import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
@@ -244,7 +246,18 @@ public class Starter {
     namedSolutionGrid.set(0, 0, Pair.of("one", one));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
+        Grid.create(namedSolutionGrid, Pair::getLeft),
+        uiExecutor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+        ))
+    );
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
         namedSolutionGrid,
