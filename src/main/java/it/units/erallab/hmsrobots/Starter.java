@@ -229,7 +229,7 @@ public class Starter {
     //one voxel robot
     Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
         new Angle(),
-        new Lidar(10, Map.of(Lidar.Side.E, 5))
+        new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
     Robot<SensingVoxel> one = new Robot<>(
         new CentralizedSensing(oneBody, in -> new double[]{0d}),
