@@ -32,15 +32,17 @@ import java.awt.geom.Path2D;
 public class SensorReading extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading> implements Configurable<SensorReading> {
 
   @ConfigurableField
-  private final Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.5f);
+  private Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.5f);
   @ConfigurableField
-  private final Color strokeColor = Color.BLACK;
+  private Color strokeColor = Color.BLACK;
   @ConfigurableField(uiMin = 0f, uiMax = 2f * (float) Math.PI)
-  private final float spanAngle = (float) Math.PI;
+  private float spanAngle = (float) Math.PI;
   @ConfigurableField(uiMin = 0.001f * (float) Math.PI, uiMax = 0.5f * (float) Math.PI)
-  private final float angleResolution = 0.01f * (float) Math.PI;
+  private float angleResolution = 0.01f * (float) Math.PI;
   @ConfigurableField
-  private final boolean sensorFrame = true;
+  private boolean sensorFrame = true;
+  @ConfigurableField
+  private boolean rotated = true;
 
   private SensorReading() {
     super(it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading.class);
@@ -66,7 +68,9 @@ public class SensorReading extends Drawer<it.units.erallab.hmsrobots.core.sensor
     Poly voxelPoly = (Poly) ((Voxel) parent).getShape();
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
-    double angle = 0;
+    double voxelAngle = Math.atan2((voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y), (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)) / 2d +
+        Math.atan2((voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y), (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)) / 2d;
+    double angle = rotated ? voxelAngle : 0d;
     double sensorSliceAngle = spanAngle / (double) immutable.getnOfSensors();
     double sensorStartingAngle = angle + (double) immutable.getSensorIndex() * sensorSliceAngle;
     double valueSliceAngle = sensorSliceAngle / (double) immutable.getValues().length;

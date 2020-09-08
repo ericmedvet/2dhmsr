@@ -23,7 +23,10 @@ import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class Lidar implements Sensor, ReadingAugmenter {
   public enum Side {
@@ -75,7 +78,7 @@ public class Lidar implements Sensor, ReadingAugmenter {
   private final double[] rayDirections;
   private final Domain[] domains;
 
-  public Lidar(double rayLength, LinkedHashMap<Side, Integer> raysPerSide) {
+  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
     this.rayLength = rayLength;
     int numRays = 0;
     for (int rays : raysPerSide.values()) {
@@ -100,7 +103,7 @@ public class Lidar implements Sensor, ReadingAugmenter {
     Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
-  public Lidar(double rayLength, LinkedHashMap<Side, Integer> raysPerSide, double[] rayDir) {
+  public Lidar(double rayLength, Map<Side, Integer> raysPerSide, double[] rayDir) {
     this.rayLength = rayLength;
     int numRays = 0;
     for (int rays : raysPerSide.values()) {

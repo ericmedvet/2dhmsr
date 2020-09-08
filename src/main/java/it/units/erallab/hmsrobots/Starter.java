@@ -112,6 +112,12 @@ public class Starter {
   }
 
   public static void main(String[] args) throws IOException {
+
+    rollingOne();
+  }
+
+  private static void bipeds() {
+
     final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
     Settings settings = new Settings();
     settings.setStepFrequency(1d / 30d);
@@ -204,6 +210,38 @@ public class Starter {
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
     /*namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));*/
+    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
+    gridOnlineViewer.start(5);
+    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
+        namedSolutionGrid,
+        locomotion,
+        gridOnlineViewer,
+        executor
+    );
+    runner.run();
+  }
+
+  private static void rollingOne() {
+    //one voxel robot
+    Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
+        new Angle(),
+        new Lidar(10, Map.of(Lidar.Side.E, 5))
+    )));
+    Robot<SensingVoxel> one = new Robot<>(
+        new CentralizedSensing(oneBody, in -> new double[]{0d}),
+        oneBody
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        60,
+        new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 100, 10, 0, 100}},
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        new Settings()
+    );
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
+    namedSolutionGrid.set(0, 0, Pair.of("one", one));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);

@@ -78,9 +78,9 @@ public class ControllableVoxel extends Voxel {
     } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
       for (DistanceJoint joint : springJoints) {
         Voxel.SpringRange range = (SpringRange) joint.getUserData();
-        if (f >= 0) {
+        if (f >= 0) { // shrink
           joint.setDistance(range.rest - (range.rest - range.min) * f);
-        } else if (f < 0) {
+        } else if (f < 0) { // expand
           joint.setDistance(range.rest + (range.max - range.rest) * -f);
         }
       }
@@ -88,7 +88,7 @@ public class ControllableVoxel extends Voxel {
     //compute energy
     double areaRatio = getAreaRatio();
     lastControlEnergy = controlEnergy;
-    if (((areaRatio > 1d) && (f > 0)) || ((areaRatio < 1d) && (f < 0))) {
+    if (((areaRatio > 1d) && (f < 0)) || ((areaRatio < 1d) && (f > 0))) { //expanded and expand or shrunk and shrink
       controlEnergy = controlEnergy + f * f;
     }
     lastAreaRatioEnergy = areaRatioEnergy;
