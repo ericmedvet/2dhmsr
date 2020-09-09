@@ -231,6 +231,19 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return sb.toString();
   }
 
+  public static <K> String toString(Grid<K> grid, Function<K, Character> function) {
+    StringBuilder sb = new StringBuilder();
+    for (int y = 0; y < grid.getH(); y++) {
+      for (int x = 0; x < grid.getW(); x++) {
+        sb.append(function.apply(grid.get(x, y)));
+      }
+      if (y < grid.getH() - 1) {
+        sb.append(String.format("%n"));
+      }
+    }
+    return sb.toString();
+  }
+
   @Override
   public int hashCode() {
     int hash = 5;
