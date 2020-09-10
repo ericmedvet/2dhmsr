@@ -21,9 +21,8 @@ import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
-public class TimeFunction implements Sensor, Configurable<TimeFunction> {
+public class TimeFunction implements Sensor {
 
-  @ConfigurableField
   private final SerializableFunction<Double, Double> function;
   private final Domain[] domains;
 

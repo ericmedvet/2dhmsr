@@ -20,21 +20,23 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 
-public class Normalization implements Sensor, Configurable<Normalization> {
+import java.util.Arrays;
+
+public class Normalization implements Sensor {
 
   @ConfigurableField
   private final Sensor sensor;
-  private final Domain[] domains = new Domain[]{
-      Domain.of(0d, 1d)
-  };
+  private final Domain[] domains;
 
   public Normalization(Sensor sensor) {
     this.sensor = sensor;
+    domains = new Domain[sensor.domains().length];
+    Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   @Override
   public Domain[] domains() {
-    return sensor.domains();
+    return domains;
   }
 
   @Override

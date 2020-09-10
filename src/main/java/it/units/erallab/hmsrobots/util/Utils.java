@@ -18,12 +18,22 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.sensors.*;
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Utils {
@@ -130,6 +140,133 @@ public class Utils {
       }
     }
     return outGrid;
+  }
+
+  public static UnaryOperator<Robot<?>> buildRobotTransformation(String name) {
+    String areaBreakable = "areaBreak-(?<rate>\\d+(\\.\\d+)?)-(?<threshold>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+    String timeBreakable = "timeBreak-(?<time>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+    String identity = "identity";
+    if (name.matches(identity)) {
+      return UnaryOperator.identity();
+    }
+    if (name.matches(areaBreakable)) {
+      double rate = Double.parseDouble(paramValue(areaBreakable, name, "rate"));
+      double threshold = Double.parseDouble(paramValue(areaBreakable, name, "threshold"));
+      Random random = new Random(Integer.parseInt(paramValue(areaBreakable, name, "seed")));
+      return robot -> {
+        Robot<?> transformed = new Robot<>(
+            ((Robot<SensingVoxel>) robot).getController(),
+            Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : (random.nextDouble() > rate ? v : new BreakableVoxel(
+                v.getSensors(),
+                random,
+                Map.of(
+                    BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
+                    BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
+                ),
+                Map.of(BreakableVoxel.MalfunctionTrigger.AREA, threshold)
+            )))
+        );
+        return transformed;
+      };
+    }
+    if (name.matches(timeBreakable)) {
+      double time = Double.parseDouble(paramValue(timeBreakable, name, "time"));
+      Random random = new Random(Integer.parseInt(paramValue(timeBreakable, name, "seed")));
+      return robot -> {
+        List<Pair<Integer, Integer>> coords = robot.getVoxels().stream()
+            .filter(e -> e.getValue() != null)
+            .map(e -> Pair.of(e.getX(), e.getY()))
+            .collect(Collectors.toList());
+        Collections.shuffle(coords, random);
+        Grid<SensingVoxel> body = SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels());
+        for (int i = 0; i < coords.size(); i++) {
+          int x = coords.get(i).getLeft();
+          int y = coords.get(i).getRight();
+          body.set(x, y, new BreakableVoxel(
+              body.get(x, y).getSensors(),
+              random,
+              Map.of(
+                  BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
+                  BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
+              ),
+              Map.of(BreakableVoxel.MalfunctionTrigger.TIME, time * ((double) (i + 1) / (double) coords.size()))
+          ));
+        }
+        return new Robot<>(
+            ((Robot<SensingVoxel>) robot).getController(),
+            body
+        );
+      };
+    }
+    throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
+  }
+
+  public static String paramValue(String pattern, String string, String paramName) {
+    Matcher matcher = Pattern.compile(pattern).matcher(string);
+    if (matcher.matches()) {
+      return matcher.group(paramName);
+    }
+    throw new IllegalStateException(String.format("Param %s not found in %s with pattern %s", paramName, string, pattern));
+  }
+
+  public static <E> List<E> ofNonNull(E... es) {
+    List<E> list = new ArrayList<>();
+    for (E e : es) {
+      if (e != null) {
+        list.add(e);
+      }
+    }
+    return list;
+  }
+
+  public static Grid<? extends SensingVoxel> buildBody(String name) {
+    String wbt = "(?<shape>worm|biped|tripod)-(?<w>\\d+)x(?<h>\\d+)-(?<cgp>[tf])-(?<malfunction>[tf])";
+    String ball = "ball-(?<d>\\d+)-(?<cgp>[tf])-(?<malfunction>[tf])";
+    if (name.matches(wbt)) {
+      String shape = Utils.paramValue(wbt, name, "shape");
+      int w = Integer.parseInt(Utils.paramValue(wbt, name, "w"));
+      int h = Integer.parseInt(Utils.paramValue(wbt, name, "h"));
+      boolean withCentralPatternGenerator = Utils.paramValue(wbt, name, "cgp").equals("t");
+      boolean withMalfunctionSensor = Utils.paramValue(wbt, name, "malfunction").equals("t");
+      Grid<? extends SensingVoxel> body = Grid.create(
+          w, h,
+          (x, y) -> new SensingVoxel(Utils.ofNonNull(
+              new Normalization(new AreaRatio()),
+              withMalfunctionSensor ? new Malfunction() : null,
+              (y == 0) ? new Touch() : null,
+              (y == h - 1) ? new Normalization(new Velocity(true, 5d, Velocity.Axis.X, Velocity.Axis.Y)) : null,
+              (x == w - 1 && y == h - 1 && withCentralPatternGenerator) ? new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1)) : null
+          ).stream().filter(Objects::nonNull).collect(Collectors.toList())));
+      if (shape.equals("biped")) {
+        final Grid<? extends SensingVoxel> finalBody = body;
+        body = Grid.create(w, h, (x, y) -> (y == 0 && x > 0 && x < w - 1) ? null : finalBody.get(x, y));
+      } else if (shape.equals("tripod")) {
+        final Grid<? extends SensingVoxel> finalBody = body;
+        body = Grid.create(w, h, (x, y) -> (y != h - 1 && x != 0 && x != w - 1 && x != w / 2) ? null : finalBody.get(x, y));
+      }
+      return body;
+    }
+    if (name.matches(ball)) {
+      int d = Integer.parseInt(Utils.paramValue(ball, name, "d"));
+      boolean withCentralPatternGenerator = Utils.paramValue(ball, name, "cgp").equals("t");
+      boolean withMalfunctionSensor = Utils.paramValue(ball, name, "malfunction").equals("t");
+      return Grid.create(
+          d, d,
+          (x, y) -> {
+            int r = (int) Math.round(Math.sqrt((x - (d - 1) / 2d) * (x - (d - 1) / 2d) + (y - (d - 1) / 2d) * (y - (d - 1) / 2d)));
+            if (r > (int) Math.floor(d / 2d)) {
+              return null;
+            }
+            return new SensingVoxel(Utils.ofNonNull(
+                withMalfunctionSensor ? new Malfunction() : null,
+                (r == 0) ? new Normalization(new Angle()) : null,
+                (r == 0 && withCentralPatternGenerator) ? new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1)) : null,
+                (r == (int) Math.floor(d / 2d)) ? new Average(new Touch(), 0.33d) : null
+            ));
+          }
+      );
+    }
+    throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
 
 }

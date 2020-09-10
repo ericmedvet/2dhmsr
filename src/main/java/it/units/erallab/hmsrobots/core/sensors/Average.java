@@ -22,11 +22,9 @@ import it.units.erallab.hmsrobots.util.ConfigurableField;
 
 import java.util.TreeMap;
 
-public class Average implements Sensor, Configurable<Average> {
+public class Average implements Sensor {
 
-  @ConfigurableField
   private final Sensor sensor;
-  @ConfigurableField
   private final double interval;
   private final TreeMap<Double, double[]> readings;
 
