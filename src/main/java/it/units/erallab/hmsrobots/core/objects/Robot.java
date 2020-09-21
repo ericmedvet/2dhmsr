@@ -31,11 +31,12 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot<V extends ControllableVoxel> implements WorldObject, Serializable {
+public class Robot<V extends ControllableVoxel> implements LivingObject, Serializable {
 
   private final Controller<V> controller;
   private final Grid<? extends V> voxels;
@@ -112,7 +113,9 @@ public class Robot<V extends ControllableVoxel> implements WorldObject, Serializ
     }
   }
 
+  @Override
   public void act(final double t) {
+    voxels.values().stream().filter(Objects::nonNull).forEach(v -> v.act(t));
     controller.control(t, voxels);
   }
 

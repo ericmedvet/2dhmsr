@@ -20,26 +20,20 @@ import it.units.erallab.hmsrobots.util.Shape;
 
 public class ControllableVoxel extends Voxel {
 
-  private final double appliedForce;
+  private final double lastAppliedForce;
   private final double controlEnergy;
-  private final double controlEnergyDelta;
 
-  public ControllableVoxel(Shape shape, double areaRatio, double appliedForce, double controlEnergy, double controlEnergyDelta) {
-    super(shape, areaRatio);
-    this.appliedForce = appliedForce;
+  public ControllableVoxel(Shape shape, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy) {
+    super(shape, areaRatio, areaRatioEnergy);
+    this.lastAppliedForce = lastAppliedForce;
     this.controlEnergy = controlEnergy;
-    this.controlEnergyDelta = controlEnergyDelta;
   }
 
-  public double getAppliedForce() {
-    return appliedForce;
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
   }
 
   public double getControlEnergy() {
     return controlEnergy;
-  }
-
-  public double getControlEnergyDelta() {
-    return controlEnergyDelta;
   }
 }

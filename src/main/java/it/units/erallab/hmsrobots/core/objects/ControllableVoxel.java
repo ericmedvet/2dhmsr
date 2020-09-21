@@ -36,11 +36,7 @@ public class ControllableVoxel extends Voxel {
   private final ForceMethod forceMethod;
 
   private transient double controlEnergy;
-  private transient double lastControlEnergy;
-  private transient double areaRatioEnergy;
-  private transient double lastAreaRatioEnergy;
-  private transient double lastAreaRatio;
-  private transient double appliedForce;
+  private transient double lastAppliedForce;
 
   public ControllableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings);
@@ -61,7 +57,7 @@ public class ControllableVoxel extends Voxel {
     if (Math.abs(f) > 1d) {
       f = Math.signum(f);
     }
-    appliedForce = f;
+    lastAppliedForce = f;
     if (forceMethod.equals(ForceMethod.FORCE)) {
       double xc = 0d;
       double yc = 0d;
@@ -85,35 +81,14 @@ public class ControllableVoxel extends Voxel {
         }
       }
     }
-    //compute energy
-    double areaRatio = getAreaRatio();
-    lastControlEnergy = controlEnergy;
-    if (((areaRatio > 1d) && (f < 0)) || ((areaRatio < 1d) && (f > 0))) { //expanded and expand or shrunk and shrink
-      controlEnergy = controlEnergy + f * f;
-    }
-    lastAreaRatioEnergy = areaRatioEnergy;
-    areaRatioEnergy = areaRatioEnergy + Math.pow(areaRatio - lastAreaRatio, 2d);
-    lastAreaRatio = areaRatio;
   }
 
-  public double getAppliedForce() {
-    return appliedForce;
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
   }
 
   public double getControlEnergy() {
     return controlEnergy;
-  }
-
-  public double getAreaRatioEnergy() {
-    return areaRatioEnergy;
-  }
-
-  public double getControlEnergyDelta() {
-    return controlEnergy - lastControlEnergy;
-  }
-
-  public double getAreaEnergyDelta() {
-    return areaRatioEnergy - lastAreaRatioEnergy;
   }
 
   @Override
@@ -122,9 +97,9 @@ public class ControllableVoxel extends Voxel {
     it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel(
         superImmutable.getShape(),
         superImmutable.getAreaRatio(),
-        appliedForce,
-        controlEnergy,
-        controlEnergy - lastControlEnergy
+        superImmutable.getAreaRatioEnergy(),
+        lastAppliedForce,
+        controlEnergy
     );
     immutable.getChildren().addAll(superImmutable.getChildren());
     return immutable;
@@ -134,10 +109,16 @@ public class ControllableVoxel extends Voxel {
   public void reset() {
     super.reset();
     controlEnergy = 0d;
-    lastControlEnergy = 0d;
-    areaRatioEnergy = 0d;
-    lastAreaRatioEnergy = 0d;
-    lastAreaRatio = 1d;
-    appliedForce = 0d;
+    lastAppliedForce = 0d;
+  }
+
+  @Override
+  public void act(double t) {
+    super.act(t);
+    //compute energy
+    double areaRatio = getAreaRatio();
+    if (((areaRatio > 1d) && (lastAppliedForce < 0)) || ((areaRatio < 1d) && (lastAppliedForce > 0))) { //expanded and expand or shrunk and shrink
+      controlEnergy = controlEnergy + lastAppliedForce * lastAppliedForce;
+    }
   }
 }

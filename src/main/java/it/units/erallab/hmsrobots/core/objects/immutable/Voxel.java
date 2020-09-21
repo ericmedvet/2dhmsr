@@ -20,13 +20,19 @@ import it.units.erallab.hmsrobots.util.Shape;
 
 public class Voxel extends ShapedImmutable {
   private final double areaRatio;
+  private final double areaRatioEnergy;
 
-  public Voxel(Shape shape, double areaRatio) {
+  public Voxel(Shape shape, double areaRatio, double areaRatioEnergy) {
     super(shape);
     this.areaRatio = areaRatio;
+    this.areaRatioEnergy = areaRatioEnergy;
   }
 
   public double getAreaRatio() {
     return areaRatio;
+  }
+
+  public double getAreaRatioEnergy() {
+    return areaRatioEnergy;
   }
 }

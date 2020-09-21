@@ -24,8 +24,8 @@ public class BreakableVoxel extends ControllableVoxel {
   private final it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType sensorsMalfunctionType;
   private final it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType structureMalfunctionType;
 
-  public BreakableVoxel(Shape shape, double areaRatio, double appliedForce, double controlEnergy, double controlEnergyDelta, it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType actuatorMalfunctionType, it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType sensorsMalfunctionType, it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType structureMalfunctionType) {
-    super(shape, areaRatio, appliedForce, controlEnergy, controlEnergyDelta);
+  public BreakableVoxel(Shape shape, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy, it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType actuatorMalfunctionType, it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType sensorsMalfunctionType, it.units.erallab.hmsrobots.core.objects.BreakableVoxel.MalfunctionType structureMalfunctionType) {
+    super(shape, areaRatio, areaRatioEnergy, lastAppliedForce, controlEnergy);
     this.actuatorMalfunctionType = actuatorMalfunctionType;
     this.sensorsMalfunctionType = sensorsMalfunctionType;
     this.structureMalfunctionType = structureMalfunctionType;

@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Voxel implements WorldObject, Serializable {
+public class Voxel implements LivingObject, Serializable {
 
   public enum SpringScaffolding {
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS
@@ -156,6 +156,8 @@ public class Voxel implements WorldObject, Serializable {
   protected transient DistanceJoint[] springJoints;
   protected transient RopeJoint[] ropeJoints;
   private transient World world;
+
+  private transient double areaRatioEnergy;
 
   public Voxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings) {
     this.sideLength = sideLength;
@@ -359,7 +361,11 @@ public class Voxel implements WorldObject, Serializable {
         Point2.build(getIndexedVertex(2, 1)),
         Point2.build(getIndexedVertex(3, 0))
     );
-    it.units.erallab.hmsrobots.core.objects.immutable.Voxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.Voxel(voxelShape, getAreaRatio());
+    it.units.erallab.hmsrobots.core.objects.immutable.Voxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.Voxel(
+        voxelShape,
+        getAreaRatio(),
+        areaRatioEnergy
+    );
     //add parts
     for (Body body : vertexBodies) {
       immutable.getChildren().add(new VoxelBody(rectangleToPoly(body)));
@@ -465,6 +471,16 @@ public class Voxel implements WorldObject, Serializable {
   }
 
   public void reset() {
+    areaRatioEnergy = 0d;
   }
 
+  @Override
+  public void act(double t) {
+    double areaRatio = getAreaRatio();
+    areaRatioEnergy = areaRatioEnergy + areaRatio * areaRatio;
+  }
+
+  public double getAreaRatioEnergy() {
+    return areaRatioEnergy;
+  }
 }

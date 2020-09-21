@@ -46,7 +46,10 @@ public class BreakableVoxel extends SensingVoxel {
   private List<Pair<Sensor, double[]>> lastSensorReadings;
   private final EnumMap<MalfunctionTrigger, Double> triggerCounters;
   private final EnumMap<ComponentType, MalfunctionType> state;
-  private double lastControlT;
+
+  private transient double lastT;
+  private transient double lastControlEnergy;
+  private transient double lastAreaRatioEnergy;
 
   public BreakableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings, maxForce, forceMethod, sensors);
@@ -80,27 +83,6 @@ public class BreakableVoxel extends SensingVoxel {
 
   @Override
   public List<Pair<Sensor, double[]>> sense(double t) {
-    //update counters
-    triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastControlT);
-    triggerCounters.put(MalfunctionTrigger.CONTROL, triggerCounters.get(MalfunctionTrigger.CONTROL) + getControlEnergyDelta());
-    triggerCounters.put(MalfunctionTrigger.AREA, triggerCounters.get(MalfunctionTrigger.AREA) + getAreaEnergyDelta());
-    lastControlT = t;
-    //check if malfunction is applicable
-    for (Map.Entry<MalfunctionTrigger, Double> triggerThreshold : triggerThresholds.entrySet()) {
-      if (random.nextDouble() < 1d - Math.tanh(triggerThreshold.getValue() / triggerCounters.get(triggerThreshold.getKey()))) {
-        //reset counters
-        Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
-        //choose component and malfunction
-        ComponentType[] componentTypes = malfunctions.keySet().toArray(ComponentType[]::new);
-        if (componentTypes.length > 0) {
-          ComponentType componentType = componentTypes[random.nextInt(componentTypes.length)];
-          MalfunctionType[] malfunctionTypes = malfunctions.get(componentType).toArray(MalfunctionType[]::new);
-          MalfunctionType malfunctionType = malfunctionTypes[random.nextInt(malfunctionTypes.length)];
-          state.put(componentType, malfunctionType);
-          updateStructureMalfunctionType();
-        }
-      }
-    }
     //sense
     List<Pair<Sensor, double[]>> sensorReadings = getSensors().stream()
         .map(s -> Pair.of(s, Arrays.stream(s.domains())
@@ -126,7 +108,7 @@ public class BreakableVoxel extends SensingVoxel {
     if (state.get(ComponentType.ACTUATOR).equals(MalfunctionType.ZERO)) {
       f = 0;
     } else if (state.get(ComponentType.ACTUATOR).equals(MalfunctionType.FROZEN)) {
-      f = getAppliedForce();
+      f = getLastAppliedForce();
     } else if (state.get(ComponentType.ACTUATOR).equals(MalfunctionType.RANDOM)) {
       f = random.nextDouble() * 2d - 1d;
     }
@@ -169,9 +151,9 @@ public class BreakableVoxel extends SensingVoxel {
     it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel(
         superImmutable.getShape(),
         superImmutable.getAreaRatio(),
-        superImmutable.getAppliedForce(),
+        superImmutable.getAreaRatioEnergy(),
+        superImmutable.getLastAppliedForce(),
         superImmutable.getControlEnergy(),
-        superImmutable.getControlEnergyDelta(),
         state.get(ComponentType.ACTUATOR),
         state.get(ComponentType.SENSORS),
         state.get(ComponentType.STRUCTURE)
@@ -183,9 +165,40 @@ public class BreakableVoxel extends SensingVoxel {
   @Override
   public void reset() {
     super.reset();
+    lastT = 0d;
+    lastControlEnergy = 0d;
+    lastAreaRatioEnergy = 0d;
     Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
     Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
-    lastControlT = 0d;
     updateStructureMalfunctionType();
+  }
+
+  @Override
+  public void act(double t) {
+    super.act(t);
+    //update counters
+    triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastT);
+    triggerCounters.put(MalfunctionTrigger.CONTROL, triggerCounters.get(MalfunctionTrigger.CONTROL) + (getControlEnergy() - lastControlEnergy));
+    triggerCounters.put(MalfunctionTrigger.AREA, triggerCounters.get(MalfunctionTrigger.AREA) + (getAreaRatioEnergy() - lastAreaRatioEnergy));
+    lastT = t;
+    lastControlEnergy = getControlEnergy();
+    lastAreaRatioEnergy = getAreaRatioEnergy();
+    //check if malfunction is applicable
+    for (Map.Entry<MalfunctionTrigger, Double> triggerThreshold : triggerThresholds.entrySet()) {
+      if (random.nextDouble() < 1d - Math.tanh(triggerThreshold.getValue() / triggerCounters.get(triggerThreshold.getKey()))) {
+        //reset counters
+        Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
+        //choose component and malfunction
+        ComponentType[] componentTypes = malfunctions.keySet().toArray(ComponentType[]::new);
+        if (componentTypes.length > 0) {
+          ComponentType componentType = componentTypes[random.nextInt(componentTypes.length)];
+          MalfunctionType[] malfunctionTypes = malfunctions.get(componentType).toArray(MalfunctionType[]::new);
+          MalfunctionType malfunctionType = malfunctionTypes[random.nextInt(malfunctionTypes.length)];
+          state.put(componentType, malfunctionType);
+          updateStructureMalfunctionType();
+        }
+      }
+    }
+
   }
 }

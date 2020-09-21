@@ -32,7 +32,7 @@ public class AppliedForce implements Sensor {
   @Override
   public double[] sense(Voxel voxel, double t) {
     if (voxel instanceof ControllableVoxel) {
-      return new double[]{((ControllableVoxel) voxel).getAppliedForce()};
+      return new double[]{((ControllableVoxel) voxel).getLastAppliedForce()};
     }
     return new double[]{0d};
   }

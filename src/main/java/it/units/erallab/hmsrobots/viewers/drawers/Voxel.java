@@ -30,7 +30,7 @@ import java.awt.geom.Path2D;
 
 public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.Voxel> implements Configurable<Voxel> {
 
-  public enum FillType {APPLIED_FORCE, AREA_RATIO, CONTROL_ENERGY_DELTA, NONE}
+  public enum FillType {APPLIED_FORCE, AREA_RATIO, NONE}
 
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
   private FillType fillType = FillType.AREA_RATIO;
@@ -76,13 +76,7 @@ public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immuta
       g.setColor(GraphicsDrawer.linear(
           shrunkFillColor, restFillColor, expandedFillColor,
           -1f, 0f, 1f,
-          (float) ((ControllableVoxel) immutable).getAppliedForce()
-      ));
-      g.fill(path);
-    } else if (fillType.equals(FillType.CONTROL_ENERGY_DELTA) && (immutable instanceof ControllableVoxel)) {
-      g.setColor(GraphicsDrawer.linear(restFillColor, expandedFillColor,
-          0f, 1f,
-          (float) ((ControllableVoxel) immutable).getControlEnergyDelta()
+          (float) ((ControllableVoxel) immutable).getLastAppliedForce()
       ));
       g.fill(path);
     }

@@ -38,8 +38,9 @@ public class ControlPower implements Sensor {
   @Override
   public double[] sense(Voxel voxel, double t) {
     if (voxel instanceof ControllableVoxel) {
-      return new double[]{((ControllableVoxel) voxel).getControlEnergyDelta() / (t - lastT)};
+      return new double[]{((ControllableVoxel) voxel).getControlEnergy() / (t - lastT)};
     }
+    lastT = t;
     return new double[]{0d};
   }
 

@@ -20,7 +20,6 @@ import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Point2;
@@ -29,10 +28,12 @@ import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
 
@@ -98,16 +99,8 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     //run
     double t = 0d;
     while (t < finalT) {
-      t = t + settings.getStepFrequency();
-      world.step(1);
-      robot.act(t);
-      //update center position metrics
+      t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       centerPositions.add(Point2.build(robot.getCenter()));
-      //possibly output snapshot
-      if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
-        listener.listen(snapshot);
-      }
     }
     //compute metrics
     List<Double> results = new ArrayList<>(metrics.size());
