@@ -20,12 +20,12 @@ import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import org.dyn4j.dynamics.World;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public interface WorldObject {
-  
+
   Immutable immutable();
+
   void addTo(World world);
-  
+
 }

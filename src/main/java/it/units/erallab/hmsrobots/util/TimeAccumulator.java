@@ -17,11 +17,10 @@
 package it.units.erallab.hmsrobots.util;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class TimeAccumulator {
-  
+
   private double t;
 
   public TimeAccumulator() {
@@ -31,14 +30,14 @@ public class TimeAccumulator {
   public double getT() {
     return t;
   }
-  
+
   public double add(double dt) {
-    t = t+dt;
+    t = t + dt;
     return t;
   }
 
   public void setT(double t) {
     this.t = t;
   }
-  
+
 }

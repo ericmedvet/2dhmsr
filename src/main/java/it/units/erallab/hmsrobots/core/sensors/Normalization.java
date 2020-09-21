@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 
 import java.util.Arrays;

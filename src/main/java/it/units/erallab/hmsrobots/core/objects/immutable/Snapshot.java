@@ -21,11 +21,10 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Snapshot implements Serializable, Comparable<Snapshot> {
-  
+
   private final double time;
   private final Collection<Immutable> objects;
 
@@ -46,5 +45,5 @@ public class Snapshot implements Serializable, Comparable<Snapshot> {
   public int compareTo(Snapshot other) {
     return Double.compare(time, other.time);
   }
-  
+
 }

@@ -20,10 +20,9 @@ import java.io.Serializable;
 import java.util.function.Function;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 @FunctionalInterface
 public interface SerializableFunction<T, R> extends Function<T, R>, Serializable {
-  
+
 }

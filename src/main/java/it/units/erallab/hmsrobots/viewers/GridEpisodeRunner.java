@@ -32,7 +32,6 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GridEpisodeRunner<S> implements Runnable {

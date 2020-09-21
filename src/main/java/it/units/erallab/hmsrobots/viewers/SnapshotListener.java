@@ -19,7 +19,6 @@ package it.units.erallab.hmsrobots.viewers;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 
 /**
- *
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public interface SnapshotListener {

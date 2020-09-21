@@ -59,7 +59,7 @@ public class Ground implements WorldObject {
     bodies = new ArrayList<>(xs.length - 1);
     polygon = new ArrayList<>(xs.length + 2);
     //find min y
-    double baseY = Arrays.stream(ys).min().getAsDouble()-MIN_Y_THICKNESS;
+    double baseY = Arrays.stream(ys).min().getAsDouble() - MIN_Y_THICKNESS;
     polygon.add(new Vector2(0, baseY));
     //build bodies and polygon
     for (int i = 1; i < xs.length; i++) {

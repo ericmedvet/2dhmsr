@@ -58,64 +58,64 @@ public class Starter {
 
   private static void sampleExecution() throws IOException {
     final Locomotion locomotion = new Locomotion(
-            20,
-            Locomotion.createTerrain("flat"),
-            Lists.newArrayList(
-                    Locomotion.Metric.TRAVEL_X_VELOCITY,
-                    Locomotion.Metric.RELATIVE_CONTROL_POWER
-            ),
-            new Settings()
+        20,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(
+            Locomotion.Metric.TRAVEL_X_VELOCITY,
+            Locomotion.Metric.RELATIVE_CONTROL_POWER
+        ),
+        new Settings()
     );
     final ControllableVoxel hardMaterialVoxel = new ControllableVoxel(
-            Voxel.SIDE_LENGTH,
-            Voxel.MASS_SIDE_LENGTH_RATIO,
-            50d,
-            Voxel.SPRING_D,
-            Voxel.MASS_LINEAR_DAMPING,
-            Voxel.MASS_ANGULAR_DAMPING,
-            Voxel.FRICTION,
-            Voxel.RESTITUTION,
-            Voxel.MASS,
-            Voxel.LIMIT_CONTRACTION_FLAG,
-            Voxel.MASS_COLLISION_FLAG,
-            Voxel.AREA_RATIO_MAX_DELTA,
-            Voxel.SPRING_SCAFFOLDINGS,
-            ControllableVoxel.MAX_FORCE,
-            ControllableVoxel.ForceMethod.DISTANCE
+        Voxel.SIDE_LENGTH,
+        Voxel.MASS_SIDE_LENGTH_RATIO,
+        50d,
+        Voxel.SPRING_D,
+        Voxel.MASS_LINEAR_DAMPING,
+        Voxel.MASS_ANGULAR_DAMPING,
+        Voxel.FRICTION,
+        Voxel.RESTITUTION,
+        Voxel.MASS,
+        Voxel.LIMIT_CONTRACTION_FLAG,
+        Voxel.MASS_COLLISION_FLAG,
+        Voxel.AREA_RATIO_MAX_DELTA,
+        Voxel.SPRING_SCAFFOLDINGS,
+        ControllableVoxel.MAX_FORCE,
+        ControllableVoxel.ForceMethod.DISTANCE
     );
     final ControllableVoxel softMaterialVoxel = new ControllableVoxel(
-            Voxel.SIDE_LENGTH,
-            Voxel.MASS_SIDE_LENGTH_RATIO,
-            5d,
-            Voxel.SPRING_D,
-            Voxel.MASS_LINEAR_DAMPING,
-            Voxel.MASS_ANGULAR_DAMPING,
-            Voxel.FRICTION,
-            Voxel.RESTITUTION,
-            Voxel.MASS,
-            Voxel.LIMIT_CONTRACTION_FLAG,
-            Voxel.MASS_COLLISION_FLAG,
-            Voxel.AREA_RATIO_MAX_DELTA,
-            EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
-            ControllableVoxel.MAX_FORCE,
-            ControllableVoxel.ForceMethod.DISTANCE
+        Voxel.SIDE_LENGTH,
+        Voxel.MASS_SIDE_LENGTH_RATIO,
+        5d,
+        Voxel.SPRING_D,
+        Voxel.MASS_LINEAR_DAMPING,
+        Voxel.MASS_ANGULAR_DAMPING,
+        Voxel.FRICTION,
+        Voxel.RESTITUTION,
+        Voxel.MASS,
+        Voxel.LIMIT_CONTRACTION_FLAG,
+        Voxel.MASS_COLLISION_FLAG,
+        Voxel.AREA_RATIO_MAX_DELTA,
+        EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL, Voxel.SpringScaffolding.CENTRAL_CROSS),
+        ControllableVoxel.MAX_FORCE,
+        ControllableVoxel.ForceMethod.DISTANCE
     );
     int w = 20;
     int h = 5;
     Robot robot = new Robot(
-            new TimeFunctions(Grid.create(
-                    w, h,
-                    (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
-            )),
-            Grid.create(
-                    w, h,
-                    (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
-            )
+        new TimeFunctions(Grid.create(
+            w, h,
+            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
+        )),
+        Grid.create(
+            w, h,
+            (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
+        )
     );
     FramesFileWriter framesFileWriter = new FramesFileWriter(
-            5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
-            new File("/home/eric/experiments/2dhmsr/frames.v.png"),
-            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+        5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
+        new File("/home/eric/experiments/2dhmsr/frames.v.png"),
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     );
     List<Double> result = locomotion.apply(robot, framesFileWriter);
     framesFileWriter.flush();
@@ -134,22 +134,22 @@ public class Starter {
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
-            new TimeFunctions(Grid.create(
-                    body.getW(),
-                    body.getH(),
-                    (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
-            )),
-            SerializationUtils.clone(body)
+        new TimeFunctions(Grid.create(
+            body.getW(),
+            body.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
+        )),
+        SerializationUtils.clone(body)
     );
     //distribute sensing
     Random random = new Random();
     DistributedSensing distributedSensing = new DistributedSensing(body, 1);
     for (Grid.Entry<? extends SensingVoxel> entry : body) {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-              MultiLayerPerceptron.ActivationFunction.TANH,
-              distributedSensing.nOfInputs(entry.getX(), entry.getY()),
-              new int[0],
-              distributedSensing.nOfOutputs(entry.getX(), entry.getY())
+          MultiLayerPerceptron.ActivationFunction.TANH,
+          distributedSensing.nOfInputs(entry.getX(), entry.getY()),
+          new int[0],
+          distributedSensing.nOfOutputs(entry.getX(), entry.getY())
       );
       double[] ws = mlp.getParams();
       IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
@@ -157,31 +157,31 @@ public class Starter {
       distributedSensing.getFunctions().set(entry.getX(), entry.getY(), mlp);
     }
     Robot<SensingVoxel> distHetero = new Robot<>(
-            distributedSensing,
-            SerializationUtils.clone(body)
+        distributedSensing,
+        SerializationUtils.clone(body)
     );
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-            MultiLayerPerceptron.ActivationFunction.TANH,
-            centralizedSensing.nOfInputs(),
-            new int[0],
-            centralizedSensing.nOfOutputs()
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[0],
+        centralizedSensing.nOfOutputs()
     );
     double[] ws = mlp.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
     Robot<SensingVoxel> centralized = new Robot<>(
-            centralizedSensing,
-            SerializationUtils.clone(body)
+        centralizedSensing,
+        SerializationUtils.clone(body)
     );
     //episode
     Locomotion locomotion = new Locomotion(
-            60,
-            Locomotion.createTerrain("flat"),
-            Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-            new Settings()
+        60,
+        Locomotion.createTerrain("flat"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
@@ -192,10 +192,10 @@ public class Starter {
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-            namedSolutionGrid,
-            locomotion,
-            gridOnlineViewer,
-            executor
+        namedSolutionGrid,
+        locomotion,
+        gridOnlineViewer,
+        executor
     );
     runner.run();
   }
@@ -204,22 +204,22 @@ public class Starter {
     Grid<? extends SensingVoxel> body = Utils.buildBody("worm-7x3-f-t");
     double f = 1d;
     Robot<ControllableVoxel> unbreakableRobot = new Robot<>(
-            new TimeFunctions(Grid.create(
-                    body.getW(),
-                    body.getH(),
-                    (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
-            )),
-            SerializationUtils.clone(body)
+        new TimeFunctions(Grid.create(
+            body.getW(),
+            body.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
+        )),
+        SerializationUtils.clone(body)
     );
     Robot<?> breakableRobot = Utils.buildRobotTransformation(
-            "areaBreak-1-0.001-0"
+        "areaBreak-1-0.001-0"
     ).apply(SerializationUtils.clone(unbreakableRobot));
     //episode
     Locomotion locomotion = new Locomotion(
-            60,
-            Locomotion.createTerrain("hilly-0.5-5-0"),
-            Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-            new Settings()
+        60,
+        Locomotion.createTerrain("hilly-0.5-5-0"),
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 2);
     namedSolutionGrid.set(0, 0, Pair.of("unbreakable", unbreakableRobot));
@@ -227,21 +227,21 @@ public class Starter {
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-            Grid.create(namedSolutionGrid, Pair::getLeft),
-            uiExecutor,
-            GraphicsDrawer.build().setConfigurable("drawers", List.of(
-                    it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-                    SensorReading.build(),
-                    Ground.build()
-            ))
+        Grid.create(namedSolutionGrid, Pair::getLeft),
+        uiExecutor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            Ground.build()
+        ))
     );
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-            namedSolutionGrid,
-            locomotion,
-            gridOnlineViewer,
-            executor
+        namedSolutionGrid,
+        locomotion,
+        gridOnlineViewer,
+        executor
     );
     runner.run();
   }
@@ -249,42 +249,42 @@ public class Starter {
   private static void rollingOne() {
     //one voxel robot
     Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
-            new Angle(),
-            new Lidar(10, Map.of(Lidar.Side.E, 4))
+        new Angle(),
+        new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
     Robot<SensingVoxel> one = new Robot<>(
-            new CentralizedSensing(oneBody, in -> new double[]{0d}),
-            oneBody
+        new CentralizedSensing(oneBody, in -> new double[]{0d}),
+        oneBody
     );
     //episode
     Locomotion locomotion = new Locomotion(
-            60,
-            new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 100, 10, 0, 100}},
-            Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-            new Settings()
+        60,
+        new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 100, 10, 0, 100}},
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
     namedSolutionGrid.set(0, 0, Pair.of("one", one));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-            Grid.create(namedSolutionGrid, Pair::getLeft),
-            uiExecutor,
-            GraphicsDrawer.build().setConfigurable("drawers", List.of(
-                    it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-                    SensorReading.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
-            ))
+        Grid.create(namedSolutionGrid, Pair::getLeft),
+        uiExecutor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+        ))
     );
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-            namedSolutionGrid,
-            locomotion,
-            gridOnlineViewer,
-            executor
+        namedSolutionGrid,
+        locomotion,
+        gridOnlineViewer,
+        executor
     );
     runner.run();
   }
@@ -295,48 +295,48 @@ public class Starter {
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-            MultiLayerPerceptron.ActivationFunction.TANH,
-            centralizedSensing.nOfInputs(),
-            new int[0],
-            centralizedSensing.nOfOutputs()
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[0],
+        centralizedSensing.nOfOutputs()
     );
     double[] ws = mlp.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
     Robot<SensingVoxel> robot = new Robot<>(
-            centralizedSensing,
-            SerializationUtils.clone(body)
+        centralizedSensing,
+        SerializationUtils.clone(body)
     );
     //episode
     Locomotion locomotion = new Locomotion(
-            60,
-            new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 75, 10, 0, 100}},
-            Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
-            new Settings()
+        60,
+        new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 75, 10, 0, 100}},
+        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
+        new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
     namedSolutionGrid.set(0, 0, Pair.of("ball", robot));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-            Grid.create(namedSolutionGrid, Pair::getLeft),
-            uiExecutor,
-            GraphicsDrawer.build().setConfigurable("drawers", List.of(
-                    it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-                    SensorReading.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
-            ))
+        Grid.create(namedSolutionGrid, Pair::getLeft),
+        uiExecutor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+        ))
     );
     gridOnlineViewer.start(5);
     GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-            namedSolutionGrid,
-            locomotion,
-            gridOnlineViewer,
-            executor
+        namedSolutionGrid,
+        locomotion,
+        gridOnlineViewer,
+        executor
     );
     runner.run();
   }
