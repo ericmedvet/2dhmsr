@@ -143,8 +143,8 @@ public class Utils {
   }
 
   public static UnaryOperator<Robot<?>> buildRobotTransformation(String name) {
-    String areaBreakable = "areaBreak-(?<rate>\\d+(\\.\\d+)?)-(?<threshold>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
-    String timeBreakable = "timeBreak-(?<time>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+    String areaBreakable = "areaBreak-(?<rate>\\d+(\\.\\d+)?)-(?<threshold>\\d+(\\.\\d+)?)-(?<restTime>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+    String timeBreakable = "timeBreak-(?<time>\\d+(\\.\\d+)?)-(?<restTime>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
     String identity = "identity";
     if (name.matches(identity)) {
       return UnaryOperator.identity();
@@ -152,6 +152,7 @@ public class Utils {
     if (name.matches(areaBreakable)) {
       double rate = Double.parseDouble(paramValue(areaBreakable, name, "rate"));
       double threshold = Double.parseDouble(paramValue(areaBreakable, name, "threshold"));
+      double restoreTime = Double.parseDouble(paramValue(areaBreakable, name, "restTime"));
       Random random = new Random(Integer.parseInt(paramValue(areaBreakable, name, "seed")));
       return robot -> {
         Robot<?> transformed = new Robot<>(
@@ -163,7 +164,8 @@ public class Utils {
                     BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
                     BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
                 ),
-                Map.of(BreakableVoxel.MalfunctionTrigger.AREA, threshold)
+                Map.of(BreakableVoxel.MalfunctionTrigger.AREA, threshold),
+                restoreTime
             )))
         );
         return transformed;
@@ -171,6 +173,7 @@ public class Utils {
     }
     if (name.matches(timeBreakable)) {
       double time = Double.parseDouble(paramValue(timeBreakable, name, "time"));
+      double restoreTime = Double.parseDouble(paramValue(timeBreakable, name, "restTime"));
       Random random = new Random(Integer.parseInt(paramValue(timeBreakable, name, "seed")));
       return robot -> {
         List<Pair<Integer, Integer>> coords = robot.getVoxels().stream()
@@ -189,7 +192,8 @@ public class Utils {
                   BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
                   BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
               ),
-              Map.of(BreakableVoxel.MalfunctionTrigger.TIME, time * ((double) (i + 1) / (double) coords.size()))
+              Map.of(BreakableVoxel.MalfunctionTrigger.TIME, time * ((double) (i + 1) / (double) coords.size())),
+              restoreTime
           ));
         }
         return new Robot<>(
