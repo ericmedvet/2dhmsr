@@ -24,16 +24,23 @@ import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 
 public class Ground extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.Ground> implements Configurable<Ground> {
 
   @ConfigurableField
-  private final Color strokeColor = Color.BLACK;
+  private Color strokeColor = Color.BLACK;
   @ConfigurableField
-  private final Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.25f);
+  private Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.25f);
+  @ConfigurableField
+  private boolean useTexture = true;
+  private final TexturePaint texturePaint;
+  private final static int TEXTURE_SIZE = 4;
+  private final static Color TEXTURE_COLOR = Color.GRAY;
 
   private Ground() {
     super(it.units.erallab.hmsrobots.core.objects.immutable.Ground.class);
+    texturePaint = createTexturePaint();
   }
 
   public static Ground build() {
@@ -43,14 +50,31 @@ public class Ground extends Drawer<it.units.erallab.hmsrobots.core.objects.immut
   @Override
   public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.Ground immutable, Immutable parent, Graphics2D g) {
     Path2D path = GraphicsDrawer.toPath((Poly) immutable.getShape(), true);
+    if (useTexture || fillColor != null) {
+      if (useTexture) {
+        g.setPaint(texturePaint);
+
+      } else {
+        g.setColor(fillColor);
+      }
+      g.fill(path);
+    }
     if (strokeColor != null) {
       g.setColor(strokeColor);
       g.draw(path);
     }
-    if (fillColor != null) {
-      g.setColor(fillColor);
-      g.fill(path);
-    }
     return false;
+  }
+
+  private TexturePaint createTexturePaint() {
+    BufferedImage texture = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
+    Graphics2D g = texture.createGraphics();
+    g.setColor(GraphicsDrawer.alphaed(TEXTURE_COLOR, 0.5f));
+    g.fillRect(0, 0, 2, 2);
+    g.setColor(GraphicsDrawer.alphaed(TEXTURE_COLOR, 0.75f));
+    g.fillRect(1, 0, 1, 1);
+    g.fillRect(0, 1, 1, 1);
+    g.dispose();
+    return new TexturePaint(texture, new Rectangle(0, 0, TEXTURE_SIZE, TEXTURE_SIZE));
   }
 }

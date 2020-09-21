@@ -43,7 +43,6 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
 
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
   private Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
-      GeneralRenderingMode.GRID_MAJOR,
       GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO,
       GeneralRenderingMode.TIME_INFO
   ));

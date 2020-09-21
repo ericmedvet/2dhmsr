@@ -28,9 +28,9 @@ import java.awt.geom.Path2D;
 public class VoxelBody extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody> implements Configurable<VoxelBody> {
 
   @ConfigurableField
-  private final Color strokeColor = Color.BLUE;
+  private Color strokeColor = Color.BLUE;
   @ConfigurableField
-  private final Color fillColor = GraphicsDrawer.alphaed(Color.BLUE, 0.25f);
+  private Color fillColor = GraphicsDrawer.alphaed(Color.BLUE, 0.25f);
 
   private VoxelBody() {
     super(it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody.class);

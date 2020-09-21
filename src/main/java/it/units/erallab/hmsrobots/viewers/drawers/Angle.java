@@ -30,7 +30,7 @@ import java.awt.*;
 public class Angle extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.Angle> implements Configurable<Angle> {
 
   @ConfigurableField
-  private final Color strokeColor = Color.BLACK;
+  private Color strokeColor = Color.BLACK;
 
   private Angle() {
     super(it.units.erallab.hmsrobots.core.sensors.immutable.Angle.class);

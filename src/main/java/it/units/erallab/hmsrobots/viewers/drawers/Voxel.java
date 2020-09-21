@@ -33,23 +33,23 @@ public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immuta
   public enum FillType {APPLIED_FORCE, AREA_RATIO, CONTROL_ENERGY_DELTA, NONE}
 
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
-  private final FillType fillType = FillType.AREA_RATIO;
+  private FillType fillType = FillType.AREA_RATIO;
   @ConfigurableField
-  private final Color strokeColor = Color.BLUE;
+  private Color strokeColor = Color.BLUE;
   @ConfigurableField
-  private final Color restFillColor = GraphicsDrawer.alphaed(Color.YELLOW, 0.5f);
+  private Color restFillColor = GraphicsDrawer.alphaed(Color.YELLOW, 0.5f);
   @ConfigurableField
-  private final Color shrunkFillColor = GraphicsDrawer.alphaed(Color.RED, 0.5f);
+  private Color shrunkFillColor = GraphicsDrawer.alphaed(Color.RED, 0.5f);
   @ConfigurableField
-  private final Color expandedFillColor = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
+  private Color expandedFillColor = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
   @ConfigurableField
-  private final Color malfunctionColor = GraphicsDrawer.alphaed(Color.BLACK, 0.75f);
+  private Color malfunctionColor = GraphicsDrawer.alphaed(Color.BLACK, 0.75f);
   @ConfigurableField(uiMin = 5, uiMax = 20)
-  private final float malfunctionStrokeWidth = 10f;
+  private float malfunctionStrokeWidth = 10f;
   @ConfigurableField(uiMin = 0.1f, uiMax = 0.999f)
-  private final float shrunkRatio = 0.75f;
+  private float shrunkRatio = 0.75f;
   @ConfigurableField(uiMin = 1.001f, uiMax = 2f)
-  private final float expandendRatio = 1.25f;
+  private float expandendRatio = 1.25f;
 
   private Voxel() {
     super(it.units.erallab.hmsrobots.core.objects.immutable.Voxel.class);

@@ -27,9 +27,9 @@ import java.awt.*;
 public class VoxelJoint extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint> implements Configurable<VoxelJoint> {
 
   @ConfigurableField
-  private final Color color = Color.RED;
+  private Color color = Color.RED;
   @ConfigurableField(uiMin = 1, uiMax = 5)
-  private final float strokeWidth = 2f;
+  private float strokeWidth = 2f;
 
   private VoxelJoint() {
     super(it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint.class);
