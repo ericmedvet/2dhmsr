@@ -201,7 +201,7 @@ public class Starter {
   }
 
   private static void breakingWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-7x3-f-t");
+    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-4x3-f-t");
     double f = 1d;
     Robot<ControllableVoxel> unbreakableRobot = new Robot<>(
         new TimeFunctions(Grid.create(
@@ -212,7 +212,7 @@ public class Starter {
         SerializationUtils.clone(body)
     );
     Robot<?> breakableRobot = Utils.buildRobotTransformation(
-        "areaBreak-1-1000-0"
+        "areaBreak-1-500-5-0"
     ).apply(SerializationUtils.clone(unbreakableRobot));
     //episode
     Locomotion locomotion = new Locomotion(
