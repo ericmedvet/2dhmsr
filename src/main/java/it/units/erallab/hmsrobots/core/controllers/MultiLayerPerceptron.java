@@ -30,19 +30,9 @@ import java.util.stream.Collectors;
 public class MultiLayerPerceptron implements Serializable, Function<double[], double[]>, Parametrized {
 
   public enum ActivationFunction {
-    RELU((Double x) -> {
-      if (x < 0) {
-        return 0d;
-      } else {
-        return x;
-      }
-    }),
-    SIGMOID((Double x) -> {
-      return 1d / (1d + Math.exp(-x));
-    }),
-    TANH((Double x) -> {
-      return Math.tanh(x);
-    });
+    RELU((Double x) -> (x < 0) ? 0d : x),
+    SIGMOID((Double x) -> 1d / (1d + Math.exp(-x))),
+    TANH(Math::tanh);
 
     private final Function<Double, Double> f;
 

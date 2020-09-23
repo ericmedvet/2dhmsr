@@ -212,7 +212,7 @@ public class Starter {
         SerializationUtils.clone(body)
     );
     Robot<?> breakableRobot = Utils.buildRobotTransformation(
-        "breakable-area-1000/300-10/10-0"
+        "breakable-area-1000/500-3/0.5-0"
     ).apply(SerializationUtils.clone(unbreakableRobot));
     //episode
     Locomotion locomotion = new Locomotion(
