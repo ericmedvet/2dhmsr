@@ -23,7 +23,6 @@ import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.*;
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -143,64 +142,33 @@ public class Utils {
   }
 
   public static UnaryOperator<Robot<?>> buildRobotTransformation(String name) {
-    String areaBreakable = "areaBreak-(?<rate>\\d+(\\.\\d+)?)-(?<threshold>\\d+(\\.\\d+)?)-(?<restTime>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
-    String timeBreakable = "timeBreak-(?<time>\\d+(\\.\\d+)?)-(?<restTime>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+    String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
     String identity = "identity";
     if (name.matches(identity)) {
       return UnaryOperator.identity();
     }
-    if (name.matches(areaBreakable)) {
-      double rate = Double.parseDouble(paramValue(areaBreakable, name, "rate"));
-      double threshold = Double.parseDouble(paramValue(areaBreakable, name, "threshold"));
-      double restoreTime = Double.parseDouble(paramValue(areaBreakable, name, "restTime"));
-      Random random = new Random(Integer.parseInt(paramValue(areaBreakable, name, "seed")));
-      return robot -> {
-        Robot<?> transformed = new Robot<>(
-            ((Robot<SensingVoxel>) robot).getController(),
-            Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : (random.nextDouble() > rate ? v : new BreakableVoxel(
-                v.getSensors(),
-                random,
-                Map.of(
-                    BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
-                    BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
-                ),
-                Map.of(BreakableVoxel.MalfunctionTrigger.AREA, threshold),
-                restoreTime
-            )))
-        );
-        return transformed;
-      };
-    }
-    if (name.matches(timeBreakable)) {
-      double time = Double.parseDouble(paramValue(timeBreakable, name, "time"));
-      double restoreTime = Double.parseDouble(paramValue(timeBreakable, name, "restTime"));
-      Random random = new Random(Integer.parseInt(paramValue(timeBreakable, name, "seed")));
-      return robot -> {
-        List<Pair<Integer, Integer>> coords = robot.getVoxels().stream()
-            .filter(e -> e.getValue() != null)
-            .map(e -> Pair.of(e.getX(), e.getY()))
-            .collect(Collectors.toList());
-        Collections.shuffle(coords, random);
-        Grid<SensingVoxel> body = SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels());
-        for (int i = 0; i < coords.size(); i++) {
-          int x = coords.get(i).getLeft();
-          int y = coords.get(i).getRight();
-          body.set(x, y, new BreakableVoxel(
-              body.get(x, y).getSensors(),
+    if (name.matches(breakable)) {
+      String type = paramValue(breakable, name, "triggerType");
+      double thresholdMean = Double.parseDouble(paramValue(breakable, name, "thresholdMean"));
+      double thresholdStDev = Double.parseDouble(paramValue(breakable, name, "thresholdStDev"));
+      double restoreTimeMean = Double.parseDouble(paramValue(breakable, name, "restTimeMean"));
+      double restoreTimeStDev = Double.parseDouble(paramValue(breakable, name, "restTimeStDev"));
+      Random random = new Random(Integer.parseInt(paramValue(breakable, name, "seed")));
+      return robot -> new Robot<>(
+          ((Robot<SensingVoxel>) robot).getController(),
+          Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
+              v.getSensors(),
               random,
               Map.of(
-                  BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN),
-                  BreakableVoxel.ComponentType.SENSORS, Set.of(BreakableVoxel.MalfunctionType.ZERO)
+                  BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
               ),
-              Map.of(BreakableVoxel.MalfunctionTrigger.TIME, time * ((double) (i + 1) / (double) coords.size())),
-              restoreTime
-          ));
-        }
-        return new Robot<>(
-            ((Robot<SensingVoxel>) robot).getController(),
-            body
-        );
-      };
+              Map.of(
+                  BreakableVoxel.MalfunctionTrigger.valueOf(type.toUpperCase()),
+                  random.nextGaussian() * thresholdStDev + thresholdMean
+              ),
+              random.nextGaussian() * restoreTimeStDev + restoreTimeMean
+          ))
+      );
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
