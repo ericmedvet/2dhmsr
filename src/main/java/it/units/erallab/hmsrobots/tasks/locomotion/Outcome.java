@@ -42,7 +42,7 @@ public class Outcome {
   private final SortedMap<Double, Footprint> footprints;
   private final SortedMap<Double, Grid<Boolean>> postures;
 
-  private static class Gait {
+  public static class Gait {
     private final List<Footprint> footprints;
     private final double modeInterval;
     private final double coverage;
