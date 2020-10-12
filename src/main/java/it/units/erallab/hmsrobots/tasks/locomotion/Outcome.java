@@ -17,15 +17,22 @@
 
 package it.units.erallab.hmsrobots.tasks.locomotion;
 
+import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Outcome {
+
+  public static final double INITIAL_TRANSIENT_RATIO = 0.1d;
+  public static final double FOOTPRINT_INTERVAL = 0.5d;
+  public static final double GAIT_LONGEST_INTERVAL = 5d;
+
   private final double distance;
   private final double time;
   private final double robotLargestDim;
@@ -33,9 +40,69 @@ public class Outcome {
   private final double areaRatioPower;
   private final SortedMap<Double, Point2> centerTrajectory;
   private final SortedMap<Double, Footprint> footprints;
-  private final SortedMap<Double, Grid<Boolean>> masks;
+  private final SortedMap<Double, Grid<Boolean>> postures;
 
-  public Outcome(double distance, double time, double robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> masks) {
+  private static class Gait {
+    private final List<Footprint> footprints;
+    private final double modeInterval;
+    private final double coverage;
+    private final double duration;
+    private final double purity;
+
+    public Gait(List<Footprint> footprints, double modeInterval, double coverage, double duration, double purity) {
+      this.footprints = footprints;
+      this.modeInterval = modeInterval;
+      this.coverage = coverage;
+      this.duration = duration;
+      this.purity = purity;
+    }
+
+    public List<Footprint> getFootprints() {
+      return footprints;
+    }
+
+    public double getModeInterval() {
+      return modeInterval;
+    }
+
+    public double getCoverage() {
+      return coverage;
+    }
+
+    public double getDuration() {
+      return duration;
+    }
+
+    public double getPurity() {
+      return purity;
+    }
+
+    public int getNOfUniqueFootprints() {
+      return Set.of(footprints).size();
+    }
+
+    public double getAvgTouchArea() {
+      return footprints.stream()
+          .mapToDouble(f -> IntStream.range(0, f.length())
+              .mapToDouble(i -> f.getMask()[i] ? 1d : 0d)
+              .sum() / (double) f.length())
+          .average()
+          .orElse(0d);
+    }
+
+    @Override
+    public String toString() {
+      return "Gait{" +
+          "footprints=" + footprints +
+          ", modeInterval=" + modeInterval +
+          ", coverage=" + coverage +
+          ", duration=" + duration +
+          ", purity=" + purity +
+          '}';
+    }
+  }
+
+  public Outcome(double distance, double time, double robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> postures) {
     this.distance = distance;
     this.time = time;
     this.robotLargestDim = robotLargestDim;
@@ -43,7 +110,7 @@ public class Outcome {
     this.areaRatioPower = areaRatioPower;
     this.centerTrajectory = centerTrajectory;
     this.footprints = footprints;
-    this.masks = masks;
+    this.postures = postures;
   }
 
   public double getDistance() {
@@ -74,13 +141,12 @@ public class Outcome {
     return footprints;
   }
 
-  public SortedMap<Double, Grid<Boolean>> getMasks() {
-    return masks;
+  public SortedMap<Double, Grid<Boolean>> getPostures() {
+    return postures;
   }
 
   @Override
   public String toString() {
-    processGaits(computeGaits(getQuantizedFootprints(5d, time, 0.5d), 3, 5), 0.5d, 2);
     return "Outcome{" +
         "distance=" + distance +
         ", time=" + time +
@@ -102,11 +168,15 @@ public class Outcome {
     return distance / controlPower;
   }
 
-  public Grid<Boolean> getAverageMask(double startingT, double endingT) {
+  public Grid<Boolean> getAveragePosture() {
+    return getAveragePosture(time * INITIAL_TRANSIENT_RATIO, time);
+  }
+
+  public Grid<Boolean> getAveragePosture(double startingT, double endingT) {
     return Grid.create(
-        masks.get(masks.firstKey()).getW(),
-        masks.get(masks.firstKey()).getH(),
-        (x, y) -> masks.subMap(startingT, endingT).values().stream()
+        postures.get(postures.firstKey()).getW(),
+        postures.get(postures.firstKey()).getH(),
+        (x, y) -> postures.subMap(startingT, endingT).values().stream()
             .mapToDouble(m -> m.get(x, y) ? 1d : 0d)
             .average()
             .orElse(0d) > 0.5d
@@ -135,77 +205,61 @@ public class Outcome {
     return quantized;
   }
 
-  private static Map<List<Footprint>, List<Double>> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength) {
-    Map<List<Footprint>, List<Double>> startTimeMap = new HashMap<>();
+  public Gait getMainGait() {
+    List<Gait> gaits = computeGaits(
+        getQuantizedFootprints(time * INITIAL_TRANSIENT_RATIO, time, FOOTPRINT_INTERVAL),
+        2,
+        (int) Math.round(GAIT_LONGEST_INTERVAL / FOOTPRINT_INTERVAL),
+        FOOTPRINT_INTERVAL
+    );
+    gaits.sort(Comparator.comparingDouble(Gait::getDuration).reversed());
+    return gaits.get(0);
+  }
+
+  private static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
+    //compute subsequences
+    Map<List<Footprint>, List<Range<Double>>> sequences = new HashMap<>();
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
-    List<Double> times = new ArrayList<>(footprints.keySet());
+    List<Range<Double>> ranges = footprints.keySet().stream().map(d -> Range.closedOpen(d, d + interval)).collect(Collectors.toList());
     for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
       for (int i = l; i < footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
-        List<Double> startingTimes = startTimeMap.getOrDefault(sequence, new ArrayList<>());
-        startingTimes.add(times.get(i - l));
-        startTimeMap.put(sequence, startingTimes);
+        List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
+        localRanges.add(ranges.get(i - l));
+        sequences.put(sequence, localRanges);
       }
     }
-    //compute intervals
-    Map<List<Footprint>, List<Double>> intervalMap = startTimeMap.entrySet().stream()
+    //compute median interval
+    List<Double> allIntervals = sequences.values().stream()
+        .map(l -> IntStream.range(0, l.size() - 1)
+            .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())
+            .collect(Collectors.toList())
+        )
+        .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
+        .orElse(List.of());
+    double modeInterval = mode(allIntervals);
+    //compute gaits
+    return sequences.entrySet().stream()
         .filter(e -> e.getValue().size() > 1)
         .map(e -> {
-          List<Double> intervals = new ArrayList<>(e.getValue().size() - 1);
-          for (int i = 1; i < e.getValue().size(); i++) {
-            intervals.add(e.getValue().get(i) - e.getValue().get(i - 1));
-          }
-          return Map.entry(
-              e.getKey(),
-              intervals
-          );
-        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    //merge
-    Map<List<Footprint>, List<Double>> mergedIntervalMap = new HashMap<>();
-    for (Map.Entry<List<Footprint>, List<Double>> entry : intervalMap.entrySet()) {
-      boolean found = false;
-      for (Map.Entry<List<Footprint>, List<Double>> existingEntry : mergedIntervalMap.entrySet()) {
-        if (areTheSame(existingEntry.getKey(), entry.getKey())) {
-          found = true;
-          existingEntry.getValue().addAll(entry.getValue());
-          break;
-        }
-      }
-      if (!found) {
-        mergedIntervalMap.put(entry.getKey(), entry.getValue());
-      }
-    }
-    return mergedIntervalMap;
-  }
-
-  private static List<Double> processGaits(Map<List<Footprint>, List<Double>> intervalMap, double interval, int topN) {
-    List<Double> allIntervals = intervalMap.values().stream()
-        .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
-        .orElse(List.of(0d));
-    Double modeInterval = mode(allIntervals);
-    //compute per seq median interval
-    Map<List<Footprint>, List<Double>> modeIntervalMap = intervalMap.entrySet().stream()
-        .collect(Collectors.toMap(
-            Map.Entry::getKey,
-            e -> {
-              double localModeInterval = mode(e.getValue());
-              return List.of(
-                  localModeInterval, //interval
-                  (double) e.getValue().size(), //number of samples
-                  (double) e.getKey().size() * interval / localModeInterval, //sequence filling
-                  (double) e.getValue().stream().filter(d -> d == localModeInterval).count() / (double) e.getValue().size(), //purity
-                  (double) e.getKey().size() * interval / localModeInterval * (double) e.getValue().size() //overall time
+              List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
+                  .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
+                  .collect(Collectors.toList());
+              List<Double> coverages = IntStream.range(0, intervals.size())
+                  .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue().get(i).lowerEndpoint()) / intervals.get(i))
+                  .collect(Collectors.toList());
+              double localModeInterval = mode(intervals);
+              return new Gait(
+                  e.getKey(),
+                  localModeInterval,
+                  coverages.stream().mapToDouble(d -> d).average().orElse(0d),
+                  e.getValue().stream().mapToDouble(r -> r.upperEndpoint() - r.lowerEndpoint()).sum(),
+                  (double) intervals.stream().filter(d -> d == localModeInterval).count() / (double) e.getValue().size()
               );
             }
-        ));
-    //filter by mode period, sort, truncate, and return
-    System.out.println(modeIntervalMap.values().stream()
-        .filter(a -> a.get(0).equals(modeInterval))
-        .sorted(Comparator.comparingDouble(a -> a.get(4)))
-        .collect(Collectors.toList())
-    );
-
-    return null;
+        )
+        .filter(g -> g.getModeInterval() == modeInterval)
+        .collect(Collectors.toList());
   }
 
   private static <K> boolean areTheSame(List<K> seq1, List<K> seq2) {

@@ -260,8 +260,6 @@ public class Starter {
         Locomotion.createTerrain("flat"),
         new Settings()
     );
-    System.out.println(locomotion.apply(robot));
-    System.exit(0); // TODO remove
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
     namedSolutionGrid.set(0, 0, Pair.of("unbreakable", robot));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
