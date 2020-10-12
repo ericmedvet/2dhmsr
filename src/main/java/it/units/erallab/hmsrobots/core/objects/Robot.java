@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.core.objects;
 
@@ -143,9 +143,11 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
   }
 
   public BoundingBox boundingBox() {
-    return immutable().getChildren().stream()
-        .map(v -> ((it.units.erallab.hmsrobots.core.objects.immutable.Voxel) v).getShape().boundingBox())
-        .reduce((b1, b2) -> BoundingBox.largest(b1, b2)).get();
+    return voxels.values().stream()
+        .filter(Objects::nonNull)
+        .map(Voxel::boundingBox)
+        .reduce(BoundingBox::largest)
+        .get();
   }
 
   public Controller<V> getController() {

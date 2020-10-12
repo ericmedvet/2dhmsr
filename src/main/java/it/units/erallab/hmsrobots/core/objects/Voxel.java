@@ -1,28 +1,25 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.core.objects;
 
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody;
 import it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint;
-import it.units.erallab.hmsrobots.util.Point2;
-import it.units.erallab.hmsrobots.util.Poly;
-import it.units.erallab.hmsrobots.util.Shape;
-import it.units.erallab.hmsrobots.util.Vector;
+import it.units.erallab.hmsrobots.util.*;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -379,6 +376,24 @@ public class Voxel implements LivingObject, Serializable {
     }
     //add enclosing
     return immutable;
+  }
+
+  public BoundingBox boundingBox() {
+    double minX = Double.POSITIVE_INFINITY;
+    double maxX = Double.NEGATIVE_INFINITY;
+    double minY = Double.POSITIVE_INFINITY;
+    double maxY = Double.NEGATIVE_INFINITY;
+    for (int i = 0; i < 4; i++) {
+      Vector2 point = getIndexedVertex(i, 3 - i);
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    }
+    return BoundingBox.build(
+        Point2.build(minX, minY),
+        Point2.build(maxX, maxY)
+    );
   }
 
   private Vector2 getIndexedVertex(int i, int j) {

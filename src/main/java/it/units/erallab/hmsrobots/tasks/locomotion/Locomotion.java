@@ -1,80 +1,68 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.tasks;
+package it.units.erallab.hmsrobots.tasks.locomotion;
 
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
+import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
+import org.dyn4j.geometry.AABB;
 import org.dyn4j.geometry.Vector2;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
+public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
   private final static double INITIAL_PLACEMENT_X_GAP = 1d;
   private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
   private final static double TERRAIN_BORDER_HEIGHT = 100d;
-  public static final int TERRAIN_LENGHT = 2000;
-
-  public enum Metric {
-    TRAVELED_X_DISTANCE,
-    CENTER_MAX_Y,
-    TRAVEL_X_VELOCITY,
-    TRAVEL_X_RELATIVE_VELOCITY,
-    CENTER_AVG_Y,
-    CONTROL_POWER,
-    RELATIVE_CONTROL_POWER,
-    AREA_RATIO_POWER,
-    RELATIVE_AREA_RATIO_POWER,
-    X_DISTANCE_CORRECTED_EFFICIENCY;
-  }
+  public static final int TERRAIN_LENGTH = 2000;
+  private static final int FOOTPRINT_BINS = 8;
+  private static final int MASK_BINS = 16;
 
   private final double finalT;
   private final double[][] groundProfile;
   private final double initialPlacement;
-  private final List<Metric> metrics;
 
-  public Locomotion(double finalT, double[][] groundProfile, List<Metric> metrics, Settings settings) {
-    this(finalT, groundProfile, groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP, metrics, settings);
+  public Locomotion(double finalT, double[][] groundProfile, Settings settings) {
+    this(finalT, groundProfile, groundProfile[0][1] + INITIAL_PLACEMENT_X_GAP, settings);
   }
 
-  public Locomotion(double finalT, double[][] groundProfile, double initialPlacement, List<Metric> metrics, Settings settings) {
+  public Locomotion(double finalT, double[][] groundProfile, double initialPlacement, Settings settings) {
     super(settings);
     this.finalT = finalT;
     this.groundProfile = groundProfile;
     this.initialPlacement = initialPlacement;
-    this.metrics = metrics;
   }
 
   @Override
-  public List<Double> apply(Robot<?> robot, SnapshotListener listener) {
-    List<Point2> centerPositions = new ArrayList<>();
+  public Outcome apply(Robot<?> robot, SnapshotListener listener) {
     //init world
     World world = new World();
     world.setSettings(settings);
@@ -96,50 +84,102 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
+    Map<Double, Point2> centerTrajectory = new HashMap<>();
+    Map<Double, Footprint> footprints = new HashMap<>();
+    Map<Double, Grid<Boolean>> masks = new HashMap<>();
     //run
     double t = 0d;
     while (t < finalT) {
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
-      centerPositions.add(Point2.build(robot.getCenter()));
+      centerTrajectory.put(t, Point2.build(robot.getCenter()));
+      footprints.put(t, footprint(robot, FOOTPRINT_BINS));
+      masks.put(t, mask(robot, MASK_BINS));
     }
-    //compute metrics
-    List<Double> results = new ArrayList<>(metrics.size());
-    for (Metric metric : metrics) {
-      double value = switch (metric) {
-        case TRAVELED_X_DISTANCE -> (robot.getCenter().x - initCenterX);
-        case TRAVEL_X_VELOCITY -> (robot.getCenter().x - initCenterX) / t;
-        case TRAVEL_X_RELATIVE_VELOCITY -> (robot.getCenter().x - initCenterX) / t / Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y);
-        case CENTER_MAX_Y -> centerPositions.stream()
-            .mapToDouble((p) -> p.y)
-            .max()
-            .orElse(0);
-        case CENTER_AVG_Y -> centerPositions.stream()
-            .mapToDouble((p) -> p.y)
-            .average()
-            .orElse(0);
-        case CONTROL_POWER -> robot.getVoxels().values().stream()
+    //prepare outcome
+    return new Outcome(
+        robot.getCenter().x - initCenterX,
+        t,
+        Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y),
+        robot.getVoxels().values().stream()
             .filter(v -> (v instanceof ControllableVoxel))
             .mapToDouble(ControllableVoxel::getControlEnergy)
-            .sum() / t;
-        case RELATIVE_CONTROL_POWER -> robot.getVoxels().values().stream()
-            .filter(v -> (v instanceof ControllableVoxel))
-            .mapToDouble(ControllableVoxel::getControlEnergy)
-            .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
-        case AREA_RATIO_POWER -> robot.getVoxels().values().stream()
+            .sum() / t,
+        robot.getVoxels().values().stream()
             .filter(v -> (v instanceof ControllableVoxel))
             .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
-            .sum() / t;
-        case RELATIVE_AREA_RATIO_POWER -> robot.getVoxels().values().stream()
-            .filter(v -> (v instanceof ControllableVoxel))
-            .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
-            .sum() / t / robot.getVoxels().values().stream().filter(Objects::nonNull).count();
-        case X_DISTANCE_CORRECTED_EFFICIENCY -> (robot.getCenter().x - initCenterX) / (1d + robot.getVoxels().values().stream()
-            .filter(v -> (v instanceof ControllableVoxel))
-            .mapToDouble(ControllableVoxel::getControlEnergy).sum());
-      };
-      results.add(value);
+            .sum() / t,
+        new TreeMap<>(centerTrajectory),
+        new TreeMap<>(footprints),
+        new TreeMap<>(masks)
+    );
+  }
+
+  private static Grid<Boolean> mask(Robot<?> robot, int n) {
+    List<BoundingBox> boxes = robot.getVoxels().values().stream()
+        .filter(Objects::nonNull)
+        .map(it.units.erallab.hmsrobots.core.objects.Voxel::boundingBox)
+        .collect(Collectors.toList());
+    double robotMinX = boxes.stream().mapToDouble(b -> b.min.x).min().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMaxX = boxes.stream().mapToDouble(b -> b.max.x).max().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMinY = boxes.stream().mapToDouble(b -> b.min.y).min().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMaxY = boxes.stream().mapToDouble(b -> b.max.y).max().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    //adjust box to make it squared
+    if ((robotMaxY - robotMinY) < (robotMaxX - robotMinX)) {
+      double d = (robotMaxX - robotMinX) - (robotMaxY - robotMinY);
+      robotMaxY = robotMaxY + d / 2;
+      robotMinY = robotMinY - d / 2;
+    } else if ((robotMaxY - robotMinY) > (robotMaxX - robotMinX)) {
+      double d = (robotMaxY - robotMinY) - (robotMaxX - robotMinX);
+      robotMaxX = robotMaxX + d / 2;
+      robotMinX = robotMinX - d / 2;
     }
-    return results;
+    Grid<Boolean> mask = Grid.create(n, n, false);
+    for (BoundingBox b : boxes) {
+      int minXIndex = (int) Math.round((b.min.x - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int maxXIndex = (int) Math.round((b.max.x - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int minYIndex = (int) Math.round((b.min.y - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
+      int maxYIndex = (int) Math.round((b.max.y - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
+      for (int x = minXIndex; x <= maxXIndex; x++) {
+        for (int y = minYIndex; y <= maxYIndex; y++) {
+          mask.set(x, y, true);
+        }
+      }
+    }
+    return mask;
+  }
+
+  private static Footprint footprint(Robot<?> robot, int n) {
+    double robotMinX = Double.POSITIVE_INFINITY;
+    double robotMaxX = Double.NEGATIVE_INFINITY;
+    List<double[]> contacts = new ArrayList<>();
+    for (it.units.erallab.hmsrobots.core.objects.Voxel v : robot.getVoxels().values()) {
+      if (v == null) {
+        continue;
+      }
+      double touchMinX = Double.POSITIVE_INFINITY;
+      double touchMaxX = Double.NEGATIVE_INFINITY;
+      for (Body body : v.getVertexBodies()) {
+        AABB box = body.createAABB();
+        robotMinX = Math.min(robotMinX, box.getMinX());
+        robotMaxX = Math.max(robotMaxX, box.getMaxX());
+        for (Body contactBody : body.getInContactBodies(false)) {
+          if (contactBody.getUserData().equals(Ground.class)) {
+            touchMinX = Math.min(touchMinX, box.getMinX());
+            touchMaxX = Math.max(touchMaxX, box.getMaxX());
+            contacts.add(new double[]{touchMinX, touchMaxX});
+          }
+        }
+      }
+    }
+    boolean[] mask = new boolean[n];
+    for (double[] contact : contacts) {
+      int minIndex = (int) Math.round((contact[0] - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int maxIndex = (int) Math.round((contact[1] - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      for (int x = minIndex; x <= Math.min(maxIndex, n - 1); x++) {
+        mask[x] = true;
+      }
+    }
+    return new Footprint(mask);
   }
 
   private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {
@@ -162,7 +202,7 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
     String steppy = "steppy-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
     if (name.matches(flat)) {
       return new double[][]{
-          new double[]{0, 10, TERRAIN_LENGHT - 10, TERRAIN_LENGHT},
+          new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
           new double[]{TERRAIN_BORDER_HEIGHT, 5, 5, TERRAIN_BORDER_HEIGHT}
       };
     }
@@ -172,7 +212,7 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
       Random random = new Random(Integer.parseInt(paramValue(hilly, name, "seed")));
       List<Double> xs = new ArrayList<>(List.of(0d, 10d));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
-      while (xs.get(xs.size() - 1) < TERRAIN_LENGHT) {
+      while (xs.get(xs.size() - 1) < TERRAIN_LENGTH) {
         xs.add(xs.get(xs.size() - 1) + Math.max(1d, (random.nextGaussian() * 0.25 + 1) * w));
         ys.add(ys.get(ys.size() - 1) + random.nextGaussian() * h);
       }
@@ -189,7 +229,7 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
       Random random = new Random(Integer.parseInt(paramValue(steppy, name, "seed")));
       List<Double> xs = new ArrayList<>(List.of(0d, 10d));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
-      while (xs.get(xs.size() - 1) < TERRAIN_LENGHT) {
+      while (xs.get(xs.size() - 1) < TERRAIN_LENGTH) {
         xs.add(xs.get(xs.size() - 1) + Math.max(1d, (random.nextGaussian() * 0.25 + 1) * w));
         xs.add(xs.get(xs.size() - 1) + 0.5d);
         ys.add(ys.get(ys.size() - 1));
@@ -203,10 +243,6 @@ public class Locomotion extends AbstractTask<Robot<?>, List<Double>> {
       };
     }
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));
-  }
-
-  public List<Metric> getMetrics() {
-    return metrics;
   }
 
   private static String paramValue(String pattern, String string, String paramName) {

@@ -1,22 +1,21 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots;
 
-import com.google.common.collect.Lists;
 import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
@@ -27,7 +26,8 @@ import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.Angle;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
-import it.units.erallab.hmsrobots.tasks.Locomotion;
+import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
+import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Utils;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
@@ -60,10 +60,6 @@ public class Starter {
     final Locomotion locomotion = new Locomotion(
         20,
         Locomotion.createTerrain("flat"),
-        Lists.newArrayList(
-            Locomotion.Metric.TRAVEL_X_VELOCITY,
-            Locomotion.Metric.RELATIVE_CONTROL_POWER
-        ),
         new Settings()
     );
     final ControllableVoxel hardMaterialVoxel = new ControllableVoxel(
@@ -117,7 +113,7 @@ public class Starter {
         new File("/home/eric/experiments/2dhmsr/frames.v.png"),
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     );
-    List<Double> result = locomotion.apply(robot, framesFileWriter);
+    Outcome result = locomotion.apply(robot, framesFileWriter);
     framesFileWriter.flush();
     System.out.println("Outcome: " + result);
   }
@@ -126,7 +122,8 @@ public class Starter {
     //bipeds();
     //rollingOne();
     //rollingBall();
-    breakingWorm();
+    //breakingWorm();
+    plainWorm();
   }
 
   private static void bipeds() {
@@ -180,7 +177,6 @@ public class Starter {
     Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("flat"),
-        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
@@ -218,12 +214,56 @@ public class Starter {
     Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("hilly-0.5-5-0"),
-        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 2);
     namedSolutionGrid.set(0, 0, Pair.of("unbreakable", unbreakableRobot));
     namedSolutionGrid.set(0, 1, Pair.of("breakable", breakableRobot));
+    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
+        Grid.create(namedSolutionGrid, Pair::getLeft),
+        uiExecutor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            Ground.build()
+        ))
+    );
+    gridOnlineViewer.start(5);
+    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
+        namedSolutionGrid,
+        locomotion,
+        gridOnlineViewer,
+        executor
+    );
+    runner.run();
+  }
+
+  private static void plainWorm() {
+    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-10x3-f-f");
+    double f = 0.5d;
+    Robot<ControllableVoxel> robot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            body.getW(),
+            body.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
+                -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
+            )
+        )),
+        SerializationUtils.clone(body)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        new Settings()
+    );
+    System.out.println(locomotion.apply(robot));
+    System.exit(0); // TODO remove
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
+    namedSolutionGrid.set(0, 0, Pair.of("unbreakable", robot));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
@@ -260,7 +300,6 @@ public class Starter {
     Locomotion locomotion = new Locomotion(
         60,
         new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 100, 10, 0, 100}},
-        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
@@ -312,7 +351,6 @@ public class Starter {
     Locomotion locomotion = new Locomotion(
         60,
         new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 75, 10, 0, 100}},
-        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
