@@ -51,7 +51,7 @@ public class Footprint {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     for (boolean b : mask) {
-      sb.append(b ? '_' : ' ');
+      sb.append(b ? '_' : '.');
     }
     return sb.toString();
   }
