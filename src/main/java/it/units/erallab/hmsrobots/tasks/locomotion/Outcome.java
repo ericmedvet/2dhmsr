@@ -20,6 +20,10 @@ package it.units.erallab.hmsrobots.tasks.locomotion;
 import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
 
 import java.util.*;
 import java.util.function.Function;
@@ -32,6 +36,7 @@ public class Outcome {
   public static final double INITIAL_TRANSIENT_RATIO = 0.1d;
   public static final double FOOTPRINT_INTERVAL = 0.5d;
   public static final double GAIT_LONGEST_INTERVAL = 5d;
+  public static final int NUM_OF_FREQS = 4;
 
   private final double distance;
   private final double time;
@@ -165,7 +170,7 @@ public class Outcome {
   }
 
   public double getCorrectedEfficiency() {
-    return distance / controlPower;
+    return distance / (controlPower * time);
   }
 
   public Grid<Boolean> getAveragePosture() {
@@ -289,6 +294,79 @@ public class Outcome {
         .max(Map.Entry.comparingByValue())
         .orElseThrow()
         .getKey();
+  }
+
+  public List<Double> getMainFrequencies() {
+    return getMainFrequencies(time * INITIAL_TRANSIENT_RATIO, time, NUM_OF_FREQS);
+  }
+
+  public List<Double> getMainFrequencies(double startingT, double endingT, int n) {
+    List<Double> vx = new ArrayList<>();
+    List<Double> vy = new ArrayList<>();
+    List<Double> times = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).keySet());
+    List<Point2> points = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).values());
+    List<Double> intervals = new ArrayList<>();
+    for (int i = 0; i < points.size() - 1; i++) {
+      vx.add(Math.abs(points.get(i + 1).x - points.get(i).x));
+      vy.add(Math.abs(points.get(i + 1).y - points.get(i).y));
+      intervals.add(times.get(i + 1) - times.get(i));
+    }
+    double avgInterval = intervals.stream().mapToDouble(d -> d).average().orElseThrow();
+    //pad
+    int paddedSize = (int) Math.pow(2d, Math.ceil(Math.log(vx.size()) / Math.log(2d)));
+    if (paddedSize != vx.size()) {
+      vx.addAll(Collections.nCopies(paddedSize - vx.size(), 0d));
+      vy.addAll(Collections.nCopies(paddedSize - vy.size(), 0d));
+    }
+    //compute fft
+    FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+    List<Double> fx = List.of(fft.transform(vx.stream()
+        .mapToDouble(d -> d)
+        .toArray(), TransformType.FORWARD)).stream()
+        .map(Complex::abs)
+        .collect(Collectors.toList())
+        .subList(0, paddedSize / 2 + 1);
+    List<Double> fy = List.of(fft.transform(vy.stream()
+        .mapToDouble(d -> d)
+        .toArray(), TransformType.FORWARD)).stream()
+        .map(Complex::abs)
+        .collect(Collectors.toList())
+        .subList(0, paddedSize / 2 + 1);
+    List<Double> frequencies = IntStream.range(0, fx.size())
+        .mapToObj(i -> 1d / avgInterval / 2d * (double) i / (double) fx.size())
+        .collect(Collectors.toList());
+    List<Integer> indexes = IntStream.range(0, fx.size())
+        .boxed()
+        .collect(Collectors.toList());
+    indexes.sort(Comparator.comparingDouble(fx::get).reversed());
+    //build overall list
+    List<Double> values = new ArrayList<>();
+    values.addAll( //freqs x
+        indexes.stream()
+            .map(frequencies::get)
+            .limit(n)
+            .collect(Collectors.toList())
+    );
+    values.addAll( //strenghts x
+        indexes.stream()
+            .map(fx::get)
+            .limit(n)
+            .collect(Collectors.toList())
+    );
+    indexes.sort(Comparator.comparingDouble(fy::get).reversed());
+    values.addAll( //freqs y
+        indexes.stream()
+            .map(frequencies::get)
+            .limit(n)
+            .collect(Collectors.toList())
+    );
+    values.addAll( //strenghts y
+        indexes.stream()
+            .map(fy::get)
+            .limit(n)
+            .collect(Collectors.toList())
+    );
+    return values;
   }
 
 }
