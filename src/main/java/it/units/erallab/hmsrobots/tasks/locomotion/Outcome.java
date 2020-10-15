@@ -170,7 +170,7 @@ public class Outcome {
   }
 
   public double getCorrectedEfficiency() {
-    return distance / (controlPower * time);
+    return distance / (1d + controlPower * time);
   }
 
   public Grid<Boolean> getAveragePosture() {
