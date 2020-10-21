@@ -119,6 +119,12 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
     controller.control(t, voxels);
   }
 
+  @Override
+  public void reset() {
+    voxels.values().stream().filter(Objects::nonNull).forEach(ControllableVoxel::reset);
+    controller.reset();
+  }
+
   public Vector2 getCenter() {
     double xc = 0d;
     double yc = 0d;

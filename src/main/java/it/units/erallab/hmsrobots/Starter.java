@@ -243,7 +243,7 @@ public class Starter {
 
   private static void plainWorm() {
     Grid<? extends SensingVoxel> body = Utils.buildBody("worm-10x3-f-f");
-    double f = 0.5d;
+    double f = 1d;
     Robot<ControllableVoxel> robot = new Robot<>(
         new TimeFunctions(Grid.create(
             body.getW(),
@@ -256,7 +256,7 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        30,
         Locomotion.createTerrain("flat"),
         new Settings()
     );

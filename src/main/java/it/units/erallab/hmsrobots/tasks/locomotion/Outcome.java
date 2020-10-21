@@ -217,6 +217,9 @@ public class Outcome {
         (int) Math.round(GAIT_LONGEST_INTERVAL / FOOTPRINT_INTERVAL),
         FOOTPRINT_INTERVAL
     );
+    if (gaits.isEmpty()) {
+      return null;
+    }
     gaits.sort(Comparator.comparingDouble(Gait::getDuration).reversed());
     return gaits.get(0);
   }
@@ -227,7 +230,7 @@ public class Outcome {
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
     List<Range<Double>> ranges = footprints.keySet().stream().map(d -> Range.closedOpen(d, d + interval)).collect(Collectors.toList());
     for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
-      for (int i = l; i < footprintList.size(); i++) {
+      for (int i = l; i <= footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
         List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
         localRanges.add(ranges.get(i - l));
@@ -242,16 +245,19 @@ public class Outcome {
         )
         .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
         .orElse(List.of());
+    if (allIntervals.isEmpty()) {
+      return List.of();
+    }
     double modeInterval = mode(allIntervals);
     //compute gaits
     return sequences.entrySet().stream()
         .filter(e -> e.getValue().size() > 1)
         .map(e -> {
-              List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
-                  .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
-                  .collect(Collectors.toList());
-              List<Double> coverages = IntStream.range(0, intervals.size())
-                  .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue().get(i).lowerEndpoint()) / intervals.get(i))
+          List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
+              .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
+              .collect(Collectors.toList());
+          List<Double> coverages = IntStream.range(0, intervals.size())
+              .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue().get(i).lowerEndpoint()) / intervals.get(i))
                   .collect(Collectors.toList());
               double localModeInterval = mode(intervals);
               return new Gait(

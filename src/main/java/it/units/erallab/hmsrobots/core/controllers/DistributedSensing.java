@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
@@ -77,10 +77,21 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     lastSignalsGrid = Grid.create(voxels, v -> new double[signals * Dir.values().length]);
     nOfInputGrid = Grid.create(voxels, v -> (v == null) ? 0 : (signals * Dir.values().length + v.getSensors().stream().mapToInt(s -> s.domains().length).sum()));
     nOfOutputGrid = Grid.create(voxels, v -> (v == null) ? 0 : (1 + signals * Dir.values().length));
+    reset();
   }
 
   public Grid<Function<double[], double[]>> getFunctions() {
     return functions;
+  }
+
+  @Override
+  public void reset() {
+    for (int x = 0; x < lastSignalsGrid.getW(); x++) {
+      for (int y = 0; y < lastSignalsGrid.getH(); y++) {
+        lastSignalsGrid.set(x, y, new double[signals * Dir.values().length]);
+      }
+    }
+
   }
 
   @Override

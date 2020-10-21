@@ -418,6 +418,17 @@ public class Voxel implements LivingObject, Serializable {
 
   @Override
   public void addTo(World world) {
+    if (this.world != null) {
+      for (Body body : vertexBodies) {
+        this.world.removeBody(body);
+      }
+      for (Joint joint : springJoints) {
+        this.world.removeJoint(joint);
+      }
+      for (Joint joint : ropeJoints) {
+        this.world.removeJoint(joint);
+      }
+    }
     this.world = world;
     for (Body body : vertexBodies) {
       world.addBody(body);
@@ -428,7 +439,6 @@ public class Voxel implements LivingObject, Serializable {
     for (Joint joint : ropeJoints) {
       world.addJoint(joint);
     }
-    reset();
   }
 
   public Body[] getVertexBodies() {
@@ -485,6 +495,7 @@ public class Voxel implements LivingObject, Serializable {
     return world;
   }
 
+  @Override
   public void reset() {
     areaRatioEnergy = 0d;
   }
@@ -498,4 +509,5 @@ public class Voxel implements LivingObject, Serializable {
   public double getAreaRatioEnergy() {
     return areaRatioEnergy;
   }
+
 }

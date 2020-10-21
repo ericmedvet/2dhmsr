@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.util.Utils;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
@@ -70,6 +71,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
     ground.addTo(world);
     worldObjects.add(ground);
+    robot.reset();
     //position robot: translate on x
     BoundingBox boundingBox = robot.boundingBox();
     robot.translate(new Vector2(initialPlacement - boundingBox.min.x, 0));
@@ -99,7 +101,10 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     return new Outcome(
         robot.getCenter().x - initCenterX,
         t,
-        Math.max(boundingBox.max.x - boundingBox.min.x, boundingBox.max.y - boundingBox.min.y),
+        Math.max(
+            Utils.cropGrid(robot.getVoxels(), Objects::nonNull).getW(),
+            Utils.cropGrid(robot.getVoxels(), Objects::nonNull).getH()
+        ),
         robot.getVoxels().values().stream()
             .filter(v -> (v instanceof ControllableVoxel))
             .mapToDouble(ControllableVoxel::getControlEnergy)
