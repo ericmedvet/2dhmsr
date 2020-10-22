@@ -243,26 +243,25 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   public static <K> String toString(Grid<K> grid, Predicate<K> p) {
-    StringBuilder sb = new StringBuilder();
-    for (int y = 0; y < grid.getH(); y++) {
-      for (int x = 0; x < grid.getW(); x++) {
-        sb.append(p.test(grid.get(x, y)) ? "+" : "-");
-      }
-      if (y < grid.getH() - 1) {
-        sb.append(String.format("%n"));
-      }
-    }
-    return sb.toString();
+    return toString(grid, p, "\n");
+  }
+
+  public static <K> String toString(Grid<K> grid, Predicate<K> p, String separator) {
+    return toString(grid, (Function<K, Character>) k -> p.test(k) ? '+' : '-', separator);
   }
 
   public static <K> String toString(Grid<K> grid, Function<K, Character> function) {
+    return toString(grid, function, "\n");
+  }
+
+  public static <K> String toString(Grid<K> grid, Function<K, Character> function, String separator) {
     StringBuilder sb = new StringBuilder();
     for (int y = 0; y < grid.getH(); y++) {
       for (int x = 0; x < grid.getW(); x++) {
         sb.append(function.apply(grid.get(x, y)));
       }
       if (y < grid.getH() - 1) {
-        sb.append(String.format("%n"));
+        sb.append(separator);
       }
     }
     return sb.toString();

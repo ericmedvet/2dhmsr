@@ -47,6 +47,36 @@ public class Outcome {
   private final SortedMap<Double, Footprint> footprints;
   private final SortedMap<Double, Grid<Boolean>> postures;
 
+  public enum Component {X, Y, MODULE}
+
+  ;
+
+  public static class Mode {
+    private final double strength;
+    private final double frequency;
+
+    public Mode(double strength, double frequency) {
+      this.strength = strength;
+      this.frequency = frequency;
+    }
+
+    public double getStrength() {
+      return strength;
+    }
+
+    public double getFrequency() {
+      return frequency;
+    }
+
+    @Override
+    public String toString() {
+      return "Mode{" +
+          "s=" + strength +
+          ", f=" + frequency +
+          '}';
+    }
+  }
+
   public static class Gait {
     private final List<Footprint> footprints;
     private final double modeInterval;
@@ -210,18 +240,22 @@ public class Outcome {
     return quantized;
   }
 
-  public Gait getMainGait() {
+  public Gait getMainGait(double startingT, double endingT, double interval, double longestInterval) {
     List<Gait> gaits = computeGaits(
-        getQuantizedFootprints(time * INITIAL_TRANSIENT_RATIO, time, FOOTPRINT_INTERVAL),
+        getQuantizedFootprints(startingT, endingT, interval),
         2,
-        (int) Math.round(GAIT_LONGEST_INTERVAL / FOOTPRINT_INTERVAL),
-        FOOTPRINT_INTERVAL
+        (int) Math.round(longestInterval / interval),
+        interval
     );
     if (gaits.isEmpty()) {
       return null;
     }
     gaits.sort(Comparator.comparingDouble(Gait::getDuration).reversed());
     return gaits.get(0);
+  }
+
+  public Gait getMainGait() {
+    return getMainGait(time * INITIAL_TRANSIENT_RATIO, time, FOOTPRINT_INTERVAL, GAIT_LONGEST_INTERVAL);
   }
 
   private static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
@@ -253,11 +287,11 @@ public class Outcome {
     return sequences.entrySet().stream()
         .filter(e -> e.getValue().size() > 1)
         .map(e -> {
-          List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
-              .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
-              .collect(Collectors.toList());
-          List<Double> coverages = IntStream.range(0, intervals.size())
-              .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue().get(i).lowerEndpoint()) / intervals.get(i))
+              List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
+                  .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
+                  .collect(Collectors.toList());
+              List<Double> coverages = IntStream.range(0, intervals.size())
+                  .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue().get(i).lowerEndpoint()) / intervals.get(i))
                   .collect(Collectors.toList());
               double localModeInterval = mode(intervals);
               return new Gait(
@@ -302,77 +336,43 @@ public class Outcome {
         .getKey();
   }
 
-  public List<Double> getMainFrequencies() {
-    return getMainFrequencies(time * INITIAL_TRANSIENT_RATIO, time, NUM_OF_FREQS);
-  }
-
-  public List<Double> getMainFrequencies(double startingT, double endingT, int n) {
-    List<Double> vx = new ArrayList<>();
-    List<Double> vy = new ArrayList<>();
+  public List<Mode> getMainFrequencies(double startingT, double endingT, Component component) {
+    List<Double> v = new ArrayList<>();
     List<Double> times = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).keySet());
     List<Point2> points = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).values());
     List<Double> intervals = new ArrayList<>();
     for (int i = 0; i < points.size() - 1; i++) {
-      vx.add(Math.abs(points.get(i + 1).x - points.get(i).x));
-      vy.add(Math.abs(points.get(i + 1).y - points.get(i).y));
+      v.add(switch (component) {
+        case X -> Math.abs(points.get(i + 1).x - points.get(i).x);
+        case Y -> Math.abs(points.get(i + 1).y - points.get(i).y);
+        case MODULE -> Math.sqrt(Math.pow(points.get(i + 1).x - points.get(i).x, 2d) + Math.pow(points.get(i + 1).y - points.get(i).y, 2d));
+      });
       intervals.add(times.get(i + 1) - times.get(i));
     }
     double avgInterval = intervals.stream().mapToDouble(d -> d).average().orElseThrow();
     //pad
-    int paddedSize = (int) Math.pow(2d, Math.ceil(Math.log(vx.size()) / Math.log(2d)));
-    if (paddedSize != vx.size()) {
-      vx.addAll(Collections.nCopies(paddedSize - vx.size(), 0d));
-      vy.addAll(Collections.nCopies(paddedSize - vy.size(), 0d));
+    int paddedSize = (int) Math.pow(2d, Math.ceil(Math.log(v.size()) / Math.log(2d)));
+    if (paddedSize != v.size()) {
+      v.addAll(Collections.nCopies(paddedSize - v.size(), 0d));
     }
     //compute fft
     FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-    List<Double> fx = List.of(fft.transform(vx.stream()
+    List<Double> f = List.of(fft.transform(v.stream()
         .mapToDouble(d -> d)
         .toArray(), TransformType.FORWARD)).stream()
         .map(Complex::abs)
         .collect(Collectors.toList())
         .subList(0, paddedSize / 2 + 1);
-    List<Double> fy = List.of(fft.transform(vy.stream()
-        .mapToDouble(d -> d)
-        .toArray(), TransformType.FORWARD)).stream()
-        .map(Complex::abs)
-        .collect(Collectors.toList())
-        .subList(0, paddedSize / 2 + 1);
-    List<Double> frequencies = IntStream.range(0, fx.size())
-        .mapToObj(i -> 1d / avgInterval / 2d * (double) i / (double) fx.size())
+    return IntStream.range(0, f.size())
+        .mapToObj(i -> new Mode(
+            f.get(i),
+            1d / avgInterval / 2d * (double) i / (double) f.size()
+        ))
+        .sorted(Comparator.comparing(Mode::getStrength).reversed())
         .collect(Collectors.toList());
-    List<Integer> indexes = IntStream.range(0, fx.size())
-        .boxed()
-        .collect(Collectors.toList());
-    indexes.sort(Comparator.comparingDouble(fx::get).reversed());
-    //build overall list
-    List<Double> values = new ArrayList<>();
-    values.addAll( //freqs x
-        indexes.stream()
-            .map(frequencies::get)
-            .limit(n)
-            .collect(Collectors.toList())
-    );
-    values.addAll( //strenghts x
-        indexes.stream()
-            .map(fx::get)
-            .limit(n)
-            .collect(Collectors.toList())
-    );
-    indexes.sort(Comparator.comparingDouble(fy::get).reversed());
-    values.addAll( //freqs y
-        indexes.stream()
-            .map(frequencies::get)
-            .limit(n)
-            .collect(Collectors.toList())
-    );
-    values.addAll( //strenghts y
-        indexes.stream()
-            .map(fy::get)
-            .limit(n)
-            .collect(Collectors.toList())
-    );
-    return values;
   }
 
+  public List<Mode> getMainFrequencies(Component component) {
+    return getMainFrequencies(time * INITIAL_TRANSIENT_RATIO, time, component);
+  }
 }
