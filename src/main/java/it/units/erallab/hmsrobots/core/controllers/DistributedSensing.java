@@ -127,7 +127,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
       int adjacentX = x + Dir.values()[i].dx;
       int adjacentY = y + Dir.values()[i].dy;
       double[] lastSignals = lastSignalsGrid.get(adjacentX, adjacentY);
-      if (lastSignals != null) {
+      if ((lastSignals != null) && (signals > 0)) {
         int index = Dir.adjacent(Dir.values()[i]).index;
         System.arraycopy(lastSignals, index * signals, values, c, signals);
       }
