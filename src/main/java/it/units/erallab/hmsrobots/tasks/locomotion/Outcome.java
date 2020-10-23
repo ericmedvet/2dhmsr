@@ -112,10 +112,6 @@ public class Outcome {
       return purity;
     }
 
-    public int getNOfUniqueFootprints() {
-      return Set.of(footprints).size();
-    }
-
     public double getAvgTouchArea() {
       return footprints.stream()
           .mapToDouble(f -> IntStream.range(0, f.length())
@@ -336,7 +332,7 @@ public class Outcome {
         .getKey();
   }
 
-  public List<Mode> getMainFrequencies(double startingT, double endingT, Component component) {
+  public List<Mode> getCenterModes(double startingT, double endingT, Component component) {
     List<Double> v = new ArrayList<>();
     List<Double> times = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).keySet());
     List<Point2> points = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).values());
@@ -372,7 +368,7 @@ public class Outcome {
         .collect(Collectors.toList());
   }
 
-  public List<Mode> getMainFrequencies(Component component) {
-    return getMainFrequencies(time * INITIAL_TRANSIENT_RATIO, time, component);
+  public List<Mode> getCenterModes(Component component) {
+    return getCenterModes(time * INITIAL_TRANSIENT_RATIO, time, component);
   }
 }
