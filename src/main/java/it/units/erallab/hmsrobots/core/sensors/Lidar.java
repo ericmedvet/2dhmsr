@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 import org.dyn4j.collision.Filter;
@@ -73,11 +75,17 @@ public class Lidar implements Sensor, ReadingAugmenter {
 
   }
 
+  @JsonProperty
   private final double rayLength;
+  @JsonProperty
   private final double[] rayDirections;
   private final Domain[] domains;
 
-  public Lidar(double rayLength, double... rayDirections) {
+  @JsonCreator
+  public Lidar(
+      @JsonProperty("rayLength") double rayLength,
+      @JsonProperty("rayDirections") double... rayDirections
+  ) {
     this.rayLength = rayLength;
     this.rayDirections = rayDirections;
     domains = new Domain[rayDirections.length];

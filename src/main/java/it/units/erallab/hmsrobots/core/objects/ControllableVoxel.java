@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.DistanceJoint;
@@ -32,13 +34,32 @@ public class ControllableVoxel extends Voxel {
   public static final double MAX_FORCE = 100d;
   public static final ForceMethod FORCE_METHOD = ForceMethod.DISTANCE;
 
+  @JsonProperty
   private final double maxForce; //not used in distance forceMethod
+  @JsonProperty
   private final ForceMethod forceMethod;
 
   private transient double controlEnergy;
   private transient double lastAppliedForce;
 
-  public ControllableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod) {
+  @JsonCreator
+  public ControllableVoxel(
+      @JsonProperty("sideLength") double sideLength,
+      @JsonProperty("massSideLengthRatio") double massSideLengthRatio,
+      @JsonProperty("springF") double springF,
+      @JsonProperty("springD") double springD,
+      @JsonProperty("massLinearDamping") double massLinearDamping,
+      @JsonProperty("massAngularDamping") double massAngularDamping,
+      @JsonProperty("friction") double friction,
+      @JsonProperty("restitution") double restitution,
+      @JsonProperty("mass") double mass,
+      @JsonProperty("limitContractionFlag") boolean limitContractionFlag,
+      @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
+      @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
+      @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
+      @JsonProperty("maxForce") double maxForce,
+      @JsonProperty("forceMethod") ForceMethod forceMethod
+  ) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings);
     this.maxForce = maxForce;
     this.forceMethod = forceMethod;

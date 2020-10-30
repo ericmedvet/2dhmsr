@@ -16,21 +16,36 @@
  */
 package it.units.erallab.hmsrobots.util;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
+import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.*;
 import org.apache.commons.lang3.SerializationUtils;
 
+import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -68,7 +83,7 @@ public class Utils {
     //filter map
     Grid<K> filtered = Grid.create(kGrid);
     for (Grid.Entry<Integer> iEntry : iGrid) {
-      if (iEntry.getValue() == maxIndex) {
+      if (iEntry.getValue().equals(maxIndex)) {
         filtered.set(iEntry.getX(), iEntry.getY(), kGrid.get(iEntry.getX(), iEntry.getY()));
       }
     }
@@ -80,7 +95,7 @@ public class Utils {
     for (int x = 0; x < kGrid.getW(); x++) {
       for (int y = 0; y < kGrid.getH(); y++) {
         if (iGrid.get(x, y) == null) {
-          int index = iGrid.values().stream().filter(i -> i != null).mapToInt(i -> i).max().orElse(0);
+          int index = iGrid.values().stream().filter(Objects::nonNull).mapToInt(i -> i).max().orElse(0);
           partitionGrid(x, y, index + 1, kGrid, iGrid, p);
         }
       }
@@ -153,12 +168,13 @@ public class Utils {
       double thresholdStDev = Double.parseDouble(paramValue(breakable, name, "thresholdStDev"));
       double restoreTimeMean = Double.parseDouble(paramValue(breakable, name, "restTimeMean"));
       double restoreTimeStDev = Double.parseDouble(paramValue(breakable, name, "restTimeStDev"));
-      Random random = new Random(Integer.parseInt(paramValue(breakable, name, "seed")));
+      long randomSeed = Integer.parseInt(paramValue(breakable, name, "seed"));
+      Random random = new Random(randomSeed);
       return robot -> new Robot<>(
           ((Robot<SensingVoxel>) robot).getController(),
           Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
               v.getSensors(),
-              random,
+              randomSeed,
               Map.of(
                   BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
               ),
@@ -181,6 +197,7 @@ public class Utils {
     throw new IllegalStateException(String.format("Param %s not found in %s with pattern %s", paramName, string, pattern));
   }
 
+  @SafeVarargs
   public static <E> List<E> ofNonNull(E... es) {
     List<E> list = new ArrayList<>();
     for (E e : es) {
@@ -239,6 +256,71 @@ public class Utils {
       );
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
+  }
+
+  public static String safelySerialize(Serializable object) {
+    try (
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(baos, true))
+    ) {
+      oos.writeObject(object);
+      oos.flush();
+      oos.close();
+      return Base64.getEncoder().encodeToString(baos.toByteArray());
+    } catch (IOException e) {
+      L.log(Level.SEVERE, String.format("Cannot serialize due to %s", e), e);
+      return "";
+    }
+  }
+
+  public static <T> T safelyDeserialize(String string, Class<T> tClass) {
+    try (
+        ByteArrayInputStream bais = new ByteArrayInputStream(Base64.getDecoder().decode(string));
+        ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(bais))
+    ) {
+      Object o = ois.readObject();
+      return (T) o;
+    } catch (IOException | ClassNotFoundException e) {
+      L.log(Level.SEVERE, String.format("Cannot deserialize due to %s", e), e);
+      return null;
+    }
+  }
+
+  public static void main(String[] args) throws JsonProcessingException {
+    Random rnd = new Random();
+    Grid<? extends SensingVoxel> body = it.units.erallab.hmsrobots.util.Utils.buildBody("biped-8x5-t-t");
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+        MultiLayerPerceptron.ActivationFunction.RELU,
+        CentralizedSensing.nOfInputs(body),
+        new int[]{(int) Math.round((double) CentralizedSensing.nOfInputs(body) * 0.65d)},
+        CentralizedSensing.nOfOutputs(body)
+    );
+    System.out.printf("weights=%d%n", mlp.getParams().length);
+    double[] ws = new double[mlp.getParams().length];
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = rnd.nextDouble() * 2d - 1d);
+    mlp.setParams(ws);
+    Robot<SensingVoxel> r = new Robot<>(
+        new CentralizedSensing(body, mlp),
+        body
+    );
+
+    ObjectMapper om = new ObjectMapper();
+    om.enable(SerializationFeature.INDENT_OUTPUT);
+    om.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    om.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.NONE);
+    om.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+    PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().build();
+    //om.activateDefaultTyping(ptv);
+    //om.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
+    //om.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE);
+
+    System.out.println(om.writeValueAsString(body).length());
+    System.out.println(om.writeValueAsString(om.readValue(om.writeValueAsString(body), Grid.class)).length());
+
+    Function<Integer, Integer> f = (Integer x) -> x+1;
+    System.out.println(om.writeValueAsString(f));
+    System.out.println(safelySerialize((Serializable & Function<Integer, Integer>) x -> x+1));
+    // TODO see https://stackoverflow.com/a/63769245/1003056 for TimeFunction.java
   }
 
 }

@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
@@ -24,13 +26,14 @@ import org.dyn4j.geometry.Vector2;
 import java.util.Arrays;
 import java.util.EnumSet;
 
-public class Velocity implements Sensor, Configurable<Velocity> {
+public class Velocity implements Sensor {
   public enum Axis {X, Y}
 
-  @ConfigurableField
+  @JsonProperty
   private final boolean rotated;
-  @ConfigurableField
+  @JsonProperty
   private final EnumSet<Axis> axes;
+  @JsonProperty
   private final double maxVelocityNorm;
   private final Domain[] domains;
 
@@ -42,7 +45,12 @@ public class Velocity implements Sensor, Configurable<Velocity> {
     );
   }
 
-  public Velocity(boolean rotated, double maxVelocityNorm, EnumSet<Axis> axes) {
+  @JsonCreator
+  public Velocity(
+      @JsonProperty("rotated") boolean rotated,
+      @JsonProperty("maxVelocityNorm") double maxVelocityNorm,
+      @JsonProperty("axes") EnumSet<Axis> axes
+  ) {
     this.rotated = rotated;
     this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;

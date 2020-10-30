@@ -21,13 +21,13 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 public class Crumpling implements Sensor {
   private final static double THRESHOLD = 0.2d;
 
-  private final Domain[] domains = new Domain[]{
+  private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(0d, 1d)
   };
 
   @Override
   public Domain[] domains() {
-    return domains;
+    return DOMAINS;
   }
 
   @Override

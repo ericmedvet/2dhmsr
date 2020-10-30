@@ -35,12 +35,15 @@ public class Box implements WorldObject {
 
   private final Body body;
 
-  public Box(double x, double y, double w, double h, double angle, double mass) {
+  public Box(double w, double h, double angle, double mass) {
     body = new Body(1);
     body.addFixture(new Rectangle(w, h), mass / w / h, FRICTION, RESTITUTION);
     body.setMass(MassType.NORMAL);
     body.rotate(angle);
-    body.translate(new Vector2(x, y));
+  }
+
+  public void translate(Vector2 v) {
+    body.translate(new Vector2(v.x, v.y));
   }
 
   @Override

@@ -16,10 +16,12 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 import java.io.Serializable;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public interface Sensor extends Serializable {
 
   class Domain implements Serializable {

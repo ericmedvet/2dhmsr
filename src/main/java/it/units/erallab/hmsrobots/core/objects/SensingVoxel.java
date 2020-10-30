@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.sensors.ReadingAugmenter;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
@@ -29,9 +31,28 @@ import java.util.stream.Collectors;
 
 public class SensingVoxel extends ControllableVoxel {
 
+  @JsonProperty
   private final List<Sensor> sensors;
 
-  public SensingVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod, List<Sensor> sensors) {
+  @JsonCreator
+  public SensingVoxel(
+      @JsonProperty("sideLength") double sideLength,
+      @JsonProperty("massSideLengthRatio") double massSideLengthRatio,
+      @JsonProperty("springF") double springF,
+      @JsonProperty("springD") double springD,
+      @JsonProperty("massLinearDamping") double massLinearDamping,
+      @JsonProperty("massAngularDamping") double massAngularDamping,
+      @JsonProperty("friction") double friction,
+      @JsonProperty("restitution") double restitution,
+      @JsonProperty("mass") double mass,
+      @JsonProperty("limitContractionFlag") boolean limitContractionFlag,
+      @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
+      @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
+      @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
+      @JsonProperty("maxForce") double maxForce,
+      @JsonProperty("forceMethod") ForceMethod forceMethod,
+      @JsonProperty("sensors") List<Sensor> sensors
+  ) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings, maxForce, forceMethod);
     this.sensors = sensors;
   }

@@ -21,13 +21,13 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 public class AreaRatio implements Sensor {
   private final static double RATIO_DELTA = 0.5d;
 
-  private final Domain[] domains = new Domain[]{
+  private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(1d - RATIO_DELTA, 1d + RATIO_DELTA)
   };
 
   @Override
   public Domain[] domains() {
-    return domains;
+    return DOMAINS;
   }
 
   @Override

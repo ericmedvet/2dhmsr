@@ -16,19 +16,22 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 
-public class Derivative implements Sensor, Configurable<Derivative> {
+public class Derivative implements Sensor {
 
-  @ConfigurableField
+  @JsonProperty
   private final Sensor sensor;
 
   private double lastT;
   private double[] lastReadings;
 
-  public Derivative(Sensor sensor) {
+  @JsonCreator
+  public Derivative(
+      @JsonProperty("sensor") Sensor sensor
+  ) {
     this.sensor = sensor;
   }
 

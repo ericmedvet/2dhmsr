@@ -16,6 +16,9 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody;
 import it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint;
@@ -41,6 +44,7 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public class Voxel implements LivingObject, Serializable {
 
   public enum SpringScaffolding {
@@ -135,18 +139,31 @@ public class Voxel implements LivingObject, Serializable {
   public static final double AREA_RATIO_MAX_DELTA = 0.25d;
   public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
 
+  @JsonProperty
   private final double sideLength;
+  @JsonProperty
   private final double massSideLengthRatio;
+  @JsonProperty
   protected final double springF;
+  @JsonProperty
   private final double springD;
+  @JsonProperty
   private final double massLinearDamping;
+  @JsonProperty
   private final double massAngularDamping;
+  @JsonProperty
   private final double friction;
+  @JsonProperty
   private final double restitution;
+  @JsonProperty
   private final double mass;
+  @JsonProperty
   private final boolean limitContractionFlag;
+  @JsonProperty
   private final boolean massCollisionFlag;
+  @JsonProperty
   private final double areaRatioMaxDelta;
+  @JsonProperty
   private final EnumSet<SpringScaffolding> springScaffoldings;
 
   protected transient Body[] vertexBodies;
@@ -156,7 +173,22 @@ public class Voxel implements LivingObject, Serializable {
 
   private transient double areaRatioEnergy;
 
-  public Voxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings) {
+  @JsonCreator
+  public Voxel(
+      @JsonProperty("sideLength") double sideLength,
+      @JsonProperty("massSideLengthRatio") double massSideLengthRatio,
+      @JsonProperty("springF") double springF,
+      @JsonProperty("springD") double springD,
+      @JsonProperty("massLinearDamping") double massLinearDamping,
+      @JsonProperty("massAngularDamping") double massAngularDamping,
+      @JsonProperty("friction") double friction,
+      @JsonProperty("restitution") double restitution,
+      @JsonProperty("mass") double mass,
+      @JsonProperty("limitContractionFlag") boolean limitContractionFlag,
+      @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
+      @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
+      @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings
+  ) {
     this.sideLength = sideLength;
     this.massSideLengthRatio = massSideLengthRatio;
     this.springF = springF;

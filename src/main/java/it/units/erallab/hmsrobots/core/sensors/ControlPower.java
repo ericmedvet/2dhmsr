@@ -16,15 +16,23 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 public class ControlPower implements Sensor {
 
   private double lastT;
+  @JsonProperty
+  private final double controlInterval;
   private final Domain[] domains;
 
-  public ControlPower(double controlInterval) {
+  @JsonCreator
+  public ControlPower(
+      @JsonProperty("controlInterval") double controlInterval
+  ) {
+    this.controlInterval = controlInterval;
     domains = new Domain[]{
         Domain.of(0, 1d / controlInterval)
     };
@@ -44,4 +52,7 @@ public class ControlPower implements Sensor {
     return new double[]{0d};
   }
 
+  public double getControlInterval() {
+    return controlInterval;
+  }
 }

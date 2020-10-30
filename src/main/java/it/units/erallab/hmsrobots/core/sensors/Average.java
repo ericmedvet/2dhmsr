@@ -16,17 +16,25 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 import java.util.TreeMap;
 
 public class Average implements Sensor {
 
+  @JsonProperty
   private final Sensor sensor;
+  @JsonProperty
   private final double interval;
   private final TreeMap<Double, double[]> readings;
 
-  public Average(Sensor sensor, double interval) {
+  @JsonCreator
+  public Average(
+      @JsonProperty("sensor") Sensor sensor,
+      @JsonProperty("interval") double interval
+  ) {
     this.sensor = sensor;
     this.interval = interval;
     readings = new TreeMap<>();

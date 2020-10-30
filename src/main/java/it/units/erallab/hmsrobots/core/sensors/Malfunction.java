@@ -10,9 +10,13 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
  */
 public class Malfunction implements Sensor {
 
+  private final static Domain[] DOMAINS = new Domain[]{
+      Domain.of(0d, 1d)
+  };
+
   @Override
   public Domain[] domains() {
-    return new Domain[]{Domain.of(0, 1)};
+    return DOMAINS;
   }
 
   @Override

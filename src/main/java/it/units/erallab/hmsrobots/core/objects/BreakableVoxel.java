@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
@@ -39,10 +41,10 @@ public class BreakableVoxel extends SensingVoxel {
     CONTROL, AREA, TIME
   }
 
-  private final Random random;
-  private final Map<ComponentType, Set<MalfunctionType>> malfunctions;
-  private final Map<MalfunctionTrigger, Double> triggerThresholds;
-  private final double restoreTime;
+  @JsonProperty private final Map<ComponentType, Set<MalfunctionType>> malfunctions;
+  @JsonProperty private final Map<MalfunctionTrigger, Double> triggerThresholds;
+  @JsonProperty private final double restoreTime;
+  @JsonProperty private final long randomSeed;
 
   private List<Pair<Sensor, double[]>> lastSensorReadings;
   private final EnumMap<MalfunctionTrigger, Double> triggerCounters;
@@ -52,10 +54,33 @@ public class BreakableVoxel extends SensingVoxel {
   private transient double lastBreakT;
   private transient double lastControlEnergy;
   private transient double lastAreaRatioEnergy;
+  private transient Random random;
 
-  public BreakableVoxel(double sideLength, double massSideLengthRatio, double springF, double springD, double massLinearDamping, double massAngularDamping, double friction, double restitution, double mass, boolean limitContractionFlag, boolean massCollisionFlag, double areaRatioMaxDelta, EnumSet<SpringScaffolding> springScaffoldings, double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
+  @JsonCreator
+  public BreakableVoxel(
+      @JsonProperty("sideLength") double sideLength,
+      @JsonProperty("massSideLengthRatio") double massSideLengthRatio,
+      @JsonProperty("springF") double springF,
+      @JsonProperty("springD") double springD,
+      @JsonProperty("massLinearDamping") double massLinearDamping,
+      @JsonProperty("massAngularDamping") double massAngularDamping,
+      @JsonProperty("friction") double friction,
+      @JsonProperty("restitution") double restitution,
+      @JsonProperty("mass") double mass,
+      @JsonProperty("limitContractionFlag") boolean limitContractionFlag,
+      @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
+      @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
+      @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
+      @JsonProperty("maxForce") double maxForce,
+      @JsonProperty("forceMethod") ForceMethod forceMethod,
+      @JsonProperty("sensors") List<Sensor> sensors,
+      @JsonProperty("randomSeed") long randomSeed,
+      @JsonProperty("malfunctions") Map<ComponentType, Set<MalfunctionType>> malfunctions,
+      @JsonProperty("triggerThresholds") Map<MalfunctionTrigger, Double> triggerThresholds,
+      @JsonProperty("restoreTime") double restoreTime
+  ) {
     super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings, maxForce, forceMethod, sensors);
-    this.random = random;
+    this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
     this.triggerThresholds = triggerThresholds;
     this.restoreTime = restoreTime;
@@ -64,9 +89,9 @@ public class BreakableVoxel extends SensingVoxel {
     reset();
   }
 
-  public BreakableVoxel(double maxForce, ForceMethod forceMethod, List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
+  public BreakableVoxel(double maxForce, ForceMethod forceMethod, List<Sensor> sensors, long randomSeed, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
     super(maxForce, forceMethod, sensors);
-    this.random = random;
+    this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
     this.triggerThresholds = triggerThresholds;
     this.restoreTime = restoreTime;
@@ -75,9 +100,9 @@ public class BreakableVoxel extends SensingVoxel {
     reset();
   }
 
-  public BreakableVoxel(List<Sensor> sensors, Random random, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
+  public BreakableVoxel(List<Sensor> sensors, long randomSeed, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
     super(sensors);
-    this.random = random;
+    this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
     this.triggerThresholds = triggerThresholds;
     this.restoreTime = restoreTime;

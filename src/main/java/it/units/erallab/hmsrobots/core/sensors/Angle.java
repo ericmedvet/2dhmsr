@@ -20,13 +20,13 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
 public class Angle implements Sensor, ReadingAugmenter {
-  private final Domain[] domains = new Domain[]{
+  private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(-Math.PI, Math.PI)
   };
 
   @Override
   public Domain[] domains() {
-    return domains;
+    return DOMAINS;
   }
 
   @Override

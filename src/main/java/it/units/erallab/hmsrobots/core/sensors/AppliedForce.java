@@ -20,13 +20,13 @@ import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 public class AppliedForce implements Sensor {
-  private final Domain[] domains = new Domain[]{
+  private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(-1d, 1d)
   };
 
   @Override
   public Domain[] domains() {
-    return domains;
+    return DOMAINS;
   }
 
   @Override

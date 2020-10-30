@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 
@@ -23,11 +25,14 @@ import java.util.Arrays;
 
 public class Normalization implements Sensor {
 
-  @ConfigurableField
+  @JsonProperty
   private final Sensor sensor;
   private final Domain[] domains;
 
-  public Normalization(Sensor sensor) {
+  @JsonCreator
+  public Normalization(
+      @JsonProperty("sensor") Sensor sensor
+  ) {
     this.sensor = sensor;
     domains = new Domain[sensor.domains().length];
     Arrays.fill(domains, Domain.of(0d, 1d));

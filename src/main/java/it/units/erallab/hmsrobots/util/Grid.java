@@ -16,6 +16,9 @@
  */
 package it.units.erallab.hmsrobots.util;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -109,19 +112,27 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
   }
 
+  @JsonProperty("items")
   private final List<T> ts;
+  @JsonProperty
   private final int w;
+  @JsonProperty
   private final int h;
 
-  public Grid(int w, int h, T[] t) {
+  @JsonCreator
+  public Grid(
+      @JsonProperty("w") int w,
+      @JsonProperty("h") int h,
+      @JsonProperty("items") List<T> ts
+  ) {
     this.w = w;
     this.h = h;
-    ts = new ArrayList<>(w * h);
+    this.ts = new ArrayList<>(w * h);
     for (int i = 0; i < w * h; i++) {
-      if ((t != null) && (i < t.length)) {
-        ts.add(t[i]);
+      if ((ts != null) && (i < ts.size())) {
+        this.ts.add(ts.get(i));
       } else {
-        ts.add(null);
+        this.ts.add(null);
       }
     }
   }
