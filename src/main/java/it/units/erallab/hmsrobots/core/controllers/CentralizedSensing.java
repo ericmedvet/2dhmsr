@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -33,10 +35,32 @@ import java.util.stream.Collectors;
  */
 public class CentralizedSensing implements Controller<SensingVoxel> {
 
+  @JsonProperty
   private final int nOfInputs;
+  @JsonProperty
   private final int nOfOutputs;
 
+  @JsonProperty
+  @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private Function<double[], double[]> function;
+
+  public CentralizedSensing(
+      @JsonProperty("nOfInputs") int nOfInputs,
+      @JsonProperty("nOfOutputs") int nOfOutputs,
+      @JsonProperty("function") Function<double[], double[]> function
+  ) {
+    this.nOfInputs = nOfInputs;
+    this.nOfOutputs = nOfOutputs;
+    this.function = function;
+  }
+
+  public CentralizedSensing(Grid<? extends SensingVoxel> voxels) {
+    this(voxels, null);
+  }
+
+  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, Function<double[], double[]> function) {
+    this(nOfInputs(voxels), nOfOutputs(voxels), function);
+  }
 
   public static int nOfInputs(Grid<? extends SensingVoxel> voxels) {
     return voxels.values().stream()
@@ -51,16 +75,6 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
     return (int) voxels.values().stream()
         .filter(Objects::nonNull)
         .count();
-  }
-
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels) {
-    nOfInputs = nOfInputs(voxels);
-    nOfOutputs = nOfOutputs(voxels);
-  }
-
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, Function<double[], double[]> function) {
-    this(voxels);
-    setFunction(function);
   }
 
   public int nOfInputs() {

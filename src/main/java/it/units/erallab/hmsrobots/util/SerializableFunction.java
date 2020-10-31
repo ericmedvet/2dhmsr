@@ -16,6 +16,9 @@
  */
 package it.units.erallab.hmsrobots.util;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import java.io.Serializable;
 import java.util.function.Function;
 
@@ -23,6 +26,8 @@ import java.util.function.Function;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 @FunctionalInterface
+@JsonSerialize(using = SerializationUtils.LambdaJsonSerializer.class)
+@JsonDeserialize(using = SerializationUtils.LambdaJsonDeserializer.class)
 public interface SerializableFunction<T, R> extends Function<T, R>, Serializable {
 
 }

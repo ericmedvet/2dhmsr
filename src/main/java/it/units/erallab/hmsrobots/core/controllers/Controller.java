@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
@@ -24,6 +25,7 @@ import java.io.Serializable;
 /**
  * @author eric
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public interface Controller<V extends ControllableVoxel> extends Serializable {
 
   void control(double t, Grid<? extends V> voxels);

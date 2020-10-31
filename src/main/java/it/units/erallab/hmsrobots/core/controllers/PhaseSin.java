@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
@@ -26,11 +28,23 @@ import java.util.Objects;
  */
 public class PhaseSin extends TimeFunctions {
 
+  @JsonProperty
+  private final double frequency;
+  @JsonProperty
+  private final double amplitude;
+  @JsonProperty
   private final Grid<Double> phases;
 
-  public PhaseSin(double frequency, double amplitude, Grid<Double> phases) {
+  @JsonCreator
+  public PhaseSin(
+      @JsonProperty("frequency") double frequency,
+      @JsonProperty("amplitude") double amplitude,
+      @JsonProperty("phases") Grid<Double> phases
+  ) {
     super(getFunctions(frequency, amplitude, phases));
     this.phases = phases;
+    this.frequency = frequency;
+    this.amplitude = amplitude;
   }
 
   private static Grid<SerializableFunction<Double, Double>> getFunctions(final double frequency, final double amplitude, final Grid<Double> phases) {

@@ -16,15 +16,29 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
 public class TimeFunction implements Sensor {
 
+  @JsonProperty
   private final SerializableFunction<Double, Double> function;
+  @JsonProperty
+  private final double min;
+  @JsonProperty
+  private final double max;
   private final Domain[] domains;
 
-  public TimeFunction(SerializableFunction<Double, Double> function, double min, double max) {
+  @JsonCreator
+  public TimeFunction(
+      @JsonProperty("function") SerializableFunction<Double, Double> function,
+      @JsonProperty("min") double min,
+      @JsonProperty("max") double max
+  ) {
+    this.min = min;
+    this.max = max;
     this.function = function;
     domains = new Domain[]{Domain.of(min, max)};
   }

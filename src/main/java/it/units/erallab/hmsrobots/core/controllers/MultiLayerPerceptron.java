@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
@@ -42,14 +44,47 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
   }
 
+  @JsonProperty
   private final ActivationFunction activationFunction;
+  @JsonProperty
   private final double[][][] weights;
+  @JsonProperty
   private final int[] neurons;
 
-  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput) {
+  @JsonCreator
+  public MultiLayerPerceptron(
+      @JsonProperty("activationFunction") ActivationFunction activationFunction,
+      @JsonProperty("weights") double[][][] weights,
+      @JsonProperty("neurons") int[] neurons
+  ) {
     this.activationFunction = activationFunction;
-    neurons = countNeurons(nOfInput, innerNeurons, nOfOutput);
-    this.weights = unflat(new double[countWeights(neurons)], neurons);
+    this.weights = weights;
+    this.neurons = neurons;
+    if (flat(weights, neurons).length != countWeights(neurons)) {
+      throw new IllegalArgumentException(String.format(
+          "Wrong number of weights: %d expected, %d found",
+          countWeights(neurons),
+          flat(weights, neurons).length
+      ));
+    }
+  }
+
+  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights) {
+    this(
+        activationFunction,
+        unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
+        countNeurons(nOfInput, innerNeurons, nOfOutput)
+    );
+  }
+
+  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput) {
+    this(
+        activationFunction,
+        nOfInput,
+        innerNeurons,
+        nOfOutput,
+        new double[countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput))]
+    );
   }
 
   public static int[] countNeurons(int nOfInput, int[] innerNeurons, int nOfOutput) {
@@ -59,11 +94,6 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     neurons[0] = nOfInput + 1;
     neurons[neurons.length - 1] = nOfOutput;
     return neurons;
-  }
-
-  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights) {
-    this(activationFunction, nOfInput, innerNeurons, nOfOutput);
-    setParams(weights);
   }
 
   public static double[][][] unflat(double[] flatWeights, int[] neurons) {

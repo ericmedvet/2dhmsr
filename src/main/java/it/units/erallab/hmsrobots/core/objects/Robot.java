@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.util.BoundingBox;
@@ -38,12 +40,18 @@ import java.util.Objects;
  */
 public class Robot<V extends ControllableVoxel> implements LivingObject, Serializable {
 
+  @JsonProperty
   private final Controller<V> controller;
+  @JsonProperty
   private final Grid<? extends V> voxels;
 
   private transient List<Joint> joints;
 
-  public Robot(Controller<V> controller, Grid<? extends V> voxels) {
+  @JsonCreator
+  public Robot(
+      @JsonProperty("controller") Controller<V> controller,
+      @JsonProperty("voxels") Grid<? extends V> voxels
+  ) {
     this.controller = controller;
     this.voxels = voxels;
     assemble();

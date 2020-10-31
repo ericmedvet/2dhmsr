@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.controllers;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
@@ -25,9 +27,13 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
  */
 public class TimeFunctions implements Controller<ControllableVoxel> {
 
+  @JsonProperty
   private final Grid<SerializableFunction<Double, Double>> functions;
 
-  public TimeFunctions(Grid<SerializableFunction<Double, Double>> functions) {
+  @JsonCreator
+  public TimeFunctions(
+      @JsonProperty("functions") Grid<SerializableFunction<Double, Double>> functions
+  ) {
     this.functions = functions;
   }
 
