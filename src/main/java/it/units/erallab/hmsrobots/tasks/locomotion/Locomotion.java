@@ -27,6 +27,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.util.Utils;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
+import org.apache.commons.lang3.time.StopWatch;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -34,6 +35,7 @@ import org.dyn4j.geometry.AABB;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -64,6 +66,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
   @Override
   public Outcome apply(Robot<?> robot, SnapshotListener listener) {
+    StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
     world.setSettings(settings);
@@ -97,8 +100,10 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       footprints.put(t, footprint(robot, FOOTPRINT_BINS));
       masks.put(t, mask(robot, MASK_BINS));
     }
+    stopWatch.stop();
     //prepare outcome
     return new Outcome(
+        (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d,
         robot.getCenter().x - initCenterX,
         t,
         Math.max(

@@ -22,7 +22,6 @@ import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.*;
-import org.apache.commons.lang3.SerializationUtils;
 
 import java.util.*;
 import java.util.function.Predicate;

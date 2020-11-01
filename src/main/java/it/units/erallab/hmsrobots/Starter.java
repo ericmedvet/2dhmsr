@@ -29,6 +29,7 @@ import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.SerializationUtils;
 import it.units.erallab.hmsrobots.util.Utils;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
@@ -36,7 +37,6 @@ import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.drawers.Ground;
 import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 

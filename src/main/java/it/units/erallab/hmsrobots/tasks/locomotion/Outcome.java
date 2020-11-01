@@ -36,8 +36,8 @@ public class Outcome {
   public static final double INITIAL_TRANSIENT_RATIO = 0.1d;
   public static final double FOOTPRINT_INTERVAL = 0.5d;
   public static final double GAIT_LONGEST_INTERVAL = 5d;
-  public static final int NUM_OF_FREQS = 4;
 
+  private final double computationTime;
   private final double distance;
   private final double time;
   private final double robotLargestDim;
@@ -48,8 +48,6 @@ public class Outcome {
   private final SortedMap<Double, Grid<Boolean>> postures;
 
   public enum Component {X, Y, MODULE}
-
-  ;
 
   public static class Mode {
     private final double strength;
@@ -133,7 +131,8 @@ public class Outcome {
     }
   }
 
-  public Outcome(double distance, double time, double robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> postures) {
+  public Outcome(double computationTime, double distance, double time, double robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> postures) {
+    this.computationTime = computationTime;
     this.distance = distance;
     this.time = time;
     this.robotLargestDim = robotLargestDim;
@@ -142,6 +141,10 @@ public class Outcome {
     this.centerTrajectory = centerTrajectory;
     this.footprints = footprints;
     this.postures = postures;
+  }
+
+  public double getComputationTime() {
+    return computationTime;
   }
 
   public double getDistance() {
@@ -179,7 +182,8 @@ public class Outcome {
   @Override
   public String toString() {
     return "Outcome{" +
-        "distance=" + distance +
+        "computationTime=" + computationTime +
+        ", distance=" + distance +
         ", time=" + time +
         ", robotLargestDim=" + robotLargestDim +
         ", controlPower=" + controlPower +

@@ -6,13 +6,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
+import org.dyn4j.dynamics.Settings;
 
 import java.io.*;
 import java.util.Base64;
@@ -32,19 +32,24 @@ public class SerializationUtils {
   private SerializationUtils() {
   }
 
-  public enum Mode {JAVA, JSON, GZIPPED_JAVA, GZIPPED_JSON}
+  public enum Mode {JAVA, JSON, PRETTY_JSON, GZIPPED_JAVA, GZIPPED_JSON}
 
   private static final Logger L = Logger.getLogger(Utils.class.getName());
-  private static final Mode DEFAULT_MODE = Mode.GZIPPED_JSON;
+  private static final Mode DEFAULT_SERIALIZATION_MODE = Mode.GZIPPED_JSON;
+  private static final Mode DEFAULT_CLONE_MODE = Mode.JSON;
   private static final ObjectMapper OM;
+  private static final ObjectMapper PRETTY_OM;
 
   static {
     OM = new ObjectMapper();
-    OM.enable(SerializationFeature.INDENT_OUTPUT);
     OM.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     OM.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.NONE);
     OM.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-    PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().build();
+    PRETTY_OM = new ObjectMapper();
+    PRETTY_OM.enable(SerializationFeature.INDENT_OUTPUT);
+    PRETTY_OM.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    PRETTY_OM.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.NONE);
+    PRETTY_OM.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
   }
 
   public static class LambdaJsonSerializer extends JsonSerializer<SerializableFunction<?, ?>> {
@@ -76,20 +81,29 @@ public class SerializationUtils {
   }
 
   public static String serialize(Object object) {
-    return serialize(object, DEFAULT_MODE);
+    return serialize(object, DEFAULT_SERIALIZATION_MODE);
   }
 
   public static <T> T deserialize(String string, Class<T> tClass) {
-    return deserialize(string, tClass, DEFAULT_MODE);
+    return deserialize(string, tClass, DEFAULT_SERIALIZATION_MODE);
+  }
+
+  public static <T> T clone(T t) {
+    return clone(t, DEFAULT_CLONE_MODE);
+  }
+
+  public static <T> T clone(T t, Mode mode) {
+    return (T) deserialize(serialize(t, mode), t.getClass(), mode);
   }
 
   public static String serialize(Object object, Mode mode) {
     try {
       return switch (mode) {
         case JAVA -> encode(javaSerialize(object));
-        case JSON -> jsonSerialize(object);
+        case JSON -> jsonSerialize(object, false);
+        case PRETTY_JSON -> jsonSerialize(object, true);
         case GZIPPED_JAVA -> encode(gzip(javaSerialize(object)));
-        case GZIPPED_JSON -> encode(gzip(jsonSerialize(object).getBytes()));
+        case GZIPPED_JSON -> encode(gzip(jsonSerialize(object, false).getBytes()));
       };
     } catch (IOException e) {
       L.log(Level.SEVERE, String.format("Cannot serialize due to %s", e), e);
@@ -101,7 +115,7 @@ public class SerializationUtils {
     try {
       return switch (mode) {
         case JAVA -> javaDeserialize(decode(string), tClass);
-        case JSON -> jsonDeserialize(string, tClass);
+        case JSON, PRETTY_JSON -> jsonDeserialize(string, tClass);
         case GZIPPED_JAVA -> javaDeserialize(ungzip(decode(string)), tClass);
         case GZIPPED_JSON -> jsonDeserialize(new String(ungzip(decode(string))), tClass);
       };
@@ -134,8 +148,8 @@ public class SerializationUtils {
     }
   }
 
-  private static String jsonSerialize(Object object) throws IOException {
-    return OM.writeValueAsString(object);
+  private static String jsonSerialize(Object object, boolean pretty) throws IOException {
+    return pretty ? PRETTY_OM.writeValueAsString(object) : OM.writeValueAsString(object);
   }
 
   private static <T> T jsonDeserialize(String string, Class<T> tClass) throws IOException {
@@ -178,64 +192,6 @@ public class SerializationUtils {
 
   private static byte[] decode(String string) {
     return Base64.getDecoder().decode(string);
-  }
-
-  public static void main(String[] args) throws IOException {
-    Random rnd = new Random();
-    Grid<? extends SensingVoxel> body = it.units.erallab.hmsrobots.util.Utils.buildBody("biped-8x5-t-t");
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.RELU,
-        CentralizedSensing.nOfInputs(body),
-        new int[]{(int) Math.round((double) CentralizedSensing.nOfInputs(body) * 0.65d)},
-        CentralizedSensing.nOfOutputs(body)
-    );
-    System.out.printf("weights=%d%n", mlp.getParams().length);
-    double[] ws = new double[mlp.getParams().length];
-    IntStream.range(0, ws.length).forEach(i -> ws[i] = rnd.nextDouble() * 2d - 1d);
-    mlp.setParams(ws);
-    Robot<SensingVoxel> r = new Robot<>(
-        new CentralizedSensing(body, mlp),
-        body
-    );
-
-    CentralizedSensing cs = new CentralizedSensing(2, 1, new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.SIGMOID, 2, new int[0], 1));
-
-    DistributedSensing ds = new DistributedSensing(body, 1);
-    body.stream().filter(e -> e.getValue() != null).forEach(e -> ds.getFunctions().set(e.getX(), e.getY(), new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
-        ds.nOfInputs(e.getX(), e.getY()),
-        new int[5],
-        ds.nOfOutputs(e.getX(), e.getY())
-    )));
-
-    for (Mode mode : Mode.values()) {
-      System.out.printf("Body  with %12.12s: 1st=%6d 2nd=%6d%n",
-          mode,
-          serialize(body, mode).length(),
-          serialize(deserialize(serialize(body, mode), Grid.class, mode), mode).length()
-      );
-      System.out.printf("MLP   with %12.12s: 1st=%6d 2nd=%6d%n",
-          mode,
-          serialize(mlp, mode).length(),
-          serialize(deserialize(serialize(mlp, mode), MultiLayerPerceptron.class, mode), mode).length()
-      );
-      System.out.printf("Ctrl  with %12.12s: 1st=%6d 2nd=%6d%n",
-          mode,
-          serialize(r.getController(), mode).length(),
-          serialize(deserialize(serialize(r.getController(), mode), CentralizedSensing.class, mode), mode).length()
-      );
-      System.out.printf("DS  with %12.12s: 1st=%6d 2nd=%6d%n",
-          mode,
-          serialize(ds, mode).length(),
-          serialize(deserialize(serialize(ds, mode), DistributedSensing.class, mode), mode).length()
-      );
-      System.out.printf("Robot with %12.12s: 1st=%6d 2nd=%6d%n",
-          mode,
-          serialize(r, mode).length(),
-          serialize(deserialize(serialize(r, mode), Robot.class, mode), mode).length()
-      );
-    }
-
   }
 
 }

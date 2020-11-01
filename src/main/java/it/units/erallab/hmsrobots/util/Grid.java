@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.util;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.io.Serializable;
 import java.util.*;
@@ -113,6 +114,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   @JsonProperty("items")
+  @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private final List<T> ts;
   @JsonProperty
   private final int w;
