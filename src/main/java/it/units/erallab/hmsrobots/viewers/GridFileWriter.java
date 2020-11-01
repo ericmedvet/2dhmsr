@@ -38,6 +38,9 @@ import java.util.logging.Logger;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
+  /* currently based on: https://github.com/jcodec/jcodec;
+  but maybe replase (or augment with) https://github.com/artclarke/humble-video
+  */
 public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private final int w;
