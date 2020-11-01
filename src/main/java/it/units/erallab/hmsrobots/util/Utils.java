@@ -42,13 +42,7 @@ public class Utils {
   private static final Logger L = Logger.getLogger(Utils.class.getName());
 
   public static <K> Grid<K> gridLargestConnected(Grid<K> kGrid, Predicate<K> p) {
-
-    System.out.println(Grid.toString(kGrid, p));
-
     Grid<Integer> iGrid = partitionGrid(kGrid, p);
-
-    System.out.println(Grid.toString(iGrid, "%d"));
-
     //count elements per partition
     Multiset<Integer> counts = LinkedHashMultiset.create();
     for (Integer i : iGrid.values()) {
@@ -73,7 +67,7 @@ public class Utils {
     //filter map
     Grid<K> filtered = Grid.create(kGrid);
     for (Grid.Entry<Integer> iEntry : iGrid) {
-      if (iEntry.getValue().equals(maxIndex)) {
+      if (iEntry.getValue() != null && iEntry.getValue().equals(maxIndex)) {
         filtered.set(iEntry.getX(), iEntry.getY(), kGrid.get(iEntry.getX(), iEntry.getY()));
       }
     }
