@@ -5,21 +5,16 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.*;
-import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
-import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
-import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
-import org.dyn4j.dynamics.Settings;
+import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 
 import java.io.*;
 import java.util.Base64;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -63,6 +58,15 @@ public class SerializationUtils {
         jsonGenerator.writeBinary(byteArrayOutputStream.toByteArray());
       }
     }
+
+    @Override
+    public void serializeWithType(SerializableFunction<?, ?> serializableFunction, JsonGenerator jsonGenerator, SerializerProvider serializers, TypeSerializer typeSer) throws IOException {
+      //WritableTypeId typeId = typeSer.typeId(serializableFunction, JsonToken.START_OBJECT);
+      //typeSer.writeTypePrefix(jsonGenerator, typeId);
+      //jsonGenerator.writeFieldName("ser");
+      serialize(serializableFunction, jsonGenerator, serializers);
+      //typeSer.writeTypeSuffix(jsonGenerator, typeId);
+    }
   }
 
   public static class LambdaJsonDeserializer extends JsonDeserializer<SerializableFunction<?, ?>> {
@@ -77,6 +81,11 @@ public class SerializationUtils {
       } catch (ClassNotFoundException e) {
         throw new IOException(e);
       }
+    }
+
+    @Override
+    public Object deserializeWithType(JsonParser jsonParser, DeserializationContext deserializationContext, TypeDeserializer typeDeserializer) throws IOException {
+      return deserialize(jsonParser, deserializationContext);
     }
   }
 

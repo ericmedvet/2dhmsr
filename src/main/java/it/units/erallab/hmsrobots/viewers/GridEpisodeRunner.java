@@ -65,13 +65,15 @@ public class GridEpisodeRunner<S> implements Runnable {
   public void run() {
     //start episodes
     List<Future<?>> results = new ArrayList<>();
-    for (final Grid.Entry<Pair<String, S>> entry : namedSolutionGrid) {
-      results.add(executor.submit(() -> {
-        L.info(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
-        Object outcome = episode.apply(entry.getValue().getRight(), gridSnapshotListener.listener(entry.getX(), entry.getY()));
-        L.info(String.format("Ended %s in position (%d,%d) with outcome %s", episode.getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
-      }));
-    }
+    namedSolutionGrid.stream()
+        .filter(p -> p.getValue() != null && p.getValue().getRight() != null)
+        .forEach(entry -> {
+          results.add(executor.submit(() -> {
+            L.info(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
+            Object outcome = episode.apply(entry.getValue().getRight(), gridSnapshotListener.listener(entry.getX(), entry.getY()));
+            L.info(String.format("Ended %s in position (%d,%d) with outcome %s", episode.getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
+          }));
+        });
     //wait for results
     for (Future<?> result : results) {
       try {

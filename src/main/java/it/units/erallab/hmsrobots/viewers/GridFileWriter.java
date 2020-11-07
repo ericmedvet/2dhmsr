@@ -16,10 +16,15 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.util.BoundingBox;
-import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
+import it.units.erallab.hmsrobots.util.*;
+import org.apache.commons.lang3.tuple.Pair;
+import org.dyn4j.dynamics.Settings;
 import org.jcodec.api.awt.AWTSequenceEncoder;
 import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.io.SeekableByteChannel;
@@ -31,8 +36,10 @@ import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 /**
@@ -45,9 +52,10 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private final int w;
   private final int h;
-
+  private final double startTime;
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
+
   private final Grid<Queue<Snapshot>> queueGrid;
   private final Grid<Framer> framerGrid;
 
@@ -61,13 +69,14 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
-  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws IOException {
-    this(w, h, frameRate, file, namesGrid, executor, GraphicsDrawer.build());
+  public GridFileWriter(int w, int h, double startTime, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws IOException {
+    this(w, h, startTime, frameRate, file, namesGrid, executor, GraphicsDrawer.build());
   }
 
-  public GridFileWriter(int w, int h, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer graphicsDrawer) throws IOException {
+  public GridFileWriter(int w, int h, double startTime, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer graphicsDrawer) throws IOException {
     this.w = w;
     this.h = h;
+    this.startTime = startTime;
     this.namesGrid = namesGrid;
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
@@ -83,7 +92,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
       }
     }
     //init time and grid
-    t = 0d;
+    t = startTime;
     running = true;
     drawnCount = 0;
     //start consumer of composed frames
@@ -154,9 +163,11 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
     return (Snapshot snapshot) -> {
-      synchronized (queueGrid) {
-        queueGrid.get(lX, lY).offer(snapshot);
-        queueGrid.notifyAll();
+      if (snapshot.getTime() >= startTime) {
+        synchronized (queueGrid) {
+          queueGrid.get(lX, lY).offer(snapshot);
+          queueGrid.notifyAll();
+        }
       }
     };
   }
@@ -212,6 +223,37 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     encoder.finish();
     NIOUtils.closeQuietly(channel);
     running = false;
+  }
+
+  public static void main(String[] args) throws IOException {
+    ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-4x3-f-t");
+    double f = 1d;
+    Robot<ControllableVoxel> robot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            body.getW(),
+            body.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
+        )),
+        SerializationUtils.clone(body)
+    );
+    Locomotion locomotion = new Locomotion(
+        10,
+        Locomotion.createTerrain("hilly-0.5-5-0"),
+        new Settings()
+    );
+    Grid<Pair<String, Robot<?>>> grid = Grid.create(2, 1);
+    grid.set(0, 0, Pair.of("ok", robot));
+    //grid.set(1, 0, Pair.of("broken", Utils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0").apply(SerializationUtils.clone(robot))));
+    grid.set(1, 0, Pair.of("broken", SerializationUtils.clone(robot)));
+    GridSnapshotListener gridSnapshotListener = new GridFileWriter(
+        300, 200, 0d, 30d,
+        new File("/home/eric/experiments/2dhmsr/provettina.mp4"),
+        Grid.create(grid, Pair::getLeft),
+        executorService);
+    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(grid, locomotion, gridSnapshotListener, executorService);
+    runner.run();
+    executorService.shutdown();
   }
 
 }

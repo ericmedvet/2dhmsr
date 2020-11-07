@@ -108,6 +108,7 @@ public class BreakableVoxel extends SensingVoxel {
     this.restoreTime = restoreTime;
     triggerCounters = new EnumMap<>(MalfunctionTrigger.class);
     state = new EnumMap<>(ComponentType.class);
+    Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
     reset();
   }
 
