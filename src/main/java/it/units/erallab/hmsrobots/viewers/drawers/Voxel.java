@@ -45,7 +45,7 @@ public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immuta
   @ConfigurableField
   private Color malfunctionColor = GraphicsDrawer.alphaed(Color.BLACK, 0.75f);
   @ConfigurableField(uiMin = 5, uiMax = 20)
-  private float malfunctionStrokeWidth = 10f;
+  private float malfunctionStrokeWidth = 3f;
   @ConfigurableField(uiMin = 0.1f, uiMax = 0.999f)
   private float shrunkRatio = 0.75f;
   @ConfigurableField(uiMin = 1.001f, uiMax = 2f)

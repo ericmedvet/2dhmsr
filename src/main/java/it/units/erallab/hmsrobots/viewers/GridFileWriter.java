@@ -23,49 +23,49 @@ import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.util.*;
+import it.units.erallab.hmsrobots.viewers.drawers.Ground;
+import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import it.units.erallab.hmsrobots.viewers.drawers.Voxel;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
-import org.jcodec.api.awt.AWTSequenceEncoder;
-import org.jcodec.common.io.NIOUtils;
-import org.jcodec.common.io.SeekableByteChannel;
-import org.jcodec.common.model.Rational;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-  /* currently based on: https://github.com/jcodec/jcodec;
-  but maybe replase (or augment with) https://github.com/artclarke/humble-video
-  */
 public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private final int w;
   private final int h;
   private final double startTime;
+  private final double frameRate;
+  final private File file;
+
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
 
   private final Grid<Queue<Snapshot>> queueGrid;
   private final Grid<Framer> framerGrid;
+  private final List<BufferedImage> images;
 
-  private final SeekableByteChannel channel;
-  private final AWTSequenceEncoder encoder;
   private final GraphicsDrawer graphicsDrawer;
 
   private double t;
   private boolean running;
-  private int drawnCount;
 
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
@@ -78,12 +78,12 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     this.h = h;
     this.startTime = startTime;
     this.namesGrid = namesGrid;
+    this.frameRate = frameRate;
+    this.file = file;
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
-    //prepare things
-    channel = NIOUtils.writableChannel(file);
-    encoder = new AWTSequenceEncoder(channel, Rational.R((int) Math.round(frameRate), 1));
+    images = new ArrayList<>();
     this.graphicsDrawer = graphicsDrawer;
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
@@ -94,7 +94,6 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     //init time and grid
     t = startTime;
     running = true;
-    drawnCount = 0;
     //start consumer of composed frames
     executor.submit(() -> {
       while (running) {
@@ -173,7 +172,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   }
 
   private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
-    L.finer(String.format("Writing frame %d/%d", drawnCount, drawnCount + gridQueue.size()));
+    L.finer(String.format("Writing frame %d/%d", images.size(), images.size() + gridQueue.size()));
     //set local clip size
     double localW = (double) w / (double) namesGrid.getW();
     double localH = (double) h / (double) namesGrid.getH();
@@ -199,13 +198,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     }
     //dispose and encode
     g.dispose();
-    //encode
-    try {
-      encoder.encodeImage(image);
-    } catch (IOException ex) {
-      L.severe(String.format("Cannot encode image due to %s", ex));
-    }
-    drawnCount = drawnCount + 1;
+    images.add(image);
   }
 
   @Override
@@ -219,10 +212,16 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
         }
       }
     }
-    L.fine("Flushing data");
-    encoder.finish();
-    NIOUtils.closeQuietly(channel);
     running = false;
+    L.info(String.format("Saving video on %s", file));
+    StopWatch stopWatch = StopWatch.createStarted();
+    VideoUtils.encodeAndSave(images, frameRate, file, VideoUtils.EncoderFramework.JCODEC);
+    long millis = stopWatch.getTime(TimeUnit.MILLISECONDS);
+    L.info(String.format(
+        "Video saved: %.1fMB written in %.2fs",
+        Files.size(file.toPath()) / 1024f / 1024f,
+        millis / 1000f
+    ));
   }
 
   public static void main(String[] args) throws IOException {
@@ -244,16 +243,26 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     );
     Grid<Pair<String, Robot<?>>> grid = Grid.create(2, 1);
     grid.set(0, 0, Pair.of("ok", robot));
-    //grid.set(1, 0, Pair.of("broken", Utils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0").apply(SerializationUtils.clone(robot))));
-    grid.set(1, 0, Pair.of("broken", SerializationUtils.clone(robot)));
+    grid.set(1, 0, Pair.of("broken", Utils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0").apply(SerializationUtils.clone(robot))));
+    //grid.set(1, 0, Pair.of("broken", SerializationUtils.clone(robot)));
     GridSnapshotListener gridSnapshotListener = new GridFileWriter(
-        300, 200, 0d, 30d,
+        1000, 600, 0d, 30d,
         new File("/home/eric/experiments/2dhmsr/provettina.mp4"),
         Grid.create(grid, Pair::getLeft),
-        executorService);
+        executorService,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            Voxel.build(),
+            Ground.build(),
+            SensorReading.build()
+        )).setConfigurable("generalRenderingModes", Set.of(
+            GraphicsDrawer.GeneralRenderingMode.TIME_INFO,
+            GraphicsDrawer.GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO
+        ))
+    );
     GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(grid, locomotion, gridSnapshotListener, executorService);
     runner.run();
-    executorService.shutdown();
+    executorService.shutdownNow();
   }
 
 }

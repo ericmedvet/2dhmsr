@@ -40,7 +40,7 @@ public class Outcome {
   private final double computationTime;
   private final double distance;
   private final double time;
-  private final double robotLargestDim;
+  private final int robotLargestDim;
   private final double controlPower;
   private final double areaRatioPower;
   private final SortedMap<Double, Point2> centerTrajectory;
@@ -68,10 +68,7 @@ public class Outcome {
 
     @Override
     public String toString() {
-      return "Mode{" +
-          "s=" + strength +
-          ", f=" + frequency +
-          '}';
+      return String.format("Mode{%.2f @ %.1fHz}", strength, frequency);
     }
   }
 
@@ -121,17 +118,12 @@ public class Outcome {
 
     @Override
     public String toString() {
-      return "Gait{" +
-          "footprints=" + footprints +
-          ", modeInterval=" + modeInterval +
-          ", coverage=" + coverage +
-          ", duration=" + duration +
-          ", purity=" + purity +
-          '}';
+      return String.format("Gait{footprints=%s, modeInterval=%.1fs, coverage=%.2f, duration=%.1fs, purity=%.2f}",
+          footprints, modeInterval, coverage, duration, purity);
     }
   }
 
-  public Outcome(double computationTime, double distance, double time, double robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> postures) {
+  public Outcome(double computationTime, double distance, double time, int robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> postures) {
     this.computationTime = computationTime;
     this.distance = distance;
     this.time = time;
@@ -155,7 +147,7 @@ public class Outcome {
     return time;
   }
 
-  public double getRobotLargestDim() {
+  public int getRobotLargestDim() {
     return robotLargestDim;
   }
 
@@ -181,14 +173,8 @@ public class Outcome {
 
   @Override
   public String toString() {
-    return "Outcome{" +
-        "computationTime=" + computationTime +
-        ", distance=" + distance +
-        ", time=" + time +
-        ", robotLargestDim=" + robotLargestDim +
-        ", controlPower=" + controlPower +
-        ", areaRatioPower=" + areaRatioPower +
-        '}';
+    return String.format("Outcome{computationTime=%.2fs, distance=%.2f, time=%.1fs, robotLargestDim=%d, controlPower=%.1f, areaRatioPower=%.1f}",
+        computationTime, distance, time, robotLargestDim, controlPower, areaRatioPower);
   }
 
   public double getVelocity() {

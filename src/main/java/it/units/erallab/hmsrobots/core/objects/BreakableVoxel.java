@@ -199,6 +199,7 @@ public class BreakableVoxel extends SensingVoxel {
     lastBreakT = 0d;
     lastControlEnergy = 0d;
     lastAreaRatioEnergy = 0d;
+    random = new Random(randomSeed);
     Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
     Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
     updateStructureMalfunctionType();

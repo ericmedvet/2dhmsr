@@ -86,11 +86,11 @@ public class GridEpisodeRunner<S> implements Runnable {
     //flush and write
     if (gridSnapshotListener instanceof Flushable) {
       try {
-        L.info(String.format("Starting flushing of video"));
+        L.fine(String.format("Flushing with %s", gridSnapshotListener.getClass().getSimpleName()));
         ((Flushable) gridSnapshotListener).flush();
-        L.info(String.format("Video saved"));
-      } catch (IOException ex) {
-        L.log(Level.SEVERE, String.format("Cannot flush video due to %s", ex), ex);
+        L.fine("Flushed");
+      } catch (IOException e) {
+        L.log(Level.SEVERE, String.format("Cannot flush video due to %s", e), e);
       }
     }
   }
