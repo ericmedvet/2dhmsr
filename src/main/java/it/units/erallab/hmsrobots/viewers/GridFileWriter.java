@@ -16,19 +16,11 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
-import it.units.erallab.hmsrobots.util.*;
-import it.units.erallab.hmsrobots.viewers.drawers.Ground;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
-import it.units.erallab.hmsrobots.viewers.drawers.Voxel;
+import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.Point2;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.lang3.tuple.Pair;
-import org.dyn4j.dynamics.Settings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -36,11 +28,11 @@ import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -224,47 +216,6 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
         Files.size(file.toPath()) / 1024f / 1024f,
         millis / 1000f
     ));
-  }
-
-  public static void main(String[] args) throws IOException {
-    ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-4x3-f-t");
-    double f = 1d;
-    Robot<ControllableVoxel> robot = new Robot<>(
-        new TimeFunctions(Grid.create(
-            body.getW(),
-            body.getH(),
-            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
-        )),
-        SerializationUtils.clone(body)
-    );
-    Locomotion locomotion = new Locomotion(
-        10,
-        Locomotion.createTerrain("hilly-0.5-5-0"),
-        new Settings()
-    );
-    Grid<Pair<String, Robot<?>>> grid = Grid.create(2, 1);
-    grid.set(0, 0, Pair.of("ok", robot));
-    grid.set(1, 0, Pair.of("broken", Utils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0").apply(SerializationUtils.clone(robot))));
-    //grid.set(1, 0, Pair.of("broken", SerializationUtils.clone(robot)));
-    GridSnapshotListener gridSnapshotListener = new GridFileWriter(
-        1000, 600, 0d, 30d, VideoUtils.EncoderFacility.JCODEC,
-        new File("/home/eric/experiments/2dhmsr/provettina.mp4"),
-        Grid.create(grid, Pair::getLeft),
-        executorService,
-        GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            Voxel.build(),
-            Ground.build(),
-            SensorReading.build()
-        )).setConfigurable("generalRenderingModes", Set.of(
-            GraphicsDrawer.GeneralRenderingMode.TIME_INFO,
-            GraphicsDrawer.GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO
-        ))
-    );
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(grid, locomotion, gridSnapshotListener, executorService);
-    runner.run();
-    executorService.shutdownNow();
   }
 
 }
