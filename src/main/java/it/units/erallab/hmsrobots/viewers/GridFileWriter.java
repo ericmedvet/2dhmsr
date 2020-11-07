@@ -53,7 +53,8 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private final int h;
   private final double startTime;
   private final double frameRate;
-  final private File file;
+  private final VideoUtils.EncoderFacility encoder;
+  private final File file;
 
   private final Grid<String> namesGrid;
   private final Queue<Grid<Snapshot>> gridQueue;
@@ -69,16 +70,17 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
-  public GridFileWriter(int w, int h, double startTime, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor) throws IOException {
-    this(w, h, startTime, frameRate, file, namesGrid, executor, GraphicsDrawer.build());
+  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, ExecutorService executor) throws IOException {
+    this(w, h, startTime, frameRate, encoder, file, namesGrid, executor, GraphicsDrawer.build());
   }
 
-  public GridFileWriter(int w, int h, double startTime, double frameRate, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer graphicsDrawer) throws IOException {
+  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, ExecutorService executor, GraphicsDrawer graphicsDrawer) throws IOException {
     this.w = w;
     this.h = h;
     this.startTime = startTime;
     this.namesGrid = namesGrid;
     this.frameRate = frameRate;
+    this.encoder = encoder;
     this.file = file;
     framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
@@ -215,7 +217,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     running = false;
     L.info(String.format("Saving video on %s", file));
     StopWatch stopWatch = StopWatch.createStarted();
-    VideoUtils.encodeAndSave(images, frameRate, file, VideoUtils.EncoderFramework.JCODEC);
+    VideoUtils.encodeAndSave(images, frameRate, file, encoder);
     long millis = stopWatch.getTime(TimeUnit.MILLISECONDS);
     L.info(String.format(
         "Video saved: %.1fMB written in %.2fs",
@@ -246,7 +248,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     grid.set(1, 0, Pair.of("broken", Utils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0").apply(SerializationUtils.clone(robot))));
     //grid.set(1, 0, Pair.of("broken", SerializationUtils.clone(robot)));
     GridSnapshotListener gridSnapshotListener = new GridFileWriter(
-        1000, 600, 0d, 30d,
+        1000, 600, 0d, 30d, VideoUtils.EncoderFacility.JCODEC,
         new File("/home/eric/experiments/2dhmsr/provettina.mp4"),
         Grid.create(grid, Pair::getLeft),
         executorService,
