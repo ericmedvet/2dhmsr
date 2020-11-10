@@ -221,6 +221,6 @@ public static double assessOnLocomotion(double[] weights) {
 1. Hiller, Lipson. "[Automatic design and manufacture of soft robots.](https://ieeexplore.ieee.org/abstract/document/6096440)" IEEE Transactions on Robotics 28.2 (2011): 457-466 
 2. Medvet, Bartoli, De Lorenzo, Seriani. "[Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617)" arXiv cs.RO: 2001.08617
 
-## Research papers based on 2D-VSR-Sim
+## Other research papers based on 2D-VSR-Sim
 - Medvet, Bartoli, [GraphEA: a Versatile Representation and Evolutionary Algorithm for Graphs](http://medvet.inginf.units.it/publications/grapheaaversatilerepresentationandevolutionaryalgorithmforgraphs), Workshop on Evolutionary and Population-based Optimization (WEPO@AIxIA), 2020
 - Medvet, Bartoli, De Lorenzo, Fidel, [Evolution of Distributed Neural Controllers for Voxel-based Soft Robots](http://medvet.inginf.units.it/publications/evolutionofdistributedneuralcontrollersforvoxelbasedsoftrobots), ACM Genetic and Evolutionary Computation Conference (GECCO), 2020, Cancun (Mexico)
