@@ -257,7 +257,7 @@ public class Outcome {
         List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
         localRanges.add(Range.openClosed(
             ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
-            ranges.get(i).upperEndpoint() //last t of the last footprint
+            ranges.get(i - 1).upperEndpoint() //last t of the last footprint
         ));
         sequences.put(sequence, localRanges);
       }
