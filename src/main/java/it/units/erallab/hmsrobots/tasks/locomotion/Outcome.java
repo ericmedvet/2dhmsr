@@ -248,12 +248,17 @@ public class Outcome {
     //compute subsequences
     Map<List<Footprint>, List<Range<Double>>> sequences = new HashMap<>();
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
-    List<Range<Double>> ranges = footprints.keySet().stream().map(d -> Range.closedOpen(d, d + interval)).collect(Collectors.toList());
+    List<Range<Double>> ranges = footprints.keySet().stream()
+        .map(d -> Range.closedOpen(d, d + interval))
+        .collect(Collectors.toList()); //list of range of each footprint
     for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
       for (int i = l; i <= footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
         List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
-        localRanges.add(ranges.get(i - l));
+        localRanges.add(Range.openClosed(
+            ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
+            ranges.get(i).upperEndpoint() //last t of the last footprint
+        ));
         sequences.put(sequence, localRanges);
       }
     }
@@ -262,7 +267,7 @@ public class Outcome {
         .map(l -> IntStream.range(0, l.size() - 1)
             .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())
             .collect(Collectors.toList())
-        )
+        ) // stream of List<Double>, each being a list of the intervals of that subsequence
         .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
         .orElse(List.of());
     if (allIntervals.isEmpty()) {
@@ -271,7 +276,7 @@ public class Outcome {
     double modeInterval = mode(allIntervals);
     //compute gaits
     return sequences.entrySet().stream()
-        .filter(e -> e.getValue().size() > 1)
+        .filter(e -> e.getValue().size() > 1) // discard subsequences observed only once
         .map(e -> {
               List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
                   .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
