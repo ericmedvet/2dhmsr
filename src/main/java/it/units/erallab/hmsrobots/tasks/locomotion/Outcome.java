@@ -358,8 +358,20 @@ public class Outcome {
         .collect(Collectors.toList());
   }
 
-  public List<Double> getCenterPowerSpectrum(double startingT, double endingT, Component component, double startingF, double endingF, int n) {
-    return null;
+  public List<Mode> getCenterPowerSpectrum(double startingT, double endingT, Component component, double startingF, double endingF, int n) {
+    List<Mode> centerModes = getCenterModes(startingT, endingT, component);
+    return IntStream.range(0, n)
+        .mapToObj(i -> Range.openClosed(startingF + (endingF - startingF) / (double) n * (double) i, startingF + (endingF - startingF) / (double) n * (double) (i + 1)))
+        .map(r -> new Mode(
+                centerModes.stream()
+                    .filter(m -> r.contains(m.getFrequency()))
+                    .mapToDouble(Mode::getStrength)
+                    .average()
+                    .orElse(0d),
+                (r.lowerEndpoint() + r.upperEndpoint()) / 2d
+            )
+        )
+        .collect(Collectors.toList());
   }
 
 }

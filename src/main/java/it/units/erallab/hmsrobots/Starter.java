@@ -257,14 +257,6 @@ public class Starter {
         Locomotion.createTerrain("flat"),
         new Settings()
     );
-
-    Outcome outcome = locomotion.apply(robot);
-    outcome.getCenterModes(1,10, Outcome.Component.Y).stream()
-        .sorted(Comparator.comparingDouble(Outcome.Mode::getFrequency))
-        .forEach(System.out::println);
-
-    System.exit(0);
-
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
     namedSolutionGrid.set(0, 0, Pair.of("unbreakable", robot));
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
