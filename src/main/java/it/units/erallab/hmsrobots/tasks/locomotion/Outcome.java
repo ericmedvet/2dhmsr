@@ -33,7 +33,6 @@ import java.util.stream.Stream;
 
 public class Outcome {
 
-  public static final double INITIAL_TRANSIENT_RATIO = 0.1d;
   public static final double FOOTPRINT_INTERVAL = 0.5d;
   public static final double GAIT_LONGEST_INTERVAL = 5d;
 
@@ -189,10 +188,6 @@ public class Outcome {
     return distance / (1d + controlPower * time);
   }
 
-  public Grid<Boolean> getAveragePosture() {
-    return getAveragePosture(time * INITIAL_TRANSIENT_RATIO, time);
-  }
-
   public Grid<Boolean> getAveragePosture(double startingT, double endingT) {
     return Grid.create(
         postures.get(postures.firstKey()).getW(),
@@ -240,8 +235,8 @@ public class Outcome {
     return gaits.get(0);
   }
 
-  public Gait getMainGait() {
-    return getMainGait(time * INITIAL_TRANSIENT_RATIO, time, FOOTPRINT_INTERVAL, GAIT_LONGEST_INTERVAL);
+  public Gait getMainGait(double startingT, double endingT) {
+    return getMainGait(startingT, endingT, FOOTPRINT_INTERVAL, GAIT_LONGEST_INTERVAL);
   }
 
   private static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
@@ -363,7 +358,8 @@ public class Outcome {
         .collect(Collectors.toList());
   }
 
-  public List<Mode> getCenterModes(Component component) {
-    return getCenterModes(time * INITIAL_TRANSIENT_RATIO, time, component);
+  public List<Double> getCenterPowerSpectrum(double startingT, double endingT, Component component, double startingF, double endingF, int n) {
+    return null;
   }
+
 }
