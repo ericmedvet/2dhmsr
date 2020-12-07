@@ -29,7 +29,7 @@ public class SerializationUtils {
 
   private static final Logger L = Logger.getLogger(Utils.class.getName());
   private static final Mode DEFAULT_SERIALIZATION_MODE = Mode.GZIPPED_JSON;
-  private static final Mode DEFAULT_CLONE_MODE = Mode.JSON;
+  private static final Mode DEFAULT_CLONE_MODE = Mode.JAVA;
   private static final ObjectMapper OM;
   private static final ObjectMapper PRETTY_OM;
 
