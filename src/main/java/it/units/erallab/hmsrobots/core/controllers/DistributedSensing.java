@@ -77,6 +77,14 @@ public class DistributedSensing implements Controller<SensingVoxel> {
 
   private final Grid<double[]> lastSignalsGrid;
 
+  public static int nOfInputs(SensingVoxel voxel, int signals) {
+    return signals * Dir.values().length + voxel.getSensors().stream().mapToInt(s -> s.domains().length).sum();
+  }
+
+  public static int nOfOutputs(SensingVoxel voxel, int signals) {
+    return 1 + signals * Dir.values().length;
+  }
+
   @JsonCreator
   public DistributedSensing(
       @JsonProperty("signals") int signals,
