@@ -61,10 +61,6 @@ This VSR is composed of voxel of two different materials that are actuated with 
 final Locomotion locomotion = new Locomotion(
     20,
     Locomotion.createTerrain("flat"),
-    Lists.newArrayList(
-        Locomotion.Metric.TRAVEL_X_VELOCITY,
-        Locomotion.Metric.RELATIVE_CONTROL_POWER
-    ),
     new Settings()
 );
 final ControllableVoxel hardMaterialVoxel = new ControllableVoxel(
@@ -118,9 +114,9 @@ FramesFileWriter framesFileWriter = new FramesFileWriter(
     new File(pathToFile),
     Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 );
-List<Double> result = locomotion.apply(robot, framesFileWriter);
+Outcome outcome = locomotion.apply(robot, framesFileWriter);
 framesFileWriter.flush();
-System.out.println("Outcome: " + result);
+System.out.println("Outcome: " + outcome);
 ```
 
 #### Optimization examples: optimize phases
@@ -147,12 +143,11 @@ public static double assessOnLocomotion(double[] phases) {
     Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("flat"),
-        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
     // do task
-    List<Double> results = locomotion.apply(robot);
-    return results.get(0);
+    Outcome outcome = locomotion.apply(robot);
+    return outcome.getDistance() / outcome.getTime();
 }
 ``` 
 
@@ -208,12 +203,11 @@ public static double assessOnLocomotion(double[] weights) {
     Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("flat"),
-        Lists.newArrayList(Locomotion.Metric.TRAVEL_X_VELOCITY),
         settings
     );
     // do task
-    List<Double> results = locomotion.apply(robot);
-    return results.get(0);
+    Outcome outcome = locomotion.apply(robot);
+    return outcome.getDistance() / outcome.getTime();
 }
 ```
 
