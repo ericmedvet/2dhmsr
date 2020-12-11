@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 
 /**
  * @author eric
- * @created 2020/11/07
- * @project 2dhmsr
  */
 public class VideoUtils {
 

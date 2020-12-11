@@ -18,8 +18,6 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * @author eric
- * @created 2020/10/31
- * @project 2dhmsr
  */
 public class SerializationUtils {
   private SerializationUtils() {

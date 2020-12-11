@@ -193,7 +193,7 @@ public class Utils {
     throw new IllegalStateException(String.format("Param %s not found in %s with pattern %s", paramName, string, pattern));
   }
 
-  private static Map<String, String> params(String pattern, String string) {
+  public static Map<String, String> params(String pattern, String string) {
     if (!string.matches(pattern)) {
       return null;
     }

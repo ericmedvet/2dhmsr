@@ -5,8 +5,6 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 /**
  * @author eric
- * @created 2020/08/27
- * @project 2dhmsr
  */
 public class Malfunction implements Sensor {
 

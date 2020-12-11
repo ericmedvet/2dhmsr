@@ -42,8 +42,6 @@ import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author eric
- * @created 2020/07/14
- * @project TwoDimHighlyModularSoftRobots
  */
 public class FineLocomotionStarter {
 

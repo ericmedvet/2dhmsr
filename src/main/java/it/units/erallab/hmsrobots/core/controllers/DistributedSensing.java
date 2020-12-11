@@ -29,8 +29,6 @@ import java.util.function.Function;
 
 /**
  * @author eric
- * @created 2020/08/18
- * @project TwoDimHighlyModularSoftRobots
  */
 public class DistributedSensing implements Controller<SensingVoxel> {
 
