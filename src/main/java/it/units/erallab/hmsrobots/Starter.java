@@ -124,7 +124,7 @@ public class Starter {
   }
 
   private static void bipeds() {
-    Grid<? extends SensingVoxel> body = Utils.buildBody("biped-7x4-t-f");
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("spinedTouch-f-f").apply(Utils.buildShape("biped-7x4"));
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
@@ -194,7 +194,7 @@ public class Starter {
   }
 
   private static void breakingWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-4x3-f-t");
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("spinedTouch-f-t").apply(Utils.buildShape("worm-4x3"));
     double f = 1d;
     Robot<ControllableVoxel> unbreakableRobot = new Robot<>(
         new TimeFunctions(Grid.create(
@@ -239,7 +239,7 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildBody("worm-10x3-f-f");
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform").apply(Utils.buildShape("worm-10x3"));
     double f = 1d;
     Robot<ControllableVoxel> robot = new Robot<>(
         new TimeFunctions(Grid.create(
@@ -325,7 +325,7 @@ public class Starter {
 
   private static void rollingBall() {
     Random random = new Random();
-    Grid<? extends SensingVoxel> body = Utils.buildBody("ball-7-f-f");
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform").apply(Utils.buildShape("ball-7"));
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
