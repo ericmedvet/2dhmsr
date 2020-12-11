@@ -18,10 +18,10 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.SerializableFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -64,6 +64,21 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     }
   }
 
+  private static class FunctionWrapper implements Function<double[], double[]> {
+    @JsonProperty
+    private final SerializableFunction<double[], double[]> inner;
+
+    @JsonCreator
+    public FunctionWrapper(@JsonProperty("inner") SerializableFunction<double[], double[]> inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    public double[] apply(double[] in) {
+      return inner.apply(in);
+    }
+  }
+
   @JsonProperty
   private final int signals;
   @JsonProperty
@@ -103,7 +118,11 @@ public class DistributedSensing implements Controller<SensingVoxel> {
         signals,
         Grid.create(voxels, v -> (v == null) ? 0 : (signals * Dir.values().length + v.getSensors().stream().mapToInt(s -> s.domains().length).sum())),
         Grid.create(voxels, v -> (v == null) ? 0 : (1 + signals * Dir.values().length)),
-        Grid.create(voxels.getW(), voxels.getH(), (x, y) -> voxels.get(x, y) == null ? null : ((double[] in) -> new double[1 + signals * Dir.values().length]))
+        Grid.create(
+            voxels.getW(),
+            voxels.getH(),
+            (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper((double[] in) -> new double[1 + signals * Dir.values().length])
+        )
     );
   }
 
@@ -174,4 +193,5 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     }
     return flatValues;
   }
+
 }

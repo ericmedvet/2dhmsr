@@ -18,6 +18,8 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
+import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -207,9 +209,9 @@ public class Utils {
   }
 
   public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {
-    String spineTouch = "spinedTouch-(?<cgp>[tf])-(?<malfunction>[tf])";
+    String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])";
-    String uniform = "uniform";
+    String uniform = "uniform-(?<position>[tf])";
     Map<String, String> params;
     if ((params = params(spineTouch, name)) != null) {
       final Map<String, String> pars = params;
@@ -247,9 +249,11 @@ public class Utils {
       );
     }
     if ((params = params(uniform, name)) != null) {
-      return body -> Grid.create(body, b -> !b ? null : new SensingVoxel(List.of(
+      final Map<String, String> pars = params;
+      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(Utils.ofNonNull(
           new Normalization(new Velocity(true, 5d, Velocity.Axis.X, Velocity.Axis.Y)),
-          new Normalization(new AreaRatio())
+          new Normalization(new AreaRatio()),
+          pars.get("position").equals("t") ? new Constant((double) x / (double) body.getW(), (double) y / (double) body.getH()) : null
       )));
     }
     throw new IllegalArgumentException(String.format("Unknown sensorizing function name: %s", name));
@@ -270,12 +274,12 @@ public class Utils {
     if ((params = params(biped, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> (y == 0 && x > 0 && x < w - 1));
+      return Grid.create(w, h, (x, y) -> !(y == 0 && x > 0 && x < w - 1));
     }
     if ((params = params(tripod, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> (y != h - 1 && x != 0 && x != w - 1 && x != w / 2));
+      return Grid.create(w, h, (x, y) -> !(y != h - 1 && x != 0 && x != w - 1 && x != w / 2));
     }
     if ((params = params(ball, name)) != null) {
       int d = Integer.parseInt(params.get("d"));
