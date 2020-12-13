@@ -141,9 +141,9 @@ public class Utils {
     return outGrid;
   }
 
-  public static UnaryOperator<Robot<?>> buildRobotTransformation(String name) {
-    String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
-    String broken = "broken-(?<ratio>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+  public static UnaryOperator<Robot<?>> buildRobotTransformation(String name, Random externalRandom) {
+    String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
+    String broken = "broken-(?<ratio>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
     String identity = "identity";
     Map<String, String> params;
     if ((params = params(identity, name)) != null) {
@@ -155,8 +155,12 @@ public class Utils {
       double thresholdStDev = Double.parseDouble(params.get("thresholdStDev"));
       double restoreTimeMean = Double.parseDouble(params.get("restoreTimeMean"));
       double restoreTimeStDev = Double.parseDouble(params.get("restoreTimeStDev"));
-      long randomSeed = Long.parseLong(params.get("seed"));
-      Random random = new Random(randomSeed);
+      Random random;
+      if (!params.get("seed").equals("rnd")) {
+        random = new Random(Long.parseLong(params.get("seed")));
+      } else {
+        random = externalRandom;
+      }
       return new UnaryOperator<Robot<?>>() {
         @Override
         @SuppressWarnings("unchecked")
@@ -165,7 +169,7 @@ public class Utils {
               ((Robot<SensingVoxel>) robot).getController(),
               Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
                   v.getSensors(),
-                  randomSeed,
+                  random.nextInt(),
                   Map.of(
                       BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
                   ),
@@ -181,8 +185,12 @@ public class Utils {
     }
     if ((params = params(broken, name)) != null) {
       double ratio = Double.parseDouble(params.get("ratio"));
-      long randomSeed = Long.parseLong(params.get("seed"));
-      Random random = new Random(randomSeed);
+      Random random;
+      if (!params.get("seed").equals("rnd")) {
+        random = new Random(Long.parseLong(params.get("seed")));
+      } else {
+        random = externalRandom;
+      }
       return new UnaryOperator<Robot<?>>() {
         @Override
         @SuppressWarnings("unchecked")
@@ -191,7 +199,7 @@ public class Utils {
               ((Robot<SensingVoxel>) robot).getController(),
               Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : random.nextDouble() > ratio ? v : new BreakableVoxel(
                   v.getSensors(),
-                  randomSeed,
+                  random.nextInt(),
                   Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)),
                   Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 0d),
                   Double.POSITIVE_INFINITY
