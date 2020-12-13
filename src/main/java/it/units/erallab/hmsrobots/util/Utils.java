@@ -18,8 +18,6 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
-import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -146,32 +144,39 @@ public class Utils {
   public static UnaryOperator<Robot<?>> buildRobotTransformation(String name) {
     String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
     String identity = "identity";
-    if (name.matches(identity)) {
+    Map<String, String> params;
+    if ((params = params(identity, name)) != null) {
       return UnaryOperator.identity();
     }
-    if (name.matches(breakable)) {
-      String type = param(breakable, name, "triggerType");
-      double thresholdMean = Double.parseDouble(param(breakable, name, "thresholdMean"));
-      double thresholdStDev = Double.parseDouble(param(breakable, name, "thresholdStDev"));
-      double restoreTimeMean = Double.parseDouble(param(breakable, name, "restTimeMean"));
-      double restoreTimeStDev = Double.parseDouble(param(breakable, name, "restTimeStDev"));
-      long randomSeed = Integer.parseInt(param(breakable, name, "seed"));
+    if ((params = params(breakable, name)) != null) {
+      String type = params.get("triggerType");
+      double thresholdMean = Double.parseDouble(params.get("thresholdMean"));
+      double thresholdStDev = Double.parseDouble(params.get("thresholdStDev"));
+      double restoreTimeMean = Double.parseDouble(params.get("restoreTimeMean"));
+      double restoreTimeStDev = Double.parseDouble(params.get("restoreTimeStDev"));
+      long randomSeed = Long.parseLong(params.get("seed"));
       Random random = new Random(randomSeed);
-      return robot -> new Robot<>(
-          ((Robot<SensingVoxel>) robot).getController(),
-          Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
-              v.getSensors(),
-              randomSeed,
-              Map.of(
-                  BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
-              ),
-              Map.of(
-                  BreakableVoxel.MalfunctionTrigger.valueOf(type.toUpperCase()),
-                  random.nextGaussian() * thresholdStDev + thresholdMean
-              ),
-              random.nextGaussian() * restoreTimeStDev + restoreTimeMean
-          ))
-      );
+      return new UnaryOperator<Robot<?>>() {
+        @Override
+        @SuppressWarnings("unchecked")
+        public Robot<?> apply(Robot<?> robot) {
+          return new Robot<>(
+              ((Robot<SensingVoxel>) robot).getController(),
+              Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
+                  v.getSensors(),
+                  randomSeed,
+                  Map.of(
+                      BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
+                  ),
+                  Map.of(
+                      BreakableVoxel.MalfunctionTrigger.valueOf(type.toUpperCase()),
+                      random.nextGaussian() * thresholdStDev + thresholdMean
+                  ),
+                  random.nextGaussian() * restoreTimeStDev + restoreTimeMean
+              ))
+          );
+        }
+      };
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
