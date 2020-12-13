@@ -210,16 +210,17 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     String flat = "flat";
     String hilly = "hilly-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
     String steppy = "steppy-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
-    if (name.matches(flat)) {
+    Map<String, String> params;
+    if ((params = Utils.params(flat, name)) != null) {
       return new double[][]{
           new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
           new double[]{TERRAIN_BORDER_HEIGHT, 5, 5, TERRAIN_BORDER_HEIGHT}
       };
     }
-    if (name.matches(hilly)) {
-      double h = Double.parseDouble(paramValue(hilly, name, "h"));
-      double w = Double.parseDouble(paramValue(hilly, name, "w"));
-      Random random = new Random(Integer.parseInt(paramValue(hilly, name, "seed")));
+    if ((params = Utils.params(hilly, name)) != null) {
+      double h = Double.parseDouble(params.get("h"));
+      double w = Double.parseDouble(params.get("w"));
+      Random random = new Random(Integer.parseInt(params.get("seed")));
       List<Double> xs = new ArrayList<>(List.of(0d, 10d));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
       while (xs.get(xs.size() - 1) < TERRAIN_LENGTH) {
@@ -233,10 +234,10 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
           ys.stream().mapToDouble(d -> d).toArray()
       };
     }
-    if (name.matches(steppy)) {
-      double h = Double.parseDouble(paramValue(steppy, name, "h"));
-      double w = Double.parseDouble(paramValue(steppy, name, "w"));
-      Random random = new Random(Integer.parseInt(paramValue(steppy, name, "seed")));
+    if ((params = Utils.params(steppy, name)) != null) {
+      double h = Double.parseDouble(params.get("h"));
+      double w = Double.parseDouble(params.get("w"));
+      Random random = new Random(Integer.parseInt(params.get("seed")));
       List<Double> xs = new ArrayList<>(List.of(0d, 10d));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
       while (xs.get(xs.size() - 1) < TERRAIN_LENGTH) {
@@ -253,14 +254,6 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       };
     }
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));
-  }
-
-  private static String paramValue(String pattern, String string, String paramName) {
-    Matcher matcher = Pattern.compile(pattern).matcher(string);
-    if (matcher.matches()) {
-      return matcher.group(paramName);
-    }
-    throw new IllegalStateException(String.format("Param %s not found in %s with pattern %s", paramName, string, pattern));
   }
 
 }
