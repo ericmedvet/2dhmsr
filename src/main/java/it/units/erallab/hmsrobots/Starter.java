@@ -259,7 +259,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         30,
-        Locomotion.createTerrain("flat"),
+        Locomotion.createTerrain("hilly-1-10-0"),
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
