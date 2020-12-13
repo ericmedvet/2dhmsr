@@ -116,11 +116,11 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    //plainWorm();
+    plainWorm();
   }
 
   private static void bipeds() {
@@ -239,9 +239,9 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform").apply(Utils.buildShape("worm-10x3"));
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-f").apply(Utils.buildShape("worm-10x3"));
     double f = 1d;
-    Robot<ControllableVoxel> robot = new Robot<>(
+    Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(
             body.getW(),
             body.getH(),
@@ -251,6 +251,7 @@ public class Starter {
         )),
         SerializationUtils.clone(body)
     );
+    robot = Utils.buildRobotTransformation("broken-0.25-0").apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
         30,
@@ -325,7 +326,7 @@ public class Starter {
 
   private static void rollingBall() {
     Random random = new Random();
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform").apply(Utils.buildShape("ball-7"));
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-f").apply(Utils.buildShape("ball-7"));
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(

@@ -143,6 +143,7 @@ public class Utils {
 
   public static UnaryOperator<Robot<?>> buildRobotTransformation(String name) {
     String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
+    String broken = "broken-(?<ratio>\\d+(\\.\\d+)?)-(?<seed>\\d+)";
     String identity = "identity";
     Map<String, String> params;
     if ((params = params(identity, name)) != null) {
@@ -178,7 +179,28 @@ public class Utils {
         }
       };
     }
-    throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
+    if ((params = params(broken, name)) != null) {
+      double ratio = Double.parseDouble(params.get("ratio"));
+      long randomSeed = Long.parseLong(params.get("seed"));
+      Random random = new Random(randomSeed);
+      return new UnaryOperator<Robot<?>>() {
+        @Override
+        @SuppressWarnings("unchecked")
+        public Robot<?> apply(Robot<?> robot) {
+          return new Robot<>(
+              ((Robot<SensingVoxel>) robot).getController(),
+              Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : random.nextDouble() > ratio ? v : new BreakableVoxel(
+                  v.getSensors(),
+                  randomSeed,
+                  Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)),
+                  Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 0d),
+                  Double.POSITIVE_INFINITY
+              ))
+          );
+        }
+      };
+    }
+    throw new IllegalArgumentException(String.format("Unknown transformation name: %s", name));
   }
 
   @SafeVarargs
