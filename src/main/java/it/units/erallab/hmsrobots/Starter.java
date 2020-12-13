@@ -42,7 +42,10 @@ import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -205,7 +208,8 @@ public class Starter {
         SerializationUtils.clone(body)
     );
     Robot<?> breakableRobot = Utils.buildRobotTransformation(
-        "breakable-area-1000/500-3/0.5-0"
+        "breakable-area-1000/500-3/0.5-0",
+        new Random(0)
     ).apply(SerializationUtils.clone(unbreakableRobot));
     //episode
     Locomotion locomotion = new Locomotion(
@@ -251,7 +255,7 @@ public class Starter {
         )),
         SerializationUtils.clone(body)
     );
-    robot = Utils.buildRobotTransformation("broken-0.25-0").apply(robot);
+    robot = Utils.buildRobotTransformation("broken-0.25-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
         30,
