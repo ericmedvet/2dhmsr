@@ -36,9 +36,8 @@ import org.dyn4j.geometry.Vector2;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
@@ -208,6 +207,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
   public static double[][] createTerrain(String name) {
     String flat = "flat";
+    String flatWithStart = "flatWithStart-(?<seed>[0-9]+)";
     String hilly = "hilly-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
     String steppy = "steppy-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
     Map<String, String> params;
@@ -215,6 +215,24 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       return new double[][]{
           new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
           new double[]{TERRAIN_BORDER_HEIGHT, 5, 5, TERRAIN_BORDER_HEIGHT}
+      };
+    }
+    if ((params = Utils.params(flatWithStart, name)) != null) {
+      Random random = new Random(Integer.parseInt(params.get("seed")));
+      IntStream.range(0, random.nextInt(10) + 10).forEach(i -> random.nextDouble()); //it looks like that otherwise the 1st double of nextDouble() is always around 0.73...
+      double angle = Math.PI / 18d * (random.nextDouble() * 2d - 1d);
+      double startLength = it.units.erallab.hmsrobots.core.objects.Voxel.SIDE_LENGTH * 8d;
+      return new double[][]{
+          new double[]{
+              0, 10,
+              10 + startLength,
+              TERRAIN_LENGTH - 10, TERRAIN_LENGTH
+          },
+          new double[]{
+              TERRAIN_BORDER_HEIGHT, 5 + startLength * Math.sin(angle),
+              5,
+              5, TERRAIN_BORDER_HEIGHT
+          }
       };
     }
     if ((params = Utils.params(hilly, name)) != null) {
