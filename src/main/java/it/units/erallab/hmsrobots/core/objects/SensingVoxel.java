@@ -78,14 +78,6 @@ public class SensingVoxel extends ControllableVoxel {
     lastReadings = sensors.stream()
         .map(s -> Pair.of(s, s.sense(this, t)))
         .collect(Collectors.toList());
-
-    System.out.println(
-        String.format("%5.3fs", t) + " " +
-            lastReadings.stream()
-                .map(p -> String.format("%s=[%s]",
-                    p.getLeft().getClass().getSimpleName(),
-                    Arrays.stream(p.getRight()).mapToObj(v -> String.format("%5.3f", v)).collect(Collectors.joining(";"))
-                )).collect(Collectors.joining(" ")));
   }
 
   public List<Sensor> getSensors() {
