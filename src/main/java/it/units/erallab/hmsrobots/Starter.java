@@ -243,19 +243,20 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-f").apply(Utils.buildShape("worm-10x3"));
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-t+vx+vy+ax+ay+a-0.1").apply(Utils.buildShape("worm-10x3"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(
             body.getW(),
             body.getH(),
-            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
+            /*(final Integer x, final Integer y) -> (Double t) -> Math.sin(
                 -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
-            )
+            )*/
+            (x, y) -> t -> Math.signum(Math.sin(-2 * Math.PI * (f + (x > body.getW() / 2d ? 1 : 0)) * t))
         )),
         SerializationUtils.clone(body)
     );
-    robot = Utils.buildRobotTransformation("broken-0.25-0", new Random(0)).apply(robot);
+    robot = Utils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
         30,

@@ -41,12 +41,15 @@ public class BreakableVoxel extends SensingVoxel {
     CONTROL, AREA, TIME
   }
 
-  @JsonProperty private final Map<ComponentType, Set<MalfunctionType>> malfunctions;
-  @JsonProperty private final Map<MalfunctionTrigger, Double> triggerThresholds;
-  @JsonProperty private final double restoreTime;
-  @JsonProperty private final long randomSeed;
+  @JsonProperty
+  private final Map<ComponentType, Set<MalfunctionType>> malfunctions;
+  @JsonProperty
+  private final Map<MalfunctionTrigger, Double> triggerThresholds;
+  @JsonProperty
+  private final double restoreTime;
+  @JsonProperty
+  private final long randomSeed;
 
-  private List<Pair<Sensor, double[]>> lastSensorReadings;
   private final EnumMap<MalfunctionTrigger, Double> triggerCounters;
   private final EnumMap<ComponentType, MalfunctionType> state;
 
@@ -110,27 +113,6 @@ public class BreakableVoxel extends SensingVoxel {
     state = new EnumMap<>(ComponentType.class);
     Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
     reset();
-  }
-
-  @Override
-  public List<Pair<Sensor, double[]>> sense(double t) {
-    //sense
-    List<Pair<Sensor, double[]>> sensorReadings = getSensors().stream()
-        .map(s -> Pair.of(s, Arrays.stream(s.domains())
-            .mapToDouble(d -> (d.getMin() + d.getMax()) / 2d)
-            .toArray()
-        )).collect(Collectors.toList());
-    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE)) {
-      sensorReadings = super.sense(t);
-    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.FROZEN)) {
-      sensorReadings = lastSensorReadings;
-    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.RANDOM)) {
-      sensorReadings = getSensors().stream()
-          .map(s -> Pair.of(s, random(s.domains())))
-          .collect(Collectors.toList());
-    }
-    lastSensorReadings = sensorReadings;
-    return sensorReadings;
   }
 
   @Override
@@ -207,7 +189,18 @@ public class BreakableVoxel extends SensingVoxel {
 
   @Override
   public void act(double t) {
+    //sense
+    List<Pair<Sensor, double[]>> oldReadings = lastReadings.stream()
+        .map(p -> Pair.of(p.getLeft(), Arrays.copyOf(p.getRight(), p.getRight().length)))
+        .collect(Collectors.toList());
     super.act(t);
+    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.FROZEN)) {
+      lastReadings = oldReadings;
+    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.RANDOM)) {
+      lastReadings = getSensors().stream()
+          .map(s -> Pair.of(s, random(s.domains())))
+          .collect(Collectors.toList());
+    }
     //update counters
     triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastT);
     triggerCounters.put(MalfunctionTrigger.CONTROL, triggerCounters.get(MalfunctionTrigger.CONTROL) + (getControlEnergy() - lastControlEnergy));

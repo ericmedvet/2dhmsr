@@ -19,8 +19,6 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.Arrays;

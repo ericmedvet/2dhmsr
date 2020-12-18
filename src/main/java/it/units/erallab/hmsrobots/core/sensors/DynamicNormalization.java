@@ -21,29 +21,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 import java.util.Arrays;
+import java.util.TreeMap;
 
-public class Derivative implements Sensor {
-
-  private final static double DOMAIN_MULTIPLIER = 10d;
+public class DynamicNormalization implements Sensor {
 
   @JsonProperty
   private final Sensor sensor;
+  @JsonProperty
+  private final double interval;
 
+  private final TreeMap<Double, double[]> readings;
   private final Domain[] domains;
-  private double lastT;
-  private double[] lastReadings;
 
   @JsonCreator
-  public Derivative(
-      @JsonProperty("sensor") Sensor sensor
+  public DynamicNormalization(
+      @JsonProperty("sensor") Sensor sensor,
+      @JsonProperty("interval") double interval
   ) {
     this.sensor = sensor;
-    domains = Arrays.stream(sensor.domains())
-        .map(d -> Domain.of(
-            -DOMAIN_MULTIPLIER * Math.max(Math.abs(d.getMax()), Math.abs(d.getMin())),
-            DOMAIN_MULTIPLIER * Math.max(Math.abs(d.getMax()), Math.abs(d.getMin()))
-        ))
-        .toArray(Domain[]::new);
+    this.interval = interval;
+    domains = new Domain[sensor.domains().length];
+    readings = new TreeMap<>();
+    Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   @Override
@@ -54,14 +53,27 @@ public class Derivative implements Sensor {
   @Override
   public double[] sense(Voxel voxel, double t) {
     double[] currentReadings = sensor.sense(voxel, t);
-    double[] diffs = new double[currentReadings.length];
-    if (lastReadings != null) {
-      for (int i = 0; i < diffs.length; i++) {
-        diffs[i] = (currentReadings[i] - lastReadings[i]) / (t - lastT);
+    readings.put(t, currentReadings);
+    double t0 = readings.firstKey();
+    while (t0 < (t - interval)) {
+      readings.remove(t0);
+      t0 = readings.firstKey();
+    }
+    double[] mins = new double[currentReadings.length];
+    double[] maxs = new double[currentReadings.length];
+    Arrays.fill(mins, 0d);
+    Arrays.fill(maxs, 1d);
+    for (double[] pastReadings : readings.values()) {
+      for (int i = 0; i < currentReadings.length; i++) {
+        mins[i] = Math.min(mins[i], pastReadings[i]);
+        maxs[i] = Math.max(maxs[i], pastReadings[i]);
       }
     }
-    lastT = t;
-    lastReadings = currentReadings;
-    return diffs;
+    double[] values = new double[currentReadings.length];
+    for (int i = 0; i < values.length; i++) {
+      values[i] = Math.min(Math.max((currentReadings[i] - mins[i]) / (maxs[i] - mins[i]), 0d), 1d);
+    }
+    return values;
   }
+
 }

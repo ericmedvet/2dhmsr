@@ -148,7 +148,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
       }
       //get inputs
       double[] signals = getLastSignals(entry.getX(), entry.getY());
-      double[] inputs = flatten(entry.getValue().sense(t), signals);
+      double[] inputs = flatten(entry.getValue().getLastReadings(), signals);
       //compute outputs
       Function<double[], double[]> function = functions.get(entry.getX(), entry.getY());
       double[] outputs = function != null ? function.apply(inputs) : new double[1 + this.signals * Dir.values().length];

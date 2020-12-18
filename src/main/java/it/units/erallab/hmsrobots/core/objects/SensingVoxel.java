@@ -24,7 +24,7 @@ import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,14 +66,26 @@ public class SensingVoxel extends ControllableVoxel {
     this.sensors = sensors;
   }
 
-  private List<Pair<Sensor, double[]>> lastSensorReadings = Collections.EMPTY_LIST;
+  protected List<Pair<Sensor, double[]>> lastReadings = List.of();
 
-  public List<Pair<Sensor, double[]>> sense(double t) {
-    List<Pair<Sensor, double[]>> pairs = sensors.stream()
+  public List<Pair<Sensor, double[]>> getLastReadings() {
+    return lastReadings;
+  }
+
+  @Override
+  public void act(double t) {
+    super.act(t);
+    lastReadings = sensors.stream()
         .map(s -> Pair.of(s, s.sense(this, t)))
         .collect(Collectors.toList());
-    lastSensorReadings = pairs;
-    return pairs;
+
+    System.out.println(
+        String.format("%5.3fs", t) + " " +
+            lastReadings.stream()
+                .map(p -> String.format("%s=[%s]",
+                    p.getLeft().getClass().getSimpleName(),
+                    Arrays.stream(p.getRight()).mapToObj(v -> String.format("%5.3f", v)).collect(Collectors.joining(";"))
+                )).collect(Collectors.joining(" ")));
   }
 
   public List<Sensor> getSensors() {
@@ -84,9 +96,9 @@ public class SensingVoxel extends ControllableVoxel {
   public Immutable immutable() {
     it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel immutable = (it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel) super.immutable();
     //add sensor readings
-    int nOfSensors = lastSensorReadings.size();
+    int nOfSensors = lastReadings.size();
     for (int i = 0; i < nOfSensors; i++) {
-      Pair<Sensor, double[]> pair = lastSensorReadings.get(i);
+      Pair<Sensor, double[]> pair = lastReadings.get(i);
       Sensor sensor = pair.getKey();
       SensorReading reading = new SensorReading(pair.getValue(), sensor.domains(), i, nOfSensors);
       if (sensor instanceof ReadingAugmenter) {

@@ -98,7 +98,7 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
     int c = 0;
     List<List<Pair<Sensor, double[]>>> allReadings = voxels.values().stream()
         .filter(Objects::nonNull)
-        .map(v -> v.sense(t))
+        .map(SensingVoxel::getLastReadings)
         .collect(Collectors.toList());
     for (List<Pair<Sensor, double[]>> readings : allReadings) {
       for (Pair<Sensor, double[]> sensorPair : readings) {

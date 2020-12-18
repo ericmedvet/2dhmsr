@@ -24,6 +24,7 @@ import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.*;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -244,9 +245,20 @@ public class Utils {
   }
 
   public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {
+    Map<String, BiFunction<Double, Double, Sensor>> availableSensors = Map.ofEntries(
+        Map.entry("t", (x, y) -> new Touch()),
+        Map.entry("a", (x, y) -> new DynamicNormalization(new AreaRatio(), 2d)),
+        Map.entry("r", (x, y) -> new Normalization(new Angle())),
+        Map.entry("vx", (x, y) -> new DynamicNormalization(new Velocity(true, 5d, Velocity.Axis.X), 2d)),
+        Map.entry("vy", (x, y) -> new DynamicNormalization(new Velocity(true, 5d, Velocity.Axis.Y), 2d)),
+        Map.entry("ax", (x, y) -> new DynamicNormalization(new Derivative(new Velocity(true, 5d, Velocity.Axis.X)), 2d)),
+        Map.entry("ay", (x, y) -> new DynamicNormalization(new Derivative(new Velocity(true, 5d, Velocity.Axis.Y)), 2d)),
+        Map.entry("px", (x, y) -> new Constant(x)),
+        Map.entry("py", (x, y) -> new Constant(y))
+    );
     String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])";
-    String uniform = "uniform-(?<position>[tf])";
+    String uniform = "uniform-(?<sensors>(" + String.join("|", availableSensors.keySet()) + ")(\\+(" + String.join("|", availableSensors.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
     Map<String, String> params;
     if ((params = params(spineTouch, name)) != null) {
       final Map<String, String> pars = params;
@@ -285,15 +297,16 @@ public class Utils {
     }
     if ((params = params(uniform, name)) != null) {
       final Map<String, String> pars = params;
-      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(Utils.ofNonNull(
-          new Normalization(new Velocity(true, 5d, Velocity.Axis.X, Velocity.Axis.Y)),
-          new Normalization(new AreaRatio()),
-          pars.get("position").equals("t") ? new Constant((double) x / (double) body.getW(), (double) y / (double) body.getH()) : null
-      )));
+      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
+      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
+          Arrays.stream(pars.get("sensors").split("\\+"))
+              .map(s -> availableSensors.get(s).apply((double) x / (double) body.getW(), (double) y / (double) body.getH()))
+              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
+              .collect(Collectors.toList())
+      ));
     }
     throw new IllegalArgumentException(String.format("Unknown sensorizing function name: %s", name));
   }
-
 
   public static Grid<Boolean> buildShape(String name) {
     String box = "(box|worm)-(?<w>\\d+)x(?<h>\\d+)";
