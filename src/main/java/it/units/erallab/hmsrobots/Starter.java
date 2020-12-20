@@ -243,7 +243,7 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-t+vx+vy+ax+ay+a-0.1").apply(Utils.buildShape("worm-10x3"));
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-a-0.01").apply(Utils.buildShape("worm-3x2"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(

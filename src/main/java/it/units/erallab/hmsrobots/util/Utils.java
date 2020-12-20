@@ -259,6 +259,7 @@ public class Utils {
     String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])";
     String uniform = "uniform-(?<sensors>(" + String.join("|", availableSensors.keySet()) + ")(\\+(" + String.join("|", availableSensors.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
+    String empty = "empty";
     Map<String, String> params;
     if ((params = params(spineTouch, name)) != null) {
       final Map<String, String> pars = params;
@@ -304,6 +305,9 @@ public class Utils {
               .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
               .collect(Collectors.toList())
       ));
+    }
+    if ((params = params(empty, name)) != null) {
+      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(List.of()));
     }
     throw new IllegalArgumentException(String.format("Unknown sensorizing function name: %s", name));
   }

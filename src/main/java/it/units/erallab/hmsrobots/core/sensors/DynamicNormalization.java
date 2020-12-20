@@ -61,8 +61,8 @@ public class DynamicNormalization implements Sensor {
     }
     double[] mins = new double[currentReadings.length];
     double[] maxs = new double[currentReadings.length];
-    Arrays.fill(mins, 0d);
-    Arrays.fill(maxs, 1d);
+    Arrays.fill(mins, Double.POSITIVE_INFINITY);
+    Arrays.fill(maxs, Double.NEGATIVE_INFINITY);
     for (double[] pastReadings : readings.values()) {
       for (int i = 0; i < currentReadings.length; i++) {
         mins[i] = Math.min(mins[i], pastReadings[i]);
