@@ -88,39 +88,30 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
-    Map<Double, Point2> centerTrajectory = new HashMap<>();
-    Map<Double, Footprint> footprints = new HashMap<>();
-    Map<Double, Grid<Boolean>> masks = new HashMap<>();
     //run
+    List<Outcome.Observation> observations = new ArrayList<>((int) Math.ceil(finalT / settings.getStepFrequency()));
     double t = 0d;
     while (t < finalT) {
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
-      centerTrajectory.put(t, Point2.build(robot.getCenter()));
-      footprints.put(t, footprint(robot, FOOTPRINT_BINS));
-      masks.put(t, mask(robot, MASK_BINS));
+      observations.add(new Outcome.Observation(
+          t,
+          Point2.build(robot.getCenter()),
+          footprint(robot, FOOTPRINT_BINS),
+          mask(robot, MASK_BINS),
+          robot.getVoxels().values().stream()
+              .filter(v -> (v instanceof ControllableVoxel))
+              .mapToDouble(ControllableVoxel::getControlEnergy)
+              .sum() - (observations.isEmpty() ? 0d : observations.get(observations.size() - 1).getControlEnergy()),
+          robot.getVoxels().values().stream()
+              .filter(v -> (v instanceof ControllableVoxel))
+              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
+              .sum() - (observations.isEmpty() ? 0d : observations.get(observations.size() - 1).getAreaRatioEnergy()),
+          (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+      ));
     }
     stopWatch.stop();
     //prepare outcome
-    return new Outcome(
-        (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d,
-        robot.getCenter().x - initCenterX,
-        t,
-        Math.max(
-            Utils.cropGrid(robot.getVoxels(), Objects::nonNull).getW(),
-            Utils.cropGrid(robot.getVoxels(), Objects::nonNull).getH()
-        ),
-        robot.getVoxels().values().stream()
-            .filter(v -> (v instanceof ControllableVoxel))
-            .mapToDouble(ControllableVoxel::getControlEnergy)
-            .sum() / t,
-        robot.getVoxels().values().stream()
-            .filter(v -> (v instanceof ControllableVoxel))
-            .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
-            .sum() / t,
-        new TreeMap<>(centerTrajectory),
-        new TreeMap<>(footprints),
-        new TreeMap<>(masks)
-    );
+    return new Outcome(observations);
   }
 
   private static Grid<Boolean> mask(Robot<?> robot, int n) {

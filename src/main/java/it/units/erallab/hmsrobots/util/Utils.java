@@ -240,8 +240,14 @@ public class Utils {
     while (m.find()) {
       groupNames.add(m.group(1));
     }
-    return groupNames.stream()
-        .collect(Collectors.toMap(n -> n, n -> param(pattern, string, n)));
+    Map<String, String> params = new HashMap<>();
+    for (String groupName : groupNames) {
+      String value = param(pattern, string, groupName);
+      if (value != null) {
+        params.put(groupName, value);
+      }
+    }
+    return params;
   }
 
   public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {

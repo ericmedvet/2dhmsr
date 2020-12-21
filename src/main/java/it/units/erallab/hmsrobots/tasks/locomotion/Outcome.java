@@ -36,17 +36,55 @@ public class Outcome {
   public static final double FOOTPRINT_INTERVAL = 0.5d;
   public static final double GAIT_LONGEST_INTERVAL = 5d;
 
-  private final double computationTime;
-  private final double distance;
-  private final double time;
-  private final int robotLargestDim;
-  private final double controlPower;
-  private final double areaRatioPower;
-  private final SortedMap<Double, Point2> centerTrajectory;
-  private final SortedMap<Double, Footprint> footprints;
-  private final SortedMap<Double, Grid<Boolean>> postures;
-
   public enum Component {X, Y, MODULE}
+
+  public static class Observation {
+    private final double time;
+    private final Point2 centerPosition;
+    private final Footprint footprint;
+    private final Grid<Boolean> posture;
+    private final double controlEnergy;
+    private final double areaRatioEnergy;
+    private final double computationTime;
+
+    public Observation(double time, Point2 centerPosition, Footprint footprint, Grid<Boolean> posture, double controlEnergy, double areaRatioEnergy, double computationTime) {
+      this.time = time;
+      this.centerPosition = centerPosition;
+      this.footprint = footprint;
+      this.posture = posture;
+      this.controlEnergy = controlEnergy;
+      this.areaRatioEnergy = areaRatioEnergy;
+      this.computationTime = computationTime;
+    }
+
+    public double getTime() {
+      return time;
+    }
+
+    public Point2 getCenterPosition() {
+      return centerPosition;
+    }
+
+    public Footprint getFootprint() {
+      return footprint;
+    }
+
+    public Grid<Boolean> getPosture() {
+      return posture;
+    }
+
+    public double getControlEnergy() {
+      return controlEnergy;
+    }
+
+    public double getAreaRatioEnergy() {
+      return areaRatioEnergy;
+    }
+
+    public double getComputationTime() {
+      return computationTime;
+    }
+  }
 
   public static class Mode {
     private final double strength;
@@ -122,93 +160,84 @@ public class Outcome {
     }
   }
 
-  public Outcome(double computationTime, double distance, double time, int robotLargestDim, double controlPower, double areaRatioPower, SortedMap<Double, Point2> centerTrajectory, SortedMap<Double, Footprint> footprints, SortedMap<Double, Grid<Boolean>> postures) {
-    this.computationTime = computationTime;
-    this.distance = distance;
-    this.time = time;
-    this.robotLargestDim = robotLargestDim;
-    this.controlPower = controlPower;
-    this.areaRatioPower = areaRatioPower;
-    this.centerTrajectory = centerTrajectory;
-    this.footprints = footprints;
-    this.postures = postures;
+  private List<Observation> observations;
+
+  public Outcome(List<Observation> observations) {
+    observations.sort(Comparator.comparingDouble(Observation::getTime));
+    this.observations = Collections.unmodifiableList(observations);
   }
 
   public double getComputationTime() {
-    return computationTime;
+    return observations.get(observations.size() - 1).getComputationTime();
   }
 
   public double getDistance() {
-    return distance;
+    return observations.get(observations.size() - 1).getCenterPosition().x - observations.get(0).getCenterPosition().x;
   }
 
   public double getTime() {
-    return time;
-  }
-
-  public int getRobotLargestDim() {
-    return robotLargestDim;
+    return observations.get(observations.size() - 1).getTime() - observations.get(0).getTime();
   }
 
   public double getControlPower() {
-    return controlPower;
+    return (observations.get(observations.size() - 1).getControlEnergy() - observations.get(0).getControlEnergy()) / getTime();
   }
 
   public double getAreaRatioPower() {
-    return areaRatioPower;
+    return (observations.get(observations.size() - 1).getAreaRatioEnergy() - observations.get(0).getAreaRatioEnergy()) / getTime();
   }
 
   public SortedMap<Double, Point2> getCenterTrajectory() {
-    return centerTrajectory;
+    return new TreeMap<>(observations.stream().collect(Collectors.toMap(Observation::getTime, Observation::getCenterPosition)));
   }
 
   public SortedMap<Double, Footprint> getFootprints() {
-    return footprints;
+    return new TreeMap<>(observations.stream().collect(Collectors.toMap(Observation::getTime, Observation::getFootprint)));
   }
 
   public SortedMap<Double, Grid<Boolean>> getPostures() {
-    return postures;
+    return new TreeMap<>(observations.stream().collect(Collectors.toMap(Observation::getTime, Observation::getPosture)));
   }
 
   @Override
   public String toString() {
-    return String.format("Outcome{computationTime=%.2fs, distance=%.2f, time=%.1fs, robotLargestDim=%d, controlPower=%.1f, areaRatioPower=%.1f}",
-        computationTime, distance, time, robotLargestDim, controlPower, areaRatioPower);
+    return String.format("Outcome{computationTime=%.2fs, distance=%.2f, time=%.1fs, controlPower=%.1f, areaRatioPower=%.1f}",
+        getComputationTime(), getDistance(), getTime(), getControlPower(), getAreaRatioPower());
   }
 
   public double getVelocity() {
-    return distance / time;
-  }
-
-  public double getRelativeVelocity() {
-    return getVelocity() / getRobotLargestDim();
+    return getDistance() / getTime();
   }
 
   public double getCorrectedEfficiency() {
-    return distance / (1d + controlPower * time);
+    return getDistance() / (1d + getControlPower() * getTime());
   }
 
-  public Grid<Boolean> getAveragePosture(double startingT, double endingT) {
+  public Grid<Boolean> getAveragePosture() {
     return Grid.create(
-        postures.get(postures.firstKey()).getW(),
-        postures.get(postures.firstKey()).getH(),
-        (x, y) -> postures.subMap(startingT, endingT).values().stream()
-            .mapToDouble(m -> m.get(x, y) ? 1d : 0d)
+        observations.get(0).getPosture().getW(),
+        observations.get(0).getPosture().getH(),
+        (x, y) -> observations.stream()
+            .mapToDouble(m -> m.getPosture().get(x, y) ? 1d : 0d)
             .average()
             .orElse(0d) > 0.5d
     );
   }
 
-  public SortedMap<Double, Footprint> getQuantizedFootprints(double startingT, double endingT, double interval) {
+  public SortedMap<Double, Footprint> getQuantizedFootprints(double interval) {
     SortedMap<Double, Footprint> quantized = new TreeMap<>();
-    int n = footprints.get(footprints.firstKey()).length();
-    for (double t = startingT; t <= endingT; t = t + interval) {
-      SortedMap<Double, Footprint> local = footprints.subMap(t, t + interval);
+    int n = observations.get(0).getFootprint().length();
+    for (double t = observations.get(0).getTime(); t <= observations.get(observations.size() - 1).getTime(); t = t + interval) {
+      final double localT = t;
+      List<Footprint> local = observations.stream()
+          .filter(o -> o.getTime() >= localT && o.getTime() < localT + interval)
+          .map(Observation::getFootprint)
+          .collect(Collectors.toList());
       double[] counts = new double[n];
       double tot = local.size();
       for (int x = 0; x < n; x++) {
         final int finalX = x;
-        counts[x] = local.values().stream().mapToDouble(f -> f.getMask()[finalX] ? 1d : 0d).sum();
+        counts[x] = local.stream().mapToDouble(f -> f.getMask()[finalX] ? 1d : 0d).sum();
       }
       boolean[] localFootprint = new boolean[n];
       for (int x = 0; x < n; x++) {
@@ -221,9 +250,9 @@ public class Outcome {
     return quantized;
   }
 
-  public Gait getMainGait(double startingT, double endingT, double interval, double longestInterval) {
+  public Gait getMainGait(double interval, double longestInterval) {
     List<Gait> gaits = computeGaits(
-        getQuantizedFootprints(startingT, endingT, interval),
+        getQuantizedFootprints(interval),
         2,
         (int) Math.round(longestInterval / interval),
         interval
@@ -235,8 +264,8 @@ public class Outcome {
     return gaits.get(0);
   }
 
-  public Gait getMainGait(double startingT, double endingT) {
-    return getMainGait(startingT, endingT, FOOTPRINT_INTERVAL, GAIT_LONGEST_INTERVAL);
+  public Gait getMainGait() {
+    return getMainGait(FOOTPRINT_INTERVAL, GAIT_LONGEST_INTERVAL);
   }
 
   private static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
@@ -322,10 +351,10 @@ public class Outcome {
         .getKey();
   }
 
-  public List<Mode> getCenterModes(double startingT, double endingT, Component component) {
+  public List<Mode> getCenterModes(Component component) {
     List<Double> v = new ArrayList<>();
-    List<Double> times = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).keySet());
-    List<Point2> points = new ArrayList<>(centerTrajectory.subMap(startingT, endingT).values());
+    List<Double> times = observations.stream().map(Observation::getTime).collect(Collectors.toList());
+    List<Point2> points = observations.stream().map(Observation::getCenterPosition).collect(Collectors.toList());
     List<Double> intervals = new ArrayList<>();
     for (int i = 0; i < points.size() - 1; i++) {
       v.add(switch (component) {
@@ -358,8 +387,8 @@ public class Outcome {
         .collect(Collectors.toList());
   }
 
-  public List<Mode> getCenterPowerSpectrum(double startingT, double endingT, Component component, double startingF, double endingF, int n) {
-    List<Mode> centerModes = getCenterModes(startingT, endingT, component);
+  public List<Mode> getCenterPowerSpectrum(Component component, double startingF, double endingF, int n) {
+    List<Mode> centerModes = getCenterModes(component);
     return IntStream.range(0, n)
         .mapToObj(i -> Range.openClosed(startingF + (endingF - startingF) / (double) n * (double) i, startingF + (endingF - startingF) / (double) n * (double) (i + 1)))
         .map(r -> new Mode(
@@ -372,6 +401,10 @@ public class Outcome {
             )
         )
         .collect(Collectors.toList());
+  }
+
+  public Outcome subOutcome(double startT, double endT) {
+    return new Outcome(observations.stream().filter(o -> o.getTime() >= startT && o.getTime() < endT).collect(Collectors.toList()));
   }
 
 }
