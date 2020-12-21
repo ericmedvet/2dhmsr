@@ -50,17 +50,12 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     }
 
     private static Dir adjacent(Dir dir) {
-      switch (dir) {
-        case N:
-          return Dir.S;
-        case E:
-          return Dir.W;
-        case S:
-          return Dir.N;
-        case W:
-          return Dir.E;
-      }
-      return Dir.N;
+      return switch (dir) {
+        case N -> Dir.S;
+        case E -> Dir.W;
+        case S -> Dir.N;
+        case W -> Dir.E;
+      };
     }
   }
 
