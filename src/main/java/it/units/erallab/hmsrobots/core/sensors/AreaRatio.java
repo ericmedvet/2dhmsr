@@ -34,4 +34,9 @@ public class AreaRatio implements Sensor {
   public double[] sense(Voxel voxel, double t) {
     return new double[]{voxel.getAreaRatio()};
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
 }

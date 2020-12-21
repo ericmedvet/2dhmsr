@@ -55,4 +55,11 @@ public class ControlPower implements Sensor {
   public double getControlInterval() {
     return controlInterval;
   }
+
+  @Override
+  public String toString() {
+    return "ControlPower{" +
+        "controlInterval=" + controlInterval +
+        '}';
+  }
 }

@@ -43,4 +43,9 @@ public class Crumpling implements Sensor {
     }
     return new double[]{2d * c / (double) (voxel.getVertexBodies().length * (voxel.getVertexBodies().length - 1))};
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
 }

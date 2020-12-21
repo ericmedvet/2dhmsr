@@ -153,4 +153,12 @@ public class Lidar implements Sensor, ReadingAugmenter {
         rayDirections.clone()
     );
   }
+
+  @Override
+  public String toString() {
+    return "Lidar{" +
+        "rayLength=" + rayLength +
+        ", rayDirections=" + Arrays.toString(rayDirections) +
+        '}';
+  }
 }

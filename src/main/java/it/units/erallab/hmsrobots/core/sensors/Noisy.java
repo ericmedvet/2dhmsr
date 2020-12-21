@@ -46,4 +46,12 @@ public class Noisy implements Sensor {
     }
     return values;
   }
+
+  @Override
+  public String toString() {
+    return "Noisy{" +
+        "sensor=" + sensor +
+        ", sigma=" + sigma +
+        '}';
+  }
 }

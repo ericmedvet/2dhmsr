@@ -66,4 +66,11 @@ public class Average implements Sensor {
     return sums;
   }
 
+  @Override
+  public String toString() {
+    return "Average{" +
+        "sensor=" + sensor +
+        ", interval=" + interval +
+        '}';
+  }
 }

@@ -43,4 +43,9 @@ public class Angle implements Sensor, ReadingAugmenter {
         reading.getnOfSensors()
     );
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
 }

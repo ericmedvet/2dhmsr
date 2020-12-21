@@ -52,4 +52,13 @@ public class TimeFunction implements Sensor {
   public double[] sense(Voxel voxel, double t) {
     return new double[]{function.apply(t)};
   }
+
+  @Override
+  public String toString() {
+    return "TimeFunction{" +
+        "function=" + function +
+        ", min=" + min +
+        ", max=" + max +
+        '}';
+  }
 }

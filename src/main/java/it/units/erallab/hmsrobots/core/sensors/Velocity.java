@@ -88,4 +88,13 @@ public class Velocity implements Sensor {
     }
     return values;
   }
+
+  @Override
+  public String toString() {
+    return "Velocity{" +
+        "rotated=" + rotated +
+        ", axes=" + axes +
+        ", maxVelocityNorm=" + maxVelocityNorm +
+        '}';
+  }
 }

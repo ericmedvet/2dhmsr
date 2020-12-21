@@ -37,4 +37,11 @@ public class Constant implements Sensor {
   public double[] sense(Voxel voxel, double t) {
     return values;
   }
+
+  @Override
+  public String toString() {
+    return "Constant{" +
+        "values=" + Arrays.toString(values) +
+        '}';
+  }
 }

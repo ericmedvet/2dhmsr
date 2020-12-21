@@ -76,4 +76,11 @@ public class DynamicNormalization implements Sensor {
     return values;
   }
 
+  @Override
+  public String toString() {
+    return "DynamicNormalization{" +
+        "sensor=" + sensor +
+        ", interval=" + interval +
+        '}';
+  }
 }

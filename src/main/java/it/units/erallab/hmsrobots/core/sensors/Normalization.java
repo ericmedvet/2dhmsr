@@ -19,7 +19,6 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 
 import java.util.Arrays;
 
@@ -54,4 +53,10 @@ public class Normalization implements Sensor {
     return values;
   }
 
+  @Override
+  public String toString() {
+    return "Normalization{" +
+        "sensor=" + sensor +
+        '}';
+  }
 }

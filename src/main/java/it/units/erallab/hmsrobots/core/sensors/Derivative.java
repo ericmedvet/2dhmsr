@@ -64,4 +64,11 @@ public class Derivative implements Sensor {
     lastReadings = currentReadings;
     return diffs;
   }
+
+  @Override
+  public String toString() {
+    return "Derivative{" +
+        "sensor=" + sensor +
+        '}';
+  }
 }

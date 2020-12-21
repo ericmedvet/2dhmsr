@@ -36,4 +36,9 @@ public class AppliedForce implements Sensor {
     }
     return new double[]{0d};
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
 }
