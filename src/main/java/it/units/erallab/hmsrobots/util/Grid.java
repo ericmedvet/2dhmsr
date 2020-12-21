@@ -33,6 +33,9 @@ import java.util.stream.StreamSupport;
  */
 public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
+  private final static char FULL_CELL_CHAR = '█';
+  private final static char EMPTY_CELL_CHAR = '░';
+
   public static final class Entry<K> implements Serializable {
 
     private final int x;
@@ -242,6 +245,14 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return columns;
   }
 
+  public boolean[][] toArray(Predicate<T> p) {
+    boolean[][] b = new boolean[w][h];
+    for (Grid.Entry<T> entry : this) {
+      b[entry.getX()][entry.getY()] = p.test(entry.getValue());
+    }
+    return b;
+  }
+
   public static <K> String toString(Grid<K> grid, String format) {
     StringBuilder sb = new StringBuilder();
     for (int y = 0; y < grid.getH(); y++) {
@@ -260,7 +271,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   public static <K> String toString(Grid<K> grid, Predicate<K> p, String separator) {
-    return toString(grid, (Function<K, Character>) k -> p.test(k) ? '+' : '-', separator);
+    return toString(grid, (Function<K, Character>) k -> p.test(k) ? FULL_CELL_CHAR : EMPTY_CELL_CHAR, separator);
   }
 
   public static <K> String toString(Grid<K> grid, Function<K, Character> function) {
@@ -281,30 +292,16 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   @Override
-  public int hashCode() {
-    int hash = 5;
-    return hash;
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Grid<?> grid = (Grid<?>) o;
+    return w == grid.w && h == grid.h && ts.equals(grid.ts);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final Grid<?> other = (Grid<?>) obj;
-    if (this.w != other.w) {
-      return false;
-    }
-    if (this.h != other.h) {
-      return false;
-    }
-    return Objects.equals(this.ts, other.ts);
+  public int hashCode() {
+    return Objects.hash(ts, w, h);
   }
 
   @Override
@@ -322,4 +319,5 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     sb.append("]");
     return sb.toString();
   }
+
 }
