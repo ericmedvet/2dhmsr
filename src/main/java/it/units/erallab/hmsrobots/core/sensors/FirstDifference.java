@@ -22,26 +22,23 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 import java.util.Arrays;
 
-public class Derivative implements Sensor {
-
-  private final static double DOMAIN_MULTIPLIER = 10d;
+public class FirstDifference implements Sensor {
 
   @JsonProperty
   private final Sensor sensor;
 
   private final Domain[] domains;
-  private double lastT;
   private double[] lastReadings;
 
   @JsonCreator
-  public Derivative(
+  public FirstDifference(
       @JsonProperty("sensor") Sensor sensor
   ) {
     this.sensor = sensor;
     domains = Arrays.stream(sensor.domains())
         .map(d -> Domain.of(
-            -DOMAIN_MULTIPLIER * (Math.abs(d.getMax()) - Math.abs(d.getMin())),
-            DOMAIN_MULTIPLIER * (Math.abs(d.getMax()) - Math.abs(d.getMin()))
+            -Math.abs(d.getMax()) - Math.abs(d.getMin()),
+            Math.abs(d.getMax()) - Math.abs(d.getMin())
         ))
         .toArray(Domain[]::new);
   }
@@ -57,17 +54,16 @@ public class Derivative implements Sensor {
     double[] diffs = new double[currentReadings.length];
     if (lastReadings != null) {
       for (int i = 0; i < diffs.length; i++) {
-        diffs[i] = (currentReadings[i] - lastReadings[i]) / (t - lastT);
+        diffs[i] = currentReadings[i] - lastReadings[i];
       }
     }
-    lastT = t;
     lastReadings = currentReadings;
     return diffs;
   }
 
   @Override
   public String toString() {
-    return "Derivative{" +
+    return "FirstDifference{" +
         "sensor=" + sensor +
         '}';
   }

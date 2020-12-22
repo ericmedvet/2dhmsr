@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -22,52 +23,42 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 
 import java.util.Arrays;
 
-public class Derivative implements Sensor {
-
-  private final static double DOMAIN_MULTIPLIER = 10d;
+public class SoftNormalization implements Sensor {
 
   @JsonProperty
   private final Sensor sensor;
-
-  private final Domain[] domains;
-  private double lastT;
-  private double[] lastReadings;
+  private final Sensor.Domain[] domains;
 
   @JsonCreator
-  public Derivative(
+  public SoftNormalization(
       @JsonProperty("sensor") Sensor sensor
   ) {
     this.sensor = sensor;
-    domains = Arrays.stream(sensor.domains())
-        .map(d -> Domain.of(
-            -DOMAIN_MULTIPLIER * (Math.abs(d.getMax()) - Math.abs(d.getMin())),
-            DOMAIN_MULTIPLIER * (Math.abs(d.getMax()) - Math.abs(d.getMin()))
-        ))
-        .toArray(Domain[]::new);
+    domains = new Sensor.Domain[sensor.domains().length];
+    Arrays.fill(domains, Sensor.Domain.of(0d, 1d));
   }
 
   @Override
-  public Domain[] domains() {
+  public Sensor.Domain[] domains() {
     return domains;
   }
 
   @Override
   public double[] sense(Voxel voxel, double t) {
-    double[] currentReadings = sensor.sense(voxel, t);
-    double[] diffs = new double[currentReadings.length];
-    if (lastReadings != null) {
-      for (int i = 0; i < diffs.length; i++) {
-        diffs[i] = (currentReadings[i] - lastReadings[i]) / (t - lastT);
-      }
+    double[] innerValues = sensor.sense(voxel, t);
+    double[] values = new double[innerValues.length];
+    for (int i = 0; i < values.length; i++) {
+      Sensor.Domain d = sensor.domains()[i];
+      double v = (innerValues[i] - d.getMin()) / (d.getMax() - d.getMin());
+      //tanh(((x*2)-1)*2)/2+1/2
+      values[i] = Math.tanh(((v * 2d) - 1d) * 2d) / 2d + 0.5d;
     }
-    lastT = t;
-    lastReadings = currentReadings;
-    return diffs;
+    return values;
   }
 
   @Override
   public String toString() {
-    return "Derivative{" +
+    return "SoftNormalization{" +
         "sensor=" + sensor +
         '}';
   }

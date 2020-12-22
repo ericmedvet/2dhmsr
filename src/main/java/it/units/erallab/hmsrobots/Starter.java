@@ -243,7 +243,7 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-a-0.01").apply(Utils.buildShape("worm-3x2"));
+    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniformAll-0").apply(Utils.buildShape("worm-3x2"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(
@@ -259,7 +259,7 @@ public class Starter {
     robot = Utils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
-        30,
+        10,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );

@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.util;
 
@@ -251,20 +251,21 @@ public class Utils {
   }
 
   public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {
-    Map<String, BiFunction<Double, Double, Sensor>> availableSensors = Map.ofEntries(
+    Map<String, BiFunction<Double, Double, Sensor>> availableSensors = new TreeMap<>(Map.ofEntries(
         Map.entry("t", (x, y) -> new Touch()),
-        Map.entry("a", (x, y) -> new DynamicNormalization(new AreaRatio(), 2d)),
-        Map.entry("r", (x, y) -> new Normalization(new Angle())),
-        Map.entry("vx", (x, y) -> new DynamicNormalization(new Velocity(true, 5d, Velocity.Axis.X), 2d)),
-        Map.entry("vy", (x, y) -> new DynamicNormalization(new Velocity(true, 5d, Velocity.Axis.Y), 2d)),
-        Map.entry("ax", (x, y) -> new DynamicNormalization(new Derivative(new Velocity(true, 5d, Velocity.Axis.X)), 2d)),
-        Map.entry("ay", (x, y) -> new DynamicNormalization(new Derivative(new Velocity(true, 5d, Velocity.Axis.Y)), 2d)),
+        Map.entry("a", (x, y) -> new SoftNormalization(new AreaRatio())),
+        Map.entry("r", (x, y) -> new SoftNormalization(new Angle())),
+        Map.entry("vx", (x, y) -> new SoftNormalization(new Velocity(true, 8d, Velocity.Axis.X))),
+        Map.entry("vy", (x, y) -> new SoftNormalization(new Velocity(true, 8d, Velocity.Axis.Y))),
+        Map.entry("ax", (x, y) -> new SoftNormalization(new FirstDifference(new Velocity(true, 4d, Velocity.Axis.X)))),
+        Map.entry("ay", (x, y) -> new SoftNormalization(new FirstDifference(new Velocity(true, 4d, Velocity.Axis.Y)))),
         Map.entry("px", (x, y) -> new Constant(x)),
         Map.entry("py", (x, y) -> new Constant(y))
-    );
+    ));
     String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])";
     String uniform = "uniform-(?<sensors>(" + String.join("|", availableSensors.keySet()) + ")(\\+(" + String.join("|", availableSensors.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
+    String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
     Map<String, String> params;
     if ((params = params(spineTouch, name)) != null) {
@@ -307,7 +308,17 @@ public class Utils {
       double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
       return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
           Arrays.stream(pars.get("sensors").split("\\+"))
-              .map(s -> availableSensors.get(s).apply((double) x / (double) body.getW(), (double) y / (double) body.getH()))
+              .map(f -> availableSensors.get(f).apply((double) x / (double) body.getW(), (double) y / (double) body.getH()))
+              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
+              .collect(Collectors.toList())
+      ));
+    }
+    if ((params = params(uniformAll, name)) != null) {
+      final Map<String, String> pars = params;
+      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
+      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
+          availableSensors.values().stream()
+              .map(f -> f.apply((double) x / (double) body.getW(), (double) y / (double) body.getH()))
               .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
               .collect(Collectors.toList())
       ));
