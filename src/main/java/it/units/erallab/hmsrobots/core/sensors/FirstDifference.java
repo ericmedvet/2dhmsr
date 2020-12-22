@@ -37,8 +37,8 @@ public class FirstDifference implements Sensor {
     this.sensor = sensor;
     domains = Arrays.stream(sensor.domains())
         .map(d -> Domain.of(
-            -Math.abs(d.getMax()) - Math.abs(d.getMin()),
-            Math.abs(d.getMax()) - Math.abs(d.getMin())
+            -Math.abs(d.getMax() - d.getMin()),
+            Math.abs(d.getMax() - d.getMin())
         ))
         .toArray(Domain[]::new);
   }

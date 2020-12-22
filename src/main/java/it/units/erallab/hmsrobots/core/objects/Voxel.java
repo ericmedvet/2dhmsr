@@ -126,17 +126,17 @@ public class Voxel implements LivingObject, Serializable {
   }
 
   public static final double SIDE_LENGTH = 3d;
-  public static final double MASS_SIDE_LENGTH_RATIO = .30d;
+  public static final double MASS_SIDE_LENGTH_RATIO = .40d;
   public static final double SPRING_F = 8d;
   public static final double SPRING_D = 0.3d;
-  public static final double MASS_LINEAR_DAMPING = 1d;
-  public static final double MASS_ANGULAR_DAMPING = 1d;
+  public static final double MASS_LINEAR_DAMPING = 0.1d;
+  public static final double MASS_ANGULAR_DAMPING = 0.1d;
   public static final double FRICTION = 100d;
   public static final double RESTITUTION = 0.1d;
   public static final double MASS = 1d;
   public static final boolean LIMIT_CONTRACTION_FLAG = true;
-  public static final boolean MASS_COLLISION_FLAG = false;
-  public static final double AREA_RATIO_MAX_DELTA = 0.25d;
+  public static final boolean MASS_COLLISION_FLAG = true;
+  public static final double AREA_RATIO_MAX_DELTA = 0.225d;
   public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
 
   @JsonProperty

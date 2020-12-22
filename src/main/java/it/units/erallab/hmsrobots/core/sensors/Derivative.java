@@ -40,8 +40,8 @@ public class Derivative implements Sensor {
     this.sensor = sensor;
     domains = Arrays.stream(sensor.domains())
         .map(d -> Domain.of(
-            -DOMAIN_MULTIPLIER * (Math.abs(d.getMax()) - Math.abs(d.getMin())),
-            DOMAIN_MULTIPLIER * (Math.abs(d.getMax()) - Math.abs(d.getMin()))
+            -DOMAIN_MULTIPLIER * (Math.abs(d.getMax() - d.getMin())),
+            DOMAIN_MULTIPLIER * (Math.abs(d.getMax() - d.getMin()))
         ))
         .toArray(Domain[]::new);
   }

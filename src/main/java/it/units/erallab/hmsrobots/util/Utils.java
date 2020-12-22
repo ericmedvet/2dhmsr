@@ -18,20 +18,12 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.core.sensors.*;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -142,76 +134,6 @@ public class Utils {
     return outGrid;
   }
 
-  public static UnaryOperator<Robot<?>> buildRobotTransformation(String name, Random externalRandom) {
-    String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
-    String broken = "broken-(?<ratio>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
-    String identity = "identity";
-    Map<String, String> params;
-    if ((params = params(identity, name)) != null) {
-      return UnaryOperator.identity();
-    }
-    if ((params = params(breakable, name)) != null) {
-      String type = params.get("triggerType");
-      double thresholdMean = Double.parseDouble(params.get("thresholdMean"));
-      double thresholdStDev = Double.parseDouble(params.get("thresholdStDev"));
-      double restoreTimeMean = Double.parseDouble(params.get("restoreTimeMean"));
-      double restoreTimeStDev = Double.parseDouble(params.get("restoreTimeStDev"));
-      Random random;
-      if (!params.get("seed").equals("rnd")) {
-        random = new Random(Long.parseLong(params.get("seed")));
-      } else {
-        random = externalRandom;
-      }
-      return new UnaryOperator<Robot<?>>() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public Robot<?> apply(Robot<?> robot) {
-          return new Robot<>(
-              ((Robot<SensingVoxel>) robot).getController(),
-              Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
-                  v.getSensors(),
-                  random.nextInt(),
-                  Map.of(
-                      BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
-                  ),
-                  Map.of(
-                      BreakableVoxel.MalfunctionTrigger.valueOf(type.toUpperCase()),
-                      random.nextGaussian() * thresholdStDev + thresholdMean
-                  ),
-                  random.nextGaussian() * restoreTimeStDev + restoreTimeMean
-              ))
-          );
-        }
-      };
-    }
-    if ((params = params(broken, name)) != null) {
-      double ratio = Double.parseDouble(params.get("ratio"));
-      Random random;
-      if (!params.get("seed").equals("rnd")) {
-        random = new Random(Long.parseLong(params.get("seed")));
-      } else {
-        random = externalRandom;
-      }
-      return new UnaryOperator<Robot<?>>() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public Robot<?> apply(Robot<?> robot) {
-          return new Robot<>(
-              ((Robot<SensingVoxel>) robot).getController(),
-              Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : random.nextDouble() > ratio ? v : new BreakableVoxel(
-                  v.getSensors(),
-                  random.nextInt(),
-                  Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)),
-                  Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 0d),
-                  Double.POSITIVE_INFINITY
-              ))
-          );
-        }
-      };
-    }
-    throw new IllegalArgumentException(String.format("Unknown transformation name: %s", name));
-  }
-
   @SafeVarargs
   public static <E> List<E> ofNonNull(E... es) {
     List<E> list = new ArrayList<>();
@@ -248,116 +170,6 @@ public class Utils {
       }
     }
     return params;
-  }
-
-  public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {
-    Map<String, BiFunction<Double, Double, Sensor>> availableSensors = new TreeMap<>(Map.ofEntries(
-        Map.entry("t", (x, y) -> new Touch()),
-        Map.entry("a", (x, y) -> new SoftNormalization(new AreaRatio())),
-        Map.entry("r", (x, y) -> new SoftNormalization(new Angle())),
-        Map.entry("vx", (x, y) -> new SoftNormalization(new Velocity(true, 8d, Velocity.Axis.X))),
-        Map.entry("vy", (x, y) -> new SoftNormalization(new Velocity(true, 8d, Velocity.Axis.Y))),
-        Map.entry("ax", (x, y) -> new SoftNormalization(new FirstDifference(new Velocity(true, 4d, Velocity.Axis.X)))),
-        Map.entry("ay", (x, y) -> new SoftNormalization(new FirstDifference(new Velocity(true, 4d, Velocity.Axis.Y)))),
-        Map.entry("px", (x, y) -> new Constant(x)),
-        Map.entry("py", (x, y) -> new Constant(y))
-    ));
-    String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])";
-    String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])";
-    String uniform = "uniform-(?<sensors>(" + String.join("|", availableSensors.keySet()) + ")(\\+(" + String.join("|", availableSensors.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
-    String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
-    String empty = "empty";
-    Map<String, String> params;
-    if ((params = params(spineTouch, name)) != null) {
-      final Map<String, String> pars = params;
-      return body -> Grid.create(body.getW(), body.getH(),
-          (x, y) -> {
-            if (!body.get(x, y)) {
-              return null;
-            }
-            return new SensingVoxel(Utils.ofNonNull(
-                new Normalization(new AreaRatio()),
-                pars.get("malfunction").equals("t") ? new Malfunction() : null,
-                (y == 0) ? new Touch() : null,
-                (y == body.getH() - 1) ? new Normalization(new Velocity(true, 5d, Velocity.Axis.X, Velocity.Axis.Y)) : null,
-                (x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")) ? new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1)) : null
-            ));
-          }
-      );
-    }
-    if ((params = params(spineTouchSighted, name)) != null) {
-      final Map<String, String> pars = params;
-      return body -> Grid.create(body.getW(), body.getH(),
-          (x, y) -> {
-            if (!body.get(x, y)) {
-              return null;
-            }
-            return new SensingVoxel(Utils.ofNonNull(
-                new Normalization(new AreaRatio()),
-                pars.get("malfunction").equals("t") ? new Malfunction() : null,
-                (y == 0) ? new Touch() : null,
-                (y == body.getH() - 1) ? new Normalization(new Velocity(true, 5d, Velocity.Axis.X, Velocity.Axis.Y)) : null,
-                (x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")) ? new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1)) : null,
-                (x == body.getW() - 1) ? new Lidar(10d, Map.of(Lidar.Side.E, 5)) : null
-            ));
-          }
-      );
-    }
-    if ((params = params(uniform, name)) != null) {
-      final Map<String, String> pars = params;
-      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
-      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
-          Arrays.stream(pars.get("sensors").split("\\+"))
-              .map(f -> availableSensors.get(f).apply((double) x / (double) body.getW(), (double) y / (double) body.getH()))
-              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
-              .collect(Collectors.toList())
-      ));
-    }
-    if ((params = params(uniformAll, name)) != null) {
-      final Map<String, String> pars = params;
-      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
-      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
-          availableSensors.values().stream()
-              .map(f -> f.apply((double) x / (double) body.getW(), (double) y / (double) body.getH()))
-              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
-              .collect(Collectors.toList())
-      ));
-    }
-    if ((params = params(empty, name)) != null) {
-      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(List.of()));
-    }
-    throw new IllegalArgumentException(String.format("Unknown sensorizing function name: %s", name));
-  }
-
-  public static Grid<Boolean> buildShape(String name) {
-    String box = "(box|worm)-(?<w>\\d+)x(?<h>\\d+)";
-    String biped = "biped-(?<w>\\d+)x(?<h>\\d+)";
-    String tripod = "tripod-(?<w>\\d+)x(?<h>\\d+)";
-    String ball = "ball-(?<d>\\d+)";
-    Map<String, String> params;
-    if ((params = params(box, name)) != null) {
-      int w = Integer.parseInt(params.get("w"));
-      int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, true);
-    }
-    if ((params = params(biped, name)) != null) {
-      int w = Integer.parseInt(params.get("w"));
-      int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> !(y == 0 && x > 0 && x < w - 1));
-    }
-    if ((params = params(tripod, name)) != null) {
-      int w = Integer.parseInt(params.get("w"));
-      int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> !(y != h - 1 && x != 0 && x != w - 1 && x != w / 2));
-    }
-    if ((params = params(ball, name)) != null) {
-      int d = Integer.parseInt(params.get("d"));
-      return Grid.create(
-          d, d,
-          (x, y) -> Math.round(Math.sqrt((x - (d - 1) / 2d) * (x - (d - 1) / 2d) + (y - (d - 1) / 2d) * (y - (d - 1) / 2d))) <= (int) Math.floor(d / 2d)
-      );
-    }
-    throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
 
 }

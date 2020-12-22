@@ -25,12 +25,14 @@ import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.Angle;
+import it.units.erallab.hmsrobots.core.sensors.Derivative;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
+import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.util.Utils;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
@@ -98,7 +100,7 @@ public class Starter {
     );
     int w = 20;
     int h = 5;
-    Robot robot = new Robot(
+    Robot<ControllableVoxel> robot = new Robot<>(
         new TimeFunctions(Grid.create(
             w, h,
             (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) w))
@@ -121,13 +123,13 @@ public class Starter {
   public static void main(String[] args) {
     //bipeds();
     //rollingOne();
-    //rollingBall();
+    rollingBall();
     //breakingWorm();
-    plainWorm();
+    //plainWorm();
   }
 
   private static void bipeds() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("spinedTouch-f-f").apply(Utils.buildShape("biped-7x4"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-f").apply(RobotUtils.buildShape("biped-7x4"));
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
@@ -197,7 +199,7 @@ public class Starter {
   }
 
   private static void breakingWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("spinedTouch-f-t").apply(Utils.buildShape("worm-4x3"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t").apply(RobotUtils.buildShape("worm-4x3"));
     double f = 1d;
     Robot<ControllableVoxel> unbreakableRobot = new Robot<>(
         new TimeFunctions(Grid.create(
@@ -207,7 +209,7 @@ public class Starter {
         )),
         SerializationUtils.clone(body)
     );
-    Robot<?> breakableRobot = Utils.buildRobotTransformation(
+    Robot<?> breakableRobot = RobotUtils.buildRobotTransformation(
         "breakable-area-1000/500-3/0.5-0",
         new Random(0)
     ).apply(SerializationUtils.clone(unbreakableRobot));
@@ -243,23 +245,23 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniformAll-0").apply(Utils.buildShape("worm-3x2"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniformAll-0").apply(RobotUtils.buildShape("worm-10x4"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(
             body.getW(),
             body.getH(),
-            /*(final Integer x, final Integer y) -> (Double t) -> Math.sin(
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
                 -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
-            )*/
-            (x, y) -> t -> Math.signum(Math.sin(-2 * Math.PI * (f + (x > body.getW() / 2d ? 1 : 0)) * t))
+            )
+            //(x, y) -> t -> Math.signum(Math.sin(-2 * Math.PI * (f + (x > body.getW() / 2d ? 1 : 0)) * t))
         )),
         SerializationUtils.clone(body)
     );
-    robot = Utils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
+    robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        60,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
@@ -290,6 +292,8 @@ public class Starter {
   private static void rollingOne() {
     //one voxel robot
     Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
+        new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
+        new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)),
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
@@ -300,7 +304,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-        new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 100, 10, 0, 100}},
+        new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
@@ -331,7 +335,7 @@ public class Starter {
 
   private static void rollingBall() {
     Random random = new Random();
-    Grid<? extends SensingVoxel> body = Utils.buildSensorizingFunction("uniform-f").apply(Utils.buildShape("ball-7"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+l1-0").apply(RobotUtils.buildShape("ball-2"));
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(

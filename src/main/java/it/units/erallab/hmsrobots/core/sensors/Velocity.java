@@ -66,15 +66,12 @@ public class Velocity implements Sensor {
     double[] values = new double[domains.length];
     int c = 0;
     Vector2 velocity = voxel.getLinearVelocity();
-    double angle = 0d;
-    if (rotated) {
-      angle = voxel.getAngle();
-    }
+    double angle = voxel.getAngle();
     if (axes.contains(Axis.X)) {
       if (!rotated) {
         values[c] = velocity.x;
       } else {
-        values[c] = velocity.copy().dot(new Vector2(voxel.getAngle()));
+        values[c] = velocity.copy().dot(new Vector2(angle));
       }
       c = c + 1;
     }
@@ -82,9 +79,8 @@ public class Velocity implements Sensor {
       if (!rotated) {
         values[c] = velocity.y;
       } else {
-        values[c] = velocity.copy().dot(new Vector2(voxel.getAngle() + Math.PI / 2d));
+        values[c] = velocity.copy().dot(new Vector2(angle + Math.PI / 2d));
       }
-      c = c + 1;
     }
     return values;
   }
