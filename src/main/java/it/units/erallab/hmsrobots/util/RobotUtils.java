@@ -40,7 +40,7 @@ public class RobotUtils {
     if (y > x && y > (1 - x)) {
       return Lidar.Side.N;
     }
-    if (y > x && y < (1 - x)) {
+    if (y >= x && y <= (1 - x)) {
       return Lidar.Side.W;
     }
     if (y < x && y < (1 - x)) {

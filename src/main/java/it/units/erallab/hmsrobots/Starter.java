@@ -335,7 +335,8 @@ public class Starter {
 
   private static void rollingBall() {
     Random random = new Random();
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+l1-0").apply(RobotUtils.buildShape("ball-2"));
+    Grid<Boolean> shape = RobotUtils.buildShape("ball-7");
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+l5-0").apply(shape);
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
