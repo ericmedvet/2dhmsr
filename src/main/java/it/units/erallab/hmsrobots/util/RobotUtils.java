@@ -191,11 +191,11 @@ public class RobotUtils {
     throw new IllegalArgumentException(String.format("Unknown sensorizing function name: %s", name));
   }
 
-  private static Sensor sensor(String name, int x, int y, Grid<Boolean> body) {
+  public static Sensor sensor(String name, int x, int y, Grid<Boolean> body) {
     return sensor(name, x, y, body, true);
   }
 
-  private static Sensor sensor(String name, int x, int y, Grid<Boolean> body, boolean condition) {
+  public static Sensor sensor(String name, int x, int y, Grid<Boolean> body, boolean condition) {
     if (!condition) {
       return null;
     }
