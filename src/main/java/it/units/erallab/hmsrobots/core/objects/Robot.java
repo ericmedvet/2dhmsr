@@ -172,4 +172,11 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
     return voxels;
   }
 
+  @Override
+  public String toString() {
+    return "Robot{" +
+        "controller=" + controller +
+        ", voxels=" + voxels +
+        '}';
+  }
 }

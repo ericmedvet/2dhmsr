@@ -18,15 +18,21 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -221,5 +227,45 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     }
     Toolkit.getDefaultToolkit().sync();
   }
+
+  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions) {
+    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
+        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
+        uiExecutor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+        ))
+    );
+    gridOnlineViewer.start(3);
+    GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
+        namedSolutions,
+        task,
+        gridOnlineViewer,
+        executor
+    );
+    runner.run();
+  }
+
+  public static <S> void run(Task<S, ?> task, List<S> ss) {
+    int nRows = (int) Math.ceil(Math.sqrt(ss.size()));
+    int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
+    Grid<Pair<String, S>> namedSolutions = Grid.create(nRows, nCols);
+    for (int i = 0; i < ss.size(); i++) {
+      namedSolutions.set(i % nRows, Math.floorDiv(i, nCols), Pair.of(Integer.toString(i), ss.get(i)));
+    }
+    run(task, namedSolutions);
+  }
+
+  public static <S> void run(Task<S, ?> task, S s) {
+    run(task, Grid.create(1, 1, Pair.of("solution", s)));
+  }
+
 
 }

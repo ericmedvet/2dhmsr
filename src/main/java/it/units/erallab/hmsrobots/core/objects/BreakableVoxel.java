@@ -236,4 +236,13 @@ public class BreakableVoxel extends SensingVoxel {
       state.put(ComponentType.STRUCTURE, MalfunctionType.NONE);
     }
   }
+
+  @Override
+  public String toString() {
+    return "BreakableVoxel{" +
+        "malfunctions=" + malfunctions +
+        ", triggerThresholds=" + triggerThresholds +
+        ", restoreTime=" + restoreTime +
+        '}';
+  }
 }

@@ -100,4 +100,10 @@ public class SensingVoxel extends ControllableVoxel {
     return immutable;
   }
 
+  @Override
+  public String toString() {
+    return "SensingVoxel{" +
+        "sensors=" + sensors +
+        '}';
+  }
 }

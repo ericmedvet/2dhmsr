@@ -199,7 +199,7 @@ public class RobotUtils {
     if (!condition) {
       return null;
     }
-    return PREDEFINED_SENSORS.get(name).apply((double) x / (double) body.getW(), (double) y / (double) body.getH());
+    return PREDEFINED_SENSORS.get(name).apply((double) x / ((double) body.getW() - 1d), (double) y / ((double) body.getH() - 1d));
   }
 
   public static Grid<Boolean> buildShape(String name) {

@@ -83,4 +83,12 @@ public class PhaseSin extends TimeFunctions {
     return phases;
   }
 
+  @Override
+  public String toString() {
+    return "PhaseSin{" +
+        "frequency=" + frequency +
+        ", amplitude=" + amplitude +
+        ", phases=" + phases +
+        '}';
+  }
 }

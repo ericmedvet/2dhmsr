@@ -143,4 +143,13 @@ public class ControllableVoxel extends Voxel {
       controlEnergy = controlEnergy + lastAppliedForce * lastAppliedForce;
     }
   }
+
+  @Override
+  public String toString() {
+    return "ControllableVoxel{" +
+        "maxForce=" + maxForce +
+        ", forceMethod=" + forceMethod +
+        ", controlEnergy=" + controlEnergy +
+        '}';
+  }
 }

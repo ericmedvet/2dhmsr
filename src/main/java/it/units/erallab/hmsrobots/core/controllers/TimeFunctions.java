@@ -55,4 +55,10 @@ public class TimeFunctions implements Controller<ControllableVoxel> {
     return functions;
   }
 
+  @Override
+  public String toString() {
+    return "TimeFunctions{" +
+        "functions=" + functions +
+        '}';
+  }
 }

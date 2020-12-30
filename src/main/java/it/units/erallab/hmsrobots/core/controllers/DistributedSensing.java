@@ -189,4 +189,11 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     return flatValues;
   }
 
+  @Override
+  public String toString() {
+    return "DistributedSensing{" +
+        "signals=" + signals +
+        ", functions=" + functions +
+        '}';
+  }
 }

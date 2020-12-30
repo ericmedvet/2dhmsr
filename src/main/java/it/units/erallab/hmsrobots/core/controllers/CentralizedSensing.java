@@ -124,4 +124,11 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @Override
   public void reset() {
   }
+
+  @Override
+  public String toString() {
+    return "CentralizedSensing{" +
+        "function=" + function +
+        '}';
+  }
 }

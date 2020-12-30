@@ -34,11 +34,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
-import it.units.erallab.hmsrobots.viewers.GridEpisodeRunner;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
-import it.units.erallab.hmsrobots.viewers.drawers.Ground;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -48,9 +44,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.IntStream;
 
 /**
@@ -185,17 +179,7 @@ public class Starter {
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
     namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(Grid.create(namedSolutionGrid, Pair::getLeft), uiExecutor);
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        locomotion,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
+    GridOnlineViewer.run(locomotion, namedSolutionGrid);
   }
 
   private static void breakingWorm() {
@@ -222,26 +206,7 @@ public class Starter {
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 2);
     namedSolutionGrid.set(0, 0, Pair.of("unbreakable", unbreakableRobot));
     namedSolutionGrid.set(0, 1, Pair.of("breakable", breakableRobot));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-        Grid.create(namedSolutionGrid, Pair::getLeft),
-        uiExecutor,
-        GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            Ground.build()
-        ))
-    );
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        locomotion,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
+    GridOnlineViewer.run(locomotion, namedSolutionGrid);
   }
 
   private static void plainWorm() {
@@ -265,28 +230,7 @@ public class Starter {
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("unbreakable", robot));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-        Grid.create(namedSolutionGrid, Pair::getLeft),
-        uiExecutor,
-        GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            Ground.build()
-        ))
-    );
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        locomotion,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
+    GridOnlineViewer.run(locomotion, robot);
   }
 
   private static void rollingOne() {
@@ -297,7 +241,7 @@ public class Starter {
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
-    Robot<SensingVoxel> one = new Robot<>(
+    Robot<SensingVoxel> robot = new Robot<>(
         new CentralizedSensing(oneBody, in -> new double[]{0d}),
         oneBody
     );
@@ -307,30 +251,7 @@ public class Starter {
         new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
         new Settings()
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("one", one));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-        Grid.create(namedSolutionGrid, Pair::getLeft),
-        uiExecutor,
-        GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
-        ))
-    );
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        locomotion,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
+    GridOnlineViewer.run(locomotion, robot);
   }
 
   private static void rollingBall() {
@@ -359,30 +280,7 @@ public class Starter {
         new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 75, 10, 0, 100}},
         new Settings()
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("ball", robot));
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-        Grid.create(namedSolutionGrid, Pair::getLeft),
-        uiExecutor,
-        GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
-        ))
-    );
-    gridOnlineViewer.start(5);
-    GridEpisodeRunner<Robot<?>> runner = new GridEpisodeRunner<>(
-        namedSolutionGrid,
-        locomotion,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
+    GridOnlineViewer.run(locomotion, robot);
   }
 
 }

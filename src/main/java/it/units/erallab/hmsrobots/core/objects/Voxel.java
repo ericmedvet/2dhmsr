@@ -542,4 +542,23 @@ public class Voxel implements LivingObject, Serializable {
     return areaRatioEnergy;
   }
 
+  @Override
+  public String toString() {
+    return "Voxel{" +
+        "sideLength=" + sideLength +
+        ", massSideLengthRatio=" + massSideLengthRatio +
+        ", springF=" + springF +
+        ", springD=" + springD +
+        ", massLinearDamping=" + massLinearDamping +
+        ", massAngularDamping=" + massAngularDamping +
+        ", friction=" + friction +
+        ", restitution=" + restitution +
+        ", mass=" + mass +
+        ", limitContractionFlag=" + limitContractionFlag +
+        ", massCollisionFlag=" + massCollisionFlag +
+        ", areaRatioMaxDelta=" + areaRatioMaxDelta +
+        ", springScaffoldings=" + springScaffoldings +
+        ", areaRatioEnergy=" + areaRatioEnergy +
+        '}';
+  }
 }
