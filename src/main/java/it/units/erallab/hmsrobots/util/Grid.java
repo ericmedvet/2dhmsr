@@ -153,6 +153,12 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   public void set(int x, int y, T t) {
+    if (x < 0 || x >= w || y < 0 || y >= h) {
+      throw new IllegalArgumentException(String.format(
+          "Cannot set element at %d,%d on a %dx%d grid",
+          x, y, w, h
+      ));
+    }
     ts.set((y * w) + x, t);
   }
 

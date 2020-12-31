@@ -17,13 +17,20 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
+import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.tasks.Task;
+import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.dyn4j.dynamics.Settings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +42,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -258,7 +267,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
     Grid<Pair<String, S>> namedSolutions = Grid.create(nRows, nCols);
     for (int i = 0; i < ss.size(); i++) {
-      namedSolutions.set(i % nRows, Math.floorDiv(i, nCols), Pair.of(Integer.toString(i), ss.get(i)));
+      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), Pair.of(Integer.toString(i), ss.get(i)));
     }
     run(task, namedSolutions);
   }
@@ -266,6 +275,5 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   public static <S> void run(Task<S, ?> task, S s) {
     run(task, Grid.create(1, 1, Pair.of("solution", s)));
   }
-
 
 }
