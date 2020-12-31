@@ -47,6 +47,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
   public static final int TERRAIN_LENGTH = 2000;
   private static final int FOOTPRINT_BINS = 8;
   private static final int MASK_BINS = 16;
+  public static final double TERRAIN_BORDER_WIDTH = 10d;
 
   private final double finalT;
   private final double[][] groundProfile;
@@ -206,7 +207,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     Map<String, String> params;
     if ((params = Utils.params(flat, name)) != null) {
       return new double[][]{
-          new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
+          new double[]{0, TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH},
           new double[]{TERRAIN_BORDER_HEIGHT, 5, 5, TERRAIN_BORDER_HEIGHT}
       };
     }
@@ -217,14 +218,12 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       double startLength = it.units.erallab.hmsrobots.core.objects.Voxel.SIDE_LENGTH * 8d;
       return new double[][]{
           new double[]{
-              0, 10,
-              10 + startLength,
-              TERRAIN_LENGTH - 10, TERRAIN_LENGTH
+              0, TERRAIN_BORDER_WIDTH,
+              TERRAIN_BORDER_WIDTH + startLength, TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH
           },
           new double[]{
               TERRAIN_BORDER_HEIGHT, 5 + startLength * Math.sin(angle),
-              5,
-              5, TERRAIN_BORDER_HEIGHT
+              5, 5, TERRAIN_BORDER_HEIGHT
           }
       };
     }
@@ -232,14 +231,14 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       double h = Double.parseDouble(params.get("h"));
       double w = Double.parseDouble(params.get("w"));
       Random random = new Random(Integer.parseInt(params.get("seed")));
-      List<Double> xs = new ArrayList<>(List.of(0d, 10d));
+      List<Double> xs = new ArrayList<>(List.of(0d, TERRAIN_BORDER_WIDTH));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
-      while (xs.get(xs.size() - 1) < TERRAIN_LENGTH) {
+      while (xs.get(xs.size() - 1) < TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH) {
         xs.add(xs.get(xs.size() - 1) + Math.max(1d, (random.nextGaussian() * 0.25 + 1) * w));
         ys.add(ys.get(ys.size() - 1) + random.nextGaussian() * h);
       }
-      xs.addAll(List.of(xs.get(xs.size() - 1) + 10, xs.get(xs.size() - 1) + 20));
-      ys.addAll(List.of(0d, TERRAIN_BORDER_HEIGHT));
+      xs.addAll(List.of(xs.get(xs.size() - 1) + TERRAIN_BORDER_WIDTH));
+      ys.addAll(List.of(TERRAIN_BORDER_HEIGHT));
       return new double[][]{
           xs.stream().mapToDouble(d -> d).toArray(),
           ys.stream().mapToDouble(d -> d).toArray()
@@ -249,16 +248,16 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       double h = Double.parseDouble(params.get("h"));
       double w = Double.parseDouble(params.get("w"));
       Random random = new Random(Integer.parseInt(params.get("seed")));
-      List<Double> xs = new ArrayList<>(List.of(0d, 10d));
+      List<Double> xs = new ArrayList<>(List.of(0d, TERRAIN_BORDER_WIDTH));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
-      while (xs.get(xs.size() - 1) < TERRAIN_LENGTH) {
+      while (xs.get(xs.size() - 1) < TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH) {
         xs.add(xs.get(xs.size() - 1) + Math.max(1d, (random.nextGaussian() * 0.25 + 1) * w));
         xs.add(xs.get(xs.size() - 1) + 0.5d);
         ys.add(ys.get(ys.size() - 1));
         ys.add(ys.get(ys.size() - 1) + random.nextGaussian() * h);
       }
-      xs.addAll(List.of(xs.get(xs.size() - 1) + 10, xs.get(xs.size() - 1) + 20));
-      ys.addAll(List.of(0d, TERRAIN_BORDER_HEIGHT));
+      xs.addAll(List.of(xs.get(xs.size() - 1) + TERRAIN_BORDER_WIDTH));
+      ys.addAll(List.of(TERRAIN_BORDER_HEIGHT));
       return new double[][]{
           xs.stream().mapToDouble(d -> d).toArray(),
           ys.stream().mapToDouble(d -> d).toArray()
@@ -266,21 +265,20 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     }
     if ((params = Utils.params(downhill, name)) != null) {
       double angle = Double.parseDouble(params.get("angle"));
-      double dY = (TERRAIN_LENGTH - 20) * Math.sin(angle / 180 * Math.PI);
+      double dY = (TERRAIN_LENGTH - 2 * TERRAIN_BORDER_WIDTH) * Math.sin(angle / 180 * Math.PI);
       return new double[][]{
-          new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
+          new double[]{0, TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH},
           new double[]{TERRAIN_BORDER_HEIGHT + dY, 5 + dY, 5, TERRAIN_BORDER_HEIGHT}
       };
     }
     if ((params = Utils.params(uphill, name)) != null) {
       double angle = Double.parseDouble(params.get("angle"));
-      double dY = (TERRAIN_LENGTH - 20) * Math.sin(angle / 180 * Math.PI);
+      double dY = (TERRAIN_LENGTH - 2 * TERRAIN_BORDER_WIDTH) * Math.sin(angle / 180 * Math.PI);
       return new double[][]{
-          new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
+          new double[]{0, TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH},
           new double[]{TERRAIN_BORDER_HEIGHT, 5, 5 + dY, TERRAIN_BORDER_HEIGHT + dY}
       };
     }
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));
   }
-
 }

@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Ground implements WorldObject {
 
-  private static final double MIN_Y_THICKNESS = 10d;
+  private static final double MIN_Y_THICKNESS = 50d;
 
   private final double[] xs;
   private final double[] ys;

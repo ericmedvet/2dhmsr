@@ -26,6 +26,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,14 @@ import java.util.stream.Collectors;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
+
+  private final static Ground MINIATURE_GROUND_DRAWER = Ground.build();
+  private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(Point2.build(0.65, 0.01), Point2.build(0.99, 0.35));
+
+  static {
+    MINIATURE_GROUND_DRAWER.setConfigurable("useTexture", false);
+    MINIATURE_GROUND_DRAWER.setConfigurable("strokeColor", null);
+  }
 
   public enum GeneralRenderingMode {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, VOXEL_COMPOUND_CENTERS_INFO
@@ -57,8 +66,12 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   private double[] gridSizes = new double[]{2, 5, 10};
   @ConfigurableField(uiMin = 1, uiMax = 5)
   private float strokeWidth = 1f;
+  @ConfigurableField
+  private boolean drawMiniature = true;
+  @ConfigurableField(uiMin = 1, uiMax = 10)
+  private float miniatureMagnifyRatio = 3f;
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
-  private List<Drawer> drawers = new ArrayList<>(List.of(
+  private List<Drawer<?>> drawers = new ArrayList<>(List.of(
       Robot.build(),
       Voxel.build(),
       VoxelBody.build(),
@@ -75,17 +88,60 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return new GraphicsDrawer();
   }
 
+  public void drawMiniature(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
+    //set clipping area
+    g.setClip(
+        (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
+        (int) graphicsFrame.width(), (int) graphicsFrame.height()
+    );
+    it.units.erallab.hmsrobots.core.objects.immutable.Ground ground = (it.units.erallab.hmsrobots.core.objects.immutable.Ground) snapshot.getObjects().stream().filter(i -> i instanceof it.units.erallab.hmsrobots.core.objects.immutable.Ground).findFirst().orElse(null);
+    if (ground != null) {
+      BoundingBox worldFrame = ground.getShape().boundingBox();
+      if (miniatureMagnifyRatio != 1f) {
+        Point2 center = inWorldFrame.center();
+        double w = worldFrame.width();
+        double h = worldFrame.height();
+        double minX = Math.max(center.x - w / 2d / miniatureMagnifyRatio, worldFrame.min.x);
+        worldFrame = BoundingBox.build(
+            Point2.build(minX, center.y - h / 2d / miniatureMagnifyRatio),
+            Point2.build(minX + w / miniatureMagnifyRatio, center.y + h / 2d / miniatureMagnifyRatio)
+        );
+      }
+      //save original transform
+      AffineTransform oAt = g.getTransform();
+      //prepare transformation
+      double xRatio = graphicsFrame.width() / worldFrame.width();
+      double yRatio = graphicsFrame.height() / worldFrame.height();
+      double ratio = Math.min(xRatio, yRatio);
+      AffineTransform at = new AffineTransform();
+      at.translate(graphicsFrame.min.x, graphicsFrame.min.y);
+      at.scale(ratio, -ratio);
+      at.translate(-worldFrame.min.x, -inWorldFrame.max.y);
+      g.setTransform(at);
+      //draw ground
+      Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
+      g.setStroke(basicStroke);
+      g.setColor(basicColor);
+      MINIATURE_GROUND_DRAWER.draw(ground, null, g);
+      //draw in world frame
+      g.setColor(infoColor);
+      g.draw(new Rectangle2D.Double(inWorldFrame.min.x, inWorldFrame.min.y, inWorldFrame.width(), inWorldFrame.height()));
+      //restore transform
+      g.setTransform(oAt);
+    }
+  }
+
   public void draw(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, String... infos) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
-        (int) (graphicsFrame.max.x - graphicsFrame.min.x), (int) (graphicsFrame.max.y - graphicsFrame.min.y)
+        (int) graphicsFrame.width(), (int) graphicsFrame.height()
     );
     //save original transform
     AffineTransform oAt = g.getTransform();
     //prepare transformation
-    double xRatio = (graphicsFrame.max.x - graphicsFrame.min.x) / (worldFrame.max.x - worldFrame.min.x);
-    double yRatio = (graphicsFrame.max.y - graphicsFrame.min.y) / (worldFrame.max.y - worldFrame.min.y);
+    double xRatio = graphicsFrame.width() / worldFrame.width();
+    double yRatio = graphicsFrame.height() / worldFrame.height();
     double ratio = Math.min(xRatio, yRatio);
     AffineTransform at = new AffineTransform();
     at.translate(graphicsFrame.min.x, graphicsFrame.min.y);
@@ -95,7 +151,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     g.setColor(backgroundColor);
     g.fillRect(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
-        (int) (graphicsFrame.max.x - graphicsFrame.min.x), (int) (graphicsFrame.max.y - graphicsFrame.min.y)
+        (int) graphicsFrame.width(), (int) graphicsFrame.height()
     );
     //draw grid
     g.setTransform(at);
@@ -170,6 +226,23 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
         relY = relY + g.getFontMetrics().getMaxAscent() + 1;
       }
     }
+    //draw miniature
+    if (drawMiniature) {
+      drawMiniature(
+          snapshot,
+          g,
+          BoundingBox.build(
+              Point2.build(
+                  graphicsFrame.min.x + graphicsFrame.width() * MINIATURE_REL_BOUNDING_BOX.min.x,
+                  graphicsFrame.min.y + graphicsFrame.height() * MINIATURE_REL_BOUNDING_BOX.min.y
+              ), Point2.build(
+                  graphicsFrame.min.x + graphicsFrame.width() * MINIATURE_REL_BOUNDING_BOX.max.x,
+                  graphicsFrame.min.y + graphicsFrame.height() * MINIATURE_REL_BOUNDING_BOX.max.y
+              )
+          ),
+          worldFrame
+      );
+    }
   }
 
   private double computeGridSize(double x1, double x2) {
@@ -197,7 +270,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       }
     }
     if (drawChildren) {
-      immutable.getChildren().stream().forEach(c -> recursivelyDraw(c, immutable, g, basicStroke));
+      immutable.getChildren().forEach(c -> recursivelyDraw(c, immutable, g, basicStroke));
     }
   }
 

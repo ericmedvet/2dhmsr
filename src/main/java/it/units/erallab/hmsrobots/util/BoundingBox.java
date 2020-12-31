@@ -59,4 +59,16 @@ public class BoundingBox implements Serializable {
   public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
     return BoundingBox.build(bb1.min, bb1.max, bb2.min, bb2.max);
   }
+
+  public Point2 center() {
+    return Point2.build((min.x + max.x) / 2d, (min.y + max.x) / 2d);
+  }
+
+  public double width() {
+    return max.x - min.x;
+  }
+
+  public double height() {
+    return max.y - min.y;
+  }
 }
