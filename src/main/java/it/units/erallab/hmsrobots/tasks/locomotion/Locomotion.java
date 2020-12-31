@@ -201,6 +201,8 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     String flatWithStart = "flatWithStart-(?<seed>[0-9]+)";
     String hilly = "hilly-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
     String steppy = "steppy-(?<h>[0-9]+(\\.[0-9]+)?)-(?<w>[0-9]+(\\.[0-9]+)?)-(?<seed>[0-9]+)";
+    String downhill = "downhill-(?<angle>[0-9]+(\\.[0-9]+)?)";
+    String uphill = "uphill-(?<angle>[0-9]+(\\.[0-9]+)?)";
     Map<String, String> params;
     if ((params = Utils.params(flat, name)) != null) {
       return new double[][]{
@@ -260,6 +262,22 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       return new double[][]{
           xs.stream().mapToDouble(d -> d).toArray(),
           ys.stream().mapToDouble(d -> d).toArray()
+      };
+    }
+    if ((params = Utils.params(downhill, name)) != null) {
+      double angle = Double.parseDouble(params.get("angle"));
+      double dY = (TERRAIN_LENGTH - 20) * Math.sin(angle / 180 * Math.PI);
+      return new double[][]{
+          new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
+          new double[]{TERRAIN_BORDER_HEIGHT + dY, 5 + dY, 5, TERRAIN_BORDER_HEIGHT}
+      };
+    }
+    if ((params = Utils.params(uphill, name)) != null) {
+      double angle = Double.parseDouble(params.get("angle"));
+      double dY = (TERRAIN_LENGTH - 20) * Math.sin(angle / 180 * Math.PI);
+      return new double[][]{
+          new double[]{0, 10, TERRAIN_LENGTH - 10, TERRAIN_LENGTH},
+          new double[]{TERRAIN_BORDER_HEIGHT, 5, 5 + dY, TERRAIN_BORDER_HEIGHT + dY}
       };
     }
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));

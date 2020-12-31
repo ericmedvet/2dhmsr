@@ -172,7 +172,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-        Locomotion.createTerrain("flat"),
+        Locomotion.createTerrain("steppy-3-10-0"),
         new Settings()
     );
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
@@ -277,7 +277,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         60,
-        new double[][]{new double[]{0, 10, 100, 1000, 1010}, new double[]{100, 75, 10, 0, 100}},
+        Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
     GridOnlineViewer.run(locomotion, robot);

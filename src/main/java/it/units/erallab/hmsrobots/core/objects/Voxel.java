@@ -131,7 +131,7 @@ public class Voxel implements LivingObject, Serializable {
   public static final double SPRING_D = 0.3d;
   public static final double MASS_LINEAR_DAMPING = 0.1d;
   public static final double MASS_ANGULAR_DAMPING = 0.1d;
-  public static final double FRICTION = 100d;
+  public static final double FRICTION = 10d;
   public static final double RESTITUTION = 0.1d;
   public static final double MASS = 1d;
   public static final boolean LIMIT_CONTRACTION_FLAG = true;
