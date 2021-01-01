@@ -141,11 +141,11 @@ public class Starter {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
           MultiLayerPerceptron.ActivationFunction.TANH,
           distributedSensing.nOfInputs(entry.getX(), entry.getY()),
-          new int[0],
+          new int[]{2},
           distributedSensing.nOfOutputs(entry.getX(), entry.getY())
       );
       double[] ws = mlp.getParams();
-      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
+      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
       mlp.setParams(ws);
       distributedSensing.getFunctions().set(entry.getX(), entry.getY(), mlp);
     }
@@ -158,11 +158,11 @@ public class Starter {
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
-        new int[0],
+        new int[]{2},
         centralizedSensing.nOfOutputs()
     );
     double[] ws = mlp.getParams();
-    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
     Robot<SensingVoxel> centralized = new Robot<>(

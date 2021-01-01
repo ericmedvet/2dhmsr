@@ -23,6 +23,7 @@ import it.units.erallab.hmsrobots.viewers.drawers.Robot;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
 
 import java.awt.*;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
@@ -124,8 +125,11 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       g.setColor(basicColor);
       MINIATURE_GROUND_DRAWER.draw(ground, null, g);
       //draw in world frame
+      Shape rect = new Rectangle2D.Double(inWorldFrame.min.x, inWorldFrame.min.y, inWorldFrame.width(), inWorldFrame.height());
+      g.setColor(alphaed(infoColor, 0.25f));
+      g.fill(rect);
       g.setColor(infoColor);
-      g.draw(new Rectangle2D.Double(inWorldFrame.min.x, inWorldFrame.min.y, inWorldFrame.width(), inWorldFrame.height()));
+      g.draw(rect);
       //restore transform
       g.setTransform(oAt);
     }
