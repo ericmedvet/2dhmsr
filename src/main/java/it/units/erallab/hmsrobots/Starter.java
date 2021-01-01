@@ -115,11 +115,12 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
+    cShaped();
   }
 
   private static void bipeds() {
@@ -224,6 +225,22 @@ public class Starter {
         SerializationUtils.clone(body)
     );
     robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
+    //episode
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flatWithStart-2"),
+        new Settings()
+    );
+    GridOnlineViewer.run(locomotion, robot);
+  }
+
+  private static void cShaped() {
+    Grid<Boolean> shape = Grid.create(8, 8, (x, y) -> x < 2 || y < 2 || y >= 6);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t-0").apply(shape);
+    Robot<?> robot = new Robot<>(
+        new CentralizedSensing(body),
+        SerializationUtils.clone(body)
+    );
     //episode
     Locomotion locomotion = new Locomotion(
         60,

@@ -135,7 +135,7 @@ public class Voxel implements LivingObject, Serializable {
   public static final double RESTITUTION = 0.1d;
   public static final double MASS = 1d;
   public static final boolean LIMIT_CONTRACTION_FLAG = true;
-  public static final boolean MASS_COLLISION_FLAG = true;
+  public static final boolean MASS_COLLISION_FLAG = false;
   public static final double AREA_RATIO_MAX_DELTA = 0.225d;
   public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
 
@@ -367,7 +367,7 @@ public class Voxel implements LivingObject, Serializable {
     springJoints = allSpringJoints.toArray(new DistanceJoint[0]);
   }
 
-  public void setOwner(Robot robot) {
+  public void setOwner(Robot<?> robot) {
     Filter filter;
     if (massCollisionFlag) {
       filter = new ParentFilter(robot);

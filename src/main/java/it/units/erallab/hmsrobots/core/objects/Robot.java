@@ -30,6 +30,7 @@ import org.dyn4j.geometry.Vector2;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,7 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
     assemble();
   }
 
+  @Serial
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
     assemble();
@@ -91,11 +93,10 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
   }
 
   private static Joint join(Body body1, Body body2) {
-    WeldJoint joint = new WeldJoint(body1, body2, new Vector2(
+    return new WeldJoint(body1, body2, new Vector2(
         (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
         (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
-    return joint;
   }
 
   @Override
