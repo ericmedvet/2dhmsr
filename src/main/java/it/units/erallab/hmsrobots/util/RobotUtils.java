@@ -8,6 +8,7 @@ import it.units.erallab.hmsrobots.core.sensors.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -216,12 +217,12 @@ public class RobotUtils {
     if ((params = params(biped, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> !(y == 0 && x > 0 && x < w - 1));
+      return Grid.create(w, h, (x, y) -> !(y < h / 2 && x >= w / 4 && x < w * 3 / 4));
     }
     if ((params = params(tripod, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> !(y != h - 1 && x != 0 && x != w - 1 && x != w / 2));
+      return Grid.create(w, h, (x, y) -> !(y < h / 2 && x != 0 && x != w - 1 && x != w / 2));
     }
     if ((params = params(ball, name)) != null) {
       int d = Integer.parseInt(params.get("d"));
