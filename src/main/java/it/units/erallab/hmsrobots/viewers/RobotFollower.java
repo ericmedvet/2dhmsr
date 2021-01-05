@@ -38,9 +38,9 @@ public class RobotFollower implements Framer {
 
   private final EvictingQueue<BoundingBox> enclosingFrames;
 
-  public RobotFollower(int windowSize, double sizeRelativeMargin, int compounds, AggregateType aggregateType) {
+  public RobotFollower(int windowSize, double sizeRelativeMargin, int nOfRobots, AggregateType aggregateType) {
     this.sizeRelativeMargin = sizeRelativeMargin;
-    this.compounds = compounds;
+    this.compounds = nOfRobots;
     this.aggregateType = aggregateType;
     enclosingFrames = EvictingQueue.create(windowSize);
   }

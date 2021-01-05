@@ -19,20 +19,17 @@ package it.units.erallab.hmsrobots.viewers;
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.Flushable;
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class FramesFileWriter implements Flushable, SnapshotListener {
+public class FramesImageBuilder implements SnapshotListener {
 
   public enum Direction {
     HORIZONTAL, VERTICAL
@@ -44,8 +41,6 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
   private final int w;
   private final int h;
   private final Direction direction;
-  private final File file;
-  private final ExecutorService executor;
 
   private final GraphicsDrawer graphicsDrawer;
   private final Framer framer;
@@ -54,17 +49,15 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
   private Snapshot lastSnapshot;
   private int frameCount;
 
-  private static final Logger L = Logger.getLogger(FramesFileWriter.class.getName());
+  private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
 
-  public FramesFileWriter(double initialT, double finalT, double dT, int w, int h, Direction direction, File file, ExecutorService executor) {
+  public FramesImageBuilder(double initialT, double finalT, double dT, int w, int h, Direction direction) {
     this.initialT = initialT;
     this.finalT = finalT;
     this.dT = dT;
     this.w = w;
     this.h = h;
     this.direction = direction;
-    this.file = file;
-    this.executor = executor;
     int frames = (int) Math.floor((finalT - initialT) / dT);
     int overallW = w;
     int overallH = h;
@@ -74,15 +67,19 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
       overallH = h * frames;
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
-    graphicsDrawer = GraphicsDrawer.build();
+    graphicsDrawer = GraphicsDrawer.build().setConfigurable("drawers", List.of(
+        it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+        it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+        it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+        SensorReading.build(),
+        it.units.erallab.hmsrobots.viewers.drawers.Lidar.build()
+    ));
     framer = new RobotFollower(frames, 1.5d, 100, RobotFollower.AggregateType.MAX);
     frameCount = 0;
   }
 
-  @Override
-  public void flush() throws IOException {
-    L.info(String.format("Saving image with %d frames", frameCount));
-    ImageIO.write(image, "png", file);
+  public BufferedImage getImage() {
+    return image;
   }
 
   @Override
@@ -107,7 +104,7 @@ public class FramesFileWriter implements Flushable, SnapshotListener {
           Point2.build(w, h * (frameCount + 1))
       );
     }
-    L.info(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
+    L.fine(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
     frameCount = frameCount + 1;
     Graphics2D g = image.createGraphics();
     graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, String.format("%d", frameCount));

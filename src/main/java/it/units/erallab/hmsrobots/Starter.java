@@ -33,18 +33,17 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.viewers.FramesFileWriter;
+import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
-import java.io.File;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 /**
@@ -104,13 +103,11 @@ public class Starter {
             (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
         )
     );
-    FramesFileWriter framesFileWriter = new FramesFileWriter(
-        5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
-        new File("/home/eric/experiments/2dhmsr/frames.v.png"),
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
+        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL
     );
-    Outcome result = locomotion.apply(robot, framesFileWriter);
-    framesFileWriter.flush();
+    Outcome result = locomotion.apply(robot, framesImageBuilder);
+    BufferedImage image = framesImageBuilder.getImage();
     System.out.println("Outcome: " + result);
   }
 

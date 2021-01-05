@@ -109,14 +109,12 @@ Robot robot = new Robot(
         (x, y) -> (y == 0) ? SerializationUtils.clone(hardMaterialVoxel) : SerializationUtils.clone(softMaterialVoxel)
     )
 );
-FramesFileWriter framesFileWriter = new FramesFileWriter(
-    5, 5.5, 0.1, 300, 200, FramesFileWriter.Direction.HORIZONTAL,
-    new File(pathToFile),
-    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
+5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL
 );
-Outcome outcome = locomotion.apply(robot, framesFileWriter);
-framesFileWriter.flush();
-System.out.println("Outcome: " + outcome);
+Outcome result = locomotion.apply(robot, framesImageBuilder);
+BufferedImage image = framesImageBuilder.getImage();
+System.out.println("Outcome: " + result);
 ```
 
 #### Optimization examples: optimize phases
