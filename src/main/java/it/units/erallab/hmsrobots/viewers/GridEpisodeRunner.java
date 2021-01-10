@@ -18,14 +18,15 @@ package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -68,9 +69,9 @@ public class GridEpisodeRunner<S> implements Runnable {
         .filter(p -> p.getValue() != null && p.getValue().getRight() != null)
         .forEach(entry -> {
           results.add(executor.submit(() -> {
-            L.info(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
+            L.fine(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
             Object outcome = episode.apply(entry.getValue().getRight(), gridSnapshotListener.listener(entry.getX(), entry.getY()));
-            L.info(String.format("Ended %s in position (%d,%d) with outcome %s", episode.getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
+            L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", episode.getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
           }));
         });
     //wait for results
@@ -85,9 +86,9 @@ public class GridEpisodeRunner<S> implements Runnable {
     //flush and write
     if (gridSnapshotListener instanceof Flushable) {
       try {
-        L.fine(String.format("Flushing with %s", gridSnapshotListener.getClass().getSimpleName()));
+        L.finer(String.format("Flushing with %s", gridSnapshotListener.getClass().getSimpleName()));
         ((Flushable) gridSnapshotListener).flush();
-        L.fine("Flushed");
+        L.finer("Flushed");
       } catch (IOException e) {
         L.log(Level.SEVERE, String.format("Cannot flush video due to %s", e), e);
       }

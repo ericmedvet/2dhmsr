@@ -17,10 +17,13 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -33,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -207,15 +212,54 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
       }
     }
     running = false;
-    L.info(String.format("Saving video on %s", file));
+    L.fine(String.format("Saving video on %s", file));
     StopWatch stopWatch = StopWatch.createStarted();
     VideoUtils.encodeAndSave(images, frameRate, file, encoder);
     long millis = stopWatch.getTime(TimeUnit.MILLISECONDS);
-    L.info(String.format(
+    L.fine(String.format(
         "Video saved: %.1fMB written in %.2fs",
         Files.size(file.toPath()) / 1024f / 1024f,
         millis / 1000f
     ));
+  }
+
+  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridFileWriter gridFileWriter = new GridFileWriter(
+        w, h, startTime, frameRate, encoder, file,
+        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
+        executor,
+        GraphicsDrawer.build().setConfigurable("drawers", List.of(
+            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+            SensorReading.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
+            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+        ))
+    );
+    GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
+        namedSolutions,
+        task,
+        gridFileWriter,
+        executor
+    );
+    runner.run();
+    executor.shutdownNow();
+  }
+
+  public static <S> void save(Task<S, ?> task, List<S> ss, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+    int nRows = (int) Math.ceil(Math.sqrt(ss.size()));
+    int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
+    Grid<Pair<String, S>> namedSolutions = Grid.create(nRows, nCols);
+    for (int i = 0; i < ss.size(); i++) {
+      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), Pair.of(Integer.toString(i), ss.get(i)));
+    }
+    save(task, namedSolutions, w, h, startTime, frameRate, encoder, file);
+  }
+
+  public static <S> void save(Task<S, ?> task, S s, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+    save(task, Grid.create(1, 1, Pair.of("solution", s)), w, h, startTime, frameRate, encoder, file);
   }
 
 }

@@ -33,12 +33,13 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
-import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import it.units.erallab.hmsrobots.viewers.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
@@ -240,10 +241,16 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        10,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
+    //GridOnlineViewer.run(locomotion, robot);
+    try {
+      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     GridOnlineViewer.run(locomotion, robot);
   }
 
