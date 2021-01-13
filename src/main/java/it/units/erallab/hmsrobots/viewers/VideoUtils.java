@@ -1,8 +1,5 @@
 package it.units.erallab.hmsrobots.viewers;
 
-import io.humble.video.*;
-import io.humble.video.awt.MediaPictureConverter;
-import io.humble.video.awt.MediaPictureConverterFactory;
 import org.jcodec.api.SequenceEncoder;
 import org.jcodec.common.Format;
 import org.jcodec.common.io.NIOUtils;
@@ -28,7 +25,7 @@ import java.util.logging.Logger;
  */
 public class VideoUtils {
 
-  public enum EncoderFacility {JCODEC, HUMBLE, FFMPEG_LARGE, FFMPEG_SMALL}
+  public enum EncoderFacility {JCODEC, FFMPEG_LARGE, FFMPEG_SMALL}
 
   private static final EncoderFacility DEFAULT_ENCODER = EncoderFacility.JCODEC;
   private static final Logger L = Logger.getLogger(VideoUtils.class.getName());
@@ -43,7 +40,6 @@ public class VideoUtils {
   public static void encodeAndSave(List<BufferedImage> images, double frameRate, File file, EncoderFacility encoder) throws IOException {
     switch (encoder) {
       case JCODEC -> encodeAndSaveWithJCodec(images, frameRate, file);
-      case HUMBLE -> encodeAndSaveWithHumble(images, frameRate, file);
       case FFMPEG_LARGE -> encodeAndSaveWithFFMpeg(images, frameRate, file, 18);
       case FFMPEG_SMALL -> encodeAndSaveWithFFMpeg(images, frameRate, file, 30);
     }
@@ -68,56 +64,6 @@ public class VideoUtils {
     }
     encoder.finish();
     NIOUtils.closeQuietly(channel);
-  }
-
-  private static void encodeAndSaveWithHumble(List<BufferedImage> images, double frameRate, File file) throws IOException {
-    //inspiration from https://github.com/artclarke/humble-video/blob/master/humble-video-demos/src/main/java/io/humble/video/demos/RecordAndEncodeVideo.java
-    io.humble.video.Rational rational = io.humble.video.Rational.make(1, (int) Math.round(frameRate));
-    final Muxer muxer = Muxer.make(file.getPath(), null, null);
-    final MuxerFormat format = muxer.getFormat();
-    L.info(String.format("Muxing with %s format", format.getLongName()));
-    final Codec codec = Codec.findEncodingCodec(format.getDefaultVideoCodecId());
-    Encoder encoder = Encoder.make(codec);
-    encoder.setWidth(images.get(0).getWidth());
-    encoder.setHeight(images.get(0).getHeight());
-    final PixelFormat.Type pixelFormat = PixelFormat.Type.PIX_FMT_YUV420P;
-    encoder.setPixelFormat(pixelFormat);
-    encoder.setTimeBase(rational);
-    if (format.getFlag(MuxerFormat.Flag.GLOBAL_HEADER)) {
-      encoder.setFlag(Encoder.Flag.FLAG_GLOBAL_HEADER, true);
-    }
-    encoder.open(null, null);
-    muxer.addNewStream(encoder);
-    try {
-      muxer.open(null, null);
-    } catch (InterruptedException e) {
-      throw new IOException(String.format("Cannot open muxer due to %s", e));
-    }
-    final MediaPicture picture = MediaPicture.make(
-        encoder.getWidth(),
-        encoder.getHeight(),
-        pixelFormat
-    );
-    picture.setTimeBase(rational);
-    MediaPictureConverter converter = MediaPictureConverterFactory.createConverter(images.get(0), picture);
-    final MediaPacket packet = MediaPacket.make();
-    for (int i = 0; i < images.size(); i++) {
-      BufferedImage image = images.get(i);
-      converter.toPicture(picture, image, i);
-      do {
-        encoder.encode(packet, picture);
-        if (packet.isComplete()) {
-          muxer.write(packet, false);
-        }
-      } while (packet.isComplete());
-    }
-    do {
-      encoder.encode(packet, null);
-      if (packet.isComplete()) {
-        muxer.write(packet, false);
-      }
-    } while (packet.isComplete());
-    muxer.close();
   }
 
   private static void encodeAndSaveWithFFMpeg(List<BufferedImage> images, double frameRate, File file, int compression) throws IOException {

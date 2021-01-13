@@ -117,8 +117,8 @@ public class Starter {
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    //plainWorm();
-    cShaped();
+    plainWorm();
+    //cShaped();
   }
 
   private static void bipeds() {
