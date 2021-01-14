@@ -19,11 +19,12 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
 import java.util.Arrays;
 import java.util.TreeMap;
 
-public class DynamicNormalization implements Sensor {
+public class DynamicNormalization implements Sensor, ReadingAugmenter {
 
   @JsonProperty
   private final Sensor sensor;
@@ -83,4 +84,13 @@ public class DynamicNormalization implements Sensor {
         ", interval=" + interval +
         '}';
   }
+
+  @Override
+  public SensorReading augment(SensorReading reading, Voxel voxel) {
+    if (sensor instanceof ReadingAugmenter) {
+      return ((ReadingAugmenter) sensor).augment(reading, voxel);
+    }
+    return reading;
+  }
+
 }

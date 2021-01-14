@@ -20,10 +20,11 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
 import java.util.Arrays;
 
-public class SoftNormalization implements Sensor {
+public class SoftNormalization implements Sensor, ReadingAugmenter {
 
   @JsonProperty
   private final Sensor sensor;
@@ -62,4 +63,13 @@ public class SoftNormalization implements Sensor {
         "sensor=" + sensor +
         '}';
   }
+
+  @Override
+  public SensorReading augment(SensorReading reading, Voxel voxel) {
+    if (sensor instanceof ReadingAugmenter) {
+      return ((ReadingAugmenter) sensor).augment(reading, voxel);
+    }
+    return reading;
+  }
+
 }

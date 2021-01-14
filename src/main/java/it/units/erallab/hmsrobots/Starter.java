@@ -115,11 +115,11 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    //plainWorm();
+    plainWorm();
     //cShaped();
   }
 
@@ -211,7 +211,11 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniformAll-0").apply(RobotUtils.buildShape("worm-10x4"));
+    Grid<? extends SensingVoxel> body = RobotUtils
+        .buildSensorizingFunction("uniform-l1-0.01")
+        //.buildSensorizingFunction("uniform-l5-0")
+        //.buildSensorizingFunction("uniformAll-0")
+        .apply(RobotUtils.buildShape("worm-5x2"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(

@@ -3,6 +3,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -10,7 +11,7 @@ import java.util.Random;
 /**
  * @author eric on 2020/12/18 for 2dhmsr
  */
-public class Noisy implements Sensor {
+public class Noisy implements Sensor, ReadingAugmenter {
 
   @JsonProperty
   private final Sensor sensor;
@@ -53,5 +54,13 @@ public class Noisy implements Sensor {
         "sensor=" + sensor +
         ", sigma=" + sigma +
         '}';
+  }
+
+  @Override
+  public SensorReading augment(SensorReading reading, Voxel voxel) {
+    if (sensor instanceof ReadingAugmenter) {
+      return ((ReadingAugmenter) sensor).augment(reading, voxel);
+    }
+    return reading;
   }
 }
