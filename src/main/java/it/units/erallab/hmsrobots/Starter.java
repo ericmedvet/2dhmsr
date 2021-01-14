@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -33,12 +33,14 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.viewers.*;
+import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
+import it.units.erallab.hmsrobots.viewers.GridFileWriter;
+import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
+import it.units.erallab.hmsrobots.viewers.VideoUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -113,11 +115,11 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    //bipeds();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    plainWorm();
+    //plainWorm();
     //cShaped();
   }
 
@@ -170,7 +172,7 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        10,
         Locomotion.createTerrain("steppy-3-10-0"),
         new Settings()
     );
@@ -225,7 +227,7 @@ public class Starter {
     robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        10,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
