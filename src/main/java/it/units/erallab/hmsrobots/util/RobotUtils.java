@@ -8,7 +8,6 @@ import it.units.erallab.hmsrobots.core.sensors.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -32,7 +31,7 @@ public class RobotUtils {
       Map.entry("px", (x, y) -> new Constant(x)),
       Map.entry("py", (x, y) -> new Constant(y)),
       Map.entry("m", (x, y) -> new Malfunction()),
-      Map.entry("cgp", (x, y) -> new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1))),
+      Map.entry("cpg", (x, y) -> new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1))),
       Map.entry("l5", (x, y) -> new Lidar(10d, Map.of(lidarSide(x, y), 5))),
       Map.entry("l1", (x, y) -> new Lidar(10d, Map.of(lidarSide(x, y), 1)))
   ));
