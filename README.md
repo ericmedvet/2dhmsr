@@ -214,5 +214,6 @@ public static double assessOnLocomotion(double[] weights) {
 2. Medvet, Bartoli, De Lorenzo, Seriani. "[Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617)" arXiv cs.RO: 2001.08617
 
 ## Other research papers based on 2D-VSR-Sim
-- Medvet, Bartoli, [GraphEA: a Versatile Representation and Evolutionary Algorithm for Graphs](http://medvet.inginf.units.it/publications/grapheaaversatilerepresentationandevolutionaryalgorithmforgraphs), Workshop on Evolutionary and Population-based Optimization (WEPO@AIxIA), 2020
-- Medvet, Bartoli, De Lorenzo, Fidel, [Evolution of Distributed Neural Controllers for Voxel-based Soft Robots](http://medvet.inginf.units.it/publications/evolutionofdistributedneuralcontrollersforvoxelbasedsoftrobots), ACM Genetic and Evolutionary Computation Conference (GECCO), 2020, Cancun (Mexico)
+- Ferigo, Iacca, Medvet; [Beyond Body Shape and Brain: Evolving the Sensory Apparatus of Voxel-based Soft Robots](https://medvet.inginf.units.it/publications/2021-c-fim-beyond/); 24th European Conference on the Applications of Evolutionary Computation (EvoAPPS); 2021
+- Medvet, Bartoli, [GraphEA: a Versatile Representation and Evolutionary Algorithm for Graphs](https://medvet.inginf.units.it/publications/2020-c-mb-graphea/), Workshop on Evolutionary and Population-based Optimization (WEPO@AIxIA), 2020
+- Medvet, Bartoli, De Lorenzo, Fidel, [Evolution of Distributed Neural Controllers for Voxel-based Soft Robots](https://medvet.inginf.units.it/publications/2020-c-mbdf-evolution/), ACM Genetic and Evolutionary Computation Conference (GECCO), 2020, Cancun (Mexico)
