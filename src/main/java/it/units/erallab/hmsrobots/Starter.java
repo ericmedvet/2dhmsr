@@ -204,7 +204,7 @@ public class Starter {
         new Settings()
     );
     //GridOnlineViewer.run(locomotion, robot);
-    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .65, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
     locomotion.apply(robot, framesImageBuilder);
     try {
       ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
