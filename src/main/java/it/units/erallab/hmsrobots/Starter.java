@@ -40,6 +40,7 @@ import it.units.erallab.hmsrobots.viewers.VideoUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -119,8 +120,9 @@ public class Starter {
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    plainWorm();
+    //plainWorm();
     //cShaped();
+    multiped();
   }
 
   private static void bipeds() {
@@ -183,6 +185,34 @@ public class Starter {
     GridOnlineViewer.run(locomotion, namedSolutionGrid);
   }
 
+  private static void multiped() {
+    double f = 1d;
+    Grid<Boolean> body = Grid.create(7, 2, (x, y) -> y == 1 || (x % 2 == 0));
+    Robot<?> robot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            body.getW(),
+            body.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
+                -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
+            )
+        )),
+        RobotUtils.buildSensorizingFunction("uniform-a-0.01").apply(body)
+    );
+    Locomotion locomotion = new Locomotion(
+        10,
+        Locomotion.createTerrain("hilly-0.3-1-0"),
+        new Settings()
+    );
+    //GridOnlineViewer.run(locomotion, robot);
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .65, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    locomotion.apply(robot, framesImageBuilder);
+    try {
+      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   private static void breakingWorm() {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t").apply(RobotUtils.buildShape("worm-4x3"));
     double f = 1d;
@@ -192,7 +222,7 @@ public class Starter {
             body.getH(),
             (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
         )),
-        SerializationUtils.clone(body)
+        body
     );
     Robot<?> breakableRobot = RobotUtils.buildRobotTransformation(
         "breakable-area-1000/500-3/0.5-0",
