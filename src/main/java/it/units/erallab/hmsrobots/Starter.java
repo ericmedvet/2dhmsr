@@ -126,7 +126,7 @@ public class Starter {
   }
 
   private static void bipeds() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-f").apply(RobotUtils.buildShape("biped-7x4"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-f-0").apply(RobotUtils.buildShape("biped-7x4"));
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
@@ -214,7 +214,7 @@ public class Starter {
   }
 
   private static void breakingWorm() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t").apply(RobotUtils.buildShape("worm-4x3"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t-0").apply(RobotUtils.buildShape("worm-4x3"));
     double f = 1d;
     Robot<ControllableVoxel> unbreakableRobot = new Robot<>(
         new TimeFunctions(Grid.create(
