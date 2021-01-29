@@ -36,20 +36,22 @@ public class Outcome {
   public static final double FOOTPRINT_INTERVAL = 0.5d;
   public static final double GAIT_LONGEST_INTERVAL = 5d;
 
-  public enum Component {X, Y, MODULE}
+  public enum Component {X, RELATIVE_Y, Y, MODULE}
 
   public static class Observation {
     private final double time;
     private final Point2 centerPosition;
+    private final double terrainHeight;
     private final Footprint footprint;
     private final Grid<Boolean> posture;
     private final double controlEnergy;
     private final double areaRatioEnergy;
     private final double computationTime;
 
-    public Observation(double time, Point2 centerPosition, Footprint footprint, Grid<Boolean> posture, double controlEnergy, double areaRatioEnergy, double computationTime) {
+    public Observation(double time, Point2 centerPosition, double terrainHeight, Footprint footprint, Grid<Boolean> posture, double controlEnergy, double areaRatioEnergy, double computationTime) {
       this.time = time;
       this.centerPosition = centerPosition;
+      this.terrainHeight = terrainHeight;
       this.footprint = footprint;
       this.posture = posture;
       this.controlEnergy = controlEnergy;
@@ -63,6 +65,10 @@ public class Outcome {
 
     public Point2 getCenterPosition() {
       return centerPosition;
+    }
+
+    public double getTerrainHeight() {
+      return terrainHeight;
     }
 
     public Footprint getFootprint() {
@@ -160,7 +166,7 @@ public class Outcome {
     }
   }
 
-  private List<Observation> observations;
+  private final List<Observation> observations;
 
   public Outcome(List<Observation> observations) {
     observations.sort(Comparator.comparingDouble(Observation::getTime));
@@ -197,6 +203,10 @@ public class Outcome {
 
   public SortedMap<Double, Grid<Boolean>> getPostures() {
     return new TreeMap<>(observations.stream().collect(Collectors.toMap(Observation::getTime, Observation::getPosture)));
+  }
+
+  public List<Observation> getObservations() {
+    return observations;
   }
 
   @Override
@@ -355,11 +365,13 @@ public class Outcome {
     List<Double> v = new ArrayList<>();
     List<Double> times = observations.stream().map(Observation::getTime).collect(Collectors.toList());
     List<Point2> points = observations.stream().map(Observation::getCenterPosition).collect(Collectors.toList());
+    List<Double> terrainHeights = observations.stream().map(Observation::getTerrainHeight).collect(Collectors.toList());
     List<Double> intervals = new ArrayList<>();
     for (int i = 0; i < points.size() - 1; i++) {
       v.add(switch (component) {
         case X -> Math.abs(points.get(i + 1).x - points.get(i).x);
         case Y -> Math.abs(points.get(i + 1).y - points.get(i).y);
+        case RELATIVE_Y -> Math.abs(points.get(i + 1).x - terrainHeights.get(i + 1) - points.get(i).x + terrainHeights.get(i));
         case MODULE -> Math.sqrt(Math.pow(points.get(i + 1).x - points.get(i).x, 2d) + Math.pow(points.get(i + 1).y - points.get(i).y, 2d));
       });
       intervals.add(times.get(i + 1) - times.get(i));

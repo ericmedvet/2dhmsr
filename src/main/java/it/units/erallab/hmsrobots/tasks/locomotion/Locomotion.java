@@ -97,6 +97,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       observations.add(new Outcome.Observation(
           t,
           Point2.build(robot.getCenter()),
+          ground.yAt(robot.getCenter().x),
           footprint(robot, FOOTPRINT_BINS),
           mask(robot, MASK_BINS),
           robot.getVoxels().values().stream()
