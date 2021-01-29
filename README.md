@@ -145,7 +145,7 @@ public static double assessOnLocomotion(double[] phases) {
     );
     // do task
     Outcome outcome = locomotion.apply(robot);
-    return outcome.getDistance() / outcome.getTime();
+    return outcome.getVelocity();
 }
 ``` 
 
@@ -205,7 +205,7 @@ public static double assessOnLocomotion(double[] weights) {
     );
     // do task
     Outcome outcome = locomotion.apply(robot);
-    return outcome.getDistance() / outcome.getTime();
+    return outcome.getVelocity();
 }
 ```
 
@@ -215,5 +215,5 @@ public static double assessOnLocomotion(double[] weights) {
 
 ## Other research papers based on 2D-VSR-Sim
 - Ferigo, Iacca, Medvet; [Beyond Body Shape and Brain: Evolving the Sensory Apparatus of Voxel-based Soft Robots](https://medvet.inginf.units.it/publications/2021-c-fim-beyond/); 24th European Conference on the Applications of Evolutionary Computation (EvoAPPS); 2021
-- Medvet, Bartoli, [GraphEA: a Versatile Representation and Evolutionary Algorithm for Graphs](https://medvet.inginf.units.it/publications/2020-c-mb-graphea/), Workshop on Evolutionary and Population-based Optimization (WEPO@AIxIA), 2020
-- Medvet, Bartoli, De Lorenzo, Fidel, [Evolution of Distributed Neural Controllers for Voxel-based Soft Robots](https://medvet.inginf.units.it/publications/2020-c-mbdf-evolution/), ACM Genetic and Evolutionary Computation Conference (GECCO), 2020, Cancun (Mexico)
+- Medvet, Bartoli; [GraphEA: a Versatile Representation and Evolutionary Algorithm for Graphs](https://medvet.inginf.units.it/publications/2020-c-mb-graphea/), Workshop on Evolutionary and Population-based Optimization (WEPO@AIxIA); 2020
+- Medvet, Bartoli, De Lorenzo, Fidel; [Evolution of Distributed Neural Controllers for Voxel-based Soft Robots](https://medvet.inginf.units.it/publications/2020-c-mbdf-evolution/), ACM Genetic and Evolutionary Computation Conference (GECCO); 2020
