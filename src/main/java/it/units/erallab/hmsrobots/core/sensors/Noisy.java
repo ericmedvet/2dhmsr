@@ -17,6 +17,8 @@ public class Noisy implements Sensor, ReadingAugmenter {
   private final Sensor sensor;
   @JsonProperty
   private final double sigma;
+  @JsonProperty
+  private final long seed;
 
   private final double[] sigmas;
   private final Random random;
@@ -24,14 +26,20 @@ public class Noisy implements Sensor, ReadingAugmenter {
   @JsonCreator
   public Noisy(
       @JsonProperty("sensor") Sensor sensor,
-      @JsonProperty("sigma") double sigma
+      @JsonProperty("sigma") double sigma,
+      @JsonProperty("seed") long seed
   ) {
     this.sensor = sensor;
     this.sigma = sigma;
-    random = new Random();
+    this.seed = seed;
+    random = new Random(seed);
     sigmas = Arrays.stream(sensor.domains())
         .mapToDouble(d -> Math.abs(d.getMax() - d.getMin()) * sigma)
         .toArray();
+  }
+
+  public Noisy(Sensor sensor, double sigma){
+    this(sensor, sigma, 0);
   }
 
   @Override
