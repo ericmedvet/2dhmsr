@@ -95,7 +95,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     final int[] neurons;
     neurons = new int[2 + innerNeurons.length];
     System.arraycopy(innerNeurons, 0, neurons, 1, innerNeurons.length);
-    neurons[0] = nOfInput + 1;
+    neurons[0] = nOfInput;
     neurons[neurons.length - 1] = nOfOutput;
     return neurons;
   }
@@ -103,11 +103,11 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   public static double[][][] unflat(double[] flatWeights, int[] neurons) {
     double[][][] unflatWeights = new double[neurons.length - 1][][];
     int c = 0;
-    for (int i = 0; i < neurons.length - 1; i++) {
-      unflatWeights[i] = new double[neurons[i]][neurons[i + 1]];
+    for (int i = 1; i < neurons.length; i++) {
+      unflatWeights[i - 1] = new double[neurons[i]][neurons[i - 1] + 1];
       for (int j = 0; j < neurons[i]; j++) {
-        for (int k = 0; k < neurons[i + 1]; k++) {
-          unflatWeights[i][j][k] = flatWeights[c];
+        for (int k = 0; k < neurons[i - 1] + 1; k++) {
+          unflatWeights[i - 1][j][k] = flatWeights[c];
           c = c + 1;
         }
       }
@@ -116,16 +116,12 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   }
 
   public static double[] flat(double[][][] unflatWeights, int[] neurons) {
-    int n = 0;
-    for (int i = 0; i < neurons.length - 1; i++) {
-      n = n + neurons[i] * neurons[i + 1];
-    }
-    double[] flatWeights = new double[n];
+    double[] flatWeights = new double[countWeights(neurons)];
     int c = 0;
-    for (int i = 0; i < neurons.length - 1; i++) {
+    for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
-        for (int k = 0; k < neurons[i + 1]; k++) {
-          flatWeights[c] = unflatWeights[i][j][k];
+        for (int k = 0; k < neurons[i - 1] + 1; k++) {
+          flatWeights[c] = unflatWeights[i - 1][j][k];
           c = c + 1;
         }
       }
@@ -134,12 +130,11 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
   }
 
   public static int countWeights(int[] neurons) {
-    int largestLayerSize = Arrays.stream(neurons).max().orElse(0);
-    double[][][] fakeWeights = new double[neurons.length][][];
-    double[][] fakeLayerWeights = new double[largestLayerSize][];
-    Arrays.fill(fakeLayerWeights, new double[largestLayerSize]);
-    Arrays.fill(fakeWeights, fakeLayerWeights);
-    return flat(fakeWeights, neurons).length;
+    int c = 0;
+    for (int i = 1; i < neurons.length; i++) {
+      c = c + neurons[i] * (neurons[i - 1] + 1);
+    }
+    return c;
   }
 
   public static int countWeights(int nOfInput, int[] innerNeurons, int nOfOutput) {
@@ -148,19 +143,18 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
 
   @Override
   public double[] apply(double[] input) {
-    if (input.length != neurons[0] - 1) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0] - 1, input.length));
+    if (input.length != neurons[0]) {
+      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
     double[][] values = new double[neurons.length][];
     values[0] = new double[neurons[0]];
     System.arraycopy(input, 0, values[0], 0, input.length);
-    values[0][values[0].length - 1] = 1d; //set the bias    
     for (int i = 1; i < neurons.length; i++) {
       values[i] = new double[neurons[i]];
       for (int j = 0; j < neurons[i]; j++) {
-        double sum = 0d;
-        for (int k = 0; k < neurons[i - 1]; k++) {
-          sum = sum + values[i - 1][k] * weights[i - 1][k][j];
+        double sum = weights[i - 1][j][0]; //set the bias
+        for (int k = 1; k < neurons[i - 1] + 1; k++) {
+          sum = sum + values[i - 1][k - 1] * weights[i - 1][j][k];
         }
         values[i][j] = activationFunction.f.apply(sum);
       }
@@ -228,5 +222,24 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
     return "MLP." + activationFunction.toString().toLowerCase() + "[" +
         Arrays.stream(neurons).mapToObj(Integer::toString).collect(Collectors.joining(","))
         + "]";
+  }
+
+  public String printWeights() {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 1; i < neurons.length; i++) {
+      for (int j = 0; j < neurons[i]; j++) {
+        sb.append("->(").append(i).append(",").append(j).append("):");
+        for (int k = 0; k < neurons[i - 1] + 1; k++) {
+          sb.append(String.format(" %+5.3f", weights[i - 1][j][k]));
+        }
+        sb.append("\n");
+      }
+    }
+    return sb.toString();
+  }
+
+  public static void main(String[] args) {
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(ActivationFunction.TANH, 2, new int[]{3}, 1);
+    System.out.println(mlp.printWeights());
   }
 }

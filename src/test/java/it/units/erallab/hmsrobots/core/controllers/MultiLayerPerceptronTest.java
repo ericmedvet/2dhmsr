@@ -51,10 +51,10 @@ public class MultiLayerPerceptronTest {
   public void testUnflat() {
     System.out.println("unflat");
     double[] flatWeights = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    int[] neurons = new int[]{2, 3, 1};
+    int[] neurons = new int[]{2, 2, 1};
     double[][][] expResult = new double[2][][];
     expResult[0] = new double[][]{new double[]{1, 2, 3}, new double[]{4, 5, 6}};
-    expResult[1] = new double[][]{new double[]{7}, new double[]{8}, new double[]{9}};
+    expResult[1] = new double[][]{new double[]{7, 8, 9}};
     double[][][] result = MultiLayerPerceptron.unflat(flatWeights, neurons);
     assertArrayEquals(expResult, result);
   }
@@ -67,8 +67,8 @@ public class MultiLayerPerceptronTest {
     System.out.println("flat");
     double[][][] unflatWeights = new double[2][][];
     unflatWeights[0] = new double[][]{new double[]{1, 2, 3}, new double[]{4, 5, 6}};
-    unflatWeights[1] = new double[][]{new double[]{7}, new double[]{8}, new double[]{9}};
-    int[] neurons = new int[]{2, 3, 1};
+    unflatWeights[1] = new double[][]{new double[]{7, 8, 9}};
+    int[] neurons = new int[]{2, 2, 1};
     double[] expResult = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
     double[] result = MultiLayerPerceptron.flat(unflatWeights, neurons);
     assertArrayEquals(expResult, result);
@@ -81,10 +81,10 @@ public class MultiLayerPerceptronTest {
   public void testApply() {
     System.out.println("apply");
     double[] input = new double[]{2};
-    double[] weights = new double[]{1, 0, 1, 2, 1, -1};
+    double[] weights = new double[]{1, 0, 1, 2, 1, -1, 1};
     MultiLayerPerceptron instance = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.RELU, 1, new int[]{2}, 1);
     instance.setParams(weights);
-    double[] expResult = new double[]{1};
+    double[] expResult = new double[]{5};
     double[] result = instance.apply(input);
     assertArrayEquals(expResult, result);
   }

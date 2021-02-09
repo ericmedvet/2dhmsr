@@ -20,28 +20,18 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.math3.util.Pair;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class PruningMLP extends MultiLayerPerceptron {
 
-  private final class EdgeInfo {
-    private final int layer;
-    private final int source;
-    private final int dest;
-
-    public EdgeInfo(int layer, int source, int dest) {
-      this.layer = layer;
-      this.source = source;
-      this.dest = dest;
-    }
-  }
-
   public enum Context {WHOLE, LAYER, NEURON}
 
-  //see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm for SIGNAL_VARIANCE
   public enum Criterion {
     WEIGHT,
-    SIGNAL
+    SIGNAL,
+    ABS_SIGNAL,
+    SIGNAL_VARIANCE
   }
 
   @JsonProperty
@@ -54,7 +44,8 @@ public class PruningMLP extends MultiLayerPerceptron {
   private long counter;
 
   private double[][][] means;
-  private double[][][] variances;
+  private double[][][] absMeans;
+  private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
 
   public PruningMLP(
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
@@ -90,26 +81,41 @@ public class PruningMLP extends MultiLayerPerceptron {
   private void reset() {
     counter = 0;
     means = new double[weights.length][][];
-    variances = new double[weights.length][][];
-    for (int i = 0; i < weights.length; i++) {
-      means[i] = new double[weights[i].length][];
-      variances[i] = new double[weights[i].length][];
-      for (int j = 0; j < weights[i].length; j++) {
-        means[i] = new double[weights[i].length][weights[i][j].length];
-        means[i] = new double[weights[i].length][weights[i][j].length];
+    absMeans = new double[weights.length][][];
+    meanDiffSquareSums = new double[weights.length][][];
+    for (int i = 1; i < neurons.length; i++) {
+      means[i - 1] = new double[weights[i - 1].length][];
+      absMeans[i - 1] = new double[weights[i - 1].length][];
+      meanDiffSquareSums[i - 1] = new double[weights[i - 1].length][];
+      for (int j = 0; j < weights[i - 1].length; j++) {
+        means[i - 1] = new double[weights[i - 1].length][weights[i - 1][j].length];
+        absMeans[i - 1] = new double[weights[i - 1].length][weights[i - 1][j].length];
+        meanDiffSquareSums[i - 1] = new double[weights[i - 1].length][weights[i - 1][j].length];
       }
     }
   }
 
   private void prune() {
-    List<Pair<EdgeInfo, Double>> pairs;
+    List<Pair<int[], Double>> pairs = new ArrayList<>();
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
-        for (int k = 0; k < neurons[i - 1]; k++) {
-
+        for (int k = 0; k < neurons[i - 1] + 1; k++) {
+          pairs.add(Pair.create(
+              new int[]{i - 1, j, k},
+              switch (criterion) {
+                case WEIGHT -> Math.abs(weights[i - 1][j][k]);
+                case SIGNAL -> means[i - 1][j][k];
+                case ABS_SIGNAL -> absMeans[i - 1][j][k];
+                case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
+              }
+          ));
         }
       }
     }
+    pairs.sort(Comparator.comparing(Pair::getValue));
+
+    pairs.forEach(p -> System.out.printf("%s -> %+5.3f%n", Arrays.toString(p.getKey()), p.getValue()));
+
   }
 
   @Override
@@ -117,27 +123,55 @@ public class PruningMLP extends MultiLayerPerceptron {
     if (nOfCalls == counter) {
       prune();
     }
-    if (input.length != neurons[0] - 1) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0] - 1, input.length));
+    if (input.length != neurons[0]) {
+      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
     double[][] values = new double[neurons.length][];
     values[0] = new double[neurons[0]];
     System.arraycopy(input, 0, values[0], 0, input.length);
-    values[0][values[0].length - 1] = 1d; //set the bias
     for (int i = 1; i < neurons.length; i++) {
       values[i] = new double[neurons[i]];
       for (int j = 0; j < neurons[i]; j++) {
-        double sum = 0d;
-        for (int k = 0; k < neurons[i - 1]; k++) {
-          double signal = values[i - 1][k] * weights[i - 1][k][j];
+        double sum = weights[i - 1][j][0]; //set the bias
+        for (int k = 1; k < neurons[i - 1] + 1; k++) {
+          double signal = values[i - 1][k - 1] * weights[i - 1][j][k];
           sum = sum + signal;
-          means[i - 1][k][j] = (means[i - 1][k][j] * (double) counter + signal) / ((double) counter + 1);
-          //TODO update average
+          double delta = signal - means[i - 1][j][k];
+          means[i - 1][j][k] = means[i - 1][j][k] + delta / ((double) counter + 1d);
+          absMeans[i - 1][j][k] = absMeans[i - 1][j][k] + (Math.abs(signal) - absMeans[i - 1][j][k]) / ((double) counter + 1d);
+          meanDiffSquareSums[i - 1][j][k] = meanDiffSquareSums[i - 1][j][k] + delta * (signal - means[i - 1][j][k]);
         }
         values[i][j] = activationFunction.getF().apply(sum);
       }
     }
     counter = counter + 1;
+
+    for (int i = 1; i < neurons.length; i++) {
+      for (int j = 0; j < neurons[i]; j++) {
+        for (int k = 0; k <= neurons[i - 1]; k++) {
+          System.out.printf("l=%d %d->%d: w=%5.3f s.avg=%5.3f as.avg=%5.3f s.var=%5.3f%n", i, j, k, weights[i - 1][j][k], means[i - 1][j][k], absMeans[i - 1][j][k], meanDiffSquareSums[i - 1][j][k]);
+        }
+      }
+    }
+
     return values[neurons.length - 1];
+  }
+
+
+  public static void main(String[] args) {
+    MultiLayerPerceptron nn = new MultiLayerPerceptron(ActivationFunction.TANH, 2, new int[]{2}, 2);
+    PruningMLP pnn = new PruningMLP(ActivationFunction.TANH, 2, new int[]{2}, 2, 5, Context.LAYER, Criterion.SIGNAL_VARIANCE);
+    Random r = new Random(1);
+    double[] ws = IntStream.range(0, pnn.getParams().length).mapToDouble(i -> r.nextDouble() * 2d - 1d).toArray();
+    nn.setParams(ws);
+    pnn.setParams(ws);
+    System.out.println(pnn.printWeights());
+    for (int i = 0; i < 10; i++) {
+      System.out.println(i);
+      double[] in = new double[]{1d, i % 2};
+      double[] out = pnn.apply(in);
+      System.out.printf("%s -> %s%n", Arrays.toString(in), Arrays.toString(out));
+      System.out.printf("%s -> %s%n%n", Arrays.toString(in), Arrays.toString(nn.apply(in)));
+    }
   }
 }
