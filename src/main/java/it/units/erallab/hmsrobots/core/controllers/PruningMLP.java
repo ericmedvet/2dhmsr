@@ -20,8 +20,10 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.math3.util.Pair;
 
-import java.util.*;
-import java.util.stream.IntStream;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PruningMLP extends MultiLayerPerceptron {
 
@@ -29,8 +31,8 @@ public class PruningMLP extends MultiLayerPerceptron {
 
   public enum Criterion {
     WEIGHT,
-    SIGNAL,
-    ABS_SIGNAL,
+    SIGNAL_MEAN,
+    ABS_SIGNAL_MEAN,
     SIGNAL_VARIANCE
   }
 
@@ -40,6 +42,8 @@ public class PruningMLP extends MultiLayerPerceptron {
   private final Context context;
   @JsonProperty
   private final Criterion criterion;
+  @JsonProperty
+  private final double rate;
 
   private long counter;
 
@@ -53,32 +57,45 @@ public class PruningMLP extends MultiLayerPerceptron {
       @JsonProperty("neurons") int[] neurons,
       @JsonProperty("nOfCalls") long nOfCalls,
       @JsonProperty("context") Context context,
-      @JsonProperty("criterion") Criterion criterion
+      @JsonProperty("criterion") Criterion criterion,
+      @JsonProperty("rate") double rate
   ) {
     super(activationFunction, weights, neurons);
     this.nOfCalls = nOfCalls;
     this.context = context;
     this.criterion = criterion;
+    this.rate = rate;
     reset();
   }
 
-  public PruningMLP(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, long nOfCalls, Context context, Criterion criterion) {
+  public PruningMLP(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, long nOfCalls, Context context, Criterion criterion, double rate) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput, weights);
     this.nOfCalls = nOfCalls;
     this.context = context;
     this.criterion = criterion;
+    this.rate = rate;
     reset();
   }
 
-  public PruningMLP(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, long nOfCalls, Context context, Criterion criterion) {
+  public PruningMLP(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, long nOfCalls, Context context, Criterion criterion, double rate) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput);
     this.nOfCalls = nOfCalls;
     this.context = context;
     this.criterion = criterion;
+    this.rate = rate;
+    reset();
+  }
+
+  @Override
+  public void setParams(double[] params) {
+    super.setParams(params);
     reset();
   }
 
   private void reset() {
+    if (rate < 0 || rate > 1) {
+      throw new IllegalArgumentException(String.format("Pruning rate should be defined in [0,1]: %f found", rate));
+    }
     counter = 0;
     means = new double[weights.length][][];
     absMeans = new double[weights.length][][];
@@ -88,9 +105,13 @@ public class PruningMLP extends MultiLayerPerceptron {
       absMeans[i - 1] = new double[weights[i - 1].length][];
       meanDiffSquareSums[i - 1] = new double[weights[i - 1].length][];
       for (int j = 0; j < weights[i - 1].length; j++) {
-        means[i - 1] = new double[weights[i - 1].length][weights[i - 1][j].length];
-        absMeans[i - 1] = new double[weights[i - 1].length][weights[i - 1][j].length];
-        meanDiffSquareSums[i - 1] = new double[weights[i - 1].length][weights[i - 1][j].length];
+        means[i - 1][j] = new double[weights[i - 1][j].length];
+        absMeans[i - 1][j] = new double[weights[i - 1][j].length];
+        meanDiffSquareSums[i - 1][j] = new double[weights[i - 1][j].length];
+        for (int k = 0; k < weights[i - 1][j].length; k++) {
+          means[i - 1][j][k] = weights[i - 1][j][k];
+          absMeans[i - 1][j][k] = Math.abs(weights[i - 1][j][k]);
+        }
       }
     }
   }
@@ -101,21 +122,48 @@ public class PruningMLP extends MultiLayerPerceptron {
       for (int j = 0; j < neurons[i]; j++) {
         for (int k = 0; k < neurons[i - 1] + 1; k++) {
           pairs.add(Pair.create(
-              new int[]{i - 1, j, k},
+              new int[]{i, j, k},
               switch (criterion) {
                 case WEIGHT -> Math.abs(weights[i - 1][j][k]);
-                case SIGNAL -> means[i - 1][j][k];
-                case ABS_SIGNAL -> absMeans[i - 1][j][k];
+                case SIGNAL_MEAN -> means[i - 1][j][k];
+                case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
                 case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
               }
           ));
         }
       }
     }
-    pairs.sort(Comparator.comparing(Pair::getValue));
+    if (context.equals(Context.WHOLE)) {
+      prune(pairs);
+    } else if (context.equals(Context.LAYER)) {
+      for (int i = 1; i < neurons.length; i++) {
+        final int localI = i;
+        prune(pairs.stream().filter(p -> p.getKey()[0] == localI).collect(Collectors.toList()));
+      }
+    } else if (context.equals(Context.NEURON)) {
+      for (int i = 1; i < neurons.length; i++) {
+        for (int j = 0; j < neurons[i]; j++) {
+          final int localI = i;
+          final int localJ = j;
+          prune(pairs.stream().filter(p -> p.getKey()[0] == localI && p.getKey()[1] == localJ).collect(Collectors.toList()));
+        }
+      }
+    }
+  }
 
-    pairs.forEach(p -> System.out.printf("%s -> %+5.3f%n", Arrays.toString(p.getKey()), p.getValue()));
+  private void prune(List<Pair<int[], Double>> localPairs) {
+    localPairs.sort(Comparator.comparing(Pair::getValue));
+    localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.getKey()));
+  }
 
+  private void prune(int[] is) {
+    int i = is[0];
+    int j = is[1];
+    int k = is[2];
+    weights[i - 1][j][k] = 0d;
+    if (criterion.equals(Criterion.SIGNAL_VARIANCE) && k != 0) {
+      weights[i - 1][j][0] = weights[i - 1][j][0] + means[i - 1][j][k];
+    }
   }
 
   @Override
@@ -145,33 +193,6 @@ public class PruningMLP extends MultiLayerPerceptron {
       }
     }
     counter = counter + 1;
-
-    for (int i = 1; i < neurons.length; i++) {
-      for (int j = 0; j < neurons[i]; j++) {
-        for (int k = 0; k <= neurons[i - 1]; k++) {
-          System.out.printf("l=%d %d->%d: w=%5.3f s.avg=%5.3f as.avg=%5.3f s.var=%5.3f%n", i, j, k, weights[i - 1][j][k], means[i - 1][j][k], absMeans[i - 1][j][k], meanDiffSquareSums[i - 1][j][k]);
-        }
-      }
-    }
-
     return values[neurons.length - 1];
-  }
-
-
-  public static void main(String[] args) {
-    MultiLayerPerceptron nn = new MultiLayerPerceptron(ActivationFunction.TANH, 2, new int[]{2}, 2);
-    PruningMLP pnn = new PruningMLP(ActivationFunction.TANH, 2, new int[]{2}, 2, 5, Context.LAYER, Criterion.SIGNAL_VARIANCE);
-    Random r = new Random(1);
-    double[] ws = IntStream.range(0, pnn.getParams().length).mapToDouble(i -> r.nextDouble() * 2d - 1d).toArray();
-    nn.setParams(ws);
-    pnn.setParams(ws);
-    System.out.println(pnn.printWeights());
-    for (int i = 0; i < 10; i++) {
-      System.out.println(i);
-      double[] in = new double[]{1d, i % 2};
-      double[] out = pnn.apply(in);
-      System.out.printf("%s -> %s%n", Arrays.toString(in), Arrays.toString(out));
-      System.out.printf("%s -> %s%n%n", Arrays.toString(in), Arrays.toString(nn.apply(in)));
-    }
   }
 }

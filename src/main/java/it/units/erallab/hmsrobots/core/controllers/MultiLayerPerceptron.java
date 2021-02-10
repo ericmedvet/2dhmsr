@@ -224,7 +224,7 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
         + "]";
   }
 
-  public String printWeights() {
+  public String weightsString() {
     StringBuilder sb = new StringBuilder();
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
@@ -236,10 +236,5 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
       }
     }
     return sb.toString();
-  }
-
-  public static void main(String[] args) {
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(ActivationFunction.TANH, 2, new int[]{3}, 1);
-    System.out.println(mlp.printWeights());
   }
 }
