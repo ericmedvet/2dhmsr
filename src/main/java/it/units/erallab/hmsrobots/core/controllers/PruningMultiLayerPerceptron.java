@@ -25,7 +25,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PruningMLP extends MultiLayerPerceptron {
+public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
 
   public enum Context {WHOLE, LAYER, NEURON}
 
@@ -51,7 +51,7 @@ public class PruningMLP extends MultiLayerPerceptron {
   private double[][][] absMeans;
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
 
-  public PruningMLP(
+  public PruningMultiLayerPerceptron(
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
       @JsonProperty("weights") double[][][] weights,
       @JsonProperty("neurons") int[] neurons,
@@ -68,7 +68,7 @@ public class PruningMLP extends MultiLayerPerceptron {
     reset();
   }
 
-  public PruningMLP(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, long nOfCalls, Context context, Criterion criterion, double rate) {
+  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, long nOfCalls, Context context, Criterion criterion, double rate) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput, weights);
     this.nOfCalls = nOfCalls;
     this.context = context;
@@ -77,7 +77,7 @@ public class PruningMLP extends MultiLayerPerceptron {
     reset();
   }
 
-  public PruningMLP(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, long nOfCalls, Context context, Criterion criterion, double rate) {
+  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, long nOfCalls, Context context, Criterion criterion, double rate) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput);
     this.nOfCalls = nOfCalls;
     this.context = context;
