@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
 
-  public enum Context {WHOLE, LAYER, NEURON}
+  public enum Context {NETWORK, LAYER, NEURON}
 
   public enum Criterion {
     WEIGHT,
@@ -133,7 +133,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
         }
       }
     }
-    if (context.equals(Context.WHOLE)) {
+    if (context.equals(Context.NETWORK)) {
       prune(pairs);
     } else if (context.equals(Context.LAYER)) {
       for (int i = 1; i < neurons.length; i++) {
