@@ -123,6 +123,9 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
 
   @Override
   public void reset() {
+    if (function instanceof Resettable) {
+      ((Resettable) function).reset();
+    }
   }
 
   @Override

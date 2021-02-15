@@ -18,14 +18,24 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
+import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.util.RobotUtils;
+import it.units.erallab.hmsrobots.util.SerializationUtils;
+import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import org.apache.commons.math3.util.Pair;
+import org.dyn4j.dynamics.Settings;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
+public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements Resettable {
 
   public enum Context {NETWORK, LAYER, NEURON}
 
@@ -47,6 +57,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
 
   private long counter;
 
+  private double[][][] prunedWeights;
   private double[][][] means;
   private double[][][] absMeans;
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
@@ -92,7 +103,8 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
     reset();
   }
 
-  private void reset() {
+  @Override
+  public void reset() {
     if (rate < 0 || rate > 1) {
       throw new IllegalArgumentException(String.format("Pruning rate should be defined in [0,1]: %f found", rate));
     }
@@ -100,17 +112,21 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
     means = new double[weights.length][][];
     absMeans = new double[weights.length][][];
     meanDiffSquareSums = new double[weights.length][][];
+    prunedWeights = new double[weights.length][][];
     for (int i = 1; i < neurons.length; i++) {
       means[i - 1] = new double[weights[i - 1].length][];
       absMeans[i - 1] = new double[weights[i - 1].length][];
       meanDiffSquareSums[i - 1] = new double[weights[i - 1].length][];
+      prunedWeights[i - 1] = new double[weights[i - 1].length][];
       for (int j = 0; j < weights[i - 1].length; j++) {
         means[i - 1][j] = new double[weights[i - 1][j].length];
         absMeans[i - 1][j] = new double[weights[i - 1][j].length];
         meanDiffSquareSums[i - 1][j] = new double[weights[i - 1][j].length];
+        prunedWeights[i - 1][j] = new double[weights[i - 1][j].length];
         for (int k = 0; k < weights[i - 1][j].length; k++) {
           means[i - 1][j][k] = weights[i - 1][j][k];
           absMeans[i - 1][j][k] = Math.abs(weights[i - 1][j][k]);
+          prunedWeights[i - 1][j][k] = weights[i - 1][j][k];
         }
       }
     }
@@ -124,7 +140,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
           pairs.add(Pair.create(
               new int[]{i, j, k},
               switch (criterion) {
-                case WEIGHT -> Math.abs(weights[i - 1][j][k]);
+                case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
                 case SIGNAL_MEAN -> means[i - 1][j][k];
                 case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
                 case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
@@ -151,6 +167,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
     }
   }
 
+
   private void prune(List<Pair<int[], Double>> localPairs) {
     localPairs.sort(Comparator.comparing(Pair::getValue));
     localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.getKey()));
@@ -160,9 +177,9 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
     int i = is[0];
     int j = is[1];
     int k = is[2];
-    weights[i - 1][j][k] = 0d;
+    prunedWeights[i - 1][j][k] = 0d;
     if (criterion.equals(Criterion.SIGNAL_VARIANCE) && k != 0) {
-      weights[i - 1][j][0] = weights[i - 1][j][0] + means[i - 1][j][k];
+      prunedWeights[i - 1][j][0] = prunedWeights[i - 1][j][0] + prunedWeights[i - 1][j][k];
     }
   }
 
@@ -180,9 +197,9 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron {
     for (int i = 1; i < neurons.length; i++) {
       values[i] = new double[neurons[i]];
       for (int j = 0; j < neurons[i]; j++) {
-        double sum = weights[i - 1][j][0]; //set the bias
+        double sum = prunedWeights[i - 1][j][0]; //set the bias
         for (int k = 1; k < neurons[i - 1] + 1; k++) {
-          double signal = values[i - 1][k - 1] * weights[i - 1][j][k];
+          double signal = values[i - 1][k - 1] * prunedWeights[i - 1][j][k];
           sum = sum + signal;
           double delta = signal - means[i - 1][j][k];
           means[i - 1][j][k] = means[i - 1][j][k] + delta / ((double) counter + 1d);

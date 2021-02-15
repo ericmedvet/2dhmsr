@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -132,7 +133,11 @@ public class DistributedSensing implements Controller<SensingVoxel> {
         lastSignalsGrid.set(x, y, new double[signals * Dir.values().length]);
       }
     }
-
+    functions.values().stream().filter(Objects::nonNull).forEach(f -> {
+      if (f instanceof Resettable) {
+        ((Resettable) f).reset();
+      }
+    });
   }
 
   @Override
