@@ -43,7 +43,8 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     WEIGHT,
     SIGNAL_MEAN,
     ABS_SIGNAL_MEAN,
-    SIGNAL_VARIANCE
+    SIGNAL_VARIANCE,
+    RANDOM
   }
 
   @JsonProperty
@@ -63,13 +64,13 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
 
   public PruningMultiLayerPerceptron(
-      @JsonProperty("activationFunction") ActivationFunction activationFunction,
-      @JsonProperty("weights") double[][][] weights,
-      @JsonProperty("neurons") int[] neurons,
-      @JsonProperty("nOfCalls") long nOfCalls,
-      @JsonProperty("context") Context context,
-      @JsonProperty("criterion") Criterion criterion,
-      @JsonProperty("rate") double rate
+          @JsonProperty("activationFunction") ActivationFunction activationFunction,
+          @JsonProperty("weights") double[][][] weights,
+          @JsonProperty("neurons") int[] neurons,
+          @JsonProperty("nOfCalls") long nOfCalls,
+          @JsonProperty("context") Context context,
+          @JsonProperty("criterion") Criterion criterion,
+          @JsonProperty("rate") double rate
   ) {
     super(activationFunction, weights, neurons);
     this.nOfCalls = nOfCalls;
@@ -134,17 +135,19 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
 
   private void prune() {
     List<Pair<int[], Double>> pairs = new ArrayList<>();
+    Random random = new Random((long)(10000*weights[0][0][0])); // to improve, should be passed to constructor
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
         for (int k = 0; k < neurons[i - 1] + 1; k++) {
           pairs.add(Pair.create(
-              new int[]{i, j, k},
-              switch (criterion) {
-                case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
-                case SIGNAL_MEAN -> means[i - 1][j][k];
-                case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
-                case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
-              }
+                  new int[]{i, j, k},
+                  switch (criterion) {
+                    case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
+                    case SIGNAL_MEAN -> means[i - 1][j][k];
+                    case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
+                    case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
+                    case RANDOM -> random.nextDouble();
+                  }
           ));
         }
       }
