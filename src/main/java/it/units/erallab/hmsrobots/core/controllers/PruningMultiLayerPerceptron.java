@@ -18,22 +18,13 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
-import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.RobotUtils;
-import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import org.apache.commons.math3.util.Pair;
-import org.dyn4j.dynamics.Settings;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements Resettable {
 
@@ -64,13 +55,13 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
 
   public PruningMultiLayerPerceptron(
-          @JsonProperty("activationFunction") ActivationFunction activationFunction,
-          @JsonProperty("weights") double[][][] weights,
-          @JsonProperty("neurons") int[] neurons,
-          @JsonProperty("nOfCalls") long nOfCalls,
-          @JsonProperty("context") Context context,
-          @JsonProperty("criterion") Criterion criterion,
-          @JsonProperty("rate") double rate
+      @JsonProperty("activationFunction") ActivationFunction activationFunction,
+      @JsonProperty("weights") double[][][] weights,
+      @JsonProperty("neurons") int[] neurons,
+      @JsonProperty("nOfCalls") long nOfCalls,
+      @JsonProperty("context") Context context,
+      @JsonProperty("criterion") Criterion criterion,
+      @JsonProperty("rate") double rate
   ) {
     super(activationFunction, weights, neurons);
     this.nOfCalls = nOfCalls;
@@ -135,19 +126,19 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
 
   private void prune() {
     List<Pair<int[], Double>> pairs = new ArrayList<>();
-    Random random = new Random((long)(10000*weights[0][0][0])); // to improve, should be passed to constructor
+    Random random = new Random((long) (10000 * weights[0][0][0])); // to improve, should be passed to constructor
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
         for (int k = 0; k < neurons[i - 1] + 1; k++) {
           pairs.add(Pair.create(
-                  new int[]{i, j, k},
-                  switch (criterion) {
-                    case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
-                    case SIGNAL_MEAN -> means[i - 1][j][k];
-                    case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
-                    case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
-                    case RANDOM -> random.nextDouble();
-                  }
+              new int[]{i, j, k},
+              switch (criterion) {
+                case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
+                case SIGNAL_MEAN -> means[i - 1][j][k];
+                case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
+                case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
+                case RANDOM -> random.nextDouble();
+              }
           ));
         }
       }
