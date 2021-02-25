@@ -126,7 +126,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
 
   private void prune() {
     List<Pair<int[], Double>> pairs = new ArrayList<>();
-    Random random = new Random((long) (10000 * weights[0][0][0])); // to improve, should be passed to constructor
+    Random random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
         for (int k = 0; k < neurons[i - 1] + 1; k++) {
