@@ -25,7 +25,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -40,23 +39,23 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
 
   @JsonProperty
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-  private Function<double[], double[]> function;
+  private TimedRealFunction function;
 
   public CentralizedSensing(
       @JsonProperty("nOfInputs") int nOfInputs,
       @JsonProperty("nOfOutputs") int nOfOutputs,
-      @JsonProperty("function") Function<double[], double[]> function
+      @JsonProperty("function") TimedRealFunction function
   ) {
     this.nOfInputs = nOfInputs;
     this.nOfOutputs = nOfOutputs;
-    this.function = function;
+    setFunction(function);
   }
 
   public CentralizedSensing(Grid<? extends SensingVoxel> voxels) {
-    this(voxels, null);
+    this(voxels, RealFunction.build(in -> new double[nOfOutputs(voxels)], nOfInputs(voxels), nOfOutputs(voxels)));
   }
 
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, Function<double[], double[]> function) {
+  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, TimedRealFunction function) {
     this(nOfInputs(voxels), nOfOutputs(voxels), function);
   }
 
@@ -83,11 +82,18 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
     return nOfOutputs;
   }
 
-  public Function<double[], double[]> getFunction() {
+  public TimedRealFunction getFunction() {
     return function;
   }
 
-  public void setFunction(Function<double[], double[]> function) {
+  public void setFunction(TimedRealFunction function) {
+    if (function.getInputDimension() != nOfInputs || function.getOutputDimension() != nOfOutputs) {
+      throw new IllegalArgumentException(String.format(
+          "Wrong dimension of input or output in provided function: R^%d->R^%d expected, R^%d->R^%d found",
+          nOfInputs, nOfOutputs,
+          function.getInputDimension(), function.getOutputDimension()
+      ));
+    }
     this.function = function;
   }
 
@@ -108,7 +114,7 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
       }
     }
     //compute outputs
-    double[] outputs = function != null ? function.apply(inputs) : new double[nOfOutputs];
+    double[] outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
     //apply inputs
     c = 0;
     for (SensingVoxel voxel : voxels.values()) {

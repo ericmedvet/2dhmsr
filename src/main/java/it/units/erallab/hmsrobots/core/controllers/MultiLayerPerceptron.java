@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * @author eric
  */
-public class MultiLayerPerceptron implements Serializable, Function<double[], double[]>, Parametrized {
+public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized {
 
   public enum ActivationFunction {
     RELU(x -> (x < 0) ? 0d : x),
@@ -160,6 +160,16 @@ public class MultiLayerPerceptron implements Serializable, Function<double[], do
       }
     }
     return values[neurons.length - 1];
+  }
+
+  @Override
+  public int getInputDimension() {
+    return neurons[0];
+  }
+
+  @Override
+  public int getOutputDimension() {
+    return neurons[neurons.length - 1];
   }
 
   public double[][][] getWeights() {

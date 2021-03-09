@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements Resettable {
+public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable {
 
   public enum Context {NETWORK, LAYER, NEURON}
 
@@ -39,7 +39,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   }
 
   @JsonProperty
-  private final long nOfCalls;
+  private final double pruningTime;
   @JsonProperty
   private final Context context;
   @JsonProperty
@@ -47,6 +47,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   @JsonProperty
   private final double rate;
 
+  private boolean pruned;
   private long counter;
 
   private double[][][] prunedWeights;
@@ -58,31 +59,31 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
       @JsonProperty("weights") double[][][] weights,
       @JsonProperty("neurons") int[] neurons,
-      @JsonProperty("nOfCalls") long nOfCalls,
+      @JsonProperty("nOfCalls") double pruningTime,
       @JsonProperty("context") Context context,
       @JsonProperty("criterion") Criterion criterion,
       @JsonProperty("rate") double rate
   ) {
     super(activationFunction, weights, neurons);
-    this.nOfCalls = nOfCalls;
+    this.pruningTime = pruningTime;
     this.context = context;
     this.criterion = criterion;
     this.rate = rate;
     reset();
   }
 
-  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, long nOfCalls, Context context, Criterion criterion, double rate) {
+  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double pruningTime, Context context, Criterion criterion, double rate) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput, weights);
-    this.nOfCalls = nOfCalls;
+    this.pruningTime = pruningTime;
     this.context = context;
     this.criterion = criterion;
     this.rate = rate;
     reset();
   }
 
-  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, long nOfCalls, Context context, Criterion criterion, double rate) {
+  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double pruningTime, Context context, Criterion criterion, double rate) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput);
-    this.nOfCalls = nOfCalls;
+    this.pruningTime = pruningTime;
     this.context = context;
     this.criterion = criterion;
     this.rate = rate;
@@ -100,6 +101,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     if (rate < 0 || rate > 1) {
       throw new IllegalArgumentException(String.format("Pruning rate should be defined in [0,1]: %f found", rate));
     }
+    pruned = false;
     counter = 0;
     means = new double[weights.length][][];
     absMeans = new double[weights.length][][];
@@ -125,6 +127,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   }
 
   private void prune() {
+    pruned = true;
     List<Pair<int[], Double>> pairs = new ArrayList<>();
     Random random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
     for (int i = 1; i < neurons.length; i++) {
@@ -178,8 +181,8 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   }
 
   @Override
-  public double[] apply(double[] input) {
-    if (nOfCalls == counter) {
+  public double[] apply(double t, double[] input) {
+    if (t >= pruningTime) {
       prune();
     }
     if (input.length != neurons[0]) {

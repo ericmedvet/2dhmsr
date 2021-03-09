@@ -23,6 +23,8 @@ import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Point2;
 import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import it.units.erallab.hmsrobots.viewers.drawers.VoxelBody;
+import it.units.erallab.hmsrobots.viewers.drawers.VoxelJoint;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
