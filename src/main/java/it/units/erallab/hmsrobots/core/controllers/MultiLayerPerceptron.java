@@ -160,7 +160,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
         for (int k = 1; k < neurons[i - 1] + 1; k++) {
           sum = sum + values[i - 1][k - 1] * weights[i - 1][j][k];
         }
-        values[i][j] = activationFunction.f.apply(sum);
+        values[i][j] = activationFunction.apply(sum);
       }
     }
     return values[neurons.length - 1];
