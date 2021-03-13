@@ -194,9 +194,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     double[][][] newWeights = MultiLayerPerceptron.unflat(params, neurons);
     for (int l = 0; l < newWeights.length; l++) {
       for (int s = 0; s < newWeights[l].length; s++) {
-        for (int d = 0; d < newWeights[l][s].length; d++) {
-          weights[l][s][d] = newWeights[l][s][d];
-        }
+        System.arraycopy(newWeights[l][s], 0, weights[l][s], 0, newWeights[l][s].length);
       }
     }
   }
