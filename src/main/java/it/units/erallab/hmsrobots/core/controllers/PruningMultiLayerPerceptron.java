@@ -203,7 +203,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
           absMeans[i - 1][j][k] = absMeans[i - 1][j][k] + (Math.abs(signal) - absMeans[i - 1][j][k]) / ((double) counter + 1d);
           meanDiffSquareSums[i - 1][j][k] = meanDiffSquareSums[i - 1][j][k] + delta * (signal - means[i - 1][j][k]);
         }
-        values[i][j] = activationFunction.getF().apply(sum);
+        values[i][j] = activationFunction.apply(sum);
       }
     }
     counter = counter + 1;
