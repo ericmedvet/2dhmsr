@@ -20,10 +20,7 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.math3.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable {
@@ -189,8 +186,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
     double[][] values = new double[neurons.length][];
-    values[0] = new double[neurons[0]];
-    System.arraycopy(input, 0, values[0], 0, input.length);
+    values[0] = Arrays.stream(input).map(activationFunction::apply).toArray();
     for (int i = 1; i < neurons.length; i++) {
       values[i] = new double[neurons[i]];
       for (int j = 0; j < neurons[i]; j++) {
