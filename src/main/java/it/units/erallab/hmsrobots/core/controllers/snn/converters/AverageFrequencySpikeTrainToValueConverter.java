@@ -13,6 +13,8 @@ public class AverageFrequencySpikeTrainToValueConverter implements SpikeTrainToV
     if (spikeTrain.size() == 0)
       return 0;
     double frequency = spikeTrain.size() / timeWindowSize * 1000 / FREQUENCY;
-    return Math.max(Math.min(UPPER_BOUND, frequency), LOWER_BOUND);
+    frequency = Math.max(Math.min(UPPER_BOUND, frequency), LOWER_BOUND);
+    frequency = frequency * 2 - 1;
+    return frequency;
   }
 }

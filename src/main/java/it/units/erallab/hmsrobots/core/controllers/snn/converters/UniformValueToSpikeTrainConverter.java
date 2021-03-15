@@ -5,16 +5,19 @@ import java.util.TreeSet;
 
 public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConverter {
 
-  private static final double LOWER_BOUND = 0;
+  private static final double LOWER_BOUND = -1;
   private static final double UPPER_BOUND = 1;
   private static final double FREQUENCY = 50; // hertz
 
   // suppose timeWindowSize is given in milliseconds
   @Override
   public SortedSet<Double> convert(double value, double timeWindowSize) {
-    if (value > UPPER_BOUND || value < LOWER_BOUND) {
-      throw new IllegalArgumentException(String.format("Expected input in range [%f,%f]: found %f", LOWER_BOUND, UPPER_BOUND, value));
-    }
+    //if (value > UPPER_BOUND || value < LOWER_BOUND) {
+    //  throw new IllegalArgumentException(String.format("Expected input in range [%f,%f]: found %f", LOWER_BOUND, UPPER_BOUND, value));
+    //}
+    value = Math.max(Math.min(UPPER_BOUND, value), LOWER_BOUND);
+    value = value / 2 + 0.5;
+
     SortedSet<Double> spikes = new TreeSet<>();
     if (value == 0) {
       return spikes;

@@ -11,13 +11,14 @@ import it.units.erallab.hmsrobots.core.controllers.snn.converters.ValueToSpikeTr
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
 
-public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized {
+public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized, Serializable {
 
   @JsonProperty
   private final SpikingFunction[][] neurons;    // layer + position in the layer
