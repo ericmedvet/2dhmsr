@@ -17,6 +17,9 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.controllers.snn.LIFNeuron;
+import it.units.erallab.hmsrobots.core.controllers.snn.MultilayerSpikingNetwork;
+import it.units.erallab.hmsrobots.core.controllers.snn.SpikingFunction;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -44,6 +47,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 /**
@@ -112,13 +116,14 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
     //multiped();
+    snn();
   }
 
   private static void bipeds() {
@@ -199,7 +204,12 @@ public class Starter {
         Locomotion.createTerrain("hilly-0.3-1-0"),
         new Settings()
     );
-    GridOnlineViewer.run(locomotion, robot);
+    //GridOnlineViewer.run(locomotion, robot);
+    try {
+      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.JCODEC, new File("/home/eric/video.1.mp4"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
     locomotion.apply(robot, framesImageBuilder);
     try {
@@ -208,6 +218,48 @@ public class Starter {
       e.printStackTrace();
     }*/
   }
+
+  private static void snn() {
+    Random random = new Random();
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-4x3"));
+    //centralized sensing
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
+    MultilayerSpikingNetwork msn = new MultilayerSpikingNetwork(
+        centralizedSensing.nOfInputs(),
+        new int[]{2},
+        centralizedSensing.nOfOutputs(),
+        (BiFunction<Integer, Integer, SpikingFunction>) (l, i) -> new LIFNeuron()
+    );
+    double[] ws = msn.getParams();
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
+    msn.setParams(ws);
+    centralizedSensing.setFunction(msn);
+    Robot<SensingVoxel> robot = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(body)
+    );
+    Locomotion locomotion = new Locomotion(
+        10,
+        Locomotion.createTerrain("hilly-0.3-1-0"),
+        new Settings()
+    );
+    //GridOnlineViewer.run(locomotion, robot);
+    try {
+      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/video.1.mp4"));
+      robot = SerializationUtils.clone(robot);
+      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/video.2.mp4"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    locomotion.apply(robot, framesImageBuilder);
+    try {
+      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }*/
+  }
+
 
   private static void breakingWorm() {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t-0").apply(RobotUtils.buildShape("worm-4x3"));
