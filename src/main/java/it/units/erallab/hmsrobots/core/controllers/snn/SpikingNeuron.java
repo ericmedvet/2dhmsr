@@ -1,11 +1,12 @@
 package it.units.erallab.hmsrobots.core.controllers.snn;
 
+import java.io.Serializable;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public abstract class SpikingNeuron implements SpikingFunction {
+public abstract class SpikingNeuron implements SpikingFunction, Serializable {
 
   protected final double restingPotential;
   protected final double thresholdPotential;
