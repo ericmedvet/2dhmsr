@@ -69,7 +69,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     this(neurons, unflat(weights, neurons));
   }
 
-  private static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {
+  public static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {
     SpikingFunction[][] spikingFunctions = new SpikingFunction[neuronsPerLayer.length][];
     for (int i = 0; i < neuronsPerLayer.length; i++) {
       spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
@@ -80,7 +80,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     return spikingFunctions;
   }
 
-  private static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, BiFunction<Integer,Integer,SpikingFunction> neuronBuilder) {
+  public static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, BiFunction<Integer,Integer,SpikingFunction> neuronBuilder) {
     SpikingFunction[][] spikingFunctions = new SpikingFunction[neuronsPerLayer.length][];
     for (int i = 0; i < neuronsPerLayer.length; i++) {
       spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
