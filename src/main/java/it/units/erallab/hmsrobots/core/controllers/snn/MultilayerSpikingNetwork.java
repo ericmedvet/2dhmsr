@@ -233,6 +233,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
 
   @Override
   public void reset() {
+    previousApplicationTime = 0d;
     for(int i=0; i<neurons.length; i++){
       for(int j=0; j<neurons[i].length; j++){
         neurons[i][j].reset();
