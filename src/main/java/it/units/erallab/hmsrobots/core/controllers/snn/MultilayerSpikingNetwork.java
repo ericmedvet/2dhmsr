@@ -3,6 +3,7 @@ package it.units.erallab.hmsrobots.core.controllers.snn;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
+import it.units.erallab.hmsrobots.core.controllers.Resettable;
 import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.AverageFrequencySpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.SpikeTrainToValueConverter;
@@ -18,7 +19,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
 
-public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized, Serializable {
+public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized, Serializable, Resettable {
 
   @JsonProperty
   private final SpikingFunction[][] neurons;    // layer + position in the layer
@@ -226,6 +227,15 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     for (int l = 0; l < newWeights.length; l++) {
       for (int s = 0; s < newWeights[l].length; s++) {
         System.arraycopy(newWeights[l][s], 0, weights[l][s], 0, newWeights[l][s].length);
+      }
+    }
+  }
+
+  @Override
+  public void reset() {
+    for(int i=0; i<neurons.length; i++){
+      for(int j=0; j<neurons[i].length; j++){
+        neurons[i][j].reset();
       }
     }
   }

@@ -74,4 +74,9 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
   public double getLastEvaluatedTime() {
     return lastEvaluatedTime;
   }
+
+  @Override
+  public void reset() {
+    membranePotential = restingPotential;
+  }
 }

@@ -17,6 +17,8 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.controllers.snn.LIFNeuron;
+import it.units.erallab.hmsrobots.core.controllers.snn.MultilayerSpikingNetwork;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -164,6 +166,10 @@ public class Starter {
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
+    MultilayerSpikingNetwork msn = new MultilayerSpikingNetwork(
+            centralizedSensing.nOfInputs(), new int[]{2}, centralizedSensing.nOfOutputs(), new LIFNeuron()
+    );
+    centralizedSensing.setFunction(msn);
     Robot<SensingVoxel> centralized = new Robot<>(
         centralizedSensing,
         SerializationUtils.clone(body)
