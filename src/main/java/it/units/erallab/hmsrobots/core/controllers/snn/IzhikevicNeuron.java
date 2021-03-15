@@ -42,4 +42,10 @@ public class IzhikevicNeuron extends SpikingNeuron {
     membranePotential = c;
     membraneRecovery += d;
   }
+
+  @Override
+  public void reset() {
+    super.reset();
+    membraneRecovery = b * membranePotential;
+  }
 }
