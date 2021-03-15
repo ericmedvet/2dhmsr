@@ -180,6 +180,10 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     return c;
   }
 
+  public static int countWeights(int nOfInput, int[] innerNeurons, int nOfOutput) {
+    return countWeights(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput));
+  }
+
   // for each layer, for each neuron, list incoming weights in order
   public static double[] flat(double[][][] unflatWeights, SpikingFunction[][] neurons) {
     double[] flatWeights = new double[countWeights(neurons)];
