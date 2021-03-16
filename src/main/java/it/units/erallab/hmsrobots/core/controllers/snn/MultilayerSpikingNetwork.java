@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.controllers.Resettable;
 import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.AverageFrequencySpikeTrainToValueConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.SpikeTrainToValueConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.UniformValueToSpikeTrainConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.ValueToSpikeTrainConverter;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.UniformValueToSpikeTrainConverter;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
