@@ -49,4 +49,8 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
     return spikes;
   }
 
+  @Override
+  public void reset() {
+    previousTrainRemains = new TreeSet<>();
+  }
 }

@@ -41,8 +41,10 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   ) {
     this.neurons = neurons;
     this.weights = weights;
-    this.valueToSpikeTrainConverter = valueToSpikeTrainConverter;
-    this.spikeTrainToValueConverter = spikeTrainToValueConverter;
+    this.valueToSpikeTrainConverter = SerializationUtils.clone(valueToSpikeTrainConverter);
+    this.valueToSpikeTrainConverter.reset();
+    this.spikeTrainToValueConverter = SerializationUtils.clone(spikeTrainToValueConverter);
+    this.spikeTrainToValueConverter.reset();
     if (flat(weights, neurons).length != countWeights(neurons)) {
       throw new IllegalArgumentException(String.format(
               "Wrong number of weights: %d expected, %d found",
