@@ -7,9 +7,13 @@ public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConve
 
   private static final double LOWER_BOUND = -1;
   private static final double UPPER_BOUND = 1;
-  private static final double FREQUENCY = 50; // hertz
+  private double frequency = 65; // hertz
 
-  // suppose timeWindowSize is given in milliseconds
+  @Override
+  public void setFrequency(double frequency) {
+    this.frequency = frequency;
+  }
+
   @Override
   public SortedSet<Double> convert(double value, double timeWindowSize) {
     //if (value > UPPER_BOUND || value < LOWER_BOUND) {
@@ -22,9 +26,9 @@ public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConve
     if (value == 0) {
       return spikes;
     }
-    double frequency = value * FREQUENCY / 1000;
+    double frequency = value * this.frequency;
     double deltaT = 1 / frequency / timeWindowSize;
-    for (double t = 0; t < 1; t += deltaT)
+    for (double t = deltaT; t <= 1; t += deltaT)
       spikes.add(t);
     return spikes;
   }

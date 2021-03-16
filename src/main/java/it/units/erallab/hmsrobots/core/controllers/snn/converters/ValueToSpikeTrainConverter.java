@@ -7,4 +7,6 @@ public interface ValueToSpikeTrainConverter extends Serializable {
 
     SortedSet<Double> convert(double value, double timeWindowSize);
 
+    void setFrequency(double frequency);
+
 }
