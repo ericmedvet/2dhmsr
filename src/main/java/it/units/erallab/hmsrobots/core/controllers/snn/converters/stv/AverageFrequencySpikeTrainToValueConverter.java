@@ -6,6 +6,13 @@ public class AverageFrequencySpikeTrainToValueConverter implements SpikeTrainToV
 
   private double frequency = 500; // hertz
 
+  public AverageFrequencySpikeTrainToValueConverter() {
+  }
+
+  public AverageFrequencySpikeTrainToValueConverter(double frequency) {
+    this.frequency = frequency;
+  }
+
   @Override
   public void setFrequency(double frequency) {
     this.frequency = frequency;

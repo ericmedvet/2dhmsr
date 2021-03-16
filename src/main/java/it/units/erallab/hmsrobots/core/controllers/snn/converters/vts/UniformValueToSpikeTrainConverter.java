@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConverter {
 
-  private double frequency = 601; // hertz
+  protected double frequency = 601; // hertz
 
   public UniformValueToSpikeTrainConverter() {
   }
