@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToSpikeTrainConverter {
 
+  private static final int DEFAULT_MEMORY_LENGTH = 2;
+
   private final int memoryLength;
   private SortedSet<Double> previousTrainRemains;
 
@@ -21,11 +23,11 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
   }
 
   public UniformWithMemoryValueToSpikeTrainConverter() {
-    this(2);
+    this(DEFAULT_MEMORY_LENGTH);
   }
 
   public UniformWithMemoryValueToSpikeTrainConverter(double frequency) {
-    this(frequency, 2);
+    this(frequency, DEFAULT_MEMORY_LENGTH);
   }
 
   @Override
