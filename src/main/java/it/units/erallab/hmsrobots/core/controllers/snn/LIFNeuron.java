@@ -17,15 +17,22 @@ public class LIFNeuron extends SpikingNeuron {
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
     double decay = (spikeTime - lastInputTime) * lambdaDecay * membranePotential;
     membranePotential -= decay;
-    membranePotentialValues.put(spikeTime, membranePotential);
+    if (plotMode) {
+      membranePotentialValues.put(spikeTime, membranePotential);
+    }
     membranePotential += weightedSpike;
-    membranePotentialValues.put(spikeTime + PLOTTING_TIME_STEP, membranePotential);
+    if (plotMode) {
+      membranePotentialValues.put(spikeTime + PLOTTING_TIME_STEP, membranePotential);
+    }
     lastInputTime = spikeTime;
   }
 
   @Override
   protected void resetAfterSpike() {
     membranePotential = restingPotential;
+    if (plotMode) {
+      membranePotentialValues.put(lastInputTime + 2 * PLOTTING_TIME_STEP, membranePotential);
+    }
   }
 
 }

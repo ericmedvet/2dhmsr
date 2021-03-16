@@ -33,13 +33,18 @@ public class IzhikevicNeuron extends SpikingNeuron {
     double deltaU = (spikeTime - lastInputTime) * a * (b * membranePotential - membraneRecovery);
     membranePotential += deltaV;
     membraneRecovery += deltaU;
-    membranePotentialValues.put(spikeTime, membranePotential);
+    if (plotMode) {
+      membranePotentialValues.put(spikeTime, membranePotential);
+    }
     lastInputTime = spikeTime;
   }
 
   @Override
   protected void resetAfterSpike() {
     membranePotential = c;
+    if (plotMode) {
+      membranePotentialValues.put(lastInputTime + PLOTTING_TIME_STEP, membranePotential);
+    }
     membraneRecovery += d;
   }
 

@@ -14,18 +14,26 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
   protected double lastInputTime;
   private double lastEvaluatedTime;
 
+  protected final boolean plotMode;
   protected final SortedMap<Double, Double> membranePotentialValues;
   protected final SortedMap<Double, Double> inputSpikesValues;
 
   protected static final double PLOTTING_TIME_STEP = 0.000000000001;
 
   public SpikingNeuron(double restingPotential, double thresholdPotential) {
+    this(restingPotential, thresholdPotential, false);
+  }
+
+  public SpikingNeuron(double restingPotential, double thresholdPotential, boolean plotMode) {
     this.restingPotential = restingPotential;
     this.thresholdPotential = thresholdPotential;
+    this.plotMode = plotMode;
     membranePotential = restingPotential;
     membranePotentialValues = new TreeMap<>();
     inputSpikesValues = new TreeMap<>();
-    membranePotentialValues.put(lastInputTime, membranePotential);
+    if (plotMode) {
+      membranePotentialValues.put(lastInputTime, membranePotential);
+    }
   }
 
   @Override
@@ -34,12 +42,13 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
     SortedSet<Double> spikes = new TreeSet<>();
     weightedSpikes.forEach((spikeTime, weightedSpike) -> {
               double scaledSpikeTime = spikeTime * timeWindowSize + lastEvaluatedTime;
-              inputSpikesValues.put(scaledSpikeTime, weightedSpike);
+              if (plotMode) {
+                inputSpikesValues.put(scaledSpikeTime, weightedSpike);
+              }
               acceptWeightedSpike(scaledSpikeTime, weightedSpike);
               if (membranePotential > thresholdPotential) {
                 spikes.add(spikeTime);
                 resetAfterSpike();
-                membranePotentialValues.put(lastInputTime + 2 * PLOTTING_TIME_STEP, membranePotential);
               }
             }
     );

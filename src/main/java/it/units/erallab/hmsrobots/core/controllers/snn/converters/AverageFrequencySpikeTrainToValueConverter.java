@@ -4,7 +4,7 @@ import java.util.SortedSet;
 
 public class AverageFrequencySpikeTrainToValueConverter implements SpikeTrainToValueConverter {
 
-  private double frequency = 35; // hertz
+  private double frequency = 500; // hertz
   private static final double LOWER_BOUND = 0;
   private static final double UPPER_BOUND = 1;
 
