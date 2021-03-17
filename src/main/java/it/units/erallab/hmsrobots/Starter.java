@@ -116,8 +116,8 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    snn();
-    //bipeds();
+    //snn();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();

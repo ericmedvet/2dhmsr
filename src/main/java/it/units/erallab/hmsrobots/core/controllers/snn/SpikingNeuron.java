@@ -24,6 +24,8 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
   protected final SortedMap<Double, Double> membranePotentialValues;
   protected final SortedMap<Double, Double> inputSpikesValues;
 
+  private static final int UPDATE_FREQUENCY = 1000;
+
   protected static final double PLOTTING_TIME_STEP = 0.000000000001;
 
   @JsonCreator
@@ -50,6 +52,10 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
   @Override
   public SortedSet<Double> compute(SortedMap<Double, Double> weightedSpikes, double t) {
     double timeWindowSize = t - lastEvaluatedTime;
+    double updateInterval = 1 / (double) UPDATE_FREQUENCY / timeWindowSize;
+    for (double i = updateInterval; i <= 1; i += updateInterval) {
+      weightedSpikes.computeIfAbsent(i, x -> 0d);
+    }
     SortedSet<Double> spikes = new TreeSet<>();
     weightedSpikes.forEach((spikeTime, weightedSpike) -> {
               double scaledSpikeTime = spikeTime * timeWindowSize + lastEvaluatedTime;
