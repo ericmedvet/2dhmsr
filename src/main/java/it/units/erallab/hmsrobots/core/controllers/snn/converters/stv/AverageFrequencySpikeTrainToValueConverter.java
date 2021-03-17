@@ -1,16 +1,24 @@
 package it.units.erallab.hmsrobots.core.controllers.snn.converters.stv;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.SortedSet;
 
 public class AverageFrequencySpikeTrainToValueConverter implements SpikeTrainToValueConverter {
 
-  private double frequency = 500; // hertz
+  @JsonProperty
+  private double frequency; // hertz
 
-  public AverageFrequencySpikeTrainToValueConverter() {
+  @JsonCreator
+  public AverageFrequencySpikeTrainToValueConverter(
+          @JsonProperty("frequency") double frequency
+  ) {
+    this.frequency = frequency;
   }
 
-  public AverageFrequencySpikeTrainToValueConverter(double frequency) {
-    this.frequency = frequency;
+  public AverageFrequencySpikeTrainToValueConverter() {
+    this(DEFAULT_FREQUENCY);
   }
 
   @Override

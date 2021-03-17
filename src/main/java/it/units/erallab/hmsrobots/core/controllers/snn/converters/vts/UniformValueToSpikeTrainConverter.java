@@ -1,17 +1,25 @@
 package it.units.erallab.hmsrobots.core.controllers.snn.converters.vts;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConverter {
 
-  protected double frequency = 601; // hertz
+  @JsonProperty
+  protected double frequency; // hertz
 
-  public UniformValueToSpikeTrainConverter() {
+  @JsonCreator
+  public UniformValueToSpikeTrainConverter(
+          @JsonProperty("frequency") double frequency
+  ) {
+    this.frequency = frequency;
   }
 
-  public UniformValueToSpikeTrainConverter(double frequency) {
-    this.frequency = frequency;
+  public UniformValueToSpikeTrainConverter() {
+    this(DEFAULT_FREQUENCY);
   }
 
   @Override

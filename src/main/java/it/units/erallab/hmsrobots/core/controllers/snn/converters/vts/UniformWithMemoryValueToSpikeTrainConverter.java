@@ -1,5 +1,8 @@
 package it.units.erallab.hmsrobots.core.controllers.snn.converters.vts;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -7,27 +10,30 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
 
   private static final int DEFAULT_MEMORY_LENGTH = 2;
 
+  @JsonProperty
   private final int memoryLength;
   private SortedSet<Double> previousTrainRemains;
 
-  public UniformWithMemoryValueToSpikeTrainConverter(int memoryLength) {
-    super();
-    this.memoryLength = memoryLength;
-    previousTrainRemains = new TreeSet<>();
-  }
-
-  public UniformWithMemoryValueToSpikeTrainConverter(double frequency, int memoryLength) {
+  @JsonCreator
+  public UniformWithMemoryValueToSpikeTrainConverter(
+          @JsonProperty("frequency") double frequency,
+          @JsonProperty("memoryLength") int memoryLength
+  ) {
     super(frequency);
     this.memoryLength = memoryLength;
     previousTrainRemains = new TreeSet<>();
   }
 
-  public UniformWithMemoryValueToSpikeTrainConverter() {
-    this(DEFAULT_MEMORY_LENGTH);
+  public UniformWithMemoryValueToSpikeTrainConverter(int memoryLength) {
+    this(DEFAULT_FREQUENCY, memoryLength);
   }
 
   public UniformWithMemoryValueToSpikeTrainConverter(double frequency) {
     this(frequency, DEFAULT_MEMORY_LENGTH);
+  }
+
+  public UniformWithMemoryValueToSpikeTrainConverter() {
+    this(DEFAULT_FREQUENCY, DEFAULT_MEMORY_LENGTH);
   }
 
   @Override
