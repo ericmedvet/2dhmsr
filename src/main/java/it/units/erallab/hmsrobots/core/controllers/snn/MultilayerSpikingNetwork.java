@@ -41,9 +41,9 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   ) {
     this.neurons = neurons;
     this.weights = weights;
-    this.valueToSpikeTrainConverter = SerializationUtils.clone(valueToSpikeTrainConverter);
+    this.valueToSpikeTrainConverter = SerializationUtils.clone(valueToSpikeTrainConverter, SerializationUtils.Mode.JAVA);
     this.valueToSpikeTrainConverter.reset();
-    this.spikeTrainToValueConverter = SerializationUtils.clone(spikeTrainToValueConverter);
+    this.spikeTrainToValueConverter = SerializationUtils.clone(spikeTrainToValueConverter, SerializationUtils.Mode.JAVA);
     this.spikeTrainToValueConverter.reset();
     if (flat(weights, neurons).length != countWeights(neurons)) {
       throw new IllegalArgumentException(String.format(
@@ -96,6 +96,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
       spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
       for (int j = 0; j < spikingFunctions[i].length; j++) {
         spikingFunctions[i][j] = SerializationUtils.clone(spikingFunction, SerializationUtils.Mode.JAVA);
+        spikingFunctions[i][j].reset();
       }
     }
     return spikingFunctions;
