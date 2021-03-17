@@ -1,5 +1,8 @@
 package it.units.erallab.hmsrobots.core.controllers.snn;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -8,23 +11,27 @@ import java.util.TreeSet;
 
 public abstract class SpikingNeuron implements SpikingFunction, Serializable {
 
+  @JsonProperty
   protected final double restingPotential;
+  @JsonProperty
   protected final double thresholdPotential;
   protected double membranePotential;
-  protected double lastInputTime;
-  private double lastEvaluatedTime;
+  protected double lastInputTime = 0;
+  private double lastEvaluatedTime = 0;
 
+  @JsonProperty
   protected final boolean plotMode;
   protected final SortedMap<Double, Double> membranePotentialValues;
   protected final SortedMap<Double, Double> inputSpikesValues;
 
   protected static final double PLOTTING_TIME_STEP = 0.000000000001;
 
-  public SpikingNeuron(double restingPotential, double thresholdPotential) {
-    this(restingPotential, thresholdPotential, false);
-  }
-
-  public SpikingNeuron(double restingPotential, double thresholdPotential, boolean plotMode) {
+  @JsonCreator
+  public SpikingNeuron(
+          @JsonProperty("restingPotential") double restingPotential,
+          @JsonProperty("thresholdPotential") double thresholdPotential,
+          @JsonProperty("plotMode") boolean plotMode
+  ) {
     this.restingPotential = restingPotential;
     this.thresholdPotential = thresholdPotential;
     this.plotMode = plotMode;
@@ -34,6 +41,10 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
     if (plotMode) {
       membranePotentialValues.put(lastInputTime, membranePotential);
     }
+  }
+
+  public SpikingNeuron(double restingPotential, double thresholdPotential) {
+    this(restingPotential, thresholdPotential, false);
   }
 
   @Override

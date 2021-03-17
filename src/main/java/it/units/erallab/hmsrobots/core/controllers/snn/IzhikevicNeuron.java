@@ -1,14 +1,29 @@
 package it.units.erallab.hmsrobots.core.controllers.snn;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class IzhikevicNeuron extends SpikingNeuron {
 
   private double membraneRecovery;
+  @JsonProperty
   private final double a;
+  @JsonProperty
   private final double b;
+  @JsonProperty
   private final double c;
+  @JsonProperty
   private final double d;
 
-  public IzhikevicNeuron(double restingPotential, double thresholdPotential, double a, double b, double c, double d) {
+  @JsonCreator
+  public IzhikevicNeuron(
+          @JsonProperty("restingPotential") double restingPotential,
+          @JsonProperty("thresholdPotential") double thresholdPotential,
+          @JsonProperty("a") double a,
+          @JsonProperty("b") double b,
+          @JsonProperty("c") double c,
+          @JsonProperty("d") double d
+  ) {
     super(restingPotential, thresholdPotential);
     this.a = a;
     this.b = b;
@@ -18,12 +33,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
   }
 
   public IzhikevicNeuron() {
-    super(-70, 30);
-    a = 0.02;
-    b = 0.2;
-    c = -65;
-    d = 2;
-    membraneRecovery = b * membranePotential;
+    this(-70, 30, 0.02, 0.2, -65, 2);
   }
 
   @Override
