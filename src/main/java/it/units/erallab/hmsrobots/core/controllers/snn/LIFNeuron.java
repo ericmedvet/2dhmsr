@@ -12,14 +12,23 @@ public class LIFNeuron extends SpikingNeuron {
   public LIFNeuron(
           @JsonProperty("restingPotential") double restingPotential,
           @JsonProperty("thresholdPotential") double thresholdPotential,
-          @JsonProperty("lambdaDecay") double lambdaDecay
+          @JsonProperty("lambdaDecay") double lambdaDecay,
+          @JsonProperty("plotMode") boolean plotMode
   ) {
-    super(restingPotential, thresholdPotential);
+    super(restingPotential, thresholdPotential, plotMode);
     this.lambdaDecay = lambdaDecay;
   }
 
-  public LIFNeuron() {
-    this(0, 1, 0.5);
+  public LIFNeuron(double restingPotential, double thresholdPotential, double lambdaDecay){
+    this(restingPotential,thresholdPotential,lambdaDecay,false);
+  }
+
+  public LIFNeuron(boolean plotMode) {
+    this(0, 1, 0.5, plotMode);
+  }
+
+  public LIFNeuron(){
+    this(false);
   }
 
   @Override

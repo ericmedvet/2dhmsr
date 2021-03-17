@@ -22,9 +22,10 @@ public class IzhikevicNeuron extends SpikingNeuron {
           @JsonProperty("a") double a,
           @JsonProperty("b") double b,
           @JsonProperty("c") double c,
-          @JsonProperty("d") double d
+          @JsonProperty("d") double d,
+          @JsonProperty("plotMode") boolean plotMode
   ) {
-    super(restingPotential, thresholdPotential);
+    super(restingPotential, thresholdPotential, plotMode);
     this.a = a;
     this.b = b;
     this.c = c;
@@ -32,8 +33,16 @@ public class IzhikevicNeuron extends SpikingNeuron {
     membraneRecovery = b * membranePotential;
   }
 
+  public IzhikevicNeuron(double restingPotential, double thresholdPotential, double a, double b, double c, double d) {
+    this(restingPotential, thresholdPotential, a, b, c, d, false);
+  }
+
+  public IzhikevicNeuron(boolean plotMode) {
+    this(-70, 30, 0.02, 0.2, -65, 2, plotMode);
+  }
+
   public IzhikevicNeuron() {
-    this(-70, 30, 0.02, 0.2, -65, 2);
+    this(false);
   }
 
   @Override
