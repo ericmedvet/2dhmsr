@@ -255,6 +255,8 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   @Override
   public void reset() {
     previousApplicationTime = 0d;
+    spikeTrainToValueConverter.reset();
+    valueToSpikeTrainConverter.reset();
     for (SpikingFunction[] layer : neurons) {
       for (SpikingFunction neuron : layer) {
         neuron.reset();
