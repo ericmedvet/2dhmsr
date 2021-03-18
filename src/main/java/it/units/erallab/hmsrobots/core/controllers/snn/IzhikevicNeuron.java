@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class IzhikevicNeuron extends SpikingNeuron {
 
+  private static final double INPUT_MULTIPLIER = 35;
+
   private double membraneRecovery;
   @JsonProperty
   private final double a;
@@ -47,9 +49,9 @@ public class IzhikevicNeuron extends SpikingNeuron {
 
   @Override
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
-    double I = b + weightedSpike;
-    double deltaV = (spikeTime - lastInputTime) * (0.04 * Math.pow(membranePotential, 2) + 5 * membranePotential + 140 - membraneRecovery + I);
-    double deltaU = (spikeTime - lastInputTime) * a * (b * membranePotential - membraneRecovery);
+    double I = b + weightedSpike * INPUT_MULTIPLIER;
+    double deltaV = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * (0.04 * Math.pow(membranePotential, 2) + 5 * membranePotential + 140 - membraneRecovery + I);
+    double deltaU = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * a * (b * membranePotential - membraneRecovery);
     membranePotential += deltaV;
     membraneRecovery += deltaU;
     if (plotMode) {

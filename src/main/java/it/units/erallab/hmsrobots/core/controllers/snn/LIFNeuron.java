@@ -24,7 +24,7 @@ public class LIFNeuron extends SpikingNeuron {
   }
 
   public LIFNeuron(boolean plotMode) {
-    this(0, 1, 0.5, plotMode);
+    this(0, 2, 0.1, plotMode);
   }
 
   public LIFNeuron(){
@@ -33,7 +33,7 @@ public class LIFNeuron extends SpikingNeuron {
 
   @Override
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
-    double decay = (spikeTime - lastInputTime) * lambdaDecay * membranePotential;
+    double decay = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * lambdaDecay * membranePotential;
     membranePotential -= decay;
     if (plotMode) {
       membranePotentialValues.put(spikeTime, membranePotential);

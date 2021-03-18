@@ -11,6 +11,8 @@ import java.util.TreeSet;
 
 public abstract class SpikingNeuron implements SpikingFunction, Serializable {
 
+  protected static final double TO_MILLIS_MULTIPLIER = 1000;
+
   @JsonProperty
   protected final double restingPotential;
   @JsonProperty
@@ -59,7 +61,7 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
     SortedSet<Double> spikes = new TreeSet<>();
     weightedSpikes.forEach((spikeTime, weightedSpike) -> {
               double scaledSpikeTime = spikeTime * timeWindowSize + lastEvaluatedTime;
-              if (plotMode) {
+              if (plotMode && weightedSpike>0) {
                 inputSpikesValues.put(scaledSpikeTime, weightedSpike);
               }
               acceptWeightedSpike(scaledSpikeTime, weightedSpike);
