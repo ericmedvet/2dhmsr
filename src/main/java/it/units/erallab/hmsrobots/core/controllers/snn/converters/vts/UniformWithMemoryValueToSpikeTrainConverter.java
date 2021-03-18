@@ -16,6 +16,8 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
     super(frequency);
   }
 
+  public UniformWithMemoryValueToSpikeTrainConverter() {
+  }
 
   @Override
   public SortedSet<Double> convert(double value, double timeWindowSize, double timeWindowEnd) {
