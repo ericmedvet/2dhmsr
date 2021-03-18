@@ -34,15 +34,15 @@ public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConve
     if (value == 0) {
       return spikes;
     }
-    double deltaT = computeDeltaT(value, timeWindowSize);
-    for (double t = deltaT; t <= 1; t += deltaT)
-      spikes.add(t);
+    double deltaT = computeDeltaT(value);
+    for (double t = deltaT; t <= timeWindowSize; t += deltaT)
+      spikes.add(t / timeWindowSize);
     return spikes;
   }
 
-  protected double computeDeltaT(double value, double timeWindowSize) {
+  protected double computeDeltaT(double value) {
     double frequency = value * this.frequency;
-    return (1 / frequency / timeWindowSize);
+    return 1 / frequency;
   }
 
 }
