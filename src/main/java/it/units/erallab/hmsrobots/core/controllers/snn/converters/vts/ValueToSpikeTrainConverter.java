@@ -11,7 +11,7 @@ public interface ValueToSpikeTrainConverter extends Serializable, Resettable {
   double UPPER_BOUND = 1;
   double DEFAULT_FREQUENCY = 600;
 
-  SortedSet<Double> convert(double value, double timeWindowSize);
+  SortedSet<Double> convert(double value, double timeWindowSize, double timeWindowEnd);
 
   void setFrequency(double frequency);
 

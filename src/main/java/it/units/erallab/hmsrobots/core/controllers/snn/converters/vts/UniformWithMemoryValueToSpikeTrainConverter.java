@@ -37,7 +37,7 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
   }
 
   @Override
-  public SortedSet<Double> convert(double value, double timeWindowSize) {
+  public SortedSet<Double> convert(double value, double timeWindowSize, double timeWindowEnd) {
     value = normalizeValue(value);
     SortedSet<Double> spikes = previousTrainRemains.stream().filter(x -> x <= 1).collect(Collectors.toCollection(TreeSet::new));
     previousTrainRemains = previousTrainRemains.stream().filter(x -> x > 1).map(x -> x - 1).collect(Collectors.toCollection(TreeSet::new));

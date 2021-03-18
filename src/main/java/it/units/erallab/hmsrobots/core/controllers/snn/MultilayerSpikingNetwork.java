@@ -152,7 +152,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     double deltaT = t - previousApplicationTime;
     SortedSet<Double>[] inputSpikes = new SortedSet[input.length];
     IntStream.range(0, input.length).forEach(i ->
-            inputSpikes[i] = valueToSpikeTrainConverter.convert(input[i], deltaT));
+            inputSpikes[i] = valueToSpikeTrainConverter.convert(input[i], deltaT, t));
     SortedSet<Double>[] outputSpikes = apply(t, inputSpikes);
     previousApplicationTime = t;
     return Arrays.stream(outputSpikes)
