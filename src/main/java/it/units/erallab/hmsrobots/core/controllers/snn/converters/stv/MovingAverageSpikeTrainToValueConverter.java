@@ -6,12 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.SortedSet;
 import java.util.stream.IntStream;
 
-public class MovingAverageSpikeTrainToValueConverter implements SpikeTrainToValueConverter {
+public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpikeTrainToValueConverter {
 
   private static final int DEFAULT_NUMBER_OF_WINDOWS = 10;
-
-  @JsonProperty
-  private double frequency; // hertz
 
   private final double[] windowSizes;
   private final int[] spikesPerWindow;
@@ -22,7 +19,7 @@ public class MovingAverageSpikeTrainToValueConverter implements SpikeTrainToValu
           @JsonProperty("frequency") double frequency,
           @JsonProperty("numberOfWindows") int numberOfWindows
   ) {
-    this.frequency = frequency;
+    super(frequency);
     windowSizes = new double[numberOfWindows];
     spikesPerWindow = new int[numberOfWindows];
   }
@@ -40,11 +37,6 @@ public class MovingAverageSpikeTrainToValueConverter implements SpikeTrainToValu
   }
 
   @Override
-  public void setFrequency(double frequency) {
-    this.frequency = frequency;
-  }
-
-  @Override
   public double convert(SortedSet<Double> spikeTrain, double timeWindowSize) {
     windowSizes[currentPosition] = timeWindowSize;
     spikesPerWindow[currentPosition] = spikeTrain.size();
@@ -57,10 +49,7 @@ public class MovingAverageSpikeTrainToValueConverter implements SpikeTrainToValu
         totalNumberOfSpikes += spikesPerWindow[i];
       }
     }
-    if (totalWindowSize == 0) {
-      return normalizeValue(0);
-    }
-    return normalizeValue(totalNumberOfSpikes / totalWindowSize / frequency);
+    return convert(totalNumberOfSpikes, totalWindowSize);
   }
 
   @Override
