@@ -21,7 +21,7 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
 
   @Override
   public SortedSet<Double> convert(double value, double timeWindowSize, double timeWindowEnd) {
-    value = normalizeValue(value);
+    value = clipInputValue(value);
     SortedSet<Double> spikes = new TreeSet<>();
     if (value == 0) {
       return spikes;

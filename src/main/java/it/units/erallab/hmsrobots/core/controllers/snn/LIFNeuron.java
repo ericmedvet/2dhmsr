@@ -24,7 +24,7 @@ public class LIFNeuron extends SpikingNeuron {
   }
 
   public LIFNeuron(boolean plotMode) {
-    this(0, 2, 0.1, plotMode);
+    this(0, 1.2, 0.5, plotMode);
   }
 
   public LIFNeuron(){

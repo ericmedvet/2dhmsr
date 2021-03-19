@@ -19,9 +19,8 @@ public interface ValueToSpikeTrainConverter extends Serializable, Resettable {
   default void reset() {
   }
 
-  default double normalizeValue(double value) {
+  default double clipInputValue(double value) {
     return Math.max(Math.min(UPPER_BOUND, value), LOWER_BOUND);
-    // return (1 + value) / 2;
   }
 
 }

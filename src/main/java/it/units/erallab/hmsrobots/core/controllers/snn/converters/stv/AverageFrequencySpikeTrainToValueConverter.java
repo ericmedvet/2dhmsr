@@ -29,7 +29,7 @@ public class AverageFrequencySpikeTrainToValueConverter implements SpikeTrainToV
   @Override
   public double convert(SortedSet<Double> spikeTrain, double timeWindowSize) {
     if (timeWindowSize == 0) {
-      return 0;
+      return normalizeValue(0);
     }
     return normalizeValue(spikeTrain.size() / timeWindowSize / frequency);
   }
