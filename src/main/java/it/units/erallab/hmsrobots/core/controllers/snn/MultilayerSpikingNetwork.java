@@ -52,6 +52,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
               flat(weights, neurons).length
       ));
     }
+    reset();
   }
 
   public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[][][] weights) {
@@ -250,6 +251,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
         System.arraycopy(newWeights[l][s], 0, weights[l][s], 0, newWeights[l][s].length);
       }
     }
+    reset();
   }
 
   @Override
