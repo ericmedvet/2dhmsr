@@ -16,10 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
-import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
-import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
-import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
+import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -40,7 +37,6 @@ import it.units.erallab.hmsrobots.viewers.VideoUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -116,17 +112,17 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    //bipeds();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
-    multiped();
+    //multiped();
   }
 
   private static void bipeds() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-f-0").apply(RobotUtils.buildShape("biped-7x4"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
@@ -203,14 +199,14 @@ public class Starter {
         Locomotion.createTerrain("hilly-0.3-1-0"),
         new Settings()
     );
-    //GridOnlineViewer.run(locomotion, robot);
-    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    GridOnlineViewer.run(locomotion, robot);
+    /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
     locomotion.apply(robot, framesImageBuilder);
     try {
       ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
     } catch (IOException e) {
       e.printStackTrace();
-    }
+    }*/
   }
 
   private static void breakingWorm() {
@@ -299,7 +295,7 @@ public class Starter {
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
     Robot<SensingVoxel> robot = new Robot<>(
-        new CentralizedSensing(oneBody, in -> new double[]{0d}),
+        new CentralizedSensing(oneBody, RealFunction.build(in -> new double[]{0d}, 1, 1)),
         oneBody
     );
     //episode

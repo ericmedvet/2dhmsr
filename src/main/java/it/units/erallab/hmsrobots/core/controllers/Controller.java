@@ -26,10 +26,8 @@ import java.io.Serializable;
  * @author eric
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public interface Controller<V extends ControllableVoxel> extends Serializable {
+public interface Controller<V extends ControllableVoxel> extends Resettable, Serializable {
 
   void control(double t, Grid<? extends V> voxels);
-
-  void reset();
 
 }

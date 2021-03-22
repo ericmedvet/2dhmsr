@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package it.units.erallab.hmsrobots.util;
 
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
@@ -146,7 +163,7 @@ public class RobotUtils {
                     sensor("vxy", x, y, body, y == body.getH() - 1),
                     sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t"))
                 ).stream()
-                    .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
+                    .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
                     .collect(Collectors.toList())
             );
           }
@@ -169,7 +186,7 @@ public class RobotUtils {
                     sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
                     sensor("l5", x, y, body, x == body.getW() - 1)
                 ).stream()
-                    .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
+                    .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
                     .collect(Collectors.toList())
             );
           }
@@ -181,7 +198,7 @@ public class RobotUtils {
       return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
           Arrays.stream(pars.get("sensors").split("\\+"))
               .map(n -> sensor(n, x, y, body))
-              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
+              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
               .collect(Collectors.toList())
       ));
     }
@@ -191,7 +208,7 @@ public class RobotUtils {
       return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(
           PREDEFINED_SENSORS.keySet().stream()
               .map(n -> sensor(n, x, y, body))
-              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma))
+              .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
               .collect(Collectors.toList())
       ));
     }
