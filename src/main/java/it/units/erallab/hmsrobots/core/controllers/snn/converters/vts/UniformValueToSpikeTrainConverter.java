@@ -10,6 +10,8 @@ public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConve
 
   @JsonProperty
   protected double frequency; // hertz
+  @JsonProperty
+  protected double minFrequency = MIN_FREQUENCY;
 
   @JsonCreator
   public UniformValueToSpikeTrainConverter(
@@ -41,7 +43,8 @@ public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConve
   }
 
   protected double computeDeltaT(double value) {
-    double frequency = value * this.frequency;
+    double frequencyRange = frequency - minFrequency;
+    double frequency = value * frequencyRange + minFrequency;
     return 1 / frequency;
   }
 
