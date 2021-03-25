@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class IzhikevicNeuron extends SpikingNeuron {
 
-  private static final double INPUT_MULTIPLIER = 35;
+  private static final double INPUT_MULTIPLIER = 100;
 
   private double membraneRecovery;
   @JsonProperty
@@ -40,7 +40,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
   }
 
   public IzhikevicNeuron(boolean plotMode) {
-    this(-70, 30, 0.02, 0.2, -65, 2, plotMode);
+    this(-70, 30, 0.02, 0.2, -65, 8, plotMode);
   }
 
   public IzhikevicNeuron() {

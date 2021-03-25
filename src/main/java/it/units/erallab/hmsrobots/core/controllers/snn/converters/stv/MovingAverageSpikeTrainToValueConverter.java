@@ -10,6 +10,8 @@ public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpi
 
   private static final int DEFAULT_NUMBER_OF_WINDOWS = 10;
 
+  @JsonProperty
+  int numberOfWindows;
   private final double[] windowSizes;
   private final int[] spikesPerWindow;
   private int currentPosition = 0;
@@ -22,6 +24,7 @@ public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpi
     super(frequency);
     windowSizes = new double[numberOfWindows];
     spikesPerWindow = new int[numberOfWindows];
+    this.numberOfWindows = numberOfWindows;
   }
 
   public MovingAverageSpikeTrainToValueConverter(int numberOfWindows) {
@@ -40,7 +43,7 @@ public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpi
   public double convert(SortedSet<Double> spikeTrain, double timeWindowSize) {
     windowSizes[currentPosition] = timeWindowSize;
     spikesPerWindow[currentPosition] = spikeTrain.size();
-    currentPosition = (currentPosition == windowSizes.length - 1) ? 0 : (currentPosition + 1);
+    currentPosition = (currentPosition == (windowSizes.length - 1)) ? 0 : (currentPosition + 1);
     int totalNumberOfSpikes = 0;
     double totalWindowSize = 0;
     for (int i = 0; i < windowSizes.length; i++) {
