@@ -30,7 +30,7 @@ public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToS
     double deltaT = computeDeltaT(value);
     for (double t = lastSpikeTime; t <= timeWindowEnd; t += deltaT) {
       if (t >= timeWindowStart) {
-        spikes.add(t / timeWindowSize);
+        spikes.add((t - timeWindowStart) / timeWindowSize);
         lastSpikeTime = t;
       }
     }
