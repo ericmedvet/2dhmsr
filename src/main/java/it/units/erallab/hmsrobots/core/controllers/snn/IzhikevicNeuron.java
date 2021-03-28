@@ -3,6 +3,9 @@ package it.units.erallab.hmsrobots.core.controllers.snn;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 public class IzhikevicNeuron extends SpikingNeuron {
 
   private static final double INPUT_MULTIPLIER = 100;
@@ -16,6 +19,8 @@ public class IzhikevicNeuron extends SpikingNeuron {
   private final double c;
   @JsonProperty
   private final double d;
+
+  private final SortedMap<Double, Double> membraneRecoveryValues;
 
   @JsonCreator
   public IzhikevicNeuron(
@@ -33,6 +38,10 @@ public class IzhikevicNeuron extends SpikingNeuron {
     this.c = c;
     this.d = d;
     membraneRecovery = b * membranePotential;
+    membraneRecoveryValues = new TreeMap<>();
+    if (plotMode) {
+      membraneRecoveryValues.put(lastInputTime, membraneRecovery);
+    }
   }
 
   public IzhikevicNeuron(double restingPotential, double thresholdPotential, double a, double b, double c, double d) {
@@ -56,6 +65,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
     membraneRecovery += deltaU;
     if (plotMode) {
       membranePotentialValues.put(spikeTime, membranePotential);
+      membraneRecoveryValues.put(spikeTime,membraneRecovery);
     }
     lastInputTime = spikeTime;
   }
@@ -63,15 +73,20 @@ public class IzhikevicNeuron extends SpikingNeuron {
   @Override
   protected void resetAfterSpike() {
     membranePotential = c;
+    membraneRecovery += d;
     if (plotMode) {
       membranePotentialValues.put(lastInputTime + PLOTTING_TIME_STEP, membranePotential);
+      membraneRecoveryValues.put(lastInputTime + PLOTTING_TIME_STEP,membraneRecovery);
     }
-    membraneRecovery += d;
   }
 
   @Override
   public void reset() {
     super.reset();
     membraneRecovery = b * membranePotential;
+  }
+
+  public SortedMap<Double, Double> getMembraneRecoveryValues() {
+    return membraneRecoveryValues;
   }
 }
