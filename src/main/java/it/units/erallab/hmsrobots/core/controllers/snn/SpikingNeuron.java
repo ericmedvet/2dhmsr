@@ -65,7 +65,7 @@ public abstract class SpikingNeuron implements SpikingFunction, Serializable {
                 inputSpikesValues.put(scaledSpikeTime, weightedSpike);
               }
               acceptWeightedSpike(scaledSpikeTime, weightedSpike);
-              if (membranePotential > thresholdPotential) {
+              if (membranePotential >= thresholdPotential) {
                 spikes.add(spikeTime);
                 resetAfterSpike();
               }
