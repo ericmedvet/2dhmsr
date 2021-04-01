@@ -9,7 +9,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public abstract class SpikingNeuron implements SpikingFunction, Serializable {
+public abstract class SpikingNeuron implements SpikingFunction {
 
   protected static final double TO_MILLIS_MULTIPLIER = 1000;
 

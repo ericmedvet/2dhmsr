@@ -33,13 +33,13 @@ import java.util.stream.Collectors;
 public class CentralizedSensing implements Controller<SensingVoxel> {
 
   @JsonProperty
-  private final int nOfInputs;
+  protected final int nOfInputs;
   @JsonProperty
-  private final int nOfOutputs;
+  protected final int nOfOutputs;
 
   @JsonProperty
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-  private TimedRealFunction function;
+  protected TimedRealFunction function;
 
   public CentralizedSensing(
       @JsonProperty("nOfInputs") int nOfInputs,

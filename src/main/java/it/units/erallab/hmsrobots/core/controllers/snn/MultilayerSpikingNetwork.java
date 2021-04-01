@@ -13,11 +13,9 @@ import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized, Serializable, Resettable {
@@ -265,4 +263,23 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
       }
     }
   }
+
+  @Override
+  public int hashCode() {
+    int hash = 5;
+    hash = 67 * hash + Arrays.deepHashCode(this.weights);
+    hash = 67 * hash + Arrays.hashCode(this.neurons);
+    hash = 67 * hash + Objects.hashCode(this.valueToSpikeTrainConverter);
+    hash = 67 * hash + Objects.hashCode(this.spikeTrainToValueConverter);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    MultilayerSpikingNetwork that = (MultilayerSpikingNetwork) o;
+    return Double.compare(that.previousApplicationTime, previousApplicationTime) == 0 && Arrays.equals(neurons, that.neurons) && Arrays.deepEquals(weights, that.weights) && Objects.equals(valueToSpikeTrainConverter, that.valueToSpikeTrainConverter) && Objects.equals(spikeTrainToValueConverter, that.spikeTrainToValueConverter);
+  }
+
 }
