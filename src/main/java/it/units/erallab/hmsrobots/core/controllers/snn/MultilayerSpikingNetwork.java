@@ -186,6 +186,14 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     return neurons[neurons.length - 1].length;
   }
 
+  public SpikingFunction[][] getNeurons() {
+    return neurons;
+  }
+
+  public double[][][] getWeights() {
+    return weights;
+  }
+
   public static int countWeights(SpikingFunction[][] neurons) {
     int c = 0;
     for (int i = 1; i < neurons.length; i++) {
