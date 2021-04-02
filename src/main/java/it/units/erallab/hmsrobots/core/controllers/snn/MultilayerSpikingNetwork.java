@@ -6,8 +6,10 @@ import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.controllers.Resettable;
 import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.MovingAverageSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.UniformValueToSpikeTrainConverter;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.UniformWithMemoryValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
@@ -54,7 +56,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   }
 
   public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[][][] weights) {
-    this(neurons, weights, new UniformValueToSpikeTrainConverter(), new AverageFrequencySpikeTrainToValueConverter());
+    this(neurons, weights, new UniformWithMemoryValueToSpikeTrainConverter(), new MovingAverageSpikeTrainToValueConverter());
   }
 
   public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {

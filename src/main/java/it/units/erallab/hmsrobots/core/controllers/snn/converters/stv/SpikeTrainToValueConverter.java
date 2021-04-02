@@ -11,7 +11,7 @@ public interface SpikeTrainToValueConverter extends Serializable, Resettable {
 
   double LOWER_BOUND = -1;
   double UPPER_BOUND = 1;
-  double DEFAULT_FREQUENCY = 300;
+  double DEFAULT_FREQUENCY = 50;
 
   double convert(SortedSet<Double> spikeTrain, double timeWindowSize);
 
