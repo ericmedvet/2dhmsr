@@ -3,7 +3,6 @@ package it.units.erallab.hmsrobots.core.controllers.snn;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -60,7 +59,7 @@ public abstract class SpikingNeuron implements SpikingFunction {
     }
     double updateInterval = 1 / (double) UPDATE_FREQUENCY / timeWindowSize;
     for (double i = updateInterval; i <= 1; i += updateInterval) {
-      weightedSpikes.computeIfAbsent(i, x -> 0d);
+      weightedSpikes.putIfAbsent(i, 0d);
     }
     weightedSpikes.forEach((spikeTime, weightedSpike) -> {
               double scaledSpikeTime = spikeTime * timeWindowSize + lastEvaluatedTime;
