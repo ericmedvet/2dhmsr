@@ -32,6 +32,9 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   private final SpikeTrainToValueConverter spikeTrainToValueConverter;
   private double previousApplicationTime;
 
+  private final ValueToSpikeTrainConverter[] valueToSpikeTrainConverters;
+  private final SpikeTrainToValueConverter[] spikeTrainToValueConverters;
+
   @JsonCreator
   public MultilayerSpikingNetwork(
           @JsonProperty("neurons") SpikingFunction[][] neurons,
@@ -43,8 +46,20 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     this.weights = weights;
     this.valueToSpikeTrainConverter = SerializationUtils.clone(valueToSpikeTrainConverter, SerializationUtils.Mode.JAVA);
     this.valueToSpikeTrainConverter.reset();
+    valueToSpikeTrainConverters = new ValueToSpikeTrainConverter[neurons[0].length];
+    IntStream.range(0, valueToSpikeTrainConverters.length).forEach(i -> {
+              valueToSpikeTrainConverters[i] = SerializationUtils.clone(valueToSpikeTrainConverter, SerializationUtils.Mode.JAVA);
+              valueToSpikeTrainConverters[i].reset();
+            }
+    );
     this.spikeTrainToValueConverter = SerializationUtils.clone(spikeTrainToValueConverter, SerializationUtils.Mode.JAVA);
     this.spikeTrainToValueConverter.reset();
+    spikeTrainToValueConverters = new SpikeTrainToValueConverter[neurons[neurons.length - 1].length];
+    IntStream.range(0, spikeTrainToValueConverters.length).forEach(i -> {
+              spikeTrainToValueConverters[i] = SerializationUtils.clone(spikeTrainToValueConverter, SerializationUtils.Mode.JAVA);
+              spikeTrainToValueConverters[i].reset();
+            }
+    );
     if (flat(weights, neurons).length != countWeights(neurons)) {
       throw new IllegalArgumentException(String.format(
               "Wrong number of weights: %d expected, %d found",
@@ -153,12 +168,13 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     double deltaT = t - previousApplicationTime;
     SortedSet<Double>[] inputSpikes = new SortedSet[input.length];
     IntStream.range(0, input.length).forEach(i ->
-            inputSpikes[i] = valueToSpikeTrainConverter.convert(input[i], deltaT, t));
+            inputSpikes[i] = valueToSpikeTrainConverters[i].convert(input[i], deltaT, t));
     SortedSet<Double>[] outputSpikes = apply(t, inputSpikes);
     previousApplicationTime = t;
-    return Arrays.stream(outputSpikes)
-            .mapToDouble(x -> spikeTrainToValueConverter.convert(x, deltaT))
-            .toArray();
+    double[] output = new double[outputSpikes.length];
+    IntStream.range(0,outputSpikes.length).forEach(i->
+            output[i] = spikeTrainToValueConverters[i].convert(outputSpikes[i],deltaT));
+    return output;
   }
 
   private SortedMap<Double, Double> createWeightedSpikeTrain(SortedSet<Double>[] inputs, double[] weights) {
