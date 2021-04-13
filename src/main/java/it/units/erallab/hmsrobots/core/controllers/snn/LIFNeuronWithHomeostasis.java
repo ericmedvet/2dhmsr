@@ -6,13 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class LIFNeuronWithHomeostasis extends LIFNeuron {
 
   @JsonProperty
+  private double startingTheta;
   private double theta;
-  @JsonProperty
-  private final double thetaIncrementRate = 0.2;
-  @JsonProperty
-  private final double thetaDecayRate = 0.01;
-  @JsonProperty
-  private final double maxThresholdPotential = 1d;
+  private static final double THETA_INCREMENT_RATE = 0.2;
+  private static final double THETA_DECAY_RATE = 0.01;
 
   @JsonCreator
   public LIFNeuronWithHomeostasis(
@@ -23,7 +20,8 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
           @JsonProperty("plotMode") boolean plotMode
   ) {
     super(restingPotential, thresholdPotential, lambdaDecay, plotMode);
-    this.theta = theta;
+    startingTheta = theta;
+    this.theta = startingTheta;
   }
 
   public LIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay, double theta) {
@@ -46,12 +44,18 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
     super.acceptWeightedSpike(spikeTime, weightedSpike);
     thresholdPotential = Math.min(thresholdPotential + theta, sumOfIncomingWeights);
-    theta = theta - thetaDecayRate * (spikeTime - lastInputTime) * TO_MILLIS_MULTIPLIER;
+    theta = theta - THETA_DECAY_RATE * (spikeTime - lastInputTime) * TO_MILLIS_MULTIPLIER;
   }
 
   @Override
   protected void resetAfterSpike() {
     super.resetAfterSpike();
-    theta += thetaIncrementRate;
+    theta += THETA_INCREMENT_RATE;
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    theta = startingTheta;
   }
 }
