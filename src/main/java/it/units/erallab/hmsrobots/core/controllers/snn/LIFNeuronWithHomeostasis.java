@@ -7,6 +7,8 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
 
   @JsonProperty
   private double startingTheta;
+  @JsonProperty
+  private double startingThresholdPotential;
   private double theta;
   private static final double THETA_INCREMENT_RATE = 0.2;
   private static final double THETA_DECAY_RATE = 0.01;
@@ -21,6 +23,7 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   ) {
     super(restingPotential, thresholdPotential, lambdaDecay, plotMode);
     startingTheta = theta;
+    startingThresholdPotential = thresholdPotential;
     this.theta = startingTheta;
   }
 
@@ -57,5 +60,6 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   public void reset() {
     super.reset();
     theta = startingTheta;
+    thresholdPotential = startingThresholdPotential;
   }
 }
