@@ -15,10 +15,11 @@ public abstract class SpikingNeuron implements SpikingFunction {
   @JsonProperty
   protected final double restingPotential;
   @JsonProperty
-  protected final double thresholdPotential;
+  protected double thresholdPotential;
   protected double membranePotential;
   protected double lastInputTime = 0;
   private double lastEvaluatedTime = 0;
+  protected double sumOfIncomingWeights = 0;
 
   @JsonProperty
   protected final boolean plotMode;
@@ -103,6 +104,11 @@ public abstract class SpikingNeuron implements SpikingFunction {
 
   public double getLastEvaluatedTime() {
     return lastEvaluatedTime;
+  }
+
+  @Override
+  public void setSumOfIncomingWeights(double sumOfIncomingWeights) {
+    this.sumOfIncomingWeights = sumOfIncomingWeights;
   }
 
   @Override

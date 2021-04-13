@@ -12,4 +12,6 @@ public interface SpikingFunction extends Resettable, Serializable {
 
     SortedSet<Double> compute(SortedMap<Double,Double> weightedSpikes, double time);
 
+    void setSumOfIncomingWeights(double sumOfIncomingWeights);
+
 }
