@@ -3,6 +3,9 @@ package it.units.erallab.hmsrobots.core.controllers.snn;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 public class LIFNeuronWithHomeostasis extends LIFNeuron {
 
   @JsonProperty
@@ -12,6 +15,9 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   private double theta;
   private static final double THETA_INCREMENT_RATE = 0.2;
   private static final double THETA_DECAY_RATE = 0.01;
+  private static final double MAX_THRESHOLD = 10;
+
+  private final SortedMap<Double, Double> thresholdValues;
 
   @JsonCreator
   public LIFNeuronWithHomeostasis(
@@ -25,6 +31,10 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
     startingTheta = theta;
     startingThresholdPotential = thresholdPotential;
     this.theta = startingTheta;
+    thresholdValues = new TreeMap<>();
+    if (plotMode) {
+      thresholdValues.put(lastInputTime, thresholdPotential);
+    }
   }
 
   public LIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay, double theta) {
@@ -32,11 +42,11 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   }
 
   public LIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay) {
-    this(restingPotential, thresholdPotential, lambdaDecay, 0.1, false);
+    this(restingPotential, thresholdPotential, lambdaDecay, 0d, false);
   }
 
   public LIFNeuronWithHomeostasis(boolean plotMode) {
-    this(0, 1.0, 0.01, 0.1, plotMode);
+    this(0, 1.0, 0.01, 0d, plotMode);
   }
 
   public LIFNeuronWithHomeostasis() {
@@ -45,15 +55,21 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
 
   @Override
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
+    double previousInputTime = lastInputTime;
+    thresholdPotential = Math.min(Math.min(startingThresholdPotential, sumOfIncomingWeights) + theta, MAX_THRESHOLD);
     super.acceptWeightedSpike(spikeTime, weightedSpike);
-    thresholdPotential = Math.min(thresholdPotential + theta, sumOfIncomingWeights);
-    theta = theta - THETA_DECAY_RATE * (spikeTime - lastInputTime) * TO_MILLIS_MULTIPLIER;
+    if (membranePotential < thresholdPotential) {
+      theta = theta - THETA_DECAY_RATE * (spikeTime - previousInputTime) * TO_MILLIS_MULTIPLIER * theta;
+    }
+    if (plotMode) {
+      thresholdValues.put(previousInputTime, thresholdPotential);
+    }
   }
 
   @Override
   protected void resetAfterSpike() {
-    super.resetAfterSpike();
     theta += THETA_INCREMENT_RATE;
+    super.resetAfterSpike();
   }
 
   @Override
@@ -61,5 +77,9 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
     super.reset();
     theta = startingTheta;
     thresholdPotential = startingThresholdPotential;
+  }
+
+  public SortedMap<Double, Double> getThresholdValues() {
+    return thresholdValues;
   }
 }
