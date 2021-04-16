@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 public class IzhikevicNeuron extends SpikingNeuron {
 
-  private static final double INPUT_MULTIPLIER = 100;
+  private static final double INPUT_MULTIPLIER = 20;
 
   private double membraneRecovery;
   @JsonProperty
@@ -24,7 +24,6 @@ public class IzhikevicNeuron extends SpikingNeuron {
 
   @JsonCreator
   public IzhikevicNeuron(
-          @JsonProperty("restingPotential") double restingPotential,
           @JsonProperty("thresholdPotential") double thresholdPotential,
           @JsonProperty("a") double a,
           @JsonProperty("b") double b,
@@ -32,7 +31,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
           @JsonProperty("d") double d,
           @JsonProperty("plotMode") boolean plotMode
   ) {
-    super(restingPotential, thresholdPotential, plotMode);
+    super(c, thresholdPotential, plotMode);
     this.a = a;
     this.b = b;
     this.c = c;
@@ -44,12 +43,12 @@ public class IzhikevicNeuron extends SpikingNeuron {
     }
   }
 
-  public IzhikevicNeuron(double restingPotential, double thresholdPotential, double a, double b, double c, double d) {
-    this(restingPotential, thresholdPotential, a, b, c, d, false);
+  public IzhikevicNeuron(double thresholdPotential, double a, double b, double c, double d) {
+    this(thresholdPotential, a, b, c, d, false);
   }
 
   public IzhikevicNeuron(boolean plotMode) {
-    this(-70, 30, 0.02, 0.2, -65, 8, plotMode);
+    this(30, 0.02, 0.2, -65, 8, plotMode);
   }
 
   public IzhikevicNeuron() {
@@ -58,6 +57,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
 
   @Override
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
+    //weightedSpike = Math.abs(weightedSpike);
     double I = b + weightedSpike * INPUT_MULTIPLIER;
     double deltaV = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * (0.04 * Math.pow(membranePotential, 2) + 5 * membranePotential + 140 - membraneRecovery + I);
     double deltaU = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * a * (b * membranePotential - membraneRecovery);

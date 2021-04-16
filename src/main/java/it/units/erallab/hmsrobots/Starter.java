@@ -17,9 +17,7 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
-import it.units.erallab.hmsrobots.core.controllers.snn.LIFNeuron;
-import it.units.erallab.hmsrobots.core.controllers.snn.MultilayerSpikingNetwork;
-import it.units.erallab.hmsrobots.core.controllers.snn.SpikingFunction;
+import it.units.erallab.hmsrobots.core.controllers.snn.*;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.MovingAverageSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
@@ -29,10 +27,7 @@ import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.Angle;
-import it.units.erallab.hmsrobots.core.sensors.Derivative;
-import it.units.erallab.hmsrobots.core.sensors.Lidar;
-import it.units.erallab.hmsrobots.core.sensors.Velocity;
+import it.units.erallab.hmsrobots.core.sensors.*;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -124,6 +119,7 @@ public class Starter {
     //snn();
     bipeds();
     //rollingOne();
+    //jumpingTwo();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
@@ -206,7 +202,7 @@ public class Starter {
             SerializationUtils.clone(body)
     );
     //centralized sensing
-    CentralizedSensing centralizedSensing = new CentralizedSensing(body,true);
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body, true);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
             MultiLayerPerceptron.ActivationFunction.TANH,
             centralizedSensing.nOfInputs(),
@@ -365,6 +361,42 @@ public class Starter {
             new Settings()
     );
     GridOnlineViewer.run(locomotion, robot);
+  }
+
+  public static SpikingNeuron[][] jumpingTwo() {
+    //two voxels robot
+    Grid<SensingVoxel> oneBody = Grid.create(1, 2, (x, y) -> new SensingVoxel(List.of(new Touch())));
+    SpikingNeuron[][] spikingNeurons = new SpikingNeuron[2][2];
+    for (int i = 0; i < spikingNeurons.length; i++)
+      for (int j = 0; j < spikingNeurons[i].length; j++)
+        spikingNeurons[i][j] = new IzhikevicNeuron(true);
+    double[][][] weights = new double[1][2][2];
+    weights[0][0][0] = 10;
+    weights[0][0][1] = 0;
+    weights[0][1][0] = 0;
+    weights[0][1][1] = 0;
+    MultilayerSpikingNetwork m = new MultilayerSpikingNetwork(spikingNeurons, weights,
+            new ValueToSpikeTrainConverter[]{
+                    new UniformWithMemoryValueToSpikeTrainConverter(50),
+                    new UniformWithMemoryValueToSpikeTrainConverter(50)},
+            new SpikeTrainToValueConverter[]{
+                    new MovingAverageSpikeTrainToValueConverter(50, 5),
+                    new MovingAverageSpikeTrainToValueConverter(50, 5),
+            });
+    //MultiLayerPerceptron m = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,2,new int[]{}, 2, new double[]{0,-100,0,0,0,0});
+    Robot<SensingVoxel> robot = new Robot<>(
+            new CentralizedSensing(oneBody, m),
+            oneBody
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+            5,
+            //new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
+            Locomotion.createTerrain("flat"),
+            new Settings()
+    );
+    GridOnlineViewer.run(locomotion, robot);
+    return spikingNeurons;
   }
 
   private static void rollingBall() {

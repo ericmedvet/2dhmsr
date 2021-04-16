@@ -55,7 +55,7 @@ public abstract class SpikingNeuron implements SpikingFunction {
   public SortedSet<Double> compute(SortedMap<Double, Double> weightedSpikes, double t) {
     SortedSet<Double> spikes = new TreeSet<>();
     double timeWindowSize = t - lastEvaluatedTime;
-    if(timeWindowSize==0){
+    if (timeWindowSize == 0) {
       return spikes;
     }
     double updateInterval = 1 / (double) UPDATE_FREQUENCY / timeWindowSize;
@@ -64,7 +64,7 @@ public abstract class SpikingNeuron implements SpikingFunction {
     }
     weightedSpikes.forEach((spikeTime, weightedSpike) -> {
               double scaledSpikeTime = spikeTime * timeWindowSize + lastEvaluatedTime;
-              if (plotMode && weightedSpike>0) {
+              if (plotMode && weightedSpike != 0) {
                 inputSpikesValues.put(scaledSpikeTime, weightedSpike);
               }
               acceptWeightedSpike(scaledSpikeTime, weightedSpike);
