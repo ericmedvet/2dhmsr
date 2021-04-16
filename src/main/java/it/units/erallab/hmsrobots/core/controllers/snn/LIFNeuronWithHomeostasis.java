@@ -15,7 +15,6 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   private double theta;
   private static final double THETA_INCREMENT_RATE = 0.2;
   private static final double THETA_DECAY_RATE = 0.01;
-  private static final double MAX_THRESHOLD = 10;
 
   private final SortedMap<Double, Double> thresholdValues;
 
@@ -56,7 +55,7 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   @Override
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
     double previousInputTime = lastInputTime;
-    thresholdPotential = Math.min(Math.min(startingThresholdPotential, sumOfIncomingWeights) + theta, MAX_THRESHOLD);
+    thresholdPotential = Math.min(startingThresholdPotential, sumOfIncomingWeights) + theta;
     super.acceptWeightedSpike(spikeTime, weightedSpike);
     if (membranePotential < thresholdPotential) {
       theta = theta - THETA_DECAY_RATE * (spikeTime - previousInputTime) * TO_MILLIS_MULTIPLIER * theta;
