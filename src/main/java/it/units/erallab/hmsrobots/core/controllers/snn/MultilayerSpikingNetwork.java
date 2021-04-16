@@ -15,6 +15,7 @@ import it.units.erallab.hmsrobots.util.SerializationUtils;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized, Serializable, Resettable {
@@ -28,6 +29,9 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   private final ValueToSpikeTrainConverter[] valueToSpikeTrainConverters;
   @JsonProperty
   private final SpikeTrainToValueConverter[] spikeTrainToValueConverters;
+
+  private boolean spikesTracker = false;
+  private final List<Double>[][] spikes;
 
   @JsonCreator
   public MultilayerSpikingNetwork(
@@ -47,13 +51,20 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
               flat(weights, neurons).length
       ));
     }
+    spikes = new List[neurons.length][];
+    for (int i = 0; i < neurons.length; i++) {
+      spikes[i] = new List[neurons[i].length];
+      for (int j = 0; j < spikes[i].length; j++) {
+        spikes[i][j] = new ArrayList<>();
+      }
+    }
     reset();
   }
 
   public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[][][] weights) {
     this(neurons, weights,
             createInputConverters(neurons[0].length, new UniformWithMemoryValueToSpikeTrainConverter()),
-            createOutputConverters(neurons[neurons.length-1].length,new MovingAverageSpikeTrainToValueConverter()));
+            createOutputConverters(neurons[neurons.length - 1].length, new MovingAverageSpikeTrainToValueConverter()));
   }
 
   public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
@@ -61,7 +72,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   }
 
   public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction), weights, valueToSpikeTrainConverter,spikeTrainToValueConverter);
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction), weights, valueToSpikeTrainConverter, spikeTrainToValueConverter);
   }
 
   public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction) {
@@ -89,8 +100,8 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   }
 
   public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(neurons, unflat(weights, neurons), createInputConverters(neurons[0].length,valueToSpikeTrainConverter),
-            createOutputConverters(neurons[neurons.length-1].length,spikeTrainToValueConverter));
+    this(neurons, unflat(weights, neurons), createInputConverters(neurons[0].length, valueToSpikeTrainConverter),
+            createOutputConverters(neurons[neurons.length - 1].length, spikeTrainToValueConverter));
   }
 
   private static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {
@@ -118,6 +129,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
 
   @Override
   public SortedSet<Double>[] apply(double t, SortedSet<Double>[] inputs) {
+    double deltaT = t - previousApplicationTime;
     if (inputs.length != neurons[0].length) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
     }
@@ -136,6 +148,11 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
         SortedMap<Double, Double> weightedInputSpikeTrain = createWeightedSpikeTrain(previousLayerOutputs, incomingWeights[neuronIndex]);
         layer[neuronIndex].setSumOfIncomingWeights(Arrays.stream(incomingWeights[neuronIndex]).sum());
         thisLayersOutputs[neuronIndex] = layer[neuronIndex].compute(weightedInputSpikeTrain, t);
+        if (spikesTracker) {
+          spikes[layerIndex][neuronIndex].addAll(
+                  thisLayersOutputs[neuronIndex].stream().map(x -> x * deltaT + previousApplicationTime).collect(Collectors.toList())
+          );
+        }
       }
       if (layerIndex == neurons.length - 1) {
         break;
@@ -160,8 +177,8 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     SortedSet<Double>[] outputSpikes = apply(t, inputSpikes);
     previousApplicationTime = t;
     double[] output = new double[outputSpikes.length];
-    IntStream.range(0,outputSpikes.length).forEach(i->
-            output[i] = spikeTrainToValueConverters[i].convert(outputSpikes[i],deltaT));
+    IntStream.range(0, outputSpikes.length).forEach(i ->
+            output[i] = spikeTrainToValueConverters[i].convert(outputSpikes[i], deltaT));
     return output;
   }
 
@@ -235,18 +252,18 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     return flatWeights;
   }
 
-  private static ValueToSpikeTrainConverter[] createInputConverters(int nOfInputs, ValueToSpikeTrainConverter valueToSpikeTrainConverter){
+  private static ValueToSpikeTrainConverter[] createInputConverters(int nOfInputs, ValueToSpikeTrainConverter valueToSpikeTrainConverter) {
     ValueToSpikeTrainConverter[] valueToSpikeTrainConverters = new ValueToSpikeTrainConverter[nOfInputs];
-    IntStream.range(0,nOfInputs).forEach(i->{
+    IntStream.range(0, nOfInputs).forEach(i -> {
       valueToSpikeTrainConverters[i] = SerializationUtils.clone(valueToSpikeTrainConverter);
       valueToSpikeTrainConverters[i].reset();
     });
     return valueToSpikeTrainConverters;
   }
 
-  private static SpikeTrainToValueConverter[] createOutputConverters(int nOfOutputs, SpikeTrainToValueConverter spikeTrainToValueConverter){
+  private static SpikeTrainToValueConverter[] createOutputConverters(int nOfOutputs, SpikeTrainToValueConverter spikeTrainToValueConverter) {
     SpikeTrainToValueConverter[] spikeTrainToValueConverters = new SpikeTrainToValueConverter[nOfOutputs];
-    IntStream.range(0,nOfOutputs).forEach(i->{
+    IntStream.range(0, nOfOutputs).forEach(i -> {
       spikeTrainToValueConverters[i] = SerializationUtils.clone(spikeTrainToValueConverter);
       spikeTrainToValueConverters[i].reset();
     });
@@ -284,16 +301,25 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     reset();
   }
 
+  public void setSpikesTracker(boolean spikesTracker) {
+    this.spikesTracker = spikesTracker;
+  }
+
+  public List<Double>[][] getSpikes() {
+    return spikes;
+  }
+
   @Override
   public void reset() {
     previousApplicationTime = 0d;
-    IntStream.range(0,spikeTrainToValueConverters.length).forEach(i->
+    IntStream.range(0, spikeTrainToValueConverters.length).forEach(i ->
             spikeTrainToValueConverters[i].reset());
-    IntStream.range(0,valueToSpikeTrainConverters.length).forEach(i->
+    IntStream.range(0, valueToSpikeTrainConverters.length).forEach(i ->
             valueToSpikeTrainConverters[i].reset());
-    for (SpikingFunction[] layer : neurons) {
-      for (SpikingFunction neuron : layer) {
-        neuron.reset();
+    for (int i = 0; i < neurons.length; i++) {
+      for (int j = 0; j < neurons[i].length; j++) {
+        neurons[i][j].reset();
+        spikes[i][j].clear();
       }
     }
   }
