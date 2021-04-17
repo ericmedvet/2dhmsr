@@ -5,8 +5,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 public class IzhikevicNeuron extends SpikingNeuron {
+
+  private enum IzhikevicParameters {
+
+    REGULAR_SPIKING_PARAMS(30, 0.02, 0.2, -65, 8);
+
+    private final double threshold;
+    private final double a;
+    private final double b;
+    private final double c;
+    private final double d;
+
+    IzhikevicParameters(double threshold, double a, double b, double c, double d) {
+      this.threshold = threshold;
+      this.a = a;
+      this.b = b;
+      this.c = c;
+      this.d = d;
+    }
+
+  }
 
   private static final double INPUT_MULTIPLIER = 20;
 
@@ -47,8 +68,16 @@ public class IzhikevicNeuron extends SpikingNeuron {
     this(thresholdPotential, a, b, c, d, false);
   }
 
+  public IzhikevicNeuron(IzhikevicParameters parameters, boolean plotMode) {
+    this(parameters.threshold, parameters.a, parameters.b, parameters.c, parameters.d, plotMode);
+  }
+
+  public IzhikevicNeuron(IzhikevicParameters parameters) {
+    this(parameters, false);
+  }
+
   public IzhikevicNeuron(boolean plotMode) {
-    this(30, 0.02, 0.2, -65, 8, plotMode);
+    this(IzhikevicParameters.REGULAR_SPIKING_PARAMS, plotMode);
   }
 
   public IzhikevicNeuron() {
@@ -57,7 +86,6 @@ public class IzhikevicNeuron extends SpikingNeuron {
 
   @Override
   protected void acceptWeightedSpike(double spikeTime, double weightedSpike) {
-    //weightedSpike = Math.abs(weightedSpike);
     double I = b + weightedSpike * INPUT_MULTIPLIER;
     double deltaV = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * (0.04 * Math.pow(membranePotential, 2) + 5 * membranePotential + 140 - membraneRecovery + I);
     double deltaU = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * a * (b * membranePotential - membraneRecovery);
@@ -65,7 +93,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
     membraneRecovery += deltaU;
     if (plotMode) {
       membranePotentialValues.put(spikeTime, membranePotential);
-      membraneRecoveryValues.put(spikeTime,membraneRecovery);
+      membraneRecoveryValues.put(spikeTime, membraneRecovery);
     }
     lastInputTime = spikeTime;
   }
@@ -76,7 +104,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
     membraneRecovery += d;
     if (plotMode) {
       membranePotentialValues.put(lastInputTime + PLOTTING_TIME_STEP, membranePotential);
-      membraneRecoveryValues.put(lastInputTime + PLOTTING_TIME_STEP,membraneRecovery);
+      membraneRecoveryValues.put(lastInputTime + PLOTTING_TIME_STEP, membraneRecovery);
     }
   }
 
