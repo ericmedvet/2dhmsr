@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Function;
 
 public class IzhikevicNeuron extends SpikingNeuron {
 
-  private enum IzhikevicParameters {
+  public enum IzhikevicParameters {
 
     REGULAR_SPIKING_PARAMS(30, 0.02, 0.2, -65, 8);
 
@@ -29,7 +28,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
 
   }
 
-  private static final double INPUT_MULTIPLIER = 20;
+  private static final double INPUT_MULTIPLIER = 10;
 
   private double membraneRecovery;
   @JsonProperty
@@ -90,6 +89,9 @@ public class IzhikevicNeuron extends SpikingNeuron {
     double deltaV = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * (0.04 * Math.pow(membranePotential, 2) + 5 * membranePotential + 140 - membraneRecovery + I);
     double deltaU = TO_MILLIS_MULTIPLIER * (spikeTime - lastInputTime) * a * (b * membranePotential - membraneRecovery);
     membranePotential += deltaV;
+    //if (membranePotential < c) {
+    //  membranePotential = c;
+    //}
     membraneRecovery += deltaU;
     if (plotMode) {
       membranePotentialValues.put(spikeTime, membranePotential);
