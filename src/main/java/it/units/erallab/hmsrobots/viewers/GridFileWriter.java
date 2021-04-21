@@ -51,6 +51,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private final File file;
 
   private final Grid<String> namesGrid;
+  private final Grid<String> additionalNamesGrid;
   private final Grid<List<Double>> timesGrid;
   private final Grid<Framer> framerGrid;
   private final List<BufferedImage> images;
@@ -64,10 +65,15 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   }
 
   public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
+    this(w, h, startTime, frameRate, encoder, file, namesGrid, null, graphicsDrawer);
+  }
+
+  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, Grid<String> additionalNamesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
     this.w = w;
     this.h = h;
     this.startTime = startTime;
     this.namesGrid = namesGrid;
+    this.additionalNamesGrid = additionalNamesGrid;
     this.frameRate = frameRate;
     this.encoder = encoder;
     this.file = file;
@@ -98,19 +104,32 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
             //obtain viewport
             BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
             //draw
-            graphicsDrawer.draw(
-                snapshot, g,
-                BoundingBox.build(
-                    Point2.build(localW * lX, localH * lY),
-                    Point2.build(localW * (lX + 1), localH * (lY + 1))
-                ),
-                frame, namesGrid.get(lX, lY)
-            );
+            if (additionalNamesGrid != null) {
+              graphicsDrawer.draw(
+                      snapshot, g,
+                      BoundingBox.build(
+                              Point2.build(localW * lX, localH * lY),
+                              Point2.build(localW * (lX + 1), localH * (lY + 1))
+                      ),
+                      frame, namesGrid.get(lX, lY), additionalNamesGrid.get(lX, lY)
+              );
+            } else {
+              graphicsDrawer.draw(
+                      snapshot, g,
+                      BoundingBox.build(
+                              Point2.build(localW * lX, localH * lY),
+                              Point2.build(localW * (lX + 1), localH * (lY + 1))
+                      ),
+                      frame, namesGrid.get(lX, lY)
+              );
+            }
             g.dispose();
           }
         }
       }
-    };
+    }
+
+            ;
   }
 
 
@@ -121,31 +140,31 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     VideoUtils.encodeAndSave(images, frameRate, file, encoder);
     long millis = stopWatch.getTime(TimeUnit.MILLISECONDS);
     L.fine(String.format(
-        "Video saved: %.1fMB written in %.2fs",
-        Files.size(file.toPath()) / 1024f / 1024f,
-        millis / 1000f
+            "Video saved: %.1fMB written in %.2fs",
+            Files.size(file.toPath()) / 1024f / 1024f,
+            millis / 1000f
     ));
   }
 
   public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridFileWriter gridFileWriter = new GridFileWriter(
-        w, h, startTime, frameRate, encoder, file,
-        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
-        ))
+            w, h, startTime, frameRate, encoder, file,
+            Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
+            GraphicsDrawer.build().setConfigurable("drawers", List.of(
+                    it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
+                    it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
+                    it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
+                    SensorReading.build(),
+                    it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
+                    it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+            ))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
-        namedSolutions,
-        task,
-        gridFileWriter,
-        executor
+            namedSolutions,
+            task,
+            gridFileWriter,
+            executor
     );
     runner.run();
     executor.shutdownNow();
