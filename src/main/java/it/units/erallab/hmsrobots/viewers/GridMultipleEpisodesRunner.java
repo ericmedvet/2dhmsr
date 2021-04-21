@@ -74,7 +74,7 @@ public class GridMultipleEpisodesRunner<S> implements Runnable {
             .forEach(entry -> {
               results.add(executor.submit(() -> {
                 L.fine(String.format("Starting %s in position (%d,%d)", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY()));
-                Object outcome = entry.getValue().apply(robotGrid.get(entry.getX(), entry.getY()), gridSnapshotListener.listener(entry.getX(), entry.getY()));
+                Object outcome = entry.getValue().apply(SerializationUtils.clone(robotGrid.get(entry.getX(), entry.getY())), gridSnapshotListener.listener(entry.getX(), entry.getY()));
                 L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
               }));
             });
