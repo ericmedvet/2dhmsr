@@ -16,11 +16,10 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.tasks.Task;
-import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -48,20 +47,15 @@ public class GridMultipleEpisodesRunner<S> implements Runnable {
     }
   }
 
-  private final Grid<S> robotGrid;
-  private final Grid<Task<S, ?>> episodeGrid;
+  private final Grid<Pair<S,Task<S,?>>> solutionsGrid;
 
   private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
   private static final Logger L = Logger.getLogger(GridMultipleEpisodesRunner.class.getName());
 
-  public GridMultipleEpisodesRunner(Grid<S> robotGrid, Grid<Task<S, ?>> episodeGrid, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
-    if (robotGrid.getW() != episodeGrid.getW() || robotGrid.getH() != episodeGrid.getH()) {
-      throw new IllegalArgumentException("Cannot create grid: robot grid and episode grid sizes not matching");
-    }
-    this.robotGrid = robotGrid;
-    this.episodeGrid = episodeGrid;
+  public GridMultipleEpisodesRunner(Grid<Pair<S,Task<S,?>>> solutionsGrid, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
+    this.solutionsGrid = solutionsGrid;
     this.executor = executor;
     this.gridSnapshotListener = gridSnapshotListener;
   }
@@ -70,14 +64,14 @@ public class GridMultipleEpisodesRunner<S> implements Runnable {
   public void run() {
     //start episodes
     List<Future<?>> results = new ArrayList<>();
-    episodeGrid.stream()
-            .forEach(entry -> {
-              results.add(executor.submit(() -> {
-                L.fine(String.format("Starting %s in position (%d,%d)", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY()));
-                Object outcome = entry.getValue().apply(SerializationUtils.clone(robotGrid.get(entry.getX(), entry.getY())), gridSnapshotListener.listener(entry.getX(), entry.getY()));
-                L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
-              }));
-            });
+    solutionsGrid.stream()
+            .forEach(entry -> results.add(executor.submit(() -> {
+              L.fine(String.format("Starting %s in position (%d,%d)", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY()));
+              S solution = entry.getValue().getLeft();
+              Task<S,?> task = entry.getValue().getRight();
+              Object outcome = task.apply(SerializationUtils.clone(solution), gridSnapshotListener.listener(entry.getX(), entry.getY()));
+              L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
+            })));
     //wait for results
     for (Future<?> result : results) {
       try {
