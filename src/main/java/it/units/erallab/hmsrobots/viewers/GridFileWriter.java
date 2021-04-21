@@ -51,7 +51,6 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private final File file;
 
   private final Grid<String> namesGrid;
-  private final Grid<String> additionalNamesGrid;
   private final Grid<List<Double>> timesGrid;
   private final Grid<Framer> framerGrid;
   private final List<BufferedImage> images;
@@ -65,15 +64,10 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   }
 
   public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
-    this(w, h, startTime, frameRate, encoder, file, namesGrid, null, graphicsDrawer);
-  }
-
-  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, Grid<String> additionalNamesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
     this.w = w;
     this.h = h;
     this.startTime = startTime;
     this.namesGrid = namesGrid;
-    this.additionalNamesGrid = additionalNamesGrid;
     this.frameRate = frameRate;
     this.encoder = encoder;
     this.file = file;
@@ -104,25 +98,14 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
             //obtain viewport
             BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
             //draw
-            if (additionalNamesGrid != null) {
-              graphicsDrawer.draw(
-                      snapshot, g,
-                      BoundingBox.build(
-                              Point2.build(localW * lX, localH * lY),
-                              Point2.build(localW * (lX + 1), localH * (lY + 1))
-                      ),
-                      frame, namesGrid.get(lX, lY), additionalNamesGrid.get(lX, lY)
-              );
-            } else {
-              graphicsDrawer.draw(
-                      snapshot, g,
-                      BoundingBox.build(
-                              Point2.build(localW * lX, localH * lY),
-                              Point2.build(localW * (lX + 1), localH * (lY + 1))
-                      ),
-                      frame, namesGrid.get(lX, lY)
-              );
-            }
+            graphicsDrawer.draw(
+                    snapshot, g,
+                    BoundingBox.build(
+                            Point2.build(localW * lX, localH * lY),
+                            Point2.build(localW * (lX + 1), localH * (lY + 1))
+                    ),
+                    frame, namesGrid.get(lX, lY).lines().toArray(String[]::new)
+            );
             g.dispose();
           }
         }
@@ -131,7 +114,6 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
             ;
   }
-
 
   @Override
   public void flush() throws IOException {
