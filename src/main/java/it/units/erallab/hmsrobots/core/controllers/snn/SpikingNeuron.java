@@ -22,7 +22,7 @@ public abstract class SpikingNeuron implements SpikingFunction {
   protected double sumOfIncomingWeights = 0;
 
   @JsonProperty
-  protected final boolean plotMode;
+  protected boolean plotMode;
   protected final SortedMap<Double, Double> membranePotentialValues;
   protected final SortedMap<Double, Double> inputSpikesValues;
 
@@ -104,6 +104,12 @@ public abstract class SpikingNeuron implements SpikingFunction {
 
   public double getLastEvaluatedTime() {
     return lastEvaluatedTime;
+  }
+
+  @Override
+  public void setPlotMode(boolean plotMode) {
+    this.plotMode = plotMode;
+    reset();
   }
 
   @Override

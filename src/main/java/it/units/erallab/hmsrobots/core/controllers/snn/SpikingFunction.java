@@ -14,4 +14,6 @@ public interface SpikingFunction extends Resettable, Serializable {
 
     void setSumOfIncomingWeights(double sumOfIncomingWeights);
 
+    void setPlotMode(boolean plotMode);
+
 }

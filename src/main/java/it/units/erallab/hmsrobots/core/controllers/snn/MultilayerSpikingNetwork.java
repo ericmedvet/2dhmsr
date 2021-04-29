@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, TimedRealFunction, Parametrized, Serializable, Resettable {
 
@@ -139,6 +140,9 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     double[][] incomingWeights = new double[inputs.length][inputs.length];
     for (int i = 0; i < incomingWeights.length; i++) {
       incomingWeights[i][i] = 1;
+      if (neurons[0][i] instanceof IzhikevicNeuron) {
+        incomingWeights[i][i] = 100;
+      }
     }
     // iterating over layers
     for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
@@ -299,6 +303,12 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
       }
     }
     reset();
+  }
+
+  public void setPlotMode(boolean plotMode) {
+    Stream.of(neurons)
+            .flatMap(Stream::of)
+            .forEach(x -> x.setPlotMode(true));
   }
 
   public void setSpikesTracker(boolean spikesTracker) {

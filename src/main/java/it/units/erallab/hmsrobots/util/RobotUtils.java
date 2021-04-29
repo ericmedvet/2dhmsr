@@ -23,7 +23,6 @@ import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.*;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -35,23 +34,57 @@ import static it.units.erallab.hmsrobots.util.Utils.params;
  */
 public class RobotUtils {
 
-  private final static Map<String, BiFunction<Double, Double, Sensor>> PREDEFINED_SENSORS = new TreeMap<>(Map.ofEntries(
-      Map.entry("t", (x, y) -> new Average(new Touch(), 0.25)),
-      Map.entry("a", (x, y) -> new SoftNormalization(new AreaRatio())),
-      Map.entry("r", (x, y) -> new SoftNormalization(new Angle())),
-      Map.entry("vx", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X), 0.5))),
-      Map.entry("vy", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.Y), 0.5))),
-      Map.entry("vxy", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))),
-      Map.entry("ax", (x, y) -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.X)), 0.5))),
-      Map.entry("ay", (x, y) -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.Y)), 0.5))),
-      Map.entry("axy", (x, y) -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)), 0.5))),
-      Map.entry("px", (x, y) -> new Constant(x)),
-      Map.entry("py", (x, y) -> new Constant(y)),
-      Map.entry("m", (x, y) -> new Malfunction()),
-      Map.entry("cpg", (x, y) -> new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1))),
-      Map.entry("l5", (x, y) -> new Lidar(10d, Map.of(lidarSide(x, y), 5))),
-      Map.entry("l1", (x, y) -> new Lidar(10d, Map.of(lidarSide(x, y), 1)))
+  private static class GridPosition {
+    final int x;
+    final int y;
+    final int width;
+    final int height;
+
+    public GridPosition(int x, int y, int width, int height) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+    }
+  }
+
+  private final static Map<String, Function<GridPosition, Sensor>> PREDEFINED_SENSORS = new TreeMap<>(Map.ofEntries(
+      Map.entry("t", p -> new Average(new Touch(), 0.25)),
+      Map.entry("a", p -> new SoftNormalization(new AreaRatio())),
+      Map.entry("r", p -> new SoftNormalization(new Angle())),
+      Map.entry("vx", p -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X), 0.5))),
+      Map.entry("vy", p -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.Y), 0.5))),
+      Map.entry("vxy", p -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))),
+      Map.entry("ax", p -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.X)), 0.5))),
+      Map.entry("ay", p -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.Y)), 0.5))),
+      Map.entry("axy", p -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)), 0.5))),
+      Map.entry("px", p -> new Constant((double) p.x / ((double) p.width - 1d))),
+      Map.entry("py", p -> new Constant((double) p.y / ((double) p.height - 1d))),
+      Map.entry("m", p -> new Malfunction()),
+      Map.entry("cpg", p -> new Normalization(new TimeFunction(t -> Math.sin(2 * Math.PI * -1 * t), -1, 1))),
+      Map.entry("l5", p -> new Lidar(10d, Map.of(lidarSide((double) p.x / ((double) p.width - 1d), (double) p.y / ((double) p.height - 1d)), 5))),
+      Map.entry("l1", p -> new Lidar(10d, Map.of(lidarSide((double) p.x / ((double) p.width - 1d), (double) p.y / ((double) p.height - 1d)), 1))),
+      Map.entry("lf5", p -> createLidar(p, 5, 1))
   ));
+
+  private static Lidar createLidar(GridPosition gridPosition, int numberOfRays, int l) {
+    double voxelSize = 3;
+    double verticalDistance = gridPosition.y + 0.5;
+    double horizontalDistanceFromBodyEnd = gridPosition.x + 0.5;
+    if (gridPosition.x >= gridPosition.width / 2) {
+      horizontalDistanceFromBodyEnd = gridPosition.width - horizontalDistanceFromBodyEnd;
+    }
+    double maxHorizontalDistance = 2 * l * gridPosition.width + horizontalDistanceFromBodyEnd;
+    double minHorizontalDistance = l * gridPosition.width + horizontalDistanceFromBodyEnd;
+    double rayLength = voxelSize * Math.sqrt(maxHorizontalDistance * maxHorizontalDistance + verticalDistance * verticalDistance);
+    double startAngle = 3 * Math.PI / 2 - Math.atan(minHorizontalDistance / verticalDistance);
+    double endAngle = 3 * Math.PI / 2 - Math.atan(maxHorizontalDistance / verticalDistance);
+    if (gridPosition.x >= gridPosition.width / 2) {
+      startAngle = Math.PI - startAngle;
+      endAngle = Math.PI - endAngle;
+    }
+    return new Lidar(rayLength, startAngle, endAngle, numberOfRays);
+  }
 
   private static Lidar.Side lidarSide(double x, double y) {
     if (y > x && y > (1 - x)) {
@@ -143,6 +176,7 @@ public class RobotUtils {
   public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {
     String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
+    String spineTouchFootSighted = "spinedTouchFootSighted-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniform = "uniform-(?<sensors>(" + String.join("|", PREDEFINED_SENSORS.keySet()) + ")(\\+(" + String.join("|", PREDEFINED_SENSORS.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
@@ -192,6 +226,29 @@ public class RobotUtils {
           }
       );
     }
+    if ((params = params(spineTouchFootSighted, name)) != null) {
+      final Map<String, String> pars = params;
+      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
+      return body -> Grid.create(body.getW(), body.getH(),
+          (x, y) -> {
+            if (!body.get(x, y)) {
+              return null;
+            }
+            return new SensingVoxel(
+                Utils.ofNonNull(
+                    sensor("a", x, y, body),
+                    sensor("m", x, y, body, pars.get("malfunction").equals("t")),
+                    sensor("t", x, y, body, y == 0),
+                    sensor("vxy", x, y, body, y == body.getH() - 1),
+                    sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
+                    sensor("lf5", x, y, body, x == body.getW() - 1)
+                ).stream()
+                    .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
+                    .collect(Collectors.toList())
+            );
+          }
+      );
+    }
     if ((params = params(uniform, name)) != null) {
       final Map<String, String> pars = params;
       double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
@@ -226,7 +283,7 @@ public class RobotUtils {
     if (!condition) {
       return null;
     }
-    return PREDEFINED_SENSORS.get(name).apply((double) x / ((double) body.getW() - 1d), (double) y / ((double) body.getH() - 1d));
+    return PREDEFINED_SENSORS.get(name).apply(new GridPosition(x, y, body.getW(), body.getH()));
   }
 
   public static Grid<Boolean> buildShape(String name) {

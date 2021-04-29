@@ -28,7 +28,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
 
   }
 
-  private static final double INPUT_MULTIPLIER = 10;
+  private static final double INPUT_MULTIPLIER = 15;
 
   private double membraneRecovery;
   @JsonProperty

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Lidar implements Sensor, ReadingAugmenter {
@@ -92,9 +93,20 @@ public class Lidar implements Sensor, ReadingAugmenter {
     Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
+  public static void main(String[] args) {
+    IntStream.range(1, 11).forEach(i ->
+        System.out.println(
+            Arrays.toString(new Lidar(10, Map.of(Side.E, i)).rayDirections))
+    );
+  }
+
   public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
     this(
         rayLength,
+        // uncomment following lines and delete the rest
+        //Arrays.stream(raysPerSide.entrySet().stream()
+        //    .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
+        //    .reduce(new double[]{}, (first, second) -> ArrayUtils.addAll(first, second))).distinct().toArray()
         raysPerSide.entrySet().stream()
             .map(e -> DoubleStream.iterate(
                 e.getKey().getStartAngle() + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue()) / 2d,
@@ -109,6 +121,17 @@ public class Lidar implements Sensor, ReadingAugmenter {
             .mapToDouble(d -> d)
             .toArray()
     );
+  }
+
+  public Lidar(double rayLength, double startAngle, double endAngle, int numberOfRays) {
+    this(rayLength, sampleRangeWithRays(numberOfRays, startAngle, endAngle));
+  }
+
+  private static double[] sampleRangeWithRays(int numberOfRays, double startAngle, double endAngle) {
+    if (numberOfRays == 1) {
+      return new double[]{(endAngle - startAngle) / 2};
+    }
+    return DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1)).limit(numberOfRays).toArray();
   }
 
   @Override
