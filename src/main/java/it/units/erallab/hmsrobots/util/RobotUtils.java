@@ -180,6 +180,7 @@ public class RobotUtils {
     String uniform = "uniform-(?<sensors>(" + String.join("|", PREDEFINED_SENSORS.keySet()) + ")(\\+(" + String.join("|", PREDEFINED_SENSORS.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
+    String bottomTouch = "bottomTouch-(?<noiseSigma>\\d+(\\.\\d+)?)";
     Map<String, String> params;
     if ((params = params(spineTouch, name)) != null) {
       final Map<String, String> pars = params;
@@ -242,6 +243,24 @@ public class RobotUtils {
                     sensor("vxy", x, y, body, y == body.getH() - 1),
                     sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
                     sensor("lf5", x, y, body, x == body.getW() - 1)
+                ).stream()
+                    .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
+                    .collect(Collectors.toList())
+            );
+          }
+      );
+    }
+    if ((params = params(bottomTouch, name)) != null) {
+      final Map<String, String> pars = params;
+      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
+      return body -> Grid.create(body.getW(), body.getH(),
+          (x, y) -> {
+            if (!body.get(x, y)) {
+              return null;
+            }
+            return new SensingVoxel(
+                Utils.ofNonNull(
+                    sensor("t", x, y, body, y == 0)
                 ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
                     .collect(Collectors.toList())

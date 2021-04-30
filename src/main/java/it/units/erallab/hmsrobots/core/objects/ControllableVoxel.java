@@ -139,9 +139,9 @@ public class ControllableVoxel extends Voxel {
     super.act(t);
     //compute energy
     double areaRatio = getAreaRatio();
-    if (((areaRatio > 1d) && (lastAppliedForce < 0)) || ((areaRatio < 1d) && (lastAppliedForce > 0))) { //expanded and expand or shrunk and shrink
-      controlEnergy = controlEnergy + lastAppliedForce * lastAppliedForce;
-    }
+    //if (((areaRatio > 1d) && (lastAppliedForce < 0)) || ((areaRatio < 1d) && (lastAppliedForce > 0))) { //expanded and expand or shrunk and shrink
+    controlEnergy = controlEnergy + lastAppliedForce * lastAppliedForce;
+    //}
   }
 
   @Override
