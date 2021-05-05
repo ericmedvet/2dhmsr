@@ -115,9 +115,10 @@ public class Starter {
   }
 
   public static void main(String[] args) {
+    comb();
     //lShaped();
     //snn();
-    bipeds();
+    //bipeds();
     //rollingOne();
     //jumpingTwo();
     //rollingBall();
@@ -135,6 +136,36 @@ public class Starter {
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )) : null);
+    Robot<?> robot = new Robot<>(
+        new TimeFunctions(Grid.create(5, 5, t -> t > 2 ? 1d : 0d)),
+        body
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        5,
+        Locomotion.createTerrain("flat"),
+        new Settings()
+    );
+    Robot<?> r00 = robot;
+    Robot<?> r01 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
+    Robot<?> r02 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
+    System.out.println(locomotion.apply(r00));
+    System.out.println(locomotion.apply(r01));
+    System.out.println(locomotion.apply(r02));
+    Robot<?> r10 = robot;
+    Robot<?> r11 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
+    Robot<?> r12 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
+    GridOnlineViewer.run(locomotion, List.of(r01, r11, r12));
+    System.out.println(locomotion.apply(r10));
+    System.out.println(locomotion.apply(r11));
+    System.out.println(locomotion.apply(r12));
+    //Robot<?> r21 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
+    //r21.reset();
+  }
+
+  private static void comb() {
+    //one voxel robot
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+a+vxy-0.01").apply(RobotUtils.buildShape("comb-9x4"));
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(5, 5, t -> t > 2 ? 1d : 0d)),
         body

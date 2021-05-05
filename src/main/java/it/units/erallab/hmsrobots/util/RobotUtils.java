@@ -179,6 +179,7 @@ public class RobotUtils {
     String spineTouchFootSighted = "spinedTouchFootSighted-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String footSighted = "footSighted-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniform = "uniform-(?<sensors>(" + String.join("|", PREDEFINED_SENSORS.keySet()) + ")(\\+(" + String.join("|", PREDEFINED_SENSORS.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
+    System.out.println(uniform);
     String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
     String bottomTouch = "bottomTouch-(?<noiseSigma>\\d+(\\.\\d+)?)";
@@ -329,6 +330,9 @@ public class RobotUtils {
     String biped = "biped-(?<w>\\d+)x(?<h>\\d+)";
     String tripod = "tripod-(?<w>\\d+)x(?<h>\\d+)";
     String ball = "ball-(?<d>\\d+)";
+    String comb = "comb-(?<w>\\d+)x(?<h>\\d+)";
+    String monkey = "monkey-4x5";
+    String criticality = "criticality-10x6";
     Map<String, String> params;
     if ((params = params(box, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
@@ -351,6 +355,28 @@ public class RobotUtils {
           d, d,
           (x, y) -> Math.round(Math.sqrt((x - (d - 1) / 2d) * (x - (d - 1) / 2d) + (y - (d - 1) / 2d) * (y - (d - 1) / 2d))) <= (int) Math.floor(d / 2d)
       );
+    }
+    if ((params = params(comb, name)) != null) {
+      int w = Integer.parseInt(params.get("w"));
+      int h = Integer.parseInt(params.get("h"));
+      return Grid.create(w, h, (x, y) -> (x % 2 == 1 || (y != 0 && y != h - 1)));
+    }
+    if (params(monkey, name) != null) {
+      int w = 4;
+      int h = 5;
+      return Grid.create(w, h, (x, y) -> (x == 0 && (y == 0 || y == 3)) ||
+          (x == 1) ||
+          (x == 2 && (y == 1 || y == 2 || y == 4)) ||
+          (x == 3 && y == 4));
+    }
+    if (params(criticality, name) != null) {
+      int w = 10;
+      int h = 6;
+      return Grid.create(w, h, (x, y) -> (y == 5 && ((x >= 0 && x <= 3) || x == 5 || x == 7)) ||
+          (y == 4 && x >= 3) ||
+          (y == 3 && (x == 4 || x == 7)) ||
+          x == 3 ||
+          (x == 7 && y >= 1));
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
