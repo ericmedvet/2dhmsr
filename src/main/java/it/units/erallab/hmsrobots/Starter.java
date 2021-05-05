@@ -115,9 +115,9 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    lShaped();
+    //lShaped();
     //snn();
-    //bipeds();
+    bipeds();
     //rollingOne();
     //jumpingTwo();
     //rollingBall();
