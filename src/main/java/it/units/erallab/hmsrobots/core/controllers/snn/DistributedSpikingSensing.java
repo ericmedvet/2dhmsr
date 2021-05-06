@@ -144,6 +144,7 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
       entry.getValue().applyForce(force);
       System.arraycopy(outputs, 1, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, this.signals * Dir.values().length);
     }
+    previousTime = t;
   }
 
   @SuppressWarnings("unchecked")
@@ -163,8 +164,8 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
       }
       c = c + signals;
     }
-    for(int i=0; i<values.length; i++){
-      if(values[i] == null){
+    for (int i = 0; i < values.length; i++) {
+      if (values[i] == null) {
         values[i] = new TreeSet<>();
       }
     }
