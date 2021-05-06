@@ -123,6 +123,10 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
     return multilayerSpikingNetwork.getOutputDimension();
   }
 
+  public MultilayerSpikingNetwork getMultilayerSpikingNetwork() {
+    return multilayerSpikingNetwork;
+  }
+
   private static ValueToSpikeTrainConverter[] createInputConverters(int nOfInputs, ValueToSpikeTrainConverter valueToSpikeTrainConverter) {
     ValueToSpikeTrainConverter[] valueToSpikeTrainConverters = new ValueToSpikeTrainConverter[nOfInputs];
     IntStream.range(0, nOfInputs).forEach(i -> {
