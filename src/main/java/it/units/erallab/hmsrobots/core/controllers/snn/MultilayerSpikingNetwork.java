@@ -22,6 +22,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
   private boolean spikesTracker = false;
   private final List<Double>[][] spikes;
 
+  @SuppressWarnings("unchecked")
   @JsonCreator
   public MultilayerSpikingNetwork(
       @JsonProperty("neurons") SpikingFunction[][] neurons,

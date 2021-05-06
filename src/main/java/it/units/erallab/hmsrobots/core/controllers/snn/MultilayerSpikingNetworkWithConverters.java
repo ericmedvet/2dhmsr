@@ -28,7 +28,6 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
 
   private double previousApplicationTime = 0d;
 
-  @SuppressWarnings("unchecked")
   @JsonCreator
   public MultilayerSpikingNetworkWithConverters(
       @JsonProperty("multilayerSpikingNetwork") MultilayerSpikingNetwork multilayerSpikingNetwork,
@@ -168,6 +167,7 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
 
   @Override
   public void reset() {
+    multilayerSpikingNetwork.reset();
     previousApplicationTime = 0d;
     IntStream.range(0, spikeTrainToValueConverters.length).forEach(i ->
         spikeTrainToValueConverters[i].reset());
