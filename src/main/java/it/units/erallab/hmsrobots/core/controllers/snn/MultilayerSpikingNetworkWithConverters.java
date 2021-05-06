@@ -11,13 +11,12 @@ import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpi
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
-public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction, Parametrized, Serializable, Resettable {
+public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction, Parametrized, Resettable {
 
   @JsonProperty
   private final MultilayerSpikingNetwork multilayerSpikingNetwork;
