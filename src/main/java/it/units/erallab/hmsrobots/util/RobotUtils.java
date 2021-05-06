@@ -179,7 +179,6 @@ public class RobotUtils {
     String spineTouchFootSighted = "spinedTouchFootSighted-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String footSighted = "footSighted-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniform = "uniform-(?<sensors>(" + String.join("|", PREDEFINED_SENSORS.keySet()) + ")(\\+(" + String.join("|", PREDEFINED_SENSORS.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
-    System.out.println(uniform);
     String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
     String bottomTouch = "bottomTouch-(?<noiseSigma>\\d+(\\.\\d+)?)";

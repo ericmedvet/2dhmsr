@@ -34,6 +34,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
   private boolean spikesTracker = false;
   private final List<Double>[][] spikes;
 
+  @SuppressWarnings("unchecked")
   @JsonCreator
   public MultilayerSpikingNetwork(
           @JsonProperty("neurons") SpikingFunction[][] neurons,
@@ -128,6 +129,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     return spikingFunctions;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public SortedSet<Double>[] apply(double t, SortedSet<Double>[] inputs) {
     double deltaT = t - previousApplicationTime;
@@ -172,6 +174,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Ti
     return thisLayersOutputs;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public double[] apply(double t, double[] input) {
     double deltaT = t - previousApplicationTime;

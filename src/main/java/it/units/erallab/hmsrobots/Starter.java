@@ -115,10 +115,10 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    comb();
+    //comb();
     //lShaped();
     //snn();
-    //bipeds();
+    bipeds();
     //rollingOne();
     //jumpingTwo();
     //rollingBall();
