@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.controllers.snn.*;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.MovingAverageSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.UniformWithMemoryValueToSpikeTrainConverter;
@@ -198,7 +199,7 @@ public class Starter {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-4x3"));
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultilayerSpikingNetwork msn = new MultilayerSpikingNetwork(
+    MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(
         centralizedSensing.nOfInputs(),
         new int[]{2},
         centralizedSensing.nOfOutputs(),
@@ -250,7 +251,7 @@ public class Starter {
     );
     //distribute sensing
     Random random = new Random();
-    DistributedSensing distributedSensing = new DistributedSensing(body, 1);
+    /*DistributedSensing distributedSensing = new DistributedSensing(body, 1);
     for (Grid.Entry<? extends SensingVoxel> entry : body) {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
           MultiLayerPerceptron.ActivationFunction.TANH,
@@ -266,7 +267,25 @@ public class Starter {
     Robot<SensingVoxel> distHetero = new Robot<>(
         distributedSensing,
         SerializationUtils.clone(body)
+    );*/
+    DistributedSpikingSensing distributedSpikingSensing = new DistributedSpikingSensing(body, 1, new LIFNeuronWithHomeostasis(), new UniformWithMemoryValueToSpikeTrainConverter(), new AverageFrequencySpikeTrainToValueConverter());
+    for (Grid.Entry<? extends SensingVoxel> entry : body) {
+      MultilayerSpikingNetwork multilayerSpikingNetwork = new MultilayerSpikingNetwork(
+          distributedSpikingSensing.nOfInputs(entry.getX(), entry.getY()),
+          new int[]{2},
+          distributedSpikingSensing.nOfOutputs(entry.getX(), entry.getY()),
+          new LIFNeuronWithHomeostasis()
+      );
+      double[] ws = multilayerSpikingNetwork.getParams();
+      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 8d - 3d);
+      multilayerSpikingNetwork.setParams(ws);
+      distributedSpikingSensing.getFunctions().set(entry.getX(), entry.getY(), multilayerSpikingNetwork);
+    }
+    Robot<SensingVoxel> distHetero = new Robot<>(
+        distributedSpikingSensing,
+        SerializationUtils.clone(body)
     );
+
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body, true);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
@@ -279,7 +298,7 @@ public class Starter {
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
-    MultilayerSpikingNetwork msn = new MultilayerSpikingNetwork(
+    MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(
         centralizedSensing.nOfInputs(), new int[]{2}, centralizedSensing.nOfOutputs(), new LIFNeuron()
     );
     double[] msnWeights = msn.getParams();
@@ -441,7 +460,7 @@ public class Starter {
     weights[0][0][1] = 0;
     weights[0][1][0] = 0;
     weights[0][1][1] = 0;
-    MultilayerSpikingNetwork m = new MultilayerSpikingNetwork(spikingNeurons, weights,
+    MultilayerSpikingNetworkWithConverters m = new MultilayerSpikingNetworkWithConverters(spikingNeurons, weights,
         new ValueToSpikeTrainConverter[]{
             new UniformWithMemoryValueToSpikeTrainConverter(50),
             new UniformWithMemoryValueToSpikeTrainConverter(50)},

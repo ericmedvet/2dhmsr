@@ -192,7 +192,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
         int index = Dir.adjacent(dir).index;
         System.arraycopy(lastSignals, index * signals, values, c, signals);
       }
-      c = c + 1;
+      c = c + signals;
     }
     return values;
   }
@@ -205,6 +205,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     for (Pair<Sensor, double[]> sensorPair : sensorsReadings) {
       double[] values = sensorPair.getValue();
       System.arraycopy(values, 0, flatValues, c, values.length);
+      c = c + values.length;
     }
     return flatValues;
   }
