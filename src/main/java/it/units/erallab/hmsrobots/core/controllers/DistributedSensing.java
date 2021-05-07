@@ -120,15 +120,15 @@ public class DistributedSensing implements Controller<SensingVoxel> {
   public DistributedSensing(Grid<? extends SensingVoxel> voxels, int signals) {
     this(
         signals,
-        Grid.create(voxels, v -> (v == null) ? 0 : (signals * Dir.values().length + v.getSensors().stream().mapToInt(s -> s.domains().length).sum())),
-        Grid.create(voxels, v -> (v == null) ? 0 : (1 + signals * Dir.values().length)),
+        Grid.create(voxels, v -> (v == null) ? 0 : nOfInputs(v, signals)),
+        Grid.create(voxels, v -> (v == null) ? 0 : nOfOutputs(v, signals)),
         Grid.create(
             voxels.getW(),
             voxels.getH(),
             (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
                 (double[] in) -> new double[1 + signals * Dir.values().length],
-                signals * Dir.values().length + voxels.get(x, y).getSensors().stream().mapToInt(s -> s.domains().length).sum(),
-                1 + signals * Dir.values().length)
+                nOfInputs(voxels.get(x, y), signals),
+                nOfOutputs(voxels.get(x, y), signals))
             )
         )
     );
@@ -180,16 +180,19 @@ public class DistributedSensing implements Controller<SensingVoxel> {
 
   private double[] getLastSignals(int x, int y) {
     double[] values = new double[signals * Dir.values().length];
+    if (signals <= 0) {
+      return values;
+    }
     int c = 0;
-    for (int i = 0; i < Dir.values().length; i++) {
-      int adjacentX = x + Dir.values()[i].dx;
-      int adjacentY = y + Dir.values()[i].dy;
+    for (Dir dir : Dir.values()) {
+      int adjacentX = x + dir.dx;
+      int adjacentY = y + dir.dy;
       double[] lastSignals = lastSignalsGrid.get(adjacentX, adjacentY);
-      if ((lastSignals != null) && (signals > 0)) {
-        int index = Dir.adjacent(Dir.values()[i]).index;
+      if (lastSignals != null) {
+        int index = Dir.adjacent(dir).index;
         System.arraycopy(lastSignals, index * signals, values, c, signals);
       }
-      c = c + 1;
+      c = c + signals;
     }
     return values;
   }
@@ -202,6 +205,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     for (Pair<Sensor, double[]> sensorPair : sensorsReadings) {
       double[] values = sensorPair.getValue();
       System.arraycopy(values, 0, flatValues, c, values.length);
+      c = c + values.length;
     }
     return flatValues;
   }
