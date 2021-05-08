@@ -56,11 +56,13 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
   private final Grid<Integer> nOfOutputGrid;
   @JsonProperty
   private final Grid<MultivariateSpikingFunction> functions;
+  @JsonProperty
+  private final Grid<SpikeTrainToValueConverter> outputConverters;
+  @JsonProperty
+  private final Grid<ValueToSpikeTrainConverter[]> inputConverters;
 
   private double previousTime = 0;
   private final Grid<SortedSet<Double>[]> lastSignalsGrid;
-  private final Grid<SpikeTrainToValueConverter> outputConverters;
-  private final Grid<ValueToSpikeTrainConverter[]> inputConverters;
 
   @SuppressWarnings("unchecked")
   @JsonCreator
