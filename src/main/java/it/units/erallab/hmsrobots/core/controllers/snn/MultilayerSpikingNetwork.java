@@ -225,10 +225,12 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     reset();
   }
 
+  @Override
   public int getInputDimension() {
     return neurons[0].length;
   }
 
+  @Override
   public int getOutputDimension() {
     return neurons[neurons.length - 1].length;
   }
