@@ -14,13 +14,13 @@ import java.util.stream.Stream;
 public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Parametrized {
 
   @JsonProperty
-  private final SpikingFunction[][] neurons;    // layer + position in the layer
+  protected final SpikingFunction[][] neurons;    // layer + position in the layer
   @JsonProperty
-  private final double[][][] weights;           // layer + start neuron + end neuron
-  private double previousApplicationTime = 0d;
+  protected final double[][][] weights;           // layer + start neuron + end neuron
+  protected double previousApplicationTime = 0d;
 
-  private boolean spikesTracker = false;
-  private final List<Double>[][] spikes;
+  protected boolean spikesTracker = false;
+  protected final List<Double>[][] spikes;
 
   @SuppressWarnings("unchecked")
   @JsonCreator
@@ -66,7 +66,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     this(neurons, unflat(weights, neurons));
   }
 
-  private static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {
+  protected static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {
     SpikingFunction[][] spikingFunctions = new SpikingFunction[neuronsPerLayer.length][];
     for (int i = 0; i < neuronsPerLayer.length; i++) {
       spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
@@ -78,7 +78,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     return spikingFunctions;
   }
 
-  private static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
+  protected static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
     SpikingFunction[][] spikingFunctions = new SpikingFunction[neuronsPerLayer.length][];
     for (int i = 0; i < neuronsPerLayer.length; i++) {
       spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
@@ -96,7 +96,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     if (inputs.length != neurons[0].length) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
     }
-    SortedSet<Double>[] previousLayerOutputs = inputs;
+    SortedSet<Double>[] previousLayersOutputs = inputs;
     SortedSet<Double>[] thisLayersOutputs = null;
     // destination neuron, array of incoming weights
     double[][] incomingWeights = new double[inputs.length][inputs.length];
@@ -111,8 +111,8 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
       SpikingFunction[] layer = neurons[layerIndex];
       thisLayersOutputs = new SortedSet[layer.length];
       for (int neuronIndex = 0; neuronIndex < layer.length; neuronIndex++) {
-        SortedMap<Double, Double> weightedInputSpikeTrain = createWeightedSpikeTrain(previousLayerOutputs, incomingWeights[neuronIndex]);
-        layer[neuronIndex].setSumOfIncomingWeights(Arrays.stream(incomingWeights[neuronIndex]).sum());
+        SortedMap<Double, Double> weightedInputSpikeTrain = createWeightedSpikeTrain(previousLayersOutputs, incomingWeights[neuronIndex]);
+        layer[neuronIndex].setSumOfIncomingWeights(Arrays.stream(incomingWeights[neuronIndex]).sum());  // for homeostasis
         thisLayersOutputs[neuronIndex] = layer[neuronIndex].compute(weightedInputSpikeTrain, t);
         if (spikesTracker) {
           spikes[layerIndex][neuronIndex].addAll(
@@ -129,12 +129,12 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
           incomingWeights[i][j] = weights[layerIndex][j][i];
         }
       }
-      previousLayerOutputs = thisLayersOutputs;
+      previousLayersOutputs = thisLayersOutputs;
     }
     return thisLayersOutputs;
   }
 
-  private SortedMap<Double, Double> createWeightedSpikeTrain(SortedSet<Double>[] inputs, double[] weights) {
+  protected SortedMap<Double, Double> createWeightedSpikeTrain(SortedSet<Double>[] inputs, double[] weights) {
     SortedMap<Double, Double> weightedSpikeTrain = new TreeMap<>();
     for (int i = 0; i < inputs.length; i++) {
       double weight = weights[i];
