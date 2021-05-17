@@ -123,7 +123,6 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
             for (double tOut : absoluteTimeOutputSpikes[layerIndex][neuronIndex]) {
               for (double tIn : previousOutputs) {
                 if (Math.abs(tOut - tIn) <= STDP_LEARNING_WINDOW) {
-                  System.out.printf("Layer: %d, previous neuron: %d, current neuron: %d\n", layerIndex, previousNeuronIndex, neuronIndex);
                   deltaW += learningRules[layerIndex-1][previousNeuronIndex][neuronIndex].computeDeltaW(tOut - tIn);
                 }
               }
