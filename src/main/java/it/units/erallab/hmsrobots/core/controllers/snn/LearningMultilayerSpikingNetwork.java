@@ -22,6 +22,7 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
   private final SortedSet<Double>[][] previousTimeOutputSpikes; // absolute time
 
   @JsonCreator
+  @SuppressWarnings("unchecked")
   public LearningMultilayerSpikingNetwork(
       @JsonProperty("neurons") SpikingFunction[][] neurons,
       @JsonProperty("weights") double[][][] weights,
@@ -37,6 +38,7 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[][][] weights) {
     super(neurons, weights);
     learningRules = new STDPLearningRule[weights.length][][];
@@ -63,12 +65,16 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction))], spikingFunction);
   }
 
-  public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights);
+  public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, STDPLearningRule[] learningRules) {
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights, learningRules);
   }
 
   public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
+  }
+
+  public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights, STDPLearningRule[] learningRules) {
+    this(neurons, unflat(weights, neurons), unflat(learningRules,neurons));
   }
 
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
@@ -117,11 +123,12 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
             for (double tOut : absoluteTimeOutputSpikes[layerIndex][neuronIndex]) {
               for (double tIn : previousOutputs) {
                 if (Math.abs(tOut - tIn) <= STDP_LEARNING_WINDOW) {
-                  deltaW += learningRules[layerIndex][previousNeuronIndex][neuronIndex].computeDeltaW(tOut - tIn);
+                  System.out.printf("Layer: %d, previous neuron: %d, current neuron: %d\n", layerIndex, previousNeuronIndex, neuronIndex);
+                  deltaW += learningRules[layerIndex-1][previousNeuronIndex][neuronIndex].computeDeltaW(tOut - tIn);
                 }
               }
             }
-            weights[layerIndex][previousNeuronIndex][neuronIndex] += deltaW;
+            weights[layerIndex-1][previousNeuronIndex][neuronIndex] += deltaW;
           }
         }
         if (spikesTracker) {
@@ -145,6 +152,40 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
       System.arraycopy(absoluteTimeOutputSpikes[layer], 0, previousTimeOutputSpikes[layer], 0, absoluteTimeOutputSpikes[layer].length);
     }
     return thisLayersOutputs;
+  }
+
+  // for each layer, for each neuron, list incoming weights in order
+  public static STDPLearningRule[] flat(STDPLearningRule[][][] unflatRules, SpikingFunction[][] neurons) {
+    STDPLearningRule[] flatRules = new STDPLearningRule[countWeights(neurons)];
+    int c = 0;
+    for (int i = 1; i < neurons.length; i++) {
+      for (int j = 0; j < neurons[i].length; j++) {
+        for (int k = 0; k < neurons[i - 1].length; k++) {
+          flatRules[c] = unflatRules[i - 1][k][j];
+          c++;
+        }
+      }
+    }
+    return flatRules;
+  }
+
+  public static STDPLearningRule[][][] unflat(STDPLearningRule[] flatRules, SpikingFunction[][] neurons) {
+    STDPLearningRule[][][] unflatRules = new STDPLearningRule[neurons.length - 1][][];
+    int c = 0;
+    for (int i = 1; i < neurons.length; i++) {
+      unflatRules[i - 1] = new STDPLearningRule[neurons[i - 1].length][neurons[i].length];
+      for (int j = 0; j < neurons[i].length; j++) {
+        for (int k = 0; k < neurons[i - 1].length; k++) {
+          unflatRules[i - 1][k][j] = flatRules[c];
+          c++;
+        }
+      }
+    }
+    return unflatRules;
+  }
+
+  public STDPLearningRule[][][] getLearningRules() {
+    return learningRules;
   }
 
 }

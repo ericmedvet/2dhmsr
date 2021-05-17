@@ -127,7 +127,7 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
     return multilayerSpikingNetwork;
   }
 
-  private static ValueToSpikeTrainConverter[] createInputConverters(int nOfInputs, ValueToSpikeTrainConverter valueToSpikeTrainConverter) {
+  protected static ValueToSpikeTrainConverter[] createInputConverters(int nOfInputs, ValueToSpikeTrainConverter valueToSpikeTrainConverter) {
     ValueToSpikeTrainConverter[] valueToSpikeTrainConverters = new ValueToSpikeTrainConverter[nOfInputs];
     IntStream.range(0, nOfInputs).forEach(i -> {
       valueToSpikeTrainConverters[i] = SerializationUtils.clone(valueToSpikeTrainConverter);
@@ -136,7 +136,7 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
     return valueToSpikeTrainConverters;
   }
 
-  private static SpikeTrainToValueConverter[] createOutputConverters(int nOfOutputs, SpikeTrainToValueConverter spikeTrainToValueConverter) {
+  protected static SpikeTrainToValueConverter[] createOutputConverters(int nOfOutputs, SpikeTrainToValueConverter spikeTrainToValueConverter) {
     SpikeTrainToValueConverter[] spikeTrainToValueConverters = new SpikeTrainToValueConverter[nOfOutputs];
     IntStream.range(0, nOfOutputs).forEach(i -> {
       spikeTrainToValueConverters[i] = SerializationUtils.clone(spikeTrainToValueConverter);
