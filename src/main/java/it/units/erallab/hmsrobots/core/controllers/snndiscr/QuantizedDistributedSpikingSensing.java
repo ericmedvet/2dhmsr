@@ -129,12 +129,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
       //get inputs
       int[][] signals = getLastSignals(entry.getX(), entry.getY());
       int[][] sensorValues = convertSensorReadings(entry.getValue().getLastReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
-      int[][] inputs = new int[signals.length][signals[0].length];
-      for (int time = 0; time < inputs[0].length; time++) {
-        for (int input = 0; input < inputs.length; input++) {
-          inputs[input][time] = signals[input][time] + sensorValues[input][time];
-        }
-      }
+      int[][] inputs = ArrayUtils.addAll(signals,sensorValues);
       //compute outputs
       QuantizedMultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
       int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + this.signals * Dir.values().length][ARRAY_SIZE];
