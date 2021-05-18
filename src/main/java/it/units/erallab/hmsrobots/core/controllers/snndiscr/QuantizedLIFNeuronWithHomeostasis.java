@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class LIFNeuronWithHomeostasis extends LIFNeuron {
+public class QuantizedLIFNeuronWithHomeostasis extends QuantizedLIFNeuron {
 
   @JsonProperty
   private double startingTheta;
@@ -19,7 +19,7 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
   private final SortedMap<Double, Double> thresholdValues;
 
   @JsonCreator
-  public LIFNeuronWithHomeostasis(
+  public QuantizedLIFNeuronWithHomeostasis(
           @JsonProperty("restingPotential") double restingPotential,
           @JsonProperty("thresholdPotential") double thresholdPotential,
           @JsonProperty("lambdaDecay") double lambdaDecay,
@@ -36,19 +36,19 @@ public class LIFNeuronWithHomeostasis extends LIFNeuron {
     }
   }
 
-  public LIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay, double theta) {
+  public QuantizedLIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay, double theta) {
     this(restingPotential, thresholdPotential, lambdaDecay, theta, false);
   }
 
-  public LIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay) {
+  public QuantizedLIFNeuronWithHomeostasis(double restingPotential, double thresholdPotential, double lambdaDecay) {
     this(restingPotential, thresholdPotential, lambdaDecay, 0d, false);
   }
 
-  public LIFNeuronWithHomeostasis(boolean plotMode) {
+  public QuantizedLIFNeuronWithHomeostasis(boolean plotMode) {
     this(0, 1.0, 0.01, 0d, plotMode);
   }
 
-  public LIFNeuronWithHomeostasis() {
+  public QuantizedLIFNeuronWithHomeostasis() {
     this(false);
   }
 

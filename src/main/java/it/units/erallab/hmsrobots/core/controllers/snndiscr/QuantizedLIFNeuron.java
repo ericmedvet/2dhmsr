@@ -3,13 +3,13 @@ package it.units.erallab.hmsrobots.core.controllers.snndiscr;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LIFNeuron extends SpikingNeuron {
+public class QuantizedLIFNeuron extends QuantizedSpikingNeuron {
 
   @JsonProperty
   private final double lambdaDecay;
 
   @JsonCreator
-  public LIFNeuron(
+  public QuantizedLIFNeuron(
           @JsonProperty("restingPotential") double restingPotential,
           @JsonProperty("thresholdPotential") double thresholdPotential,
           @JsonProperty("lambdaDecay") double lambdaDecay,
@@ -19,15 +19,15 @@ public class LIFNeuron extends SpikingNeuron {
     this.lambdaDecay = lambdaDecay;
   }
 
-  public LIFNeuron(double restingPotential, double thresholdPotential, double lambdaDecay){
+  public QuantizedLIFNeuron(double restingPotential, double thresholdPotential, double lambdaDecay){
     this(restingPotential,thresholdPotential,lambdaDecay,false);
   }
 
-  public LIFNeuron(boolean plotMode) {
+  public QuantizedLIFNeuron(boolean plotMode) {
     this(0, 1.0, 0.01, plotMode);
   }
 
-  public LIFNeuron(){
+  public QuantizedLIFNeuron(){
     this(false);
   }
 

@@ -7,7 +7,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
-public abstract class SpikingNeuron implements SpikingFunction {
+public abstract class QuantizedSpikingNeuron implements QuantizedSpikingFunction {
 
   protected static final double TO_MILLIS_MULTIPLIER = 1000;
 
@@ -28,7 +28,7 @@ public abstract class SpikingNeuron implements SpikingFunction {
   protected static final double PLOTTING_TIME_STEP = 0.000000000001;
 
   @JsonCreator
-  public SpikingNeuron(
+  public QuantizedSpikingNeuron(
       @JsonProperty("restingPotential") double restingPotential,
       @JsonProperty("thresholdPotential") double thresholdPotential,
       @JsonProperty("plotMode") boolean plotMode
@@ -44,7 +44,7 @@ public abstract class SpikingNeuron implements SpikingFunction {
     }
   }
 
-  public SpikingNeuron(double restingPotential, double thresholdPotential) {
+  public QuantizedSpikingNeuron(double restingPotential, double thresholdPotential) {
     this(restingPotential, thresholdPotential, false);
   }
 

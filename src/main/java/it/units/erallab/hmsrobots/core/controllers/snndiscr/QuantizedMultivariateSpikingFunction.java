@@ -5,7 +5,7 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
 
 import java.io.Serializable;
 
-public interface MultivariateSpikingFunction extends Resettable, Serializable {
+public interface QuantizedMultivariateSpikingFunction extends Resettable, Serializable {
 
   int[][] apply(double t, int[][] inputs);
 
@@ -13,8 +13,8 @@ public interface MultivariateSpikingFunction extends Resettable, Serializable {
 
   int getOutputDimension();
 
-  static MultivariateSpikingFunction build(SerializableFunction<int[][], int[][]> function, int inputDimension, int outputDimension) {
-    return new MultivariateSpikingFunction() {
+  static QuantizedMultivariateSpikingFunction build(SerializableFunction<int[][], int[][]> function, int inputDimension, int outputDimension) {
+    return new QuantizedMultivariateSpikingFunction() {
       @Override
       public int[][] apply(double t, int[][] inputs) {
         return function.apply(inputs);

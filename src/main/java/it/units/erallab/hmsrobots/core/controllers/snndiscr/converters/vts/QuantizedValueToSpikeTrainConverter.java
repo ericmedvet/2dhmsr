@@ -1,4 +1,4 @@
-package it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv;
+package it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.controllers.Resettable;
@@ -7,13 +7,15 @@ import java.io.Serializable;
 import java.util.SortedSet;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
-public interface SpikeTrainToValueConverter extends Serializable, Resettable {
+public interface QuantizedValueToSpikeTrainConverter extends Serializable, Resettable {
 
-  double LOWER_BOUND = -1;
+  double LOWER_BOUND = 0;
   double UPPER_BOUND = 1;
   double DEFAULT_FREQUENCY = 50;
+  double MIN_FREQUENCY = 5;
+  int ARRAY_SIZE = 16;
 
-  double convert(int[] spikeTrain, double timeWindowSize);
+  int[] convert(double value, double timeWindowSize, double timeWindowEnd);
 
   void setFrequency(double frequency);
 
@@ -21,8 +23,7 @@ public interface SpikeTrainToValueConverter extends Serializable, Resettable {
   default void reset() {
   }
 
-  default double normalizeValue(double value) {
-    value = value * 2 - 1;
+  default double clipInputValue(double value) {
     return Math.max(Math.min(UPPER_BOUND, value), LOWER_BOUND);
   }
 

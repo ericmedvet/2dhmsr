@@ -3,10 +3,7 @@ package it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConverter {
+public class QuantizedUniformValueToSpikeTrainConverter implements QuantizedValueToSpikeTrainConverter {
 
   @JsonProperty
   protected double frequency; // hertz
@@ -14,13 +11,13 @@ public class UniformValueToSpikeTrainConverter implements ValueToSpikeTrainConve
   protected double minFrequency = MIN_FREQUENCY;
 
   @JsonCreator
-  public UniformValueToSpikeTrainConverter(
+  public QuantizedUniformValueToSpikeTrainConverter(
       @JsonProperty("frequency") double frequency
   ) {
     this.frequency = frequency;
   }
 
-  public UniformValueToSpikeTrainConverter() {
+  public QuantizedUniformValueToSpikeTrainConverter() {
     this(DEFAULT_FREQUENCY);
   }
 

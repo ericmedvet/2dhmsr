@@ -3,21 +3,18 @@ package it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-public class UniformWithMemoryValueToSpikeTrainConverter extends UniformValueToSpikeTrainConverter {
+public class QuantizedUniformWithMemoryValueToSpikeTrainConverter extends QuantizedUniformValueToSpikeTrainConverter {
 
   private double lastSpikeTime = 0;
 
   @JsonCreator
-  public UniformWithMemoryValueToSpikeTrainConverter(
+  public QuantizedUniformWithMemoryValueToSpikeTrainConverter(
           @JsonProperty("frequency") double frequency
   ) {
     super(frequency);
   }
 
-  public UniformWithMemoryValueToSpikeTrainConverter() {
+  public QuantizedUniformWithMemoryValueToSpikeTrainConverter() {
   }
 
   @Override

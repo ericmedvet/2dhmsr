@@ -4,21 +4,20 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
-import java.util.SortedSet;
 
-public class AverageFrequencySpikeTrainToValueConverter implements SpikeTrainToValueConverter {
+public class QuantizedAverageFrequencySpikeTrainToValueConverter implements QuantizedSpikeTrainToValueConverter {
 
   @JsonProperty
   private double frequency; // hertz
 
   @JsonCreator
-  public AverageFrequencySpikeTrainToValueConverter(
+  public QuantizedAverageFrequencySpikeTrainToValueConverter(
           @JsonProperty("frequency") double frequency
   ) {
     this.frequency = frequency;
   }
 
-  public AverageFrequencySpikeTrainToValueConverter() {
+  public QuantizedAverageFrequencySpikeTrainToValueConverter() {
     this(DEFAULT_FREQUENCY);
   }
 

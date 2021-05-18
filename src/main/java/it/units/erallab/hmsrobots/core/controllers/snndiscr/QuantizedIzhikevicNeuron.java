@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class IzhikevicNeuron extends SpikingNeuron {
+public class QuantizedIzhikevicNeuron extends QuantizedSpikingNeuron {
 
   public enum IzhikevicParameters {
 
@@ -43,7 +43,7 @@ public class IzhikevicNeuron extends SpikingNeuron {
   private final SortedMap<Double, Double> membraneRecoveryValues;
 
   @JsonCreator
-  public IzhikevicNeuron(
+  public QuantizedIzhikevicNeuron(
           @JsonProperty("thresholdPotential") double thresholdPotential,
           @JsonProperty("a") double a,
           @JsonProperty("b") double b,
@@ -63,23 +63,23 @@ public class IzhikevicNeuron extends SpikingNeuron {
     }
   }
 
-  public IzhikevicNeuron(double thresholdPotential, double a, double b, double c, double d) {
+  public QuantizedIzhikevicNeuron(double thresholdPotential, double a, double b, double c, double d) {
     this(thresholdPotential, a, b, c, d, false);
   }
 
-  public IzhikevicNeuron(IzhikevicParameters parameters, boolean plotMode) {
+  public QuantizedIzhikevicNeuron(IzhikevicParameters parameters, boolean plotMode) {
     this(parameters.threshold, parameters.a, parameters.b, parameters.c, parameters.d, plotMode);
   }
 
-  public IzhikevicNeuron(IzhikevicParameters parameters) {
+  public QuantizedIzhikevicNeuron(IzhikevicParameters parameters) {
     this(parameters, false);
   }
 
-  public IzhikevicNeuron(boolean plotMode) {
+  public QuantizedIzhikevicNeuron(boolean plotMode) {
     this(IzhikevicParameters.REGULAR_SPIKING_PARAMS, plotMode);
   }
 
-  public IzhikevicNeuron() {
+  public QuantizedIzhikevicNeuron() {
     this(false);
   }
 

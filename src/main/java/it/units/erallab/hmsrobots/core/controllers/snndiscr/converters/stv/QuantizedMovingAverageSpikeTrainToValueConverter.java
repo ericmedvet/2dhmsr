@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
-import java.util.SortedSet;
 import java.util.stream.IntStream;
 
-public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpikeTrainToValueConverter {
+public class QuantizedMovingAverageSpikeTrainToValueConverter extends QuantizedAverageFrequencySpikeTrainToValueConverter {
 
   private static final int DEFAULT_NUMBER_OF_WINDOWS = 10;
 
@@ -18,7 +17,7 @@ public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpi
   private int currentPosition = 0;
 
   @JsonCreator
-  public MovingAverageSpikeTrainToValueConverter(
+  public QuantizedMovingAverageSpikeTrainToValueConverter(
           @JsonProperty("frequency") double frequency,
           @JsonProperty("numberOfWindows") int numberOfWindows
   ) {
@@ -28,15 +27,15 @@ public class MovingAverageSpikeTrainToValueConverter extends AverageFrequencySpi
     this.numberOfWindows = numberOfWindows;
   }
 
-  public MovingAverageSpikeTrainToValueConverter(int numberOfWindows) {
+  public QuantizedMovingAverageSpikeTrainToValueConverter(int numberOfWindows) {
     this(DEFAULT_FREQUENCY, numberOfWindows);
   }
 
-  public MovingAverageSpikeTrainToValueConverter(double frequency) {
+  public QuantizedMovingAverageSpikeTrainToValueConverter(double frequency) {
     this(frequency, DEFAULT_NUMBER_OF_WINDOWS);
   }
 
-  public MovingAverageSpikeTrainToValueConverter() {
+  public QuantizedMovingAverageSpikeTrainToValueConverter() {
     this(DEFAULT_FREQUENCY, DEFAULT_NUMBER_OF_WINDOWS);
   }
 

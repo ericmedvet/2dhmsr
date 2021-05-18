@@ -6,7 +6,7 @@ import it.units.erallab.hmsrobots.core.controllers.Resettable;
 import java.io.Serializable;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
-public interface SpikingFunction extends Resettable, Serializable {
+public interface QuantizedSpikingFunction extends Resettable, Serializable {
 
     int[] compute(double[] weightedSpikes, double time);
 

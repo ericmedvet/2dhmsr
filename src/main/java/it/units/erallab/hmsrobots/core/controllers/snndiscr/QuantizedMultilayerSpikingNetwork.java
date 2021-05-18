@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Parametrized {
+public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized {
 
   @JsonProperty
-  protected final SpikingFunction[][] neurons;    // layer + position in the layer
+  protected final QuantizedSpikingFunction[][] neurons;    // layer + position in the layer
   @JsonProperty
   protected final double[][][] weights;           // layer + start neuron + end neuron
   protected double previousApplicationTime = 0d;
@@ -25,8 +25,8 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
 
   @SuppressWarnings("unchecked")
   @JsonCreator
-  public MultilayerSpikingNetwork(
-      @JsonProperty("neurons") SpikingFunction[][] neurons,
+  public QuantizedMultilayerSpikingNetwork(
+      @JsonProperty("neurons") QuantizedSpikingFunction[][] neurons,
       @JsonProperty("weights") double[][][] weights) {
     this.neurons = neurons;
     this.weights = weights;
@@ -47,47 +47,47 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     reset();
   }
 
-  public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction), weights);
+  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, QuantizedSpikingFunction quantizedSpikingFunction) {
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), quantizedSpikingFunction), weights);
   }
 
-  public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction) {
-    this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction))], spikingFunction);
+  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, QuantizedSpikingFunction quantizedSpikingFunction) {
+    this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), quantizedSpikingFunction))], quantizedSpikingFunction);
   }
 
-  public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
+  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights);
   }
 
-  public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
+  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
   }
 
-  public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
+  public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
     this(neurons, unflat(weights, neurons));
   }
 
-  protected static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {
-    SpikingFunction[][] spikingFunctions = new SpikingFunction[neuronsPerLayer.length][];
+  protected static QuantizedSpikingFunction[][] createNeurons(int[] neuronsPerLayer, QuantizedSpikingFunction quantizedSpikingFunction) {
+    QuantizedSpikingFunction[][] quantizedSpikingFunctions = new QuantizedSpikingFunction[neuronsPerLayer.length][];
     for (int i = 0; i < neuronsPerLayer.length; i++) {
-      spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
-      for (int j = 0; j < spikingFunctions[i].length; j++) {
-        spikingFunctions[i][j] = SerializationUtils.clone(spikingFunction, SerializationUtils.Mode.JAVA);
-        spikingFunctions[i][j].reset();
+      quantizedSpikingFunctions[i] = new QuantizedSpikingFunction[neuronsPerLayer[i]];
+      for (int j = 0; j < quantizedSpikingFunctions[i].length; j++) {
+        quantizedSpikingFunctions[i][j] = SerializationUtils.clone(quantizedSpikingFunction, SerializationUtils.Mode.JAVA);
+        quantizedSpikingFunctions[i][j].reset();
       }
     }
-    return spikingFunctions;
+    return quantizedSpikingFunctions;
   }
 
-  protected static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
-    SpikingFunction[][] spikingFunctions = new SpikingFunction[neuronsPerLayer.length][];
+  protected static QuantizedSpikingFunction[][] createNeurons(int[] neuronsPerLayer, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
+    QuantizedSpikingFunction[][] quantizedSpikingFunctions = new QuantizedSpikingFunction[neuronsPerLayer.length][];
     for (int i = 0; i < neuronsPerLayer.length; i++) {
-      spikingFunctions[i] = new SpikingFunction[neuronsPerLayer[i]];
-      for (int j = 0; j < spikingFunctions[i].length; j++) {
-        spikingFunctions[i][j] = neuronBuilder.apply(i, j);
+      quantizedSpikingFunctions[i] = new QuantizedSpikingFunction[neuronsPerLayer[i]];
+      for (int j = 0; j < quantizedSpikingFunctions[i].length; j++) {
+        quantizedSpikingFunctions[i][j] = neuronBuilder.apply(i, j);
       }
     }
-    return spikingFunctions;
+    return quantizedSpikingFunctions;
   }
 
   @Override
@@ -102,13 +102,13 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     double[][] incomingWeights = new double[inputs.length][inputs.length];
     for (int i = 0; i < incomingWeights.length; i++) {
       incomingWeights[i][i] = 1;
-      if (neurons[0][i] instanceof IzhikevicNeuron) {
+      if (neurons[0][i] instanceof QuantizedIzhikevicNeuron) {
         incomingWeights[i][i] = 100;
       }
     }
     // iterating over layers
     for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
-      SpikingFunction[] layer = neurons[layerIndex];
+      QuantizedSpikingFunction[] layer = neurons[layerIndex];
       thisLayersOutputs = new int[layer.length][];
       for (int neuronIndex = 0; neuronIndex < layer.length; neuronIndex++) {
         double[] weightedInputSpikeTrain = createWeightedSpikeTrain(previousLayersOutputs, incomingWeights[neuronIndex]);
@@ -145,7 +145,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     return weightedSpikeTrain;
   }
 
-  public static int countWeights(SpikingFunction[][] neurons) {
+  public static int countWeights(QuantizedSpikingFunction[][] neurons) {
     int c = 0;
     for (int i = 1; i < neurons.length; i++) {
       c += neurons[i].length * neurons[i - 1].length;
@@ -166,7 +166,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
   }
 
   // for each layer, for each neuron, list incoming weights in order
-  public static double[] flat(double[][][] unflatWeights, SpikingFunction[][] neurons) {
+  public static double[] flat(double[][][] unflatWeights, QuantizedSpikingFunction[][] neurons) {
     double[] flatWeights = new double[countWeights(neurons)];
     int c = 0;
     for (int i = 1; i < neurons.length; i++) {
@@ -180,7 +180,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     return flatWeights;
   }
 
-  public static double[][][] unflat(double[] flatWeights, SpikingFunction[][] neurons) {
+  public static double[][][] unflat(double[] flatWeights, QuantizedSpikingFunction[][] neurons) {
     double[][][] unflatWeights = new double[neurons.length - 1][][];
     int c = 0;
     for (int i = 1; i < neurons.length; i++) {
@@ -195,7 +195,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     return unflatWeights;
   }
 
-  public SpikingFunction[][] getNeurons() {
+  public QuantizedSpikingFunction[][] getNeurons() {
     return neurons;
   }
 
