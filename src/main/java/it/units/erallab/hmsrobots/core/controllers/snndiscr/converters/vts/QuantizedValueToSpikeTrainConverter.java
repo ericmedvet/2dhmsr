@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.controllers.Resettable;
 
 import java.io.Serializable;
-import java.util.SortedSet;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
 public interface QuantizedValueToSpikeTrainConverter extends Serializable, Resettable {

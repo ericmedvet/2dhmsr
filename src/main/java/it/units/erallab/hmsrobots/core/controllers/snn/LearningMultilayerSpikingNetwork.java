@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.controllers.snn.learning.STDPLearningRule;
+import it.units.erallab.hmsrobots.core.controllers.snn.learning.SymmetricAntiHebbianLearningRule;
 
 import java.util.Arrays;
 import java.util.SortedMap;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
 
-  protected static final double STDP_LEARNING_WINDOW = 0.04;
+  private static final double STDP_LEARNING_WINDOW = 0.04;
 
   @JsonProperty
   private final STDPLearningRule[][][] learningRules;           // layer + start neuron + end neuron
@@ -38,23 +39,8 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[][][] weights) {
-    super(neurons, weights);
-    learningRules = new STDPLearningRule[weights.length][][];
-    for (int startingLayer = 0; startingLayer < weights.length; startingLayer++) {
-      learningRules[startingLayer] = new STDPLearningRule[weights[startingLayer].length][];
-      for (int startingNeuron = 0; startingNeuron < weights[startingLayer].length; startingNeuron++) {
-        learningRules[startingLayer][startingNeuron] = new STDPLearningRule[weights[startingLayer][startingNeuron].length];
-      }
-    }
-    previousTimeOutputSpikes = new SortedSet[neurons.length][];
-    for (int layer = 0; layer < neurons.length; layer++) {
-      previousTimeOutputSpikes[layer] = new SortedSet[neurons[layer].length];
-      for (int neuron = 0; neuron < neurons[layer].length; neuron++) {
-        previousTimeOutputSpikes[layer][neuron] = new TreeSet<>();
-      }
-    }
+    this(neurons, weights,initializeLearningRules(weights));
   }
 
   public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
@@ -114,8 +100,8 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
         absoluteTimeOutputSpikes[layerIndex][neuronIndex] = thisLayersOutputs[neuronIndex].stream()
             .map(x -> previousApplicationTime + deltaT * x).collect(Collectors.toCollection(TreeSet::new));
         // learning (not on the inputs)
-        if (layerIndex != 0) {
-          // compute the time difference with the previous layers spikes at the previous simulation timestep
+        if (layerIndex > 0) {
+          // compute the time difference with the previous layers spikes
           for (int previousNeuronIndex = 0; previousNeuronIndex < previousLayersOutputs.length; previousNeuronIndex++) {
             double deltaW = 0;
             SortedSet<Double> previousOutputs = new TreeSet<>(previousTimeOutputSpikes[layerIndex - 1][previousNeuronIndex]);
@@ -184,6 +170,20 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
   }
 
   public STDPLearningRule[][][] getLearningRules() {
+    return learningRules;
+  }
+
+  private static STDPLearningRule[][][] initializeLearningRules(double[][][] weights){
+    STDPLearningRule[][][] learningRules = new STDPLearningRule[weights.length][][];
+    for (int startingLayer = 0; startingLayer < weights.length; startingLayer++) {
+      learningRules[startingLayer] = new STDPLearningRule[weights[startingLayer].length][];
+      for (int startingNeuron = 0; startingNeuron < weights[startingLayer].length; startingNeuron++) {
+        learningRules[startingLayer][startingNeuron] = new STDPLearningRule[weights[startingLayer][startingNeuron].length];
+        for(int learningRule =0; learningRule<weights[startingLayer][startingNeuron].length; learningRule++){
+          learningRules[startingLayer][startingNeuron][learningRule] = new SymmetricAntiHebbianLearningRule();
+        }
+      }
+    }
     return learningRules;
   }
 

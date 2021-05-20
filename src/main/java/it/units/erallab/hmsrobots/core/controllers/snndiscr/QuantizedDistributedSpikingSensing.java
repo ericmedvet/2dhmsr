@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 
 public class QuantizedDistributedSpikingSensing implements Controller<SensingVoxel> {
 
-  private static final int ARRAY_SIZE = 16;
+  private static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
 
   private enum Dir {
 
