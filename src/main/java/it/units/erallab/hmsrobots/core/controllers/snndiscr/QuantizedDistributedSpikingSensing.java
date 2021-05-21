@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.IntStream;
 
 public class QuantizedDistributedSpikingSensing implements Controller<SensingVoxel> {
@@ -156,6 +158,11 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
         System.arraycopy(lastSignals, index * signals, values, c, signals);
       }
       c = c + signals;
+    }
+    for (int i = 0; i < values.length; i++) {
+      if (values[i] == null) {
+        values[i] = new int[QuantizedValueToSpikeTrainConverter.ARRAY_SIZE];
+      }
     }
     return values;
   }
