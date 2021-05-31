@@ -62,19 +62,19 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
   }
 
   public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, spikingFunction));
+    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (x, y) -> spikingFunction));
   }
 
   public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
+    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (x, y) -> spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
   }
 
   public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, spikingFunction));
+    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, (x, y) -> spikingFunction));
   }
 
   public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
+    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, (x, y) -> spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
   }
 
   public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {

@@ -43,12 +43,8 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     this(neurons, weights,initializeLearningRules(weights));
   }
 
-  public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction), weights);
-  }
-
-  public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction) {
-    this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction))], spikingFunction);
+  public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
+    this(neurons, unflat(weights, neurons));
   }
 
   public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, STDPLearningRule[] learningRules) {
@@ -61,10 +57,6 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
 
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights, STDPLearningRule[] learningRules) {
     this(neurons, unflat(weights, neurons), unflat(learningRules,neurons));
-  }
-
-  public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
-    this(neurons, unflat(weights, neurons));
   }
 
   @SuppressWarnings("unchecked")

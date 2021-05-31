@@ -46,12 +46,8 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
     reset();
   }
 
-  public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction), weights);
-  }
-
-  public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction) {
-    this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction))], spikingFunction);
+  public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
+    this(neurons, unflat(weights, neurons));
   }
 
   public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
@@ -60,10 +56,6 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
 
   public MultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
-  }
-
-  public MultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
-    this(neurons, unflat(weights, neurons));
   }
 
   protected static SpikingFunction[][] createNeurons(int[] neuronsPerLayer, SpikingFunction spikingFunction) {

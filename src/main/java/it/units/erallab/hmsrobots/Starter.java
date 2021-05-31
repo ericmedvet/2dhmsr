@@ -16,7 +16,10 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
+import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
+import it.units.erallab.hmsrobots.core.controllers.RealFunction;
+import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.core.controllers.snn.*;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.MovingAverageSpikeTrainToValueConverter;
@@ -47,7 +50,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 /**
@@ -147,17 +149,15 @@ public class Starter {
         Locomotion.createTerrain("flat"),
         new Settings()
     );
-    Robot<?> r00 = robot;
     Robot<?> r01 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
     Robot<?> r02 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
-    System.out.println(locomotion.apply(r00));
+    System.out.println(locomotion.apply(robot));
     System.out.println(locomotion.apply(r01));
     System.out.println(locomotion.apply(r02));
-    Robot<?> r10 = robot;
     Robot<?> r11 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
     Robot<?> r12 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
     GridOnlineViewer.run(locomotion, List.of(r01, r11, r12));
-    System.out.println(locomotion.apply(r10));
+    System.out.println(locomotion.apply(robot));
     System.out.println(locomotion.apply(r11));
     System.out.println(locomotion.apply(r12));
     //Robot<?> r21 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
@@ -177,17 +177,15 @@ public class Starter {
         Locomotion.createTerrain("flat"),
         new Settings()
     );
-    Robot<?> r00 = robot;
     Robot<?> r01 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
     Robot<?> r02 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
-    System.out.println(locomotion.apply(r00));
+    System.out.println(locomotion.apply(robot));
     System.out.println(locomotion.apply(r01));
     System.out.println(locomotion.apply(r02));
-    Robot<?> r10 = robot;
     Robot<?> r11 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
     Robot<?> r12 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
     GridOnlineViewer.run(locomotion, List.of(r01, r11, r12));
-    System.out.println(locomotion.apply(r10));
+    System.out.println(locomotion.apply(robot));
     System.out.println(locomotion.apply(r11));
     System.out.println(locomotion.apply(r12));
     //Robot<?> r21 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
@@ -203,7 +201,7 @@ public class Starter {
         centralizedSensing.nOfInputs(),
         new int[]{2},
         centralizedSensing.nOfOutputs(),
-        (BiFunction<Integer, Integer, SpikingFunction>) (l, i) -> new LIFNeuron()
+        (l, i) -> new LIFNeuron()
     );
     double[] ws = msn.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
@@ -274,7 +272,7 @@ public class Starter {
           distributedSpikingSensing.nOfInputs(entry.getX(), entry.getY()),
           new int[]{2},
           distributedSpikingSensing.nOfOutputs(entry.getX(), entry.getY()),
-          new LIFNeuronWithHomeostasis()
+          (x,y) -> new LIFNeuronWithHomeostasis()
       );
       double[] ws = multilayerSpikingNetwork.getParams();
       IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 8d - 3d);

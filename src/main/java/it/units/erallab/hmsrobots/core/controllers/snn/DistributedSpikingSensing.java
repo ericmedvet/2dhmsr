@@ -97,7 +97,7 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
         Grid.create(
             voxels, v -> (v == null) ? null : new MultilayerSpikingNetwork(DistributedSensing.nOfInputs(v, signals),
                 new int[]{DistributedSensing.nOfInputs(v, signals), DistributedSensing.nOfInputs(v, signals)},
-                DistributedSensing.nOfOutputs(v, signals), spikingFunction)),
+                DistributedSensing.nOfOutputs(v, signals), (x, y) -> spikingFunction)),
         Grid.create(voxels, v -> (v == null) ? null : SerializationUtils.clone(spikeTrainToValueConverter)),
         Grid.create(voxels, v -> (v == null) ? null : IntStream.range(0, v.getSensors().stream().mapToInt(s -> s.domains().length).sum()).mapToObj(i -> SerializationUtils.clone(valueToSpikeTrainConverter)).toArray(ValueToSpikeTrainConverter[]::new))
     );

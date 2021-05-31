@@ -10,7 +10,7 @@ import it.units.erallab.hmsrobots.core.controllers.snn.learning.STDPLearningRule
 
 import java.util.function.BiFunction;
 
-public class LearningMultilayerSpikingNetworkWithConverters extends MultilayerSpikingNetworkWithConverters{
+public class LearningMultilayerSpikingNetworkWithConverters extends MultilayerSpikingNetworkWithConverters {
 
   @JsonCreator
   public LearningMultilayerSpikingNetworkWithConverters(
@@ -28,7 +28,7 @@ public class LearningMultilayerSpikingNetworkWithConverters extends MultilayerSp
   }
 
   public LearningMultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[][][] weights, STDPLearningRule[][][] learningRules, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new LearningMultilayerSpikingNetwork(neurons, weights,learningRules),
+    this(new LearningMultilayerSpikingNetwork(neurons, weights, learningRules),
         createInputConverters(neurons[0].length, valueToSpikeTrainConverter),
         createOutputConverters(neurons[neurons.length - 1].length, spikeTrainToValueConverter));
   }
@@ -38,21 +38,21 @@ public class LearningMultilayerSpikingNetworkWithConverters extends MultilayerSp
   }
 
   public LearningMultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[][][] weights, STDPLearningRule[][][] learningRules) {
-    this(new LearningMultilayerSpikingNetwork(neurons, weights,learningRules),
+    this(new LearningMultilayerSpikingNetwork(neurons, weights, learningRules),
         createInputConverters(neurons[0].length, new UniformWithMemoryValueToSpikeTrainConverter()),
         createOutputConverters(neurons[neurons.length - 1].length, new MovingAverageSpikeTrainToValueConverter()));
   }
 
   public LearningMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, SpikingFunction spikingFunction) {
-    this(new LearningMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (i,j)->spikingFunction, learningRules));
+    this(new LearningMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (i, j) -> spikingFunction, learningRules));
   }
 
   public LearningMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new LearningMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (i,j)->spikingFunction, learningRules), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
+    this(new LearningMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (i, j) -> spikingFunction, learningRules), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
   }
 
   public LearningMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new LearningMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
+    this(new LearningMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, (x, y) -> spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
   }
 
   public LearningMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
@@ -77,7 +77,7 @@ public class LearningMultilayerSpikingNetworkWithConverters extends MultilayerSp
   }
 
   public STDPLearningRule[][][] getLearningRules() {
-    return ((LearningMultilayerSpikingNetwork)getMultilayerSpikingNetwork()).getLearningRules();
+    return ((LearningMultilayerSpikingNetwork) getMultilayerSpikingNetwork()).getLearningRules();
   }
 
 }
