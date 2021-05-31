@@ -29,8 +29,8 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
   @JsonCreator
   public QuantizedMultilayerSpikingNetworkWithConverters(
       @JsonProperty("multilayerSpikingNetwork") N multilayerSpikingNetwork,
-      @JsonProperty("valueToSpikeTrainConverters") QuantizedValueToSpikeTrainConverter[] quantizedValueToSpikeTrainConverter,
-      @JsonProperty("spikeTrainToValueConverters") QuantizedSpikeTrainToValueConverter[] quantizedSpikeTrainToValueConverter
+      @JsonProperty("quantizedValueToSpikeTrainConverters") QuantizedValueToSpikeTrainConverter[] quantizedValueToSpikeTrainConverter,
+      @JsonProperty("quantizedSpikeTrainToValueConverters") QuantizedSpikeTrainToValueConverter[] quantizedSpikeTrainToValueConverter
   ) {
     this.multilayerSpikingNetwork = multilayerSpikingNetwork;
     this.quantizedValueToSpikeTrainConverters = quantizedValueToSpikeTrainConverter;
