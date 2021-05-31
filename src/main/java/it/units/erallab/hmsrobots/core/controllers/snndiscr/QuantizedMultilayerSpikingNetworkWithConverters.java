@@ -11,6 +11,7 @@ import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.Quant
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -122,10 +123,8 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
   public void reset() {
     multilayerSpikingNetwork.reset();
     previousApplicationTime = 0d;
-    IntStream.range(0, quantizedSpikeTrainToValueConverters.length).forEach(i ->
-        quantizedSpikeTrainToValueConverters[i].reset());
-    IntStream.range(0, quantizedValueToSpikeTrainConverters.length).forEach(i ->
-        quantizedValueToSpikeTrainConverters[i].reset());
+    Arrays.stream(quantizedSpikeTrainToValueConverters).forEach(QuantizedSpikeTrainToValueConverter::reset);
+    Arrays.stream(quantizedValueToSpikeTrainConverters).forEach(QuantizedValueToSpikeTrainConverter::reset);
   }
 
 }

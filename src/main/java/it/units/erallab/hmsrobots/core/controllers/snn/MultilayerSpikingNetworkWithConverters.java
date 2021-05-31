@@ -13,7 +13,6 @@ import it.units.erallab.hmsrobots.util.SerializationUtils;
 
 import java.util.List;
 import java.util.SortedSet;
-import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 public class MultilayerSpikingNetworkWithConverters<N extends MultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable {
