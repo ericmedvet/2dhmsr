@@ -47,7 +47,7 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     this(neurons, unflat(weights, neurons));
   }
 
-  public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, STDPLearningRule[] learningRules) {
+  public LearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights, learningRules);
   }
 

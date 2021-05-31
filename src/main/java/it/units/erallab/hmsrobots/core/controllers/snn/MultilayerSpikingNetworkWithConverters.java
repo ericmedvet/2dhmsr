@@ -16,10 +16,10 @@ import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
-public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction, Parametrized, Resettable {
+public class MultilayerSpikingNetworkWithConverters<N extends MultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable {
 
   @JsonProperty
-  private final MultilayerSpikingNetwork multilayerSpikingNetwork;
+  private final N multilayerSpikingNetwork;
   @JsonProperty
   private final ValueToSpikeTrainConverter[] valueToSpikeTrainConverters;
   @JsonProperty
@@ -29,7 +29,7 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
 
   @JsonCreator
   public MultilayerSpikingNetworkWithConverters(
-      @JsonProperty("multilayerSpikingNetwork") MultilayerSpikingNetwork multilayerSpikingNetwork,
+      @JsonProperty("multilayerSpikingNetwork") N multilayerSpikingNetwork,
       @JsonProperty("valueToSpikeTrainConverters") ValueToSpikeTrainConverter[] valueToSpikeTrainConverter,
       @JsonProperty("spikeTrainToValueConverters") SpikeTrainToValueConverter[] spikeTrainToValueConverter
   ) {
@@ -39,13 +39,13 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
     reset();
   }
 
-  public MultilayerSpikingNetworkWithConverters(MultilayerSpikingNetwork multilayerSpikingNetwork) {
+  public MultilayerSpikingNetworkWithConverters(N multilayerSpikingNetwork) {
     this(multilayerSpikingNetwork,
         createInputConverters(multilayerSpikingNetwork.getInputDimension(), new UniformWithMemoryValueToSpikeTrainConverter()),
         createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), new MovingAverageSpikeTrainToValueConverter()));
   }
 
-  public MultilayerSpikingNetworkWithConverters(MultilayerSpikingNetwork multilayerSpikingNetwork, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
+  public MultilayerSpikingNetworkWithConverters(N multilayerSpikingNetwork, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
     this(multilayerSpikingNetwork,
         createInputConverters(multilayerSpikingNetwork.getInputDimension(), valueToSpikeTrainConverter),
         createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), spikeTrainToValueConverter));
