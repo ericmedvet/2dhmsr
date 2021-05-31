@@ -45,57 +45,10 @@ public class MultilayerSpikingNetworkWithConverters implements TimedRealFunction
         createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), new MovingAverageSpikeTrainToValueConverter()));
   }
 
-  public MultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[][][] weights, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(neurons, weights),
-        createInputConverters(neurons[0].length, valueToSpikeTrainConverter),
-        createOutputConverters(neurons[neurons.length - 1].length, spikeTrainToValueConverter));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[][][] weights, ValueToSpikeTrainConverter[] valueToSpikeTrainConverters, SpikeTrainToValueConverter[] spikeTrainToValueConverters) {
-    this(new MultilayerSpikingNetwork(neurons, weights), valueToSpikeTrainConverters, spikeTrainToValueConverters);
-  }
-
-  public MultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[][][] weights) {
-    this(new MultilayerSpikingNetwork(neurons, weights),
-        createInputConverters(neurons[0].length, new UniformWithMemoryValueToSpikeTrainConverter()),
-        createOutputConverters(neurons[neurons.length - 1].length, new MovingAverageSpikeTrainToValueConverter()));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (x, y) -> spikingFunction));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, (x, y) -> spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, (x, y) -> spikingFunction));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, SpikingFunction spikingFunction, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, (x, y) -> spikingFunction), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, neuronBuilder), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, neuronBuilder));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, SpikingFunction> neuronBuilder, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, neuronBuilder), createInputConverters(nOfInput, valueToSpikeTrainConverter), createOutputConverters(nOfOutput, spikeTrainToValueConverter));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[] weights) {
-    this(new MultilayerSpikingNetwork(neurons, weights));
-  }
-
-  public MultilayerSpikingNetworkWithConverters(SpikingFunction[][] neurons, double[] weights, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
-    this(new MultilayerSpikingNetwork(neurons, weights), createInputConverters(neurons[0].length, valueToSpikeTrainConverter),
-        createOutputConverters(neurons[neurons.length - 1].length, spikeTrainToValueConverter));
+  public MultilayerSpikingNetworkWithConverters(MultilayerSpikingNetwork multilayerSpikingNetwork, ValueToSpikeTrainConverter valueToSpikeTrainConverter, SpikeTrainToValueConverter spikeTrainToValueConverter) {
+    this(multilayerSpikingNetwork,
+        createInputConverters(multilayerSpikingNetwork.getInputDimension(), valueToSpikeTrainConverter),
+        createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), spikeTrainToValueConverter));
   }
 
   @SuppressWarnings("unchecked")

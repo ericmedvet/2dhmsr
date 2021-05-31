@@ -23,9 +23,7 @@ import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
 import it.units.erallab.hmsrobots.core.controllers.snn.*;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.MovingAverageSpikeTrainToValueConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.UniformWithMemoryValueToSpikeTrainConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -197,12 +195,11 @@ public class Starter {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-4x3"));
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(
-        centralizedSensing.nOfInputs(),
+    MultilayerSpikingNetwork multilayerSpikingNetwork = new MultilayerSpikingNetwork(centralizedSensing.nOfInputs(),
         new int[]{2},
         centralizedSensing.nOfOutputs(),
-        (l, i) -> new LIFNeuron()
-    );
+        (l, i) -> new LIFNeuron());
+    MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(multilayerSpikingNetwork);
     double[] ws = msn.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
     msn.setParams(ws);
@@ -272,7 +269,7 @@ public class Starter {
           distributedSpikingSensing.nOfInputs(entry.getX(), entry.getY()),
           new int[]{2},
           distributedSpikingSensing.nOfOutputs(entry.getX(), entry.getY()),
-          (x,y) -> new LIFNeuronWithHomeostasis()
+          (x, y) -> new LIFNeuronWithHomeostasis()
       );
       double[] ws = multilayerSpikingNetwork.getParams();
       IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 8d - 3d);
@@ -297,7 +294,7 @@ public class Starter {
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
     MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(
-        centralizedSensing.nOfInputs(), new int[]{2}, centralizedSensing.nOfOutputs(), new LIFNeuron()
+        new MultilayerSpikingNetwork(centralizedSensing.nOfInputs(), new int[]{2}, centralizedSensing.nOfOutputs(), (x, y) -> new LIFNeuron())
     );
     double[] msnWeights = msn.getParams();
     IntStream.range(0, msnWeights.length).forEach(i -> msnWeights[i] = random.nextDouble() * 2d - 1d);
@@ -458,14 +455,11 @@ public class Starter {
     weights[0][0][1] = 0;
     weights[0][1][0] = 0;
     weights[0][1][1] = 0;
-    MultilayerSpikingNetworkWithConverters m = new MultilayerSpikingNetworkWithConverters(spikingNeurons, weights,
-        new ValueToSpikeTrainConverter[]{
-            new UniformWithMemoryValueToSpikeTrainConverter(50),
-            new UniformWithMemoryValueToSpikeTrainConverter(50)},
-        new SpikeTrainToValueConverter[]{
-            new MovingAverageSpikeTrainToValueConverter(50, 5),
-            new MovingAverageSpikeTrainToValueConverter(50, 5),
-        });
+    MultilayerSpikingNetworkWithConverters m = new MultilayerSpikingNetworkWithConverters(
+        new MultilayerSpikingNetwork(spikingNeurons, weights),
+        new UniformWithMemoryValueToSpikeTrainConverter(50),
+        new MovingAverageSpikeTrainToValueConverter(50, 5)
+    );
     //MultiLayerPerceptron m = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,2,new int[]{}, 2, new double[]{0,-100,0,0,0,0});
     Robot<SensingVoxel> robot = new Robot<>(
         new CentralizedSensing(oneBody, m),
