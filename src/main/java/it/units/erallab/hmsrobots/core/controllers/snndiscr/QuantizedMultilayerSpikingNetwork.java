@@ -47,12 +47,8 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     reset();
   }
 
-  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, QuantizedSpikingFunction quantizedSpikingFunction) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), quantizedSpikingFunction), weights);
-  }
-
-  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, QuantizedSpikingFunction quantizedSpikingFunction) {
-    this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), quantizedSpikingFunction))], quantizedSpikingFunction);
+  public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
+    this(neurons, unflat(weights, neurons));
   }
 
   public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
@@ -61,10 +57,6 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
-  }
-
-  public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
-    this(neurons, unflat(weights, neurons));
   }
 
   protected static QuantizedSpikingFunction[][] createNeurons(int[] neuronsPerLayer, QuantizedSpikingFunction quantizedSpikingFunction) {

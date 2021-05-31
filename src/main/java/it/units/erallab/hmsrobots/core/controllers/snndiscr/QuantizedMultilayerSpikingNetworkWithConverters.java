@@ -44,57 +44,10 @@ public class QuantizedMultilayerSpikingNetworkWithConverters implements TimedRea
         createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), new QuantizedMovingAverageSpikeTrainToValueConverter()));
   }
 
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedSpikingFunction[][] neurons, double[][][] weights, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
-    this(new QuantizedMultilayerSpikingNetwork(neurons, weights),
-        createInputConverters(neurons[0].length, quantizedValueToSpikeTrainConverter),
-        createOutputConverters(neurons[neurons.length - 1].length, quantizedSpikeTrainToValueConverter));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedSpikingFunction[][] neurons, double[][][] weights, QuantizedValueToSpikeTrainConverter[] quantizedValueToSpikeTrainConverters, QuantizedSpikeTrainToValueConverter[] quantizedSpikeTrainToValueConverters) {
-    this(new QuantizedMultilayerSpikingNetwork(neurons, weights), quantizedValueToSpikeTrainConverters, quantizedSpikeTrainToValueConverters);
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedSpikingFunction[][] neurons, double[][][] weights) {
-    this(new QuantizedMultilayerSpikingNetwork(neurons, weights),
-        createInputConverters(neurons[0].length, new QuantizedUniformWithMemoryValueToSpikeTrainConverter()),
-        createOutputConverters(neurons[neurons.length - 1].length, new QuantizedMovingAverageSpikeTrainToValueConverter()));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, QuantizedSpikingFunction quantizedSpikingFunction) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, quantizedSpikingFunction));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, QuantizedSpikingFunction quantizedSpikingFunction, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, quantizedSpikingFunction), createInputConverters(nOfInput, quantizedValueToSpikeTrainConverter), createOutputConverters(nOfOutput, quantizedSpikeTrainToValueConverter));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, QuantizedSpikingFunction quantizedSpikingFunction) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, quantizedSpikingFunction));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, QuantizedSpikingFunction quantizedSpikingFunction, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, quantizedSpikingFunction), createInputConverters(nOfInput, quantizedValueToSpikeTrainConverter), createOutputConverters(nOfOutput, quantizedSpikeTrainToValueConverter));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, weights, neuronBuilder), createInputConverters(nOfInput, quantizedValueToSpikeTrainConverter), createOutputConverters(nOfOutput, quantizedSpikeTrainToValueConverter));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, neuronBuilder));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
-    this(new QuantizedMultilayerSpikingNetwork(nOfInput, innerNeurons, nOfOutput, neuronBuilder), createInputConverters(nOfInput, quantizedValueToSpikeTrainConverter), createOutputConverters(nOfOutput, quantizedSpikeTrainToValueConverter));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedSpikingFunction[][] neurons, double[] weights) {
-    this(new QuantizedMultilayerSpikingNetwork(neurons, weights));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedSpikingFunction[][] neurons, double[] weights, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
-    this(new QuantizedMultilayerSpikingNetwork(neurons, weights), createInputConverters(neurons[0].length, quantizedValueToSpikeTrainConverter),
-        createOutputConverters(neurons[neurons.length - 1].length, quantizedSpikeTrainToValueConverter));
+  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedMultilayerSpikingNetwork multilayerSpikingNetwork, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
+    this(multilayerSpikingNetwork,
+        createInputConverters(multilayerSpikingNetwork.getInputDimension(), quantizedValueToSpikeTrainConverter),
+        createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), quantizedSpikeTrainToValueConverter));
   }
 
   @Override

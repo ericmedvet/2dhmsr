@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -16,7 +15,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.stream.IntStream;
 
 public class QuantizedDistributedSpikingSensing implements Controller<SensingVoxel> {
@@ -93,7 +91,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
         Grid.create(
             voxels, v -> (v == null) ? null : new QuantizedMultilayerSpikingNetwork(DistributedSensing.nOfInputs(v, signals),
                 new int[]{DistributedSensing.nOfInputs(v, signals), DistributedSensing.nOfInputs(v, signals)},
-                DistributedSensing.nOfOutputs(v, signals), spikingFunction)),
+                DistributedSensing.nOfOutputs(v, signals), (x, y) -> spikingFunction)),
         Grid.create(voxels, v -> (v == null) ? null : SerializationUtils.clone(spikeTrainToValueConverter)),
         Grid.create(voxels, v -> (v == null) ? null : IntStream.range(0, v.getSensors().stream().mapToInt(s -> s.domains().length).sum()).mapToObj(i -> SerializationUtils.clone(valueToSpikeTrainConverter)).toArray(QuantizedValueToSpikeTrainConverter[]::new))
     );
@@ -131,7 +129,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
       //get inputs
       int[][] signals = getLastSignals(entry.getX(), entry.getY());
       int[][] sensorValues = convertSensorReadings(entry.getValue().getLastReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
-      int[][] inputs = ArrayUtils.addAll(signals,sensorValues);
+      int[][] inputs = ArrayUtils.addAll(signals, sensorValues);
       //compute outputs
       QuantizedMultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
       int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + this.signals * Dir.values().length][ARRAY_SIZE];

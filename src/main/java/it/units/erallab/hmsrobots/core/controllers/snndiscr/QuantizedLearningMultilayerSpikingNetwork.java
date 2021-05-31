@@ -40,15 +40,11 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
     this(neurons, weights, initializeLearningRules(weights));
   }
 
-  public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, QuantizedSpikingFunction spikingFunction) {
-    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction), weights);
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
+    this(neurons, unflat(weights, neurons));
   }
 
-  public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, QuantizedSpikingFunction spikingFunction) {
-    this(nOfInput, innerNeurons, nOfOutput, new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), spikingFunction))], spikingFunction);
-  }
-
-  public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, STDPLearningRule[] learningRules) {
+  public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights, learningRules);
   }
 
@@ -58,10 +54,6 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
 
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights, STDPLearningRule[] learningRules) {
     this(neurons, unflat(weights, neurons), unflat(learningRules, neurons));
-  }
-
-  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
-    this(neurons, unflat(weights, neurons));
   }
 
   @Override
