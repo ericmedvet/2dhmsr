@@ -2,12 +2,14 @@ package it.units.erallab.hmsrobots.core.controllers.snn.learning;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
 public abstract class STDPLearningRule implements Parametrized, Serializable {
 
   @JsonProperty

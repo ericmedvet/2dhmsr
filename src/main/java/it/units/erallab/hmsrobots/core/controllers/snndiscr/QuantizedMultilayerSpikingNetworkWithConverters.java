@@ -12,13 +12,12 @@ import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
-public class QuantizedMultilayerSpikingNetworkWithConverters implements TimedRealFunction, Parametrized, Resettable {
+public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable {
 
   @JsonProperty
-  private final QuantizedMultilayerSpikingNetwork multilayerSpikingNetwork;
+  private final N multilayerSpikingNetwork;
   @JsonProperty
   private final QuantizedValueToSpikeTrainConverter[] quantizedValueToSpikeTrainConverters;
   @JsonProperty
@@ -28,7 +27,7 @@ public class QuantizedMultilayerSpikingNetworkWithConverters implements TimedRea
 
   @JsonCreator
   public QuantizedMultilayerSpikingNetworkWithConverters(
-      @JsonProperty("multilayerSpikingNetwork") QuantizedMultilayerSpikingNetwork multilayerSpikingNetwork,
+      @JsonProperty("multilayerSpikingNetwork") N multilayerSpikingNetwork,
       @JsonProperty("valueToSpikeTrainConverters") QuantizedValueToSpikeTrainConverter[] quantizedValueToSpikeTrainConverter,
       @JsonProperty("spikeTrainToValueConverters") QuantizedSpikeTrainToValueConverter[] quantizedSpikeTrainToValueConverter
   ) {
@@ -38,16 +37,16 @@ public class QuantizedMultilayerSpikingNetworkWithConverters implements TimedRea
     reset();
   }
 
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedMultilayerSpikingNetwork multilayerSpikingNetwork) {
-    this(multilayerSpikingNetwork,
-        createInputConverters(multilayerSpikingNetwork.getInputDimension(), new QuantizedUniformWithMemoryValueToSpikeTrainConverter()),
-        createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), new QuantizedMovingAverageSpikeTrainToValueConverter()));
-  }
-
-  public QuantizedMultilayerSpikingNetworkWithConverters(QuantizedMultilayerSpikingNetwork multilayerSpikingNetwork, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
+  public QuantizedMultilayerSpikingNetworkWithConverters(N multilayerSpikingNetwork, QuantizedValueToSpikeTrainConverter quantizedValueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter quantizedSpikeTrainToValueConverter) {
     this(multilayerSpikingNetwork,
         createInputConverters(multilayerSpikingNetwork.getInputDimension(), quantizedValueToSpikeTrainConverter),
         createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), quantizedSpikeTrainToValueConverter));
+  }
+
+  public QuantizedMultilayerSpikingNetworkWithConverters(N multilayerSpikingNetwork) {
+    this(multilayerSpikingNetwork,
+        createInputConverters(multilayerSpikingNetwork.getInputDimension(), new QuantizedUniformWithMemoryValueToSpikeTrainConverter()),
+        createOutputConverters(multilayerSpikingNetwork.getOutputDimension(), new QuantizedMovingAverageSpikeTrainToValueConverter()));
   }
 
   @Override

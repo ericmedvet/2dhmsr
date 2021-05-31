@@ -2,6 +2,7 @@ package it.units.erallab.hmsrobots.core.controllers.snndiscr;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
 public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized {
 
   @JsonProperty
