@@ -7,9 +7,7 @@ import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -24,6 +22,9 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   protected boolean spikesTracker = false;
   protected final List<Double>[][] spikes;
+
+  protected boolean weightsTracker = false;
+  protected final Map<Double,double[][][]> weightsInTime;
 
   @SuppressWarnings("unchecked")
   @JsonCreator
@@ -46,6 +47,8 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
         spikes[i][j] = new ArrayList<>();
       }
     }
+    weightsInTime = new HashMap<>();
+    weightsInTime.put(previousApplicationTime,weights);
     reset();
   }
 
@@ -233,8 +236,16 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     this.spikesTracker = spikesTracker;
   }
 
+  public void setWeightsTracker(boolean weightsTracker) {
+    this.weightsTracker = weightsTracker;
+  }
+
   public List<Double>[][] getSpikes() {
     return spikes;
+  }
+
+  public Map<Double, double[][][]> getWeightsInTime() {
+    return weightsInTime;
   }
 
   @Override

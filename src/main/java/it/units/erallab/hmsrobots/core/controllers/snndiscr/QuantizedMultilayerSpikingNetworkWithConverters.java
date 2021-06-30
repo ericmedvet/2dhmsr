@@ -13,6 +13,7 @@ import it.units.erallab.hmsrobots.util.SerializationUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable {
@@ -117,6 +118,14 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
 
   public List<Double>[][] getSpikes() {
     return multilayerSpikingNetwork.getSpikes();
+  }
+
+  public void setWeightsTracker(boolean weightsTracker){
+    multilayerSpikingNetwork.setWeightsTracker(weightsTracker);
+  }
+
+  public Map<Double, double[][][]> getWeightsInTime() {
+    return multilayerSpikingNetwork.getWeightsInTime();
   }
 
   @Override
