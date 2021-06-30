@@ -7,9 +7,8 @@ import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public abstract class STDPLearningRule implements Parametrized, Serializable {
 
   @JsonProperty
@@ -29,31 +28,40 @@ public abstract class STDPLearningRule implements Parametrized, Serializable {
     this.aMinus = aMinus;
   }
 
-  private static STDPLearningRule createFromNumbers(double[] parameters) {
+  private static STDPLearningRule createFromReals(double[] parameters) {
     if (parameters.length != 6) {
       throw new IllegalArgumentException(String.format("Expected 6 parameters, received %d", parameters.length));
     }
+    double[] stdpParams = Arrays.copyOfRange(parameters, 2, parameters.length);
     STDPLearningRule stdpLearningRule;
     // first parameter regulates symmetry, second regulates hebbian/antihebbian
-    if (parameters[0] > 0 && parameters[1] > 0) {
-      stdpLearningRule = new SymmetricHebbianLearningRule();
-    } else if (parameters[0] > 0 && parameters[1] < 0) {
-      stdpLearningRule = new SymmetricAntiHebbianLearningRule();
-    } else if (parameters[0] < 0 && parameters[1] > 0) {
-      stdpLearningRule = new AsymmetricHebbianLearningRule();
+    if (parameters[0] > 0) {
+      stdpParams = SymmetricSTPDLearningRule.scaleParameters(stdpParams);
+      if (parameters[1] > 0) {
+        stdpLearningRule = new SymmetricHebbianLearningRule();
+      } else {
+        stdpLearningRule = new SymmetricAntiHebbianLearningRule();
+      }
     } else {
-      stdpLearningRule = new AsymmetricAntiHebbianLearningRule();
+      stdpParams = AsymmetricSTDPLearningRule.scaleParameters(stdpParams);
+      if (parameters[1] > 0) {
+        stdpLearningRule = new AsymmetricHebbianLearningRule();
+      } else {
+        stdpLearningRule = new AsymmetricAntiHebbianLearningRule();
+      }
     }
-    stdpLearningRule.setParams(Arrays.copyOfRange(parameters, 2, parameters.length));
+    stdpLearningRule.setParams(stdpParams);
     return stdpLearningRule;
   }
 
-  public static STDPLearningRule[] createLearningRules(double[][] params){
-    STDPLearningRule[] stdpLearningRules = new STDPLearningRule[params.length];
-    IntStream.range(0, stdpLearningRules.length).forEach(i -> stdpLearningRules[i] = STDPLearningRule.createFromNumbers(params[i]));
-    return stdpLearningRules;
+  public static STDPLearningRule[] createLearningRules(double[][] params) {
+    return Arrays.stream(params).map(p -> STDPLearningRule.createFromReals(p)).toArray(STDPLearningRule[]::new);
   }
 
   public abstract double computeDeltaW(double deltaT);
+
+  protected static double scaleParameter(double param, double min, double max) {
+    return Math.max(Math.min(param, 1), -1) * (max - min) / 2 + min;
+  }
 
 }

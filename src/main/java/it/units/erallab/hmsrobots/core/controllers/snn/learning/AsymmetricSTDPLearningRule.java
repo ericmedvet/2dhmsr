@@ -3,7 +3,12 @@ package it.units.erallab.hmsrobots.core.controllers.snn.learning;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.stream.IntStream;
+
 public abstract class AsymmetricSTDPLearningRule extends STDPLearningRule{
+
+  private static final double[] MIN_PARAMS = {0.1, 0.1, 1d, 1d};
+  private static final double[] MAX_PARAMS = {1d, 1d, 10d, 10d};
 
   @JsonProperty
   protected double tauPlus;
@@ -37,4 +42,11 @@ public abstract class AsymmetricSTDPLearningRule extends STDPLearningRule{
     tauPlus = params[2];
     tauMinus = params[3];
   }
+
+  protected static double[] scaleParameters(double[] params) {
+    IntStream.range(0, 4).forEach(i -> params[i] = scaleParameter(params[i], MIN_PARAMS[i], MAX_PARAMS[i])
+    );
+    return params;
+  }
+
 }
