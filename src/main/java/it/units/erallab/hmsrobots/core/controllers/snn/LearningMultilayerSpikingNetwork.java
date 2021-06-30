@@ -128,6 +128,7 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     for (int layer = 0; layer < absoluteTimeOutputSpikes.length; layer++) {
       System.arraycopy(absoluteTimeOutputSpikes[layer], 0, previousTimeOutputSpikes[layer], 0, absoluteTimeOutputSpikes[layer].length);
     }
+    previousApplicationTime = t;
     return thisLayersOutputs;
   }
 

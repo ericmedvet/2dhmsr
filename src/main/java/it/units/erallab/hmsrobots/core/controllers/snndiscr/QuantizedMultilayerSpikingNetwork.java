@@ -129,6 +129,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       }
       previousLayersOutputs = thisLayersOutputs;
     }
+    previousApplicationTime = t;
     return thisLayersOutputs;
   }
 

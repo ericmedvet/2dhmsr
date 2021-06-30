@@ -129,6 +129,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
       }
     }
     weightsInTime.put(t,weights);
+    previousApplicationTime = t;
     return thisLayersOutputs;
   }
 

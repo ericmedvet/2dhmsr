@@ -58,10 +58,10 @@ public class MultilayerSpikingNetworkWithConverters<N extends MultilayerSpikingN
     IntStream.range(0, input.length).forEach(i ->
         inputSpikes[i] = valueToSpikeTrainConverters[i].convert(input[i], deltaT, t));
     SortedSet<Double>[] outputSpikes = multilayerSpikingNetwork.apply(t, inputSpikes);
-    previousApplicationTime = t;
     double[] output = new double[outputSpikes.length];
     IntStream.range(0, outputSpikes.length).forEach(i ->
         output[i] = spikeTrainToValueConverters[i].convert(outputSpikes[i], deltaT));
+    previousApplicationTime = t;
     return output;
   }
 

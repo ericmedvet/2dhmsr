@@ -123,6 +123,7 @@ public class MultilayerSpikingNetwork implements MultivariateSpikingFunction, Pa
       }
       previousLayersOutputs = thisLayersOutputs;
     }
+    previousApplicationTime = t;
     return thisLayersOutputs;
   }
 

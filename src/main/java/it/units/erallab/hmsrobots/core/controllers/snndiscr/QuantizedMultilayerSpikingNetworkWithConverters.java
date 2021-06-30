@@ -58,10 +58,10 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
     IntStream.range(0, input.length).forEach(i ->
         inputSpikes[i] = quantizedValueToSpikeTrainConverters[i].convert(input[i], deltaT, t));
     int[][] outputSpikes = multilayerSpikingNetwork.apply(t, inputSpikes);
-    previousApplicationTime = t;
     double[] output = new double[outputSpikes.length];
     IntStream.range(0, outputSpikes.length).forEach(i ->
         output[i] = quantizedSpikeTrainToValueConverters[i].convert(outputSpikes[i], deltaT));
+    previousApplicationTime = t;
     return output;
   }
 
