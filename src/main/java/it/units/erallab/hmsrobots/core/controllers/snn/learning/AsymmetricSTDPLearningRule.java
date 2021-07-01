@@ -43,7 +43,7 @@ public abstract class AsymmetricSTDPLearningRule extends STDPLearningRule{
     tauMinus = params[3];
   }
 
-  protected static double[] scaleParameters(double[] params) {
+  public static double[] scaleParameters(double[] params) {
     IntStream.range(0, 4).forEach(i -> params[i] = scaleParameter(params[i], MIN_PARAMS[i], MAX_PARAMS[i])
     );
     return params;

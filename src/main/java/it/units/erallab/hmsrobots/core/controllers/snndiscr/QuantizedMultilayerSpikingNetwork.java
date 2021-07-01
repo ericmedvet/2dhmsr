@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized {
 
   @JsonProperty
@@ -24,7 +24,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
   protected final List<Double>[][] spikes;
 
   protected boolean weightsTracker = false;
-  protected final Map<Double,double[][][]> weightsInTime;
+  protected final Map<Double, double[]> weightsInTime;
 
   @SuppressWarnings("unchecked")
   @JsonCreator
@@ -48,7 +48,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       }
     }
     weightsInTime = new HashMap<>();
-    weightsInTime.put(previousApplicationTime,weights);
+    weightsInTime.put(previousApplicationTime, flat(weights,neurons));
     reset();
   }
 
@@ -245,7 +245,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     return spikes;
   }
 
-  public Map<Double, double[][][]> getWeightsInTime() {
+  public Map<Double, double[]> getWeightsInTime() {
     return weightsInTime;
   }
 

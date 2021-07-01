@@ -124,7 +124,7 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
     multilayerSpikingNetwork.setWeightsTracker(weightsTracker);
   }
 
-  public Map<Double, double[][][]> getWeightsInTime() {
+  public Map<Double, double[]> getWeightsInTime() {
     return multilayerSpikingNetwork.getWeightsInTime();
   }
 

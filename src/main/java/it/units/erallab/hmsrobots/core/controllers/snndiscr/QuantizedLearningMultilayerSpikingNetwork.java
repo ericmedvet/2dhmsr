@@ -128,7 +128,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
         System.arraycopy(outputSpikes[layerIndex][neuronIndex], 0, previousTimeOutputSpikes[layerIndex][neuronIndex], STDP_LEARNING_WINDOW - 2 * ARRAY_SIZE, ARRAY_SIZE);
       }
     }
-    weightsInTime.put(t,weights);
+    weightsInTime.put(t,flat(weights,neurons));
     previousApplicationTime = t;
     return thisLayersOutputs;
   }
