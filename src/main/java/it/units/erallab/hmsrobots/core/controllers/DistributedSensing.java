@@ -21,11 +21,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.SerializableFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.function.Function;
+import java.util.Objects;
 
 /**
  * @author eric
@@ -59,18 +58,28 @@ public class DistributedSensing implements Controller<SensingVoxel> {
     }
   }
 
-  private static class FunctionWrapper implements Function<double[], double[]> {
+  private static class FunctionWrapper implements TimedRealFunction {
     @JsonProperty
-    private final SerializableFunction<double[], double[]> inner;
+    private final TimedRealFunction inner;
 
     @JsonCreator
-    public FunctionWrapper(@JsonProperty("inner") SerializableFunction<double[], double[]> inner) {
+    public FunctionWrapper(@JsonProperty("inner") TimedRealFunction inner) {
       this.inner = inner;
     }
 
     @Override
-    public double[] apply(double[] in) {
-      return inner.apply(in);
+    public double[] apply(double t, double[] in) {
+      return inner.apply(t, in);
+    }
+
+    @Override
+    public int getInputDimension() {
+      return inner.getInputDimension();
+    }
+
+    @Override
+    public int getOutputDimension() {
+      return inner.getOutputDimension();
     }
   }
 
@@ -81,7 +90,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
   @JsonProperty
   private final Grid<Integer> nOfOutputGrid;
   @JsonProperty
-  private final Grid<Function<double[], double[]>> functions;
+  private final Grid<TimedRealFunction> functions;
 
   private final Grid<double[]> lastSignalsGrid;
 
@@ -98,7 +107,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
       @JsonProperty("signals") int signals,
       @JsonProperty("nOfInputGrid") Grid<Integer> nOfInputGrid,
       @JsonProperty("nOfOutputGrid") Grid<Integer> nOfOutputGrid,
-      @JsonProperty("functions") Grid<Function<double[], double[]>> functions
+      @JsonProperty("functions") Grid<TimedRealFunction> functions
   ) {
     this.signals = signals;
     this.nOfInputGrid = nOfInputGrid;
@@ -116,12 +125,16 @@ public class DistributedSensing implements Controller<SensingVoxel> {
         Grid.create(
             voxels.getW(),
             voxels.getH(),
-            (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper((double[] in) -> new double[1 + signals * Dir.values().length])
+            (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
+                (double[] in) -> new double[1 + signals * Dir.values().length],
+                signals * Dir.values().length + voxels.get(x, y).getSensors().stream().mapToInt(s -> s.domains().length).sum(),
+                1 + signals * Dir.values().length)
+            )
         )
     );
   }
 
-  public Grid<Function<double[], double[]>> getFunctions() {
+  public Grid<TimedRealFunction> getFunctions() {
     return functions;
   }
 
@@ -132,7 +145,11 @@ public class DistributedSensing implements Controller<SensingVoxel> {
         lastSignalsGrid.set(x, y, new double[signals * Dir.values().length]);
       }
     }
-
+    functions.values().stream().filter(Objects::nonNull).forEach(f -> {
+      if (f instanceof Resettable) {
+        ((Resettable) f).reset();
+      }
+    });
   }
 
   @Override
@@ -145,8 +162,8 @@ public class DistributedSensing implements Controller<SensingVoxel> {
       double[] signals = getLastSignals(entry.getX(), entry.getY());
       double[] inputs = flatten(entry.getValue().getLastReadings(), signals);
       //compute outputs
-      Function<double[], double[]> function = functions.get(entry.getX(), entry.getY());
-      double[] outputs = function != null ? function.apply(inputs) : new double[1 + this.signals * Dir.values().length];
+      TimedRealFunction function = functions.get(entry.getX(), entry.getY());
+      double[] outputs = function != null ? function.apply(t, inputs) : new double[1 + this.signals * Dir.values().length];
       //apply outputs
       entry.getValue().applyForce(outputs[0]);
       System.arraycopy(outputs, 1, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, this.signals * Dir.values().length);

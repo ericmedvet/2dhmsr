@@ -32,6 +32,11 @@ import java.util.stream.Collectors;
 public abstract class AbstractTask<T, R> implements Task<T, R> {
 
   protected final Settings settings;
+  private static final long MEGABYTE = 1024L * 1024L;
+
+  public static long bytesToMegabytes(long bytes) {
+    return bytes / MEGABYTE;
+  }
 
   public AbstractTask(Settings settings) {
     this.settings = settings;
@@ -43,8 +48,15 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
 
   protected static double updateWorld(final double t, final double dT, final World world, final List<WorldObject> objects, final SnapshotListener listener) {
     double newT = t + dT;
+    //System.out.println("in update "+newT);
+    Runtime runtime = Runtime.getRuntime();
+    long memory = runtime.totalMemory() - runtime.freeMemory();
+    //System.out.println("total memory is megabytes: " + bytesToMegabytes(runtime.totalMemory()));
+    //System.out.println("Used memory is megabytes: "+ bytesToMegabytes(memory));
     world.step(1);
+    //System.out.println("world step");
     objects.stream().filter(o -> o instanceof LivingObject).forEach(o -> ((LivingObject) o).act(newT));
+    //.out.println("stream");
     //possibly output snapshot
     if (listener != null) {
       Snapshot snapshot = new Snapshot(newT, objects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
