@@ -36,7 +36,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
     @JsonProperty
     private final int[] neurons;
     @JsonProperty
-    private final double eta;
+    private final double[][] eta;
     @JsonProperty
     private final HashSet<Integer> disabled;
     @JsonProperty
@@ -57,7 +57,12 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         this.startingWeights = deepCopy(weights);
         this.neurons = neurons;
         this.hebbCoef = hebbCoef;
-        this.eta = eta;
+        this.eta = initEta(eta);
+        /*String et ="";
+        for (double d:flatEta(this.eta,neurons)){
+            et += d+" ";
+        }
+        System.out.println("eta "+flatEta(this.eta, neurons).length+" "+et);*/
         this.disabled = disabled;
         if (flat(weights, neurons).length != countWeights(neurons)) {
             throw new IllegalArgumentException(String.format(
@@ -132,9 +137,9 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
 
         double[][][] unflatWeights = new double[neurons.length-1][][];
         int c = 0;
-        System.out.println("^^^^ "+neurons.length);
+        //System.out.println("^^^^ "+neurons.length);
         for (int l = 1; l<neurons.length; l++){
-            System.out.println("@ "+l+" "+neurons[l-1]);
+            //System.out.println("@ "+l+" "+neurons[l-1]);
             unflatWeights[l-1] = new double[neurons[l]][];
         for (int i = 0; i < neurons[l]; i++) {
             unflatWeights[l-1][i] = new double[4];
@@ -145,7 +150,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         }
 
         }
-        System.out.println("@@## "+neurons[neurons.length-1]);
+        //System.out.println("@@## "+neurons[neurons.length-1]);
         return unflatWeights;
     }
 
@@ -244,7 +249,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                 for (int i = 0; i < neurons[l - 1]; i++) {
                     if ((l == 1 && !disabled.contains(i)) || l > 1) {
                         //System.out.println(o);
-                        double dW = eta * (
+                        double dW = eta[l-1][o] * (
                                 hebbCoef[l-1][o][0] * values[l][o] * values[l - 1][i] +   // A*a_i,j*a_j,k
                                         hebbCoef[l-1][o][1] * values[l][o] +                 // B*a_i,j
                                         hebbCoef[l-1][o][2] * values[l - 1][i] +                 // C*a_j,k
@@ -255,13 +260,13 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                 }
             }
         }
-        double[] wei2 = flat(this.weights, neurons);
+        /*double[] wei2 = flat(this.weights, neurons);
         String wei3 = "### "+flatHebbCoef(hebbCoef, neurons).length+"  ";
 
         for (int i = 0; i< wei1.length;i++){
             wei3 += (wei2[i] - wei1[i])+"  ";
         }
-        System.out.println(wei3);
+        System.out.println(wei3);*/
     }
 
 
@@ -333,7 +338,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         return values[neurons.length - 1];
     }
 
-    public double[][][] getWeightsM() {
+    public double[][][] getWeightsMatrix() {
         return weights;
     }
 
@@ -355,6 +360,30 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         return flatHebbCoef(hebbCoef, neurons);
     }
 
+    public double[] flatEta(double[][] etaMatrix, int[] neurons){
+        double[] etas = new double[((Arrays.stream(neurons).sum()) - neurons[0])];
+        int c =0;
+        for (int l = 0; l<etaMatrix.length; l++){
+            for (int o = 0; o<etaMatrix[l].length;o++){
+                etas[c] = etaMatrix[l][o];
+                c++;
+            }
+        }
+        return etas;
+    }
+
+    public double[][] unflatEta(double[] etasArr, int[] neurons){
+        double[][] etas = new double[neurons.length-1][];
+        int c=0;
+        for(int l =1; l<neurons.length;l++){
+            etas[l-1] = new double[neurons[l]];
+            for (int o =0; o<etas[l-1].length;o++){
+                etas[l-1][o] = etasArr[c];
+                c++;
+            }
+        }
+        return etas;
+    }
 
     public void setWeights(double[] params) {
         double[][][] newWeights = MultiLayerPerceptron.unflat(params, neurons);
@@ -365,6 +394,32 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                 }
             }
         }
+    }
+
+    public double[] getEta(){return flatEta(eta, neurons);}
+
+    public void setEta(double[] etas){
+        double[][] newEtas = unflatEta(etas, neurons);
+        for (int l = 0; l < newEtas.length; l++) {
+            for (int s = 0; s < newEtas[l].length; s++) {
+                    eta[l][s] = newEtas[l][s];
+            }
+        }
+    }
+
+    public double[][] initEta(double initEta){
+        double[][] unflatEtas = new double[neurons.length - 1][];
+        int c = 0;
+        for (int l = 1; l < neurons.length; l++) {
+            unflatEtas[l-1] = new double[neurons[l]];
+            for (int j = 0; j < neurons[l]; j++) {
+                    unflatEtas[l-1][j] = initEta;
+                    c = c + 1;
+                    //System.out.println(c);
+
+            }
+        }
+        return unflatEtas;
     }
 
     @Override
