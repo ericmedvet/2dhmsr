@@ -61,6 +61,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
   @JsonProperty
   protected final int[] neurons;
   public double[] lastInput;
+  public double[][] values;
 
   @JsonCreator
   public MultiLayerPerceptron(
@@ -154,7 +155,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
     this.lastInput= input;
-    double[][] values = new double[neurons.length][];
+    this.values = new double[neurons.length][];
     values[0] = Arrays.stream(input).map(activationFunction.f::apply).toArray();
     for (int i = 1; i < neurons.length; i++) {
       values[i] = new double[neurons[i]];

@@ -67,7 +67,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
             ));
         }
         this.mapper = mapper;
-        System.out.println("hehehehe "+neurons[0]);
+        //System.out.println("hehehehe "+neurons[0]);
         //System.out.println(neurons.length-1);
         if (flatHebbCoef(hebbCoef, neurons).length != 4 * countWeights(neurons)) {
             throw new IllegalArgumentException(String.format(
@@ -223,8 +223,6 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         for (int i : n){
             s.append(i).append(" ");
         }
-        System.out.println(s);
-        System.out.println(countWeights(n));
         return countWeights(n);
     }
 
@@ -435,7 +433,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
 
     @Override
     public int getInputDimension() {
-        System.out.println("ahahaha "+neurons[0]);
+        //System.out.println("ahahaha "+neurons[0]);
         return neurons[0];
     }
 

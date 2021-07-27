@@ -61,7 +61,7 @@ public class Outcome {
             this.controlEnergy = controlEnergy;
             this.areaRatioEnergy = areaRatioEnergy;
             this.computationTime = computationTime;
-            this.inputs =inputs;
+            this.inputs = inputs;
         }
 
         public double getTime() {
@@ -179,10 +179,12 @@ public class Outcome {
     }
 
 
-    public List<double[]> getDataObservation(){
-        List<double[]> data = new ArrayList<>();
-        for (Observation ob: this.observations){
-            data.add(ob.inputs);
+    public double[][] getDataObservation() {
+        double[][] data = new double[this.observations.size()][];
+        int c = 0;
+        for (Observation ob : this.observations) {
+            data[c] = ob.inputs;
+            c++;
         }
         return data;
     }

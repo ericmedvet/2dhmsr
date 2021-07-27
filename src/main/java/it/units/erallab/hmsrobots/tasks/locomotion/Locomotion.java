@@ -17,6 +17,8 @@
 package it.units.erallab.hmsrobots.tasks.locomotion;
 
 import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
+import it.units.erallab.hmsrobots.core.controllers.HebbianPerceptronFullModel;
+import it.units.erallab.hmsrobots.core.controllers.HebbianPerceptronOutputModel;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
@@ -40,6 +42,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
@@ -101,11 +104,17 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
             //System.out.println("pre obs "+t);
             ;
             double[] lastInput = {0d};
+            double[] activationsValues = {0d};
             if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof MultiLayerPerceptron){
                 lastInput = ((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).lastInput;
+                activationsValues = flatten(((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).values);
             }
+            double[] data = new double[lastInput.length+activationsValues.length];
+            System.arraycopy(lastInput,0,data,0,lastInput.length);
+            System.arraycopy(activationsValues,0,data,lastInput.length, activationsValues.length);
+
             observations.add(new Outcome.Observation(
-                    lastInput,
+                    data,
                     t,
                     Point2.build(robot.getCenter()),
                     ground.yAt(robot.getCenter().x),
@@ -124,8 +133,29 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
             //System.out.println("post obs "+t);
         }
         stopWatch.stop();
+        if (robot.getController() instanceof CentralizedSensing)
+            if ( ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel){
+                ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).resetInitWeights();
+            }else if(((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel){
+                ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).resetInitWeights();
+            }
+
         //prepare outcome
         return new Outcome(observations);
+    }
+
+    private double[] flatten(double[][] mat){
+        int size =0;
+        for(int i =0; i< mat.length;i++){
+            size += mat[i].length;
+        }
+        double[] vect = new double[size];
+        int pos =0;
+        for(int i =0; i< mat.length;i++){
+            System.arraycopy(mat[i],0, vect, pos, mat[i].length );
+            pos += mat[i].length;
+        }
+        return vect;
     }
 
     private static Grid<Boolean> mask(Robot<?> robot, int n) {

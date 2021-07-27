@@ -9,6 +9,7 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
+import it.units.erallab.hmsrobots.util.Utils;
 import org.checkerframework.checker.units.qual.A;
 import org.checkerframework.checker.units.qual.C;
 import org.dyn4j.dynamics.Settings;
@@ -120,6 +121,16 @@ public class Pyworker implements Runnable{
         }
 
         return res;
+    }
+
+    public Outcome locomoteSerialized(String serialized){
+        Locomotion locomotion = new Locomotion(duration, terrain, new Settings());
+        Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+        //System.out.println("pre apply");
+        Outcome outcome = locomotion.apply(robot, null);
+        //System.out.println("post apply");
+        return outcome;
+
     }
 
     protected static List<List<Double>> map(Collection<List<Double>> genotypes,
