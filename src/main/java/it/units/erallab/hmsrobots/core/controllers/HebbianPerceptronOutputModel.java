@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 public class HebbianPerceptronOutputModel implements Serializable, RealFunction, Parametrized {
 
-
     public enum ActivationFunction {
         RELU((Double x) -> (x < 0) ? 0d : x),
         SIGMOID((Double x) -> 1d / (1d + Math.exp(-x))),
@@ -83,7 +82,6 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         }
     }
 
-
     public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
         this(
                 activationFunction,
@@ -93,7 +91,6 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                 eta,
                 disabled,
                 mapper
-
         );
     }
 
@@ -173,24 +170,19 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
     }
 
     public static double[] flatHebbCoef(double[][][] hebbCoef, int[] neurons) {
-        /*for (int i = 0; i < neurons.length - 1; i++) {
-            n = n + neurons[i] * neurons[i + 1];
-        }*/
         int n = 4 * ((Arrays.stream(neurons).sum()) - neurons[0]); //first layer does not have hebb coeff
-        //System.out.println(n);
         double[] flatHebbCoef = new double[n];
         int c = 0;
         for (int l = 1; l < hebbCoef.length; l++) {
             for (int i = 0; i < neurons[l]; i++) {
                 for (int w = 0; w < 4; w++) {
-                    flatHebbCoef[c] = hebbCoef[l][i][w];
+                    flatHebbCoef[c] = hebbCoef[l - 1][i][w];
                     c = c + 1;
                 }
             }
         }
         return flatHebbCoef;
     }
-
 
     public static double[][][] initHebbCoef(int[] neurons) {
         int n = 4 * ((Arrays.stream(neurons).sum()) - neurons[0]); //first layer does not have hebb coeff
@@ -205,7 +197,6 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         return unflatHebbCoef;
     }
 
-
     public static int[] countNeurons(int nOfInput, int[] innerNeurons, int nOfOutput) {
         final int[] neurons;
         neurons = new int[2 + innerNeurons.length];
@@ -214,7 +205,6 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         neurons[neurons.length - 1] = nOfOutput;
         return neurons;
     }
-
 
     public static int countWeights(int[] neurons) {
         int largestLayerSize = Arrays.stream(neurons).max().orElse(0);
