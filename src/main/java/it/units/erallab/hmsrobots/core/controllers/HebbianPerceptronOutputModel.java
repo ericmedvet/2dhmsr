@@ -47,9 +47,28 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
             @JsonProperty("weights") double[][][] weights,
             @JsonProperty("hebbCoef") double[][][] hebbCoef,
             @JsonProperty("neurons") int[] neurons,
-            @JsonProperty("eta") double eta,
+            @JsonProperty("eta") double[][] eta,
             @JsonProperty("disabled") HashSet<Integer> disabled,
             @JsonProperty("mapper") HashMap<Integer, Integer> mapper
+    ) {
+        this.activationFunction = activationFunction;
+        this.weights = weights;
+        this.startingWeights = deepCopy(weights);
+        this.neurons = neurons;
+        this.hebbCoef = hebbCoef;
+        this.eta = eta;
+        this.disabled = disabled;
+        this.mapper = mapper;
+    }
+
+    public HebbianPerceptronOutputModel(
+            ActivationFunction activationFunction,
+            double[][][] weights,
+            double[][][] hebbCoef,
+            int[] neurons,
+            double eta,
+            HashSet<Integer> disabled,
+            HashMap<Integer, Integer> mapper
     ) {
         this.activationFunction = activationFunction;
         this.weights = weights;

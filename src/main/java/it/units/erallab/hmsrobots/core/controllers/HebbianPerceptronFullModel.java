@@ -48,9 +48,28 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
             @JsonProperty("weights") double[][][] weights,
             @JsonProperty("hebbCoef") double[][][][] hebbCoef,
             @JsonProperty("neurons") int[] neurons,
-            @JsonProperty("eta") double eta,
+            @JsonProperty("eta") double[][][] eta,
             @JsonProperty("disabled") HashSet<Integer> disabled,
             @JsonProperty("mapper") HashMap<Integer, Integer> mapper
+    ) {
+        this.activationFunction = activationFunction;
+        this.weights = weights;
+        this.startingWeights = deepCopy(weights);
+        this.neurons = neurons;
+        this.hebbCoef = hebbCoef;
+        this.eta = eta;
+        this.disabled = disabled;
+        this.mapper = mapper;
+    }
+
+    public HebbianPerceptronFullModel(
+            HebbianPerceptronFullModel.ActivationFunction activationFunction,
+            double[][][] weights,
+            double[][][][] hebbCoef,
+            int[] neurons,
+            double eta,
+            HashSet<Integer> disabled,
+            HashMap<Integer, Integer> mapper
     ) {
         this.activationFunction = activationFunction;
         this.weights = weights;
@@ -167,7 +186,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
     }
 
     public static double[] flatHebbCoef(double[][][][] hebbCoef, int[] neurons) {
-        int n = 0;
+        int n;
         /*for (int i = 0; i < neurons.length - 1; i++) {
             n = n + neurons[i] * neurons[i + 1];
         }*/
@@ -179,7 +198,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
             for (int j = 0; j < neurons[i]; j++) {
                 for (int k = 0; k < neurons[i + 1]; k++) {
                     for (int o = 0; o<4; o++) {
-                        flatHebbCoef[c] =hebbCoef[i][j][k][o];
+                        flatHebbCoef[c] = hebbCoef[i][j][k][o];
                         c = c + 1;
                     }
                 }
