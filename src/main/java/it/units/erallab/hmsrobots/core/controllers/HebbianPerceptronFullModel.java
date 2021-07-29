@@ -57,25 +57,6 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         this.startingWeights = deepCopy(weights);
         this.neurons = neurons;
         this.hebbCoef = hebbCoef;
-        this.eta = eta;
-        this.disabled = disabled;
-        this.mapper = mapper;
-    }
-
-    public HebbianPerceptronFullModel(
-            HebbianPerceptronFullModel.ActivationFunction activationFunction,
-            double[][][] weights,
-            double[][][][] hebbCoef,
-            int[] neurons,
-            double eta,
-            HashSet<Integer> disabled,
-            HashMap<Integer, Integer> mapper
-    ) {
-        this.activationFunction = activationFunction;
-        this.weights = weights;
-        this.startingWeights = deepCopy(weights);
-        this.neurons = neurons;
-        this.hebbCoef = hebbCoef;
 
         this.disabled = disabled;
         if (flat(weights, neurons).length != countWeights(neurons)) {
@@ -86,14 +67,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
             ));
         }
         this.mapper = mapper;
-        this.eta = initEta(eta);
-        /*String et ="";
-        for (double d:flat(this.eta,neurons)){
-            et += d+" ";
-        }
-        System.out.println("eta "+flat(this.eta, neurons).length+" "+et);*/
-        //System.out.println("hehehehe "+neurons[0]);
-        //System.out.println(neurons.length-1);
+        this.eta = eta;
         if (flatHebbCoef(hebbCoef, neurons).length != 4 * countWeights(neurons)) {
             throw new IllegalArgumentException(String.format(
                     "Wrong number of hebbian coeff: %d   expected, %d found",
@@ -110,7 +84,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
                 unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
                 unflatHebbCoef(hebbCoef, countNeurons(nOfInput, innerNeurons, nOfOutput)),
                 countNeurons(nOfInput, innerNeurons, nOfOutput),
-                eta,
+                initEta(eta, countNeurons(nOfInput, innerNeurons, nOfOutput)),
                 disabled,
                 mapper
 
@@ -124,13 +98,44 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
                 randW(countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput), rnd),
                 unflatHebbCoef(hebbCoef, countNeurons(nOfInput, innerNeurons, nOfOutput)),
                 countNeurons(nOfInput, innerNeurons, nOfOutput),
-                eta,
+                initEta(eta, countNeurons(nOfInput, innerNeurons, nOfOutput)),
                 disabled,
                 mapper
         );
     }
 
     public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
+        this(activationFunction, nOfInput, innerNeurons, nOfOutput, new double[countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput))], flatHebbCoef(initHebbCoef(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput)), eta, disabled, mapper);
+
+    }
+
+    public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double[][][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
+        this(
+                activationFunction,
+                unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
+                unflatHebbCoef(hebbCoef, countNeurons(nOfInput, innerNeurons, nOfOutput)),
+                countNeurons(nOfInput, innerNeurons, nOfOutput),
+                eta,
+                disabled,
+                mapper
+
+        );
+    }
+
+    public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbCoef, double[][][] eta, Random rnd, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
+
+        this(
+                activationFunction,
+                randW(countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput), rnd),
+                unflatHebbCoef(hebbCoef, countNeurons(nOfInput, innerNeurons, nOfOutput)),
+                countNeurons(nOfInput, innerNeurons, nOfOutput),
+                eta,
+                disabled,
+                mapper
+        );
+    }
+
+    public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[][][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
         this(activationFunction, nOfInput, innerNeurons, nOfOutput, new double[countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput))], flatHebbCoef(initHebbCoef(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput)), eta, disabled, mapper);
 
     }
@@ -157,7 +162,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
             unflatWeights[i] = new double[neurons[i]][neurons[i + 1]][4];
             for (int j = 0; j < neurons[i]; j++) {
                 for (int k = 0; k < neurons[i + 1]; k++) {
-                    for (int o = 0; o<4; o++) {
+                    for (int o = 0; o < 4; o++) {
                         unflatWeights[i][j][k][o] = hebbCoef[c];
                         c = c + 1;
                     }
@@ -197,7 +202,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         for (int i = 0; i < neurons.length - 1; i++) {
             for (int j = 0; j < neurons[i]; j++) {
                 for (int k = 0; k < neurons[i + 1]; k++) {
-                    for (int o = 0; o<4; o++) {
+                    for (int o = 0; o < 4; o++) {
                         flatHebbCoef[c] = hebbCoef[i][j][k][o];
                         c = c + 1;
                     }
@@ -245,14 +250,14 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
     public static int countWeights(int nOfInput, int[] innerNeurons, int nOfOutput) {
         StringBuilder s = new StringBuilder();
         int[] n = countNeurons(nOfInput, innerNeurons, nOfOutput);
-        for (int i : n){
+        for (int i : n) {
             s.append(i).append(" ");
         }
         return countWeights(n);
     }
 
     public static int countHebbCoef(int nOfInput, int[] innerNeurons, int nOfOutput) {
-        return 4 * countWeights(nOfInput, innerNeurons,nOfOutput);
+        return 4 * countWeights(nOfInput, innerNeurons, nOfOutput);
     }
 
     private double norm2(double[] vector) {
@@ -270,11 +275,11 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
                 for (int i = 0; i < neurons[l - 1]; i++) {
                     if ((l == 1 && !disabled.contains(i)) || l > 1) {
                         //System.out.println(o);
-                        double dW = eta[l-1][i][o] * (
-                                hebbCoef[l-1][i][o][0] * values[l][o] * values[l - 1][i] +   // A*a_i,j*a_j,k
-                                        hebbCoef[l-1][i][o][1] * values[l][o] +                 // B*a_i,j
-                                        hebbCoef[l-1][i][o][2] * values[l - 1][i] +                 // C*a_j,k
-                                        hebbCoef[l-1][i][o][3]                                  // D
+                        double dW = eta[l - 1][i][o] * (
+                                hebbCoef[l - 1][i][o][0] * values[l][o] * values[l - 1][i] +   // A*a_i,j*a_j,k
+                                        hebbCoef[l - 1][i][o][1] * values[l][o] +                 // B*a_i,j
+                                        hebbCoef[l - 1][i][o][2] * values[l - 1][i] +                 // C*a_j,k
+                                        hebbCoef[l - 1][i][o][3]                                  // D
                         );
                         weights[l - 1][i][o] = weights[l - 1][i][o] + dW;
                     }
@@ -388,8 +393,11 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         }
     }
 
-    public double[] getEta(){return flat(eta, neurons);}
-    public void setEta(double[] etas){
+    public double[] getEta() {
+        return flat(eta, neurons);
+    }
+
+    public void setEta(double[] etas) {
         double[][][] newEtas = unflat(etas, neurons);
         for (int l = 0; l < newEtas.length; l++) {
             for (int s = 0; s < newEtas[l].length; s++) {
@@ -400,7 +408,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         }
     }
 
-    public double[][][] initEta(double initEta){
+    public static double[][][] initEta(double initEta, int[] neurons) {
         double[][][] unflatWeights = new double[neurons.length - 1][][];
         int c = 0;
         for (int i = 0; i < neurons.length - 1; i++) {
@@ -421,7 +429,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         for (int i = 0; i < neurons.length - 1; i++) {
             for (int j = 0; j < neurons[i]; j++) {
                 for (int k = 0; k < neurons[i + 1]; k++) {
-                    for (int o = 0; o<4; o++) {
+                    for (int o = 0; o < 4; o++) {
                         hebbCoef[i][j][k][o] = tmp[i][j][k][o];
                     }
                 }

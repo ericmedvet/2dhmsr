@@ -103,18 +103,14 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
             t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
             //System.out.println("pre obs "+t);
             ;
-            double[] lastInput = {0d};
             double[] activationsValues = {0d};
             if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof MultiLayerPerceptron){
-                lastInput = ((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).lastInput;
                 activationsValues = flatten(((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).values);
+
             }
-            double[] data = new double[lastInput.length+activationsValues.length];
-            System.arraycopy(lastInput,0,data,0,lastInput.length);
-            System.arraycopy(activationsValues,0,data,lastInput.length, activationsValues.length);
 
             observations.add(new Outcome.Observation(
-                    data,
+                    activationsValues,
                     t,
                     Point2.build(robot.getCenter()),
                     ground.yAt(robot.getCenter().x),

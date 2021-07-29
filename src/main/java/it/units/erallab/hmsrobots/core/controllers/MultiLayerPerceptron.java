@@ -155,6 +155,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
     this.lastInput= input;
+    System.out.println(Arrays.toString(neurons));
     this.values = new double[neurons.length][];
     values[0] = Arrays.stream(input).map(activationFunction.f::apply).toArray();
     for (int i = 1; i < neurons.length; i++) {
