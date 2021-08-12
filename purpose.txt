@@ -1,0 +1,5 @@
+The purpose of this branch is to allow for customizable/extendible components that draw information from and during the simulation.
+
+I plan to do two things:
+- deeply refactor the Immutable/Snapshot parts: every entity, both situated (e.g., a voxel) and not situated (e.g., a sensor reading) has to possibly be able to provide info
+- deeply refactor the Drawer parts: every info could be drawn
