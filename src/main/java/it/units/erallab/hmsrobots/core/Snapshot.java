@@ -19,19 +19,32 @@ package it.units.erallab.hmsrobots.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author "Eric Medvet" on 2021/08/12 for 2dhmsr
  */
 public class Snapshot {
 
+  private final Object content;
+  private final Class<Snapshottable> snapshottableClass;
   private final List<Snapshot> children;
 
-  public Snapshot() {
+  public Snapshot(Object content, Class<Snapshottable> snapshottableClass) {
+    this.content = content;
+    this.snapshottableClass = snapshottableClass;
     this.children = new ArrayList<>();
   }
 
   public List<Snapshot> getChildren() {
     return children;
+  }
+
+  public Object getContent() {
+    return content;
+  }
+
+  public Class<Snapshottable> getSnapshottableClass() {
+    return snapshottableClass;
   }
 }

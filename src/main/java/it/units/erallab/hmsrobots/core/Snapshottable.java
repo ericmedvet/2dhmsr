@@ -17,9 +17,13 @@
 
 package it.units.erallab.hmsrobots.core;
 
+import org.apache.commons.math3.util.Pair;
+
+import java.util.function.Predicate;
+
 /**
  * @author eric on 2021/08/12 for 2dhmsr
  */
 public interface Snapshottable {
-
+  Snapshot getSnapshot(); //TODO later add a filter
 }

@@ -19,10 +19,13 @@ package it.units.erallab.hmsrobots.core.objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.Actionable;
+import it.units.erallab.hmsrobots.core.Snapshot;
+import it.units.erallab.hmsrobots.core.Snapshottable;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
+import org.apache.commons.math3.util.Pair;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
@@ -36,11 +39,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot<V extends ControllableVoxel> implements Actionable, Serializable {
+public class Robot<V extends ControllableVoxel> implements Actionable, Serializable, WorldObject, Snapshottable {
 
   @JsonProperty
   private final Controller<V> controller;
@@ -98,6 +102,13 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
         (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
         (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    //TODO
+
+    return null;
   }
 
   @Override
