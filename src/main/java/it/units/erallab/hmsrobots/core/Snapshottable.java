@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (c) "Eric Medvet" 2021.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package it.units.erallab.hmsrobots.core.objects;
+package it.units.erallab.hmsrobots.core;
 
-public interface LivingObject extends WorldObject {
-  void act(final double t);
+/**
+ * @author eric on 2021/08/12 for 2dhmsr
+ */
+public interface Snapshottable {
 
-  void reset();
 }

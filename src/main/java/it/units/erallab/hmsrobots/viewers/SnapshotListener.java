@@ -16,13 +16,13 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public interface SnapshotListener {
 
-  void listen(Snapshot snapshot);
+  void listen(SnapshotOLD snapshot);
 
 }

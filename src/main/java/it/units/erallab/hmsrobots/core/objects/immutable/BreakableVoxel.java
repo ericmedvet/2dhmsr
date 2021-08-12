@@ -16,7 +16,7 @@
  */
 package it.units.erallab.hmsrobots.core.objects.immutable;
 
-import it.units.erallab.hmsrobots.util.Shape;
+import it.units.erallab.hmsrobots.core.geometry.Shape;
 
 public class BreakableVoxel extends ControllableVoxel {
 

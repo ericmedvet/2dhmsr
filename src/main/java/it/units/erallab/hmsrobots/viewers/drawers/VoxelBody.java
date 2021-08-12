@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.util.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;

@@ -14,37 +14,36 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.util;
+package it.units.erallab.hmsrobots.core.objects.immutable;
 
-public class Vector implements Shape {
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 
-  private final Point2 start;
-  private final Point2 end;
+/**
+ * @author Eric Medvet <eric.medvet@gmail.com>
+ */
+public class SnapshotOLD implements Serializable, Comparable<SnapshotOLD> {
 
-  private Vector(Point2 start, Point2 end) {
-    this.start = start;
-    this.end = end;
+  private final double time;
+  private final Collection<Immutable> objects;
+
+  public SnapshotOLD(double time, Collection<Immutable> objects) {
+    this.time = time;
+    this.objects = Collections.unmodifiableCollection(objects);
   }
 
-  public static Vector build(Point2 start, Point2 end) {
-    return new Vector(start, end);
+  public double getTime() {
+    return time;
+  }
+
+  public Collection<Immutable> getObjects() {
+    return objects;
   }
 
   @Override
-  public BoundingBox boundingBox() {
-    return BoundingBox.build(start, end);
+  public int compareTo(SnapshotOLD other) {
+    return Double.compare(time, other.time);
   }
 
-  @Override
-  public Point2 center() {
-    return Point2.average(start, end);
-  }
-
-  public Point2 getStart() {
-    return start;
-  }
-
-  public Point2 getEnd() {
-    return end;
-  }
 }

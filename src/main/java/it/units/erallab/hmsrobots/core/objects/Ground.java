@@ -17,8 +17,8 @@
 package it.units.erallab.hmsrobots.core.objects;
 
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.util.Point2;
-import it.units.erallab.hmsrobots.util.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;

@@ -18,9 +18,10 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -39,7 +40,7 @@ import java.util.Objects;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot<V extends ControllableVoxel> implements LivingObject, Serializable {
+public class Robot<V extends ControllableVoxel> implements Actionable, Serializable {
 
   @JsonProperty
   private final Controller<V> controller;

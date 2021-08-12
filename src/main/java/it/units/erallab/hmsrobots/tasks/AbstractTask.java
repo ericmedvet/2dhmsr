@@ -16,9 +16,9 @@
  */
 package it.units.erallab.hmsrobots.tasks;
 
-import it.units.erallab.hmsrobots.core.objects.LivingObject;
+import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -44,10 +44,10 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
   protected static double updateWorld(final double t, final double dT, final World world, final List<WorldObject> objects, final SnapshotListener listener) {
     double newT = t + dT;
     world.step(1);
-    objects.stream().filter(o -> o instanceof LivingObject).forEach(o -> ((LivingObject) o).act(newT));
+    objects.stream().filter(o -> o instanceof Actionable).forEach(o -> ((Actionable) o).act(newT));
     //possibly output snapshot
     if (listener != null) {
-      Snapshot snapshot = new Snapshot(newT, objects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
+      SnapshotOLD snapshot = new SnapshotOLD(newT, objects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
       listener.listen(snapshot);
     }
     return newT;

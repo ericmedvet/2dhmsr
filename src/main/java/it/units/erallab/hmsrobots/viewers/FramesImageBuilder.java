@@ -16,9 +16,9 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.util.BoundingBox;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 
 import java.awt.*;
@@ -46,7 +46,7 @@ public class FramesImageBuilder implements SnapshotListener {
   private final Framer framer;
   private final BufferedImage image;
 
-  private Snapshot lastSnapshot;
+  private SnapshotOLD lastSnapshot;
   private int frameCount;
 
   private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
@@ -83,7 +83,7 @@ public class FramesImageBuilder implements SnapshotListener {
   }
 
   @Override
-  public void listen(final Snapshot snapshot) {
+  public void listen(final SnapshotOLD snapshot) {
     BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
     if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
       return;

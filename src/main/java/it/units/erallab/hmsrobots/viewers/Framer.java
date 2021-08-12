@@ -16,8 +16,8 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -25,6 +25,6 @@ import it.units.erallab.hmsrobots.util.BoundingBox;
 @FunctionalInterface
 public interface Framer {
 
-  BoundingBox getFrame(Snapshot snapshot, double ratio);
+  BoundingBox getFrame(SnapshotOLD snapshot, double ratio);
 
 }

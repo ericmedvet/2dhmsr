@@ -18,10 +18,10 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
 import it.units.erallab.hmsrobots.core.objects.immutable.Robot;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
-import it.units.erallab.hmsrobots.util.BoundingBox;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -46,7 +46,7 @@ public class RobotFollower implements Framer {
   }
 
   @Override
-  public BoundingBox getFrame(Snapshot snapshot, double ratio) {
+  public BoundingBox getFrame(SnapshotOLD snapshot, double ratio) {
     //get enclosing bounding box
     BoundingBox enclosing = snapshot.getObjects().stream()
         .filter(o -> o instanceof Robot)

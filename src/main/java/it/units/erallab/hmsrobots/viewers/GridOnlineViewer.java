@@ -17,14 +17,12 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.tasks.Task;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
-import it.units.erallab.hmsrobots.viewers.drawers.VoxelBody;
-import it.units.erallab.hmsrobots.viewers.drawers.VoxelJoint;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
@@ -48,8 +46,8 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   private final static int INIT_WIN_HEIGHT = 600;
 
   private final Grid<String> namesGrid;
-  private final Queue<Grid<Snapshot>> gridQueue;
-  private final Grid<Queue<Snapshot>> queueGrid;
+  private final Queue<Grid<SnapshotOLD>> gridQueue;
+  private final Grid<Queue<SnapshotOLD>> queueGrid;
   private final Grid<Framer> framerGrid;
 
   private final Canvas canvas;
@@ -93,10 +91,10 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     executor.submit(() -> {
           while (running) {
             //check if ready
-            Grid<Snapshot> snapshotGrid = Grid.create(queueGrid);
+            Grid<SnapshotOLD> snapshotGrid = Grid.create(queueGrid);
             synchronized (queueGrid) {
-              for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
-                Snapshot snapshot;
+              for (Grid.Entry<Queue<SnapshotOLD>> entry : queueGrid) {
+                SnapshotOLD snapshot;
                 while ((snapshot = entry.getValue().peek()) != null) {
                   if (snapshot.getTime() < t) {
                     entry.getValue().poll();
@@ -108,7 +106,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
               }
             }
             boolean ready = true;
-            for (Grid.Entry<Queue<Snapshot>> entry : queueGrid) {
+            for (Grid.Entry<Queue<SnapshotOLD>> entry : queueGrid) {
               ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
             }
             if (ready) {
@@ -151,7 +149,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
           stopwatch.start();
         }
         double currentTime = (double) stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000d;
-        Grid<Snapshot> localSnapshotGrid = null;
+        Grid<SnapshotOLD> localSnapshotGrid = null;
         synchronized (gridQueue) {
           while (!gridQueue.isEmpty()) {
             localSnapshotGrid = gridQueue.poll();
@@ -191,7 +189,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
-    return (Snapshot snapshot) -> {
+    return (SnapshotOLD snapshot) -> {
       synchronized (queueGrid) {
         queueGrid.get(lX, lY).offer(snapshot);
         queueGrid.notifyAll();
@@ -199,14 +197,14 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     };
   }
 
-  private void renderFrame(Grid<Snapshot> localSnapshotGrid) {
+  private void renderFrame(Grid<SnapshotOLD> localSnapshotGrid) {
     //set local clip size
     double localW = (double) canvas.getWidth() / (double) namesGrid.getW();
     double localH = (double) canvas.getHeight() / (double) namesGrid.getH();
     //get graphics
     Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
     //iterate over snapshot grid
-    for (Grid.Entry<Snapshot> entry : localSnapshotGrid) {
+    for (Grid.Entry<SnapshotOLD> entry : localSnapshotGrid) {
       if (entry.getValue() != null) {
         //obtain viewport
         BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);

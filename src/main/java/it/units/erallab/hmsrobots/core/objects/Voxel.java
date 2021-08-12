@@ -19,10 +19,11 @@ package it.units.erallab.hmsrobots.core.objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import it.units.erallab.hmsrobots.core.Actionable;
+import it.units.erallab.hmsrobots.core.geometry.*;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody;
 import it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint;
-import it.units.erallab.hmsrobots.util.*;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -45,7 +46,7 @@ import java.util.List;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class Voxel implements LivingObject, Serializable {
+public class Voxel implements Actionable, Serializable {
 
   public enum SpringScaffolding {
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS

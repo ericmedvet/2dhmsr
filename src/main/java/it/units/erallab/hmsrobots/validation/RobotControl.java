@@ -22,9 +22,9 @@ import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
@@ -169,7 +169,7 @@ public class RobotControl extends AbstractTask<Grid<ControllableVoxel>, RobotCon
       //control
       robot.act(t);
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
+        SnapshotOLD snapshot = new SnapshotOLD(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //collect data

@@ -16,11 +16,11 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.tasks.Task;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
@@ -79,7 +79,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
-    return (Snapshot snapshot) -> {
+    return (SnapshotOLD snapshot) -> {
       List<Double> times = timesGrid.get(lX, lY);
       double lastTime = times.isEmpty() ? Double.NEGATIVE_INFINITY : times.get(times.size() - 1);
       if (snapshot.getTime() >= startTime && snapshot.getTime() - lastTime >= 1d / frameRate) {

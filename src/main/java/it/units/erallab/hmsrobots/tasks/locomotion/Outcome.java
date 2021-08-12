@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.tasks.locomotion;
 
 import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;

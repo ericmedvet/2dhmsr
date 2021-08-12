@@ -22,11 +22,11 @@ import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
@@ -214,7 +214,7 @@ public class CantileverBending extends AbstractTask<Grid<ControllableVoxel>, Can
       t = t + settings.getStepFrequency();
       world.step(1);
       if (listener != null) {
-        Snapshot snapshot = new Snapshot(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
+        SnapshotOLD snapshot = new SnapshotOLD(t, worldObjects.stream().map(WorldObject::immutable).collect(Collectors.toList()));
         listener.listen(snapshot);
       }
       //get position

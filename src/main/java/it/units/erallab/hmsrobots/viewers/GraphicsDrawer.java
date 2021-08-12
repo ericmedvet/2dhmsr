@@ -16,8 +16,11 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.util.*;
 import it.units.erallab.hmsrobots.viewers.drawers.Robot;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
@@ -89,7 +92,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return new GraphicsDrawer();
   }
 
-  public void drawMiniature(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
+  public void drawMiniature(SnapshotOLD snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -135,7 +138,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     }
   }
 
-  public void draw(Snapshot snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, String... infos) {
+  public void draw(SnapshotOLD snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, String... infos) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
