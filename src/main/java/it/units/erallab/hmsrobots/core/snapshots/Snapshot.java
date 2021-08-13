@@ -15,11 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package it.units.erallab.hmsrobots.core;
+package it.units.erallab.hmsrobots.core.snapshots;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author "Eric Medvet" on 2021/08/12 for 2dhmsr
@@ -27,10 +26,10 @@ import java.util.Objects;
 public class Snapshot {
 
   private final Object content;
-  private final Class<Snapshottable> snapshottableClass;
+  private final Class<? extends Snapshottable> snapshottableClass;
   private final List<Snapshot> children;
 
-  public Snapshot(Object content, Class<Snapshottable> snapshottableClass) {
+  public Snapshot(Object content, Class<? extends Snapshottable> snapshottableClass) {
     this.content = content;
     this.snapshottableClass = snapshottableClass;
     this.children = new ArrayList<>();
@@ -44,7 +43,7 @@ public class Snapshot {
     return content;
   }
 
-  public Class<Snapshottable> getSnapshottableClass() {
+  public Class<? extends Snapshottable> getSnapshottableClass() {
     return snapshottableClass;
   }
 }

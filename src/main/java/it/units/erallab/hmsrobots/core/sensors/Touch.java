@@ -27,7 +27,7 @@ public class Touch implements Sensor {
   };
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return DOMAINS;
   }
 

@@ -41,8 +41,8 @@ public class Average implements Sensor {
   }
 
   @Override
-  public Domain[] domains() {
-    return sensor.domains();
+  public Domain[] getDomains() {
+    return sensor.getDomains();
   }
 
   @Override

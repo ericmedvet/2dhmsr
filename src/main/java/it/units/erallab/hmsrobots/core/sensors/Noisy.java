@@ -50,14 +50,14 @@ public class Noisy implements Sensor, ReadingAugmenter {
     this.sigma = sigma;
     this.seed = seed;
     random = new Random(seed);
-    sigmas = Arrays.stream(sensor.domains())
+    sigmas = Arrays.stream(sensor.getDomains())
         .mapToDouble(d -> Math.abs(d.getMax() - d.getMin()) * sigma)
         .toArray();
   }
 
   @Override
-  public Domain[] domains() {
-    return sensor.domains();
+  public Domain[] getDomains() {
+    return sensor.getDomains();
   }
 
   @Override

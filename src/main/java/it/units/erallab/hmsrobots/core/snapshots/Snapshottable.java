@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (c) "Eric Medvet" 2021.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -14,16 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.core.objects;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import org.dyn4j.dynamics.World;
+package it.units.erallab.hmsrobots.core.snapshots;
 
 /**
- * @author Eric Medvet <eric.medvet@gmail.com>
+ * @author eric on 2021/08/12 for 2dhmsr
  */
-public interface WorldObject {
-
-  void addTo(World world);
-
+public interface Snapshottable {
+  Snapshot getSnapshot(); //TODO maybe later add a filter
 }

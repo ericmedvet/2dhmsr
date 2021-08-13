@@ -44,7 +44,7 @@ public class TimeFunction implements Sensor {
   }
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return domains;
   }
 

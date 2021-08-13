@@ -17,12 +17,14 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.Actionable;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 
 import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public interface Sensor extends Serializable {
+public interface Sensor extends Serializable, Actionable, Snapshottable {
 
   class Domain implements Serializable {
     private final double min;
@@ -46,7 +48,10 @@ public interface Sensor extends Serializable {
     }
   }
 
-  Domain[] domains();
+  Domain[] getDomains();
 
-  double[] sense(Voxel voxel, double t);
+  void setVoxel(SensingVoxel sensingVoxel);
+
+  double[] getReadings();
+
 }

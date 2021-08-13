@@ -19,21 +19,19 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
+import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
-public class Lidar implements Sensor, ReadingAugmenter {
+public class Lidar extends AbstractSensor {
   public enum Side {
 
     N(Math.PI * 1d / 4d, Math.PI * 3d / 4d),
@@ -79,17 +77,15 @@ public class Lidar implements Sensor, ReadingAugmenter {
   private final double rayLength;
   @JsonProperty
   private final double[] rayDirections;
-  private final Domain[] domains;
 
   @JsonCreator
   public Lidar(
       @JsonProperty("rayLength") double rayLength,
       @JsonProperty("rayDirections") double... rayDirections
   ) {
+    super(Collections.nCopies(rayDirections.length, Domain.of(0, rayLength)).toArray(Domain[]::new));
     this.rayLength = rayLength;
     this.rayDirections = rayDirections;
-    domains = new Domain[rayDirections.length];
-    Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
@@ -97,9 +93,9 @@ public class Lidar implements Sensor, ReadingAugmenter {
         rayLength,
         raysPerSide.entrySet().stream()
             .map(e -> DoubleStream.iterate(
-                e.getKey().getStartAngle() + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue()) / 2d,
-                d -> d + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue())
-            )
+                    e.getKey().getStartAngle() + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue()) / 2d,
+                    d -> d + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue())
+                )
                 .limit(e.getValue())
                 .boxed()
                 .collect(Collectors.toList()))
@@ -112,16 +108,10 @@ public class Lidar implements Sensor, ReadingAugmenter {
   }
 
   @Override
-  public Domain[] domains() {
-    return domains;
-  }
-
-  @Override
-  public double[] sense(Voxel voxel, double t) {
+  public double[] sense(double t) {
     double[] rayHits = new double[rayDirections.length];
     // List of objects the ray intersects with
     List<RaycastResult> results = new ArrayList<>();
-
     for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {
       double direction = rayDirections[rayIdx];
       // take into account rotation angle
@@ -134,23 +124,21 @@ public class Lidar implements Sensor, ReadingAugmenter {
       if (results.isEmpty()) {
         rayHits[rayIdx] = 1d;
       } else {
-        rayHits[rayIdx] = results.get(0).getRaycast().getDistance() / rayLength;
+        rayHits[rayIdx] = results.get(0).getRaycast().getDistance();
       }
     }
-
     return rayHits;
   }
 
   @Override
-  public SensorReading augment(SensorReading reading, Voxel voxel) {
-    return new it.units.erallab.hmsrobots.core.sensors.immutable.Lidar(
-        reading.getValues(),
-        reading.getDomains(),
-        reading.getSensorIndex(),
-        reading.getnOfSensors(),
-        voxel.getAngle(),
-        rayLength,
-        rayDirections.clone()
+  public Snapshot getSnapshot() {
+    return new Snapshot(
+        new LidarReadings(
+            Arrays.copyOf(readings, readings.length),
+            Arrays.stream(domains).map(d -> Domain.of(d.getMin(), d.getMax())).toArray(Domain[]::new),
+            Arrays.copyOf(rayDirections, rayDirections.length)
+        ),
+        getClass()
     );
   }
 

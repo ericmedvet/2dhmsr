@@ -35,7 +35,7 @@ public class FirstDifference implements Sensor {
       @JsonProperty("sensor") Sensor sensor
   ) {
     this.sensor = sensor;
-    domains = Arrays.stream(sensor.domains())
+    domains = Arrays.stream(sensor.getDomains())
         .map(d -> Domain.of(
             -Math.abs(d.getMax() - d.getMin()),
             Math.abs(d.getMax() - d.getMin())
@@ -44,7 +44,7 @@ public class FirstDifference implements Sensor {
   }
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return domains;
   }
 

@@ -41,13 +41,13 @@ public class DynamicNormalization implements Sensor, ReadingAugmenter {
   ) {
     this.sensor = sensor;
     this.interval = interval;
-    domains = new Domain[sensor.domains().length];
+    domains = new Domain[sensor.getDomains().length];
     readings = new TreeMap<>();
     Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return domains;
   }
 

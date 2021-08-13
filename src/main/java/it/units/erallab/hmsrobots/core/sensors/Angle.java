@@ -16,36 +16,18 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
+public class Angle extends AbstractSensor {
 
-public class Angle implements Sensor, ReadingAugmenter {
   private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(-Math.PI, Math.PI)
   };
 
-  @Override
-  public Domain[] domains() {
-    return DOMAINS;
+  public Angle() {
+    super(DOMAINS);
   }
 
   @Override
-  public double[] sense(Voxel voxel, double t) {
+  protected double[] sense(double t) {
     return new double[]{voxel.getAngle()};
-  }
-
-  @Override
-  public SensorReading augment(SensorReading reading, Voxel voxel) {
-    return new it.units.erallab.hmsrobots.core.sensors.immutable.Angle(
-        reading.getValues(),
-        reading.getDomains(),
-        reading.getSensorIndex(),
-        reading.getnOfSensors()
-    );
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName();
   }
 }

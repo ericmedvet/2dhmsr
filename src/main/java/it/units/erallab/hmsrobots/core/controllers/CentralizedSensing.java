@@ -63,7 +63,7 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
     return voxels.values().stream()
         .filter(Objects::nonNull)
         .mapToInt(v -> v.getSensors().stream()
-            .mapToInt(s -> s.domains().length)
+            .mapToInt(s -> s.getDomains().length)
             .sum())
         .sum();
   }

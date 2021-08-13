@@ -20,10 +20,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.Actionable;
-import it.units.erallab.hmsrobots.core.geometry.*;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.VoxelBody;
-import it.units.erallab.hmsrobots.core.objects.immutable.VoxelJoint;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Vector;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -46,7 +49,7 @@ import java.util.List;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class Voxel implements Actionable, Serializable {
+public class Voxel implements Actionable, Serializable, Snapshottable, WorldObject {
 
   public enum SpringScaffolding {
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS
@@ -375,7 +378,6 @@ public class Voxel implements Actionable, Serializable {
     } else {
       filter = new RobotFilter();
     }
-
     for (Body vertexBody : vertexBodies) {
       vertexBody.setUserData(robot);
       vertexBody.getFixture(0).setFilter(filter);
@@ -383,32 +385,43 @@ public class Voxel implements Actionable, Serializable {
   }
 
   @Override
-  public Immutable immutable() {
-    //voxel shape
-    Shape voxelShape = Poly.build(
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(new VoxelPoly(
+        getVertices(),
+        getAreaRatio(),
+        getAreaRatioEnergy()
+    ), getClass());
+    fillSnapshot(snapshot);
+    return snapshot;
+  }
+
+  protected List<Point2> getVertices() {
+    return List.of(
         Point2.build(getIndexedVertex(0, 3)),
         Point2.build(getIndexedVertex(1, 2)),
         Point2.build(getIndexedVertex(2, 1)),
         Point2.build(getIndexedVertex(3, 0))
     );
-    it.units.erallab.hmsrobots.core.objects.immutable.Voxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.Voxel(
-        voxelShape,
-        getAreaRatio(),
-        areaRatioEnergy
-    );
+  }
+
+  protected void fillSnapshot(Snapshot snapshot) {
     //add parts
     for (Body body : vertexBodies) {
-      immutable.getChildren().add(new VoxelBody(rectangleToPoly(body)));
+      snapshot.getChildren().add(new Snapshot(
+          rectangleToPoly(body),
+          getClass()
+      ));
     }
     //add joints
     for (DistanceJoint joint : springJoints) {
-      immutable.getChildren().add(new VoxelJoint(Vector.build(
-          Point2.build(joint.getAnchor1()),
-          Point2.build(joint.getAnchor2())
-      )));
+      snapshot.getChildren().add(new Snapshot(
+          Vector.build(
+              Point2.build(joint.getAnchor1()),
+              Point2.build(joint.getAnchor2())
+          ),
+          getClass()
+      ));
     }
-    //add enclosing
-    return immutable;
   }
 
   public BoundingBox boundingBox() {

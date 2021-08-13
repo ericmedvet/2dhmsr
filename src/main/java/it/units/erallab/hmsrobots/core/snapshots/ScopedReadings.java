@@ -15,15 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package it.units.erallab.hmsrobots.core;
+package it.units.erallab.hmsrobots.core.snapshots;
 
-import org.apache.commons.math3.util.Pair;
-
-import java.util.function.Predicate;
+import it.units.erallab.hmsrobots.core.sensors.Sensor;
 
 /**
- * @author eric on 2021/08/12 for 2dhmsr
+ * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
-public interface Snapshottable {
-  Snapshot getSnapshot(); //TODO later add a filter
+public class ScopedReadings {
+  private final double[] readings;
+  private final Sensor.Domain[] domains;
+
+  public ScopedReadings(double[] readings, Sensor.Domain[] domains) {
+    this.readings = readings;
+    this.domains = domains;
+  }
+
+  public double[] getReadings() {
+    return readings;
+  }
+
+  public Sensor.Domain[] getDomains() {
+    return domains;
+  }
 }

@@ -57,7 +57,7 @@ public class Velocity implements Sensor {
   }
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return domains;
   }
 

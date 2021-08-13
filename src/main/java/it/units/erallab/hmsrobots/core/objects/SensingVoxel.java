@@ -18,10 +18,8 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.sensors.ReadingAugmenter;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
-import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.EnumSet;
@@ -65,18 +63,28 @@ public class SensingVoxel extends ControllableVoxel {
     this.sensors = sensors;
   }
 
-  protected List<Pair<Sensor, double[]>> lastReadings = List.of();
+  protected List<Pair<Sensor, double[]>> lastReadings = List.of(); // TODO remove
 
   public List<Pair<Sensor, double[]>> getLastReadings() {
     return lastReadings;
-  }
+  }  // TODO remove
 
   @Override
   public void act(double t) {
     super.act(t);
+    sensors.forEach(s -> s.act(t));
     lastReadings = sensors.stream()
         .map(s -> Pair.of(s, s.sense(this, t)))
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    sensors.forEach(s -> {
+      s.setVoxel(this);
+      s.reset();
+    });
   }
 
   public List<Sensor> getSensors() {
@@ -84,20 +92,12 @@ public class SensingVoxel extends ControllableVoxel {
   }
 
   @Override
-  public Immutable immutable() {
-    it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel immutable = (it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel) super.immutable();
-    //add sensor readings
-    int nOfSensors = lastReadings.size();
-    for (int i = 0; i < nOfSensors; i++) {
-      Pair<Sensor, double[]> pair = lastReadings.get(i);
-      Sensor sensor = pair.getKey();
-      SensorReading reading = new SensorReading(pair.getValue(), sensor.domains(), i, nOfSensors);
-      if (sensor instanceof ReadingAugmenter) {
-        reading = ((ReadingAugmenter) sensor).augment(reading, this);
-      }
-      immutable.getChildren().add(reading);
+  protected void fillSnapshot(Snapshot snapshot) {
+    super.fillSnapshot(snapshot);
+    //add sensors
+    for (Sensor sensor : sensors) {
+      snapshot.getChildren().add(sensor.getSnapshot());
     }
-    return immutable;
   }
 
   @Override

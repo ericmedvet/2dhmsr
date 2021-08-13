@@ -19,13 +19,11 @@ package it.units.erallab.hmsrobots.core.objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.Actionable;
-import it.units.erallab.hmsrobots.core.Snapshot;
-import it.units.erallab.hmsrobots.core.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.math3.util.Pair;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
@@ -39,7 +37,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -106,20 +103,16 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
 
   @Override
   public Snapshot getSnapshot() {
-    //TODO
-
-    return null;
-  }
-
-  @Override
-  public Immutable immutable() {
-    it.units.erallab.hmsrobots.core.objects.immutable.Robot immutable = new it.units.erallab.hmsrobots.core.objects.immutable.Robot();
+    Snapshot snapshot = new Snapshot(boundingBox(), getClass());
+    if (controller instanceof Snapshottable) {
+      snapshot.getChildren().add(((Snapshottable) controller).getSnapshot());
+    }
     for (Voxel voxel : voxels.values()) {
-      if (voxel != null) {
-        immutable.getChildren().add(voxel.immutable());
+      if (voxel!=null) {
+        snapshot.getChildren().add(voxel.getSnapshot());
       }
     }
-    return immutable;
+    return null;
   }
 
   @Override

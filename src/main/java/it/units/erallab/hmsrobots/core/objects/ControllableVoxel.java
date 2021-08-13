@@ -18,7 +18,8 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 import org.dyn4j.geometry.Vector2;
@@ -113,17 +114,16 @@ public class ControllableVoxel extends Voxel {
   }
 
   @Override
-  public Immutable immutable() {
-    it.units.erallab.hmsrobots.core.objects.immutable.Voxel superImmutable = (it.units.erallab.hmsrobots.core.objects.immutable.Voxel) super.immutable();
-    it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel(
-        superImmutable.getShape(),
-        superImmutable.getAreaRatio(),
-        superImmutable.getAreaRatioEnergy(),
-        lastAppliedForce,
-        controlEnergy
-    );
-    immutable.getChildren().addAll(superImmutable.getChildren());
-    return immutable;
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(new VoxelPoly(
+        getVertices(),
+        getAreaRatio(),
+        getAreaRatioEnergy(),
+        getLastAppliedForce(),
+        getControlEnergy()
+    ), getClass());
+    fillSnapshot(snapshot);
+    return snapshot;
   }
 
   @Override

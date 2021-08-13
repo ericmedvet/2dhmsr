@@ -17,28 +17,19 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
 
-public class AppliedForce implements Sensor {
+public class AppliedForce extends AbstractSensor {
   private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(-1d, 1d)
   };
 
-  @Override
-  public Domain[] domains() {
-    return DOMAINS;
+  public AppliedForce() {
+    super(DOMAINS);
   }
 
   @Override
-  public double[] sense(Voxel voxel, double t) {
-    if (voxel instanceof ControllableVoxel) {
-      return new double[]{((ControllableVoxel) voxel).getLastAppliedForce()};
-    }
-    return new double[]{0d};
-  }
+  protected double[] sense(double t) {
+    return new double[]{((ControllableVoxel) voxel).getLastAppliedForce()};
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName();
   }
 }

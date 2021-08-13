@@ -16,22 +16,19 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.Voxel;
-
-public class Crumpling implements Sensor {
+public class Crumpling extends AbstractSensor {
   private final static double THRESHOLD = 0.2d;
 
   private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(0d, 1d)
   };
 
-  @Override
-  public Domain[] domains() {
-    return DOMAINS;
+  public Crumpling() {
+    super(DOMAINS);
   }
 
   @Override
-  public double[] sense(Voxel voxel, double t) {
+  public double[] sense(double t) {
     double c = 0d;
     for (int i = 0; i < voxel.getVertexBodies().length; i++) {
       for (int j = i + 1; j < voxel.getVertexBodies().length; j++) {
@@ -44,8 +41,4 @@ public class Crumpling implements Sensor {
     return new double[]{2d * c / (double) (voxel.getVertexBodies().length * (voxel.getVertexBodies().length - 1))};
   }
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName();
-  }
 }

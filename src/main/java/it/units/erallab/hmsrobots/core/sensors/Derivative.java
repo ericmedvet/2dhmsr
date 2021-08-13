@@ -38,7 +38,7 @@ public class Derivative implements Sensor {
       @JsonProperty("sensor") Sensor sensor
   ) {
     this.sensor = sensor;
-    domains = Arrays.stream(sensor.domains())
+    domains = Arrays.stream(sensor.getDomains())
         .map(d -> Domain.of(
             -DOMAIN_MULTIPLIER * (Math.abs(d.getMax() - d.getMin())),
             DOMAIN_MULTIPLIER * (Math.abs(d.getMax() - d.getMin()))
@@ -47,7 +47,7 @@ public class Derivative implements Sensor {
   }
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return domains;
   }
 

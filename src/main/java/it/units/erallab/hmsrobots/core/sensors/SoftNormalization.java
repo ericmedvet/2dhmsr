@@ -35,12 +35,12 @@ public class SoftNormalization implements Sensor, ReadingAugmenter {
       @JsonProperty("sensor") Sensor sensor
   ) {
     this.sensor = sensor;
-    domains = new Sensor.Domain[sensor.domains().length];
+    domains = new Sensor.Domain[sensor.getDomains().length];
     Arrays.fill(domains, Sensor.Domain.of(0d, 1d));
   }
 
   @Override
-  public Sensor.Domain[] domains() {
+  public Sensor.Domain[] getDomains() {
     return domains;
   }
 
@@ -49,7 +49,7 @@ public class SoftNormalization implements Sensor, ReadingAugmenter {
     double[] innerValues = sensor.sense(voxel, t);
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
-      Sensor.Domain d = sensor.domains()[i];
+      Sensor.Domain d = sensor.getDomains()[i];
       double v = (innerValues[i] - d.getMin()) / (d.getMax() - d.getMin());
       //tanh(((x*2)-1)*2)/2+1/2
       values[i] = Math.tanh(((v * 2d) - 1d) * 2d) / 2d + 0.5d;

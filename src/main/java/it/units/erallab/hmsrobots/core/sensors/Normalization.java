@@ -34,12 +34,12 @@ public class Normalization implements Sensor, ReadingAugmenter {
       @JsonProperty("sensor") Sensor sensor
   ) {
     this.sensor = sensor;
-    domains = new Domain[sensor.domains().length];
+    domains = new Domain[sensor.getDomains().length];
     Arrays.fill(domains, Domain.of(0d, 1d));
   }
 
   @Override
-  public Domain[] domains() {
+  public Domain[] getDomains() {
     return domains;
   }
 
@@ -48,7 +48,7 @@ public class Normalization implements Sensor, ReadingAugmenter {
     double[] innerValues = sensor.sense(voxel, t);
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
-      Domain d = sensor.domains()[i];
+      Domain d = sensor.getDomains()[i];
       values[i] = Math.min(Math.max((innerValues[i] - d.getMin()) / (d.getMax() - d.getMin()), 0d), 1d);
     }
     return values;

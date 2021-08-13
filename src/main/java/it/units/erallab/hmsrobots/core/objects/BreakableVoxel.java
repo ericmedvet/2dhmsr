@@ -18,9 +18,9 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
@@ -158,20 +158,17 @@ public class BreakableVoxel extends SensingVoxel {
   }
 
   @Override
-  public Immutable immutable() {
-    ControllableVoxel superImmutable = (ControllableVoxel) super.immutable();
-    it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel(
-        superImmutable.getShape(),
-        superImmutable.getAreaRatio(),
-        superImmutable.getAreaRatioEnergy(),
-        superImmutable.getLastAppliedForce(),
-        superImmutable.getControlEnergy(),
-        state.get(ComponentType.ACTUATOR),
-        state.get(ComponentType.SENSORS),
-        state.get(ComponentType.STRUCTURE)
-    );
-    immutable.getChildren().addAll(superImmutable.getChildren());
-    return immutable;
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(new VoxelPoly(
+        getVertices(),
+        getAreaRatio(),
+        getAreaRatioEnergy(),
+        getLastAppliedForce(),
+        getControlEnergy(),
+        new EnumMap<>(state)
+    ), getClass());
+    fillSnapshot(snapshot);
+    return snapshot;
   }
 
   @Override
@@ -198,7 +195,7 @@ public class BreakableVoxel extends SensingVoxel {
       lastReadings = oldReadings;
     } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.RANDOM)) {
       lastReadings = getSensors().stream()
-          .map(s -> Pair.of(s, random(s.domains())))
+          .map(s -> Pair.of(s, random(s.getDomains())))
           .collect(Collectors.toList());
     }
     //update counters
