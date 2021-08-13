@@ -18,13 +18,11 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
 import org.dyn4j.geometry.Vector2;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 
-public class Velocity implements Sensor {
+public class Velocity extends AbstractSensor {
   public enum Axis {X, Y}
 
   @JsonProperty
@@ -33,7 +31,6 @@ public class Velocity implements Sensor {
   private final EnumSet<Axis> axes;
   @JsonProperty
   private final double maxVelocityNorm;
-  private final Domain[] domains;
 
   public Velocity(boolean rotated, double maxVelocityNorm, Axis... axes) {
     this(
@@ -49,20 +46,14 @@ public class Velocity implements Sensor {
       @JsonProperty("maxVelocityNorm") double maxVelocityNorm,
       @JsonProperty("axes") EnumSet<Axis> axes
   ) {
+    super(axes.stream().map(a -> Domain.of(-maxVelocityNorm, maxVelocityNorm)).toArray(Domain[]::new));
     this.rotated = rotated;
     this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;
-    domains = new Domain[this.axes.size()];
-    Arrays.fill(domains, Domain.of(-maxVelocityNorm, maxVelocityNorm));
   }
 
   @Override
-  public Domain[] getDomains() {
-    return domains;
-  }
-
-  @Override
-  public double[] sense(Voxel voxel, double t) {
+  public double[] sense(double t) {
     double[] values = new double[domains.length];
     int c = 0;
     Vector2 velocity = voxel.getLinearVelocity();

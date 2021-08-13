@@ -19,29 +19,40 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collections;
+import java.util.Arrays;
 
-public class Normalization extends CompositeSensor {
+public class Trend extends AggregatorSensor {
 
   @JsonCreator
-  public Normalization(
-      @JsonProperty("sensor") Sensor sensor
+  public Trend(
+      @JsonProperty("sensor") Sensor sensor,
+      @JsonProperty("interval") double interval
   ) {
     super(
-        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
-        sensor
+        Arrays.stream(sensor.getDomains())
+            .map(d -> Domain.of(
+                -Math.abs(d.getMax() - d.getMin()) / interval,
+                Math.abs(d.getMax() - d.getMin()) / interval
+            )).toArray(Domain[]::new),
+        sensor,
+        interval
     );
+    reset();
   }
 
   @Override
-  public double[] sense(double t) {
-    double[] innerValues = sensor.getReadings();
-    double[] values = new double[innerValues.length];
-    for (int i = 0; i < values.length; i++) {
-      Domain d = sensor.getDomains()[i];
-      values[i] = Math.min(Math.max((innerValues[i] - d.getMin()) / (d.getMax() - d.getMin()), 0d), 1d);
+  protected double[] aggregate(double t) {
+    double localInterval = readings.lastKey() - readings.firstKey();
+    if (localInterval == 0) {
+      return new double[domains.length];
     }
-    return values;
+    double[] firsts = readings.firstEntry().getValue();
+    double[] lasts = readings.lastEntry().getValue();
+    double[] changes = new double[firsts.length];
+    for (int i = 0; i < changes.length; i++) {
+      changes[i] = (lasts[i] - firsts[i]) / (localInterval);
+    }
+    return changes;
   }
 
 }

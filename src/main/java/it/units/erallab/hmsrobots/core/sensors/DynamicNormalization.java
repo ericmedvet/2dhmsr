@@ -18,48 +18,28 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
 import java.util.Arrays;
-import java.util.TreeMap;
+import java.util.Collections;
 
-public class DynamicNormalization implements Sensor, ReadingAugmenter {
-
-  @JsonProperty
-  private final Sensor sensor;
-  @JsonProperty
-  private final double interval;
-
-  private final TreeMap<Double, double[]> readings;
-  private final Domain[] domains;
+public class DynamicNormalization extends AggregatorSensor {
 
   @JsonCreator
   public DynamicNormalization(
       @JsonProperty("sensor") Sensor sensor,
       @JsonProperty("interval") double interval
   ) {
-    this.sensor = sensor;
-    this.interval = interval;
-    domains = new Domain[sensor.getDomains().length];
-    readings = new TreeMap<>();
-    Arrays.fill(domains, Domain.of(0d, 1d));
+    super(
+        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
+        sensor,
+        interval
+    );
+    reset();
   }
 
   @Override
-  public Domain[] getDomains() {
-    return domains;
-  }
-
-  @Override
-  public double[] sense(Voxel voxel, double t) {
-    double[] currentReadings = sensor.sense(voxel, t);
-    readings.put(t, currentReadings);
-    double t0 = readings.firstKey();
-    while (t0 < (t - interval)) {
-      readings.remove(t0);
-      t0 = readings.firstKey();
-    }
+  protected double[] aggregate(double t) {
+    double[] currentReadings = sensor.getReadings();
     double[] mins = new double[currentReadings.length];
     double[] maxs = new double[currentReadings.length];
     Arrays.fill(mins, Double.POSITIVE_INFINITY);
@@ -75,22 +55,6 @@ public class DynamicNormalization implements Sensor, ReadingAugmenter {
       values[i] = Math.min(Math.max((currentReadings[i] - mins[i]) / (maxs[i] - mins[i]), 0d), 1d);
     }
     return values;
-  }
-
-  @Override
-  public String toString() {
-    return "DynamicNormalization{" +
-        "sensor=" + sensor +
-        ", interval=" + interval +
-        '}';
-  }
-
-  @Override
-  public SensorReading augment(SensorReading reading, Voxel voxel) {
-    if (sensor instanceof ReadingAugmenter) {
-      return ((ReadingAugmenter) sensor).augment(reading, voxel);
-    }
-    return reading;
   }
 
 }

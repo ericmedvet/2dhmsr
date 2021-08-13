@@ -19,34 +19,24 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
 
-import java.util.Arrays;
+import java.util.Collections;
 
-public class SoftNormalization implements Sensor, ReadingAugmenter {
-
-  @JsonProperty
-  private final Sensor sensor;
-  private final Sensor.Domain[] domains;
+public class SoftNormalization extends CompositeSensor {
 
   @JsonCreator
   public SoftNormalization(
       @JsonProperty("sensor") Sensor sensor
   ) {
-    this.sensor = sensor;
-    domains = new Sensor.Domain[sensor.getDomains().length];
-    Arrays.fill(domains, Sensor.Domain.of(0d, 1d));
+    super(
+        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
+        sensor
+    );
   }
 
   @Override
-  public Sensor.Domain[] getDomains() {
-    return domains;
-  }
-
-  @Override
-  public double[] sense(Voxel voxel, double t) {
-    double[] innerValues = sensor.sense(voxel, t);
+  public double[] sense(double t) {
+    double[] innerValues = sensor.getReadings();
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
       Sensor.Domain d = sensor.getDomains()[i];
@@ -57,19 +47,5 @@ public class SoftNormalization implements Sensor, ReadingAugmenter {
     return values;
   }
 
-  @Override
-  public String toString() {
-    return "SoftNormalization{" +
-        "sensor=" + sensor +
-        '}';
-  }
-
-  @Override
-  public SensorReading augment(SensorReading reading, Voxel voxel) {
-    if (sensor instanceof ReadingAugmenter) {
-      return ((ReadingAugmenter) sensor).augment(reading, voxel);
-    }
-    return reading;
-  }
 
 }

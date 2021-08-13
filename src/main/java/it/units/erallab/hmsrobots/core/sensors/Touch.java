@@ -16,23 +16,21 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.Voxel;
 import org.dyn4j.dynamics.Body;
 
 import java.util.List;
 
-public class Touch implements Sensor {
+public class Touch extends AbstractSensor {
   private final static Domain[] DOMAINS = new Domain[]{
       Domain.of(0d, 1d)
   };
 
-  @Override
-  public Domain[] getDomains() {
-    return DOMAINS;
+  public Touch() {
+    super(DOMAINS);
   }
 
   @Override
-  public double[] sense(Voxel voxel, double t) {
+  public double[] sense(double t) {
     for (Body vertexBody : voxel.getVertexBodies()) {
       List<Body> inContactBodies = vertexBody.getInContactBodies(false);
       for (Body inContactBody : inContactBodies) {
@@ -45,10 +43,5 @@ public class Touch implements Sensor {
       }
     }
     return new double[]{0d};
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName();
   }
 }
