@@ -16,17 +16,19 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
-public class Ground extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.Ground> implements Configurable<Ground> {
+public class PolyDrawer implements Drawer, Configurable<PolyDrawer> {
 
   @ConfigurableField
   private Color strokeColor = Color.BLACK;
@@ -38,18 +40,25 @@ public class Ground extends Drawer<it.units.erallab.hmsrobots.core.objects.immut
   private final static int TEXTURE_SIZE = 4;
   private final static Color TEXTURE_COLOR = Color.GRAY;
 
-  private Ground() {
-    super(it.units.erallab.hmsrobots.core.objects.immutable.Ground.class);
-    texturePaint = createTexturePaint();
+  private final Class<? extends Snapshottable> creatorClass;
+
+  public PolyDrawer(Class<? extends Snapshottable> creatorClass) {
+    this.texturePaint = createTexturePaint();
+    this.creatorClass = creatorClass;
   }
 
-  public static Ground build() {
-    return new Ground();
+  public static PolyDrawer build() {
+    return new PolyDrawer(Snapshottable.class);
   }
 
   @Override
-  public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.Ground immutable, Immutable parent, Graphics2D g) {
-    Path2D path = GraphicsDrawer.toPath((Poly) immutable.getShape(), true);
+  public void draw(List<Snapshot> lineage, Graphics2D g) {
+    Snapshot last = lineage.get(lineage.size() - 1);
+    if (!Drawer.match(last, Poly.class, creatorClass)) {
+      return;
+    }
+    Poly poly = (Poly) last.getContent();
+    Path2D path = GraphicsDrawer.toPath(poly, true);
     if (useTexture || fillColor != null) {
       if (useTexture) {
         g.setPaint(texturePaint);
@@ -63,7 +72,6 @@ public class Ground extends Drawer<it.units.erallab.hmsrobots.core.objects.immut
       g.setColor(strokeColor);
       g.draw(path);
     }
-    return false;
   }
 
   private TexturePaint createTexturePaint() {

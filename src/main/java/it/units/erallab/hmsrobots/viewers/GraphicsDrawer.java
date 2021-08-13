@@ -16,17 +16,15 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
-import it.units.erallab.hmsrobots.util.*;
-import it.units.erallab.hmsrobots.viewers.drawers.Robot;
+import it.units.erallab.hmsrobots.util.Configurable;
+import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
 
 import java.awt.*;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
@@ -42,8 +40,8 @@ import java.util.stream.Collectors;
  */
 public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
 
-  private final static Ground MINIATURE_GROUND_DRAWER = Ground.build();
-  private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(Point2.build(0.65, 0.01), Point2.build(0.99, 0.35));
+  private final static PolyDrawer MINIATURE_GROUND_DRAWER = PolyDrawer.build();
+  private final static it.units.erallab.hmsrobots.core.geometry.BoundingBox MINIATURE_REL_BOUNDING_BOX = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(Point2.build(0.65, 0.01), Point2.build(0.99, 0.35));
 
   static {
     MINIATURE_GROUND_DRAWER.setConfigurable("useTexture", false);
@@ -75,14 +73,14 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   @ConfigurableField(uiMin = 1, uiMax = 10)
   private float miniatureMagnifyRatio = 3f;
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
-  private List<Drawer<?>> drawers = new ArrayList<>(List.of(
-      Robot.build(),
-      Voxel.build(),
+  private List<DrawerOLD<?>> drawers = new ArrayList<>(List.of(
+      BoundingBoxDrawer.build(),
+      VoxelDrawer.build(),
       VoxelBody.build(),
-      Ground.build(),
+      PolyDrawer.build(),
       VoxelJoint.build(),
-      Lidar.build(),
-      SensorReading.build()
+      LidarDrawer.build(),
+      SensorReadingsSectorDrawer.build()
   ));
 
   private GraphicsDrawer() {
@@ -92,7 +90,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return new GraphicsDrawer();
   }
 
-  public void drawMiniature(SnapshotOLD snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
+  public void drawMiniature(SnapshotOLD snapshot, Graphics2D g, it.units.erallab.hmsrobots.core.geometry.BoundingBox graphicsFrame, it.units.erallab.hmsrobots.core.geometry.BoundingBox inWorldFrame) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -100,13 +98,13 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     );
     it.units.erallab.hmsrobots.core.objects.immutable.Ground ground = (it.units.erallab.hmsrobots.core.objects.immutable.Ground) snapshot.getObjects().stream().filter(i -> i instanceof it.units.erallab.hmsrobots.core.objects.immutable.Ground).findFirst().orElse(null);
     if (ground != null) {
-      BoundingBox worldFrame = ground.getShape().boundingBox();
+      it.units.erallab.hmsrobots.core.geometry.BoundingBox worldFrame = ground.getShape().boundingBox();
       if (miniatureMagnifyRatio != 1f) {
         Point2 center = inWorldFrame.center();
         double w = worldFrame.width();
         double h = worldFrame.height();
         double minX = Math.max(center.x - w / 2d / miniatureMagnifyRatio, worldFrame.min.x);
-        worldFrame = BoundingBox.build(
+        worldFrame = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
             Point2.build(minX, center.y - h / 2d / miniatureMagnifyRatio),
             Point2.build(minX + w / miniatureMagnifyRatio, center.y + h / 2d / miniatureMagnifyRatio)
         );
@@ -138,7 +136,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     }
   }
 
-  public void draw(SnapshotOLD snapshot, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, String... infos) {
+  public void draw(SnapshotOLD snapshot, Graphics2D g, it.units.erallab.hmsrobots.core.geometry.BoundingBox graphicsFrame, it.units.erallab.hmsrobots.core.geometry.BoundingBox worldFrame, String... infos) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -238,7 +236,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       drawMiniature(
           snapshot,
           g,
-          BoundingBox.build(
+          it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
               Point2.build(
                   graphicsFrame.min.x + graphicsFrame.width() * MINIATURE_REL_BOUNDING_BOX.min.x,
                   graphicsFrame.min.y + graphicsFrame.height() * MINIATURE_REL_BOUNDING_BOX.min.y
@@ -269,7 +267,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
 
   private void recursivelyDraw(final Immutable immutable, final Immutable parent, final Graphics2D g, Stroke basicStroke) {
     boolean drawChildren = false;
-    for (Drawer drawer : drawers) {
+    for (DrawerOLD drawer : drawers) {
       if (drawer.canDraw(immutable.getClass())) {
         g.setStroke(basicStroke);
         g.setColor(basicColor);

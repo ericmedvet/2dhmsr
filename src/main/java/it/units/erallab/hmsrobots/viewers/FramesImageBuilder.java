@@ -16,10 +16,9 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
+import it.units.erallab.hmsrobots.viewers.drawers.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -68,11 +67,11 @@ public class FramesImageBuilder implements SnapshotListener {
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
     graphicsDrawer = GraphicsDrawer.build().setConfigurable("drawers", List.of(
-        it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-        it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-        it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-        SensorReading.build(),
-        it.units.erallab.hmsrobots.viewers.drawers.Lidar.build()
+        PolyDrawer.build(),
+        BoundingBoxDrawer.build(),
+        VoxelDrawer.build(),
+        SensorReadingsSectorDrawer.build(),
+        LidarDrawer.build()
     ));
     framer = new RobotFollower(frames, 1.5d, 100, RobotFollower.AggregateType.MAX);
     frameCount = 0;
@@ -84,7 +83,7 @@ public class FramesImageBuilder implements SnapshotListener {
 
   @Override
   public void listen(final SnapshotOLD snapshot) {
-    BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
+    it.units.erallab.hmsrobots.core.geometry.BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
     if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
       return;
     }
@@ -92,14 +91,14 @@ public class FramesImageBuilder implements SnapshotListener {
       return;
     }
     lastSnapshot = snapshot;
-    BoundingBox imageFrame;
+    it.units.erallab.hmsrobots.core.geometry.BoundingBox imageFrame;
     if (direction.equals(Direction.HORIZONTAL)) {
-      imageFrame = BoundingBox.build(
+      imageFrame = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
           Point2.build(w * frameCount, 0),
           Point2.build(w * (frameCount + 1), h)
       );
     } else {
-      imageFrame = BoundingBox.build(
+      imageFrame = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
           Point2.build(0, h * frameCount),
           Point2.build(w, h * (frameCount + 1))
       );

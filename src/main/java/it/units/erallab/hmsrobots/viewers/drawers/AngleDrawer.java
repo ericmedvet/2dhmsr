@@ -16,36 +16,44 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.sensors.Angle;
+import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
+import java.util.List;
 
 
-public class Angle extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.Angle> implements Configurable<Angle> {
+public class AngleDrawer implements Drawer, Configurable<AngleDrawer> {
 
   @ConfigurableField
   private Color strokeColor = Color.BLACK;
 
-  private Angle() {
-    super(it.units.erallab.hmsrobots.core.sensors.immutable.Angle.class);
-  }
-
-  public static Angle build() {
-    return new Angle();
+  public static AngleDrawer build() {
+    return new AngleDrawer();
   }
 
   @Override
-  public boolean draw(it.units.erallab.hmsrobots.core.sensors.immutable.Angle immutable, Immutable parent, Graphics2D g) {
-    double angle = immutable.getValues()[0];
-    Voxel voxel = (Voxel) parent;
-    Point2 center = voxel.getShape().center();
-    double radius = Math.sqrt(((Poly) voxel.getShape()).area()) / 2d;
+  public void draw(List<Snapshot> lineage, Graphics2D g) {
+    Snapshot last = lineage.get(lineage.size() - 1);
+    if (!Drawer.match(last, ScopedReadings.class, Angle.class)) {
+      return;
+    }
+    double angle = ((ScopedReadings) last.getContent()).getReadings()[0];
+    Snapshot voxel = Drawer.lastMatching(lineage, VoxelPoly.class, Snapshottable.class);
+    if (voxel == null) {
+      //should not happen
+      return;
+    }
+    VoxelPoly voxelPoly = (VoxelPoly) voxel.getContent();
+    Point2 center = voxelPoly.center();
+    double radius = Math.sqrt(voxelPoly.area()) / 2d;
     g.setColor(strokeColor);
     g.draw(GraphicsDrawer.toPath(
         center,
@@ -54,6 +62,5 @@ public class Angle extends Drawer<it.units.erallab.hmsrobots.core.sensors.immuta
             center.y + radius * Math.sin(angle)
         )
     ));
-    return false;
   }
 }

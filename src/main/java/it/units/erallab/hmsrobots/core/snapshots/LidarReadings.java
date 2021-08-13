@@ -23,11 +23,17 @@ import it.units.erallab.hmsrobots.core.sensors.Sensor;
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
 public class LidarReadings extends ScopedReadings {
+  private final double voxelAngle;
   private final double[] rayDirections;
 
-  public LidarReadings(double[] readings, Sensor.Domain[] domains, double[] rayDirections) {
+  public LidarReadings(double[] readings, Sensor.Domain[] domains, double voxelAngle, double[] rayDirections) {
     super(readings, domains);
+    this.voxelAngle = voxelAngle;
     this.rayDirections = rayDirections;
+  }
+
+  public double getVoxelAngle() {
+    return voxelAngle;
   }
 
   public double[] getRayDirections() {

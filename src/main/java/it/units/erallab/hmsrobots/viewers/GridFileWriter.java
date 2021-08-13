@@ -16,12 +16,11 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.tasks.Task;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import it.units.erallab.hmsrobots.viewers.drawers.*;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -96,11 +95,11 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
             double localW = (double) w / (double) namesGrid.getW();
             double localH = (double) h / (double) namesGrid.getH();
             //obtain viewport
-            BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
+            it.units.erallab.hmsrobots.core.geometry.BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
             //draw
             graphicsDrawer.draw(
                 snapshot, g,
-                BoundingBox.build(
+                it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
                     Point2.build(localW * lX, localH * lY),
                     Point2.build(localW * (lX + 1), localH * (lY + 1))
                 ),
@@ -133,12 +132,12 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
         w, h, startTime, frameRate, encoder, file,
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
         GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+            PolyDrawer.build(),
+            BoundingBoxDrawer.build(),
+            VoxelDrawer.build(),
+            SensorReadingsSectorDrawer.build(),
+            LidarDrawer.build(),
+            AngleDrawer.build()
         ))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(

@@ -17,12 +17,11 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
 import it.units.erallab.hmsrobots.tasks.Task;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import it.units.erallab.hmsrobots.viewers.drawers.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
@@ -207,11 +206,11 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     for (Grid.Entry<SnapshotOLD> entry : localSnapshotGrid) {
       if (entry.getValue() != null) {
         //obtain viewport
-        BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
+        it.units.erallab.hmsrobots.core.geometry.BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue(), localW / localH);
         //draw
         graphicsDrawer.draw(
             entry.getValue(), g,
-            BoundingBox.build(
+            it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
                 Point2.build(localW * entry.getX(), localH * entry.getY()),
                 Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
             ),
@@ -235,12 +234,12 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
         uiExecutor,
         GraphicsDrawer.build().setConfigurable("drawers", List.of(
-            it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-            SensorReading.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-            it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
+            PolyDrawer.build(),
+            BoundingBoxDrawer.build(),
+            VoxelDrawer.build(),
+            SensorReadingsSectorDrawer.build(),
+            LidarDrawer.build(),
+            AngleDrawer.build()
         ))
     );
     gridOnlineViewer.start(3);

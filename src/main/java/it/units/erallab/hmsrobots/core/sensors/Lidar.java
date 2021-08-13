@@ -136,6 +136,7 @@ public class Lidar extends AbstractSensor {
         new LidarReadings(
             Arrays.copyOf(readings, readings.length),
             Arrays.stream(domains).map(d -> Domain.of(d.getMin(), d.getMax())).toArray(Domain[]::new),
+            voxel.getAngle(),
             Arrays.copyOf(rayDirections, rayDirections.length)
         ),
         getClass()

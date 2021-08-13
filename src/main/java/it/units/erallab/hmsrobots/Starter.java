@@ -22,8 +22,8 @@ import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.Angle;
-import it.units.erallab.hmsrobots.core.sensors.Derivative;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
+import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
@@ -290,7 +290,7 @@ public class Starter {
     //one voxel robot
     Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
         new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
-        new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)),
+        new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.25),
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));

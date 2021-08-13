@@ -16,20 +16,23 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
-public class SensorReading extends Drawer<it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading> implements Configurable<SensorReading> {
+public class SensorReadingsSectorDrawer implements Drawer, Configurable<SensorReadingsSectorDrawer> {
 
   @ConfigurableField
   private Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.5f);
@@ -44,12 +47,8 @@ public class SensorReading extends Drawer<it.units.erallab.hmsrobots.core.sensor
   @ConfigurableField
   private boolean rotated = true;
 
-  private SensorReading() {
-    super(it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading.class);
-  }
-
-  public static SensorReading build() {
-    return new SensorReading();
+  public static SensorReadingsSectorDrawer build() {
+    return new SensorReadingsSectorDrawer();
   }
 
   private Path2D getSector(Point2 c, double r, double a1, double a2) {
@@ -64,31 +63,43 @@ public class SensorReading extends Drawer<it.units.erallab.hmsrobots.core.sensor
   }
 
   @Override
-  public boolean draw(it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading immutable, Immutable parent, Graphics2D g) {
-    Poly voxelPoly = (Poly) ((Voxel) parent).getShape();
+  public void draw(List<Snapshot> lineage, Graphics2D g) {
+    Snapshot last = lineage.get(lineage.size() - 1);
+    if (!Drawer.match(last, VoxelPoly.class, SensingVoxel.class)) {
+      return;
+    }
+    VoxelPoly voxelPoly = (VoxelPoly) last.getContent();
+    List<ScopedReadings> readings = last.getChildren().stream()
+        .filter(s -> s.getContent() instanceof ScopedReadings)
+        .map(s -> (ScopedReadings) s.getContent())
+        .collect(Collectors.toList());
+    if (readings.isEmpty()) {
+      return;
+    }
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
     double voxelAngle = Math.atan2((voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y), (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)) / 2d +
         Math.atan2((voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y), (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)) / 2d;
     double angle = rotated ? voxelAngle : 0d;
-    double sensorSliceAngle = spanAngle / (double) immutable.getnOfSensors();
-    double sensorStartingAngle = angle + (double) immutable.getSensorIndex() * sensorSliceAngle;
-    double valueSliceAngle = sensorSliceAngle / (double) immutable.getValues().length;
-    if (sensorFrame) {
-      g.setColor(strokeColor);
-      Path2D sector = getSector(center, radius, sensorStartingAngle, sensorStartingAngle + sensorSliceAngle);
-      g.draw(sector);
+    double sensorSliceAngle = spanAngle / (double) readings.size();
+    for (int i = 0; i < readings.size(); i++) {
+      double sensorStartingAngle = angle + (double) i * sensorSliceAngle;
+      double valueSliceAngle = sensorSliceAngle / (double) readings.get(i).getReadings().length;
+      if (sensorFrame) {
+        g.setColor(strokeColor);
+        Path2D sector = getSector(center, radius, sensorStartingAngle, sensorStartingAngle + sensorSliceAngle);
+        g.draw(sector);
+      }
+      g.setColor(fillColor);
+      for (int j = 0; j < readings.get(i).getReadings().length; j++) {
+        double value = readings.get(i).getReadings()[j];
+        Sensor.Domain d = readings.get(i).getDomains()[j];
+        double normalizedRadius = radius * Math.min(1d, Math.max(0d, (value - d.getMin()) / (d.getMax() - d.getMin())));
+        double valueStartingAngle = sensorStartingAngle + (double) j * valueSliceAngle;
+        double valueEndingAngle = valueStartingAngle + valueSliceAngle;
+        Path2D sector = getSector(center, normalizedRadius, valueStartingAngle, valueEndingAngle);
+        g.fill(sector);
+      }
     }
-    g.setColor(fillColor);
-    for (int i = 0; i < immutable.getValues().length; i++) {
-      double value = immutable.getValues()[i];
-      Sensor.Domain d = immutable.getDomains()[i];
-      double normalizedRadius = radius * Math.min(1d, Math.max(0d, (value - d.getMin()) / (d.getMax() - d.getMin())));
-      double valueStartingAngle = sensorStartingAngle + (double) i * valueSliceAngle;
-      double valueEndingAngle = valueStartingAngle + valueSliceAngle;
-      Path2D sector = getSector(center, normalizedRadius, valueStartingAngle, valueEndingAngle);
-      g.fill(sector);
-    }
-    return false;
   }
 }

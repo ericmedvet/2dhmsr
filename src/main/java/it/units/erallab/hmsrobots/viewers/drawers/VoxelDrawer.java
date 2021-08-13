@@ -16,19 +16,20 @@
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
-import it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
+import java.util.List;
 
-public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immutable.Voxel> implements Configurable<Voxel> {
+public class VoxelDrawer implements Drawer, Configurable<VoxelDrawer> {
 
   public enum FillType {APPLIED_FORCE, AREA_RATIO, NONE}
 
@@ -51,52 +52,51 @@ public class Voxel extends Drawer<it.units.erallab.hmsrobots.core.objects.immuta
   @ConfigurableField(uiMin = 1.001f, uiMax = 2f)
   private float expandendRatio = 1.25f;
 
-  private Voxel() {
-    super(it.units.erallab.hmsrobots.core.objects.immutable.Voxel.class);
-  }
-
-  public static Voxel build() {
-    return new Voxel();
+  public static VoxelDrawer build() {
+    return new VoxelDrawer();
   }
 
   @Override
-  public boolean draw(it.units.erallab.hmsrobots.core.objects.immutable.Voxel immutable, Immutable parent, Graphics2D g) {
-    Poly poly = (Poly) immutable.getShape();
-    Path2D path = GraphicsDrawer.toPath(poly, true);
+  public void draw(List<Snapshot> lineage, Graphics2D g) {
+    Snapshot last = lineage.get(lineage.size() - 1);
+    if (!Drawer.match(last, VoxelPoly.class, Voxel.class)) {
+      return;
+    }
+    VoxelPoly voxelPoly = (VoxelPoly) last.getContent();
+    Path2D path = GraphicsDrawer.toPath(voxelPoly, true);
     g.setColor(strokeColor);
     g.draw(path);
     if (fillType.equals(FillType.AREA_RATIO)) {
       g.setColor(GraphicsDrawer.linear(
           shrunkFillColor, restFillColor, expandedFillColor,
           shrunkRatio, 1f, expandendRatio,
-          (float) immutable.getAreaRatio()
+          (float) voxelPoly.getAreaRatio()
       ));
       g.fill(path);
-    } else if (fillType.equals(FillType.APPLIED_FORCE) && (immutable instanceof ControllableVoxel)) {
+    } else if (fillType.equals(FillType.APPLIED_FORCE)) {
       g.setColor(GraphicsDrawer.linear(
           shrunkFillColor, restFillColor, expandedFillColor,
           -1f, 0f, 1f,
-          (float) ((ControllableVoxel) immutable).getLastAppliedForce()
+          (float) voxelPoly.getLastAppliedForce()
       ));
       g.fill(path);
     }
-    if (immutable instanceof it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel) {
+    if (last.getSnapshottableClass().isAssignableFrom(BreakableVoxel.class)) {
       g.setColor(malfunctionColor);
       g.setStroke(new BasicStroke(malfunctionStrokeWidth / (float) g.getTransform().getScaleX()));
-      it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel breakableVoxel = (it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel) immutable;
-      if (!breakableVoxel.getActuatorMalfunctionType().equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(GraphicsDrawer.toPath(poly.getVertexes()[0], poly.getVertexes()[2]));
+      if (!voxelPoly.getMalfunctions().get(BreakableVoxel.ComponentType.ACTUATOR).equals(BreakableVoxel.MalfunctionType.NONE)) {
+        g.draw(GraphicsDrawer.toPath(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[2]));
       }
-      if (!breakableVoxel.getSensorsMalfunctionType().equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(GraphicsDrawer.toPath(poly.getVertexes()[1], poly.getVertexes()[3]));
+      if (!voxelPoly.getMalfunctions().get(BreakableVoxel.ComponentType.SENSORS).equals(BreakableVoxel.MalfunctionType.NONE)) {
+        g.draw(GraphicsDrawer.toPath(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[3]));
       }
-      if (!breakableVoxel.getStructureMalfunctionType().equals(BreakableVoxel.MalfunctionType.NONE)) {
+      if (!voxelPoly.getMalfunctions().get(BreakableVoxel.ComponentType.STRUCTURE).equals(BreakableVoxel.MalfunctionType.NONE)) {
         g.draw(GraphicsDrawer.toPath(
-            Point2.average(poly.getVertexes()[0], poly.getVertexes()[3]),
-            Point2.average(poly.getVertexes()[1], poly.getVertexes()[2])
+            Point2.average(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[3]),
+            Point2.average(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[2])
         ));
       }
     }
-    return true;
   }
+
 }
