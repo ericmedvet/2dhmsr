@@ -21,11 +21,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BreakableVoxel extends SensingVoxel {
 
@@ -57,6 +56,7 @@ public class BreakableVoxel extends SensingVoxel {
   private transient double lastBreakT;
   private transient double lastControlEnergy;
   private transient double lastAreaRatioEnergy;
+  private transient double[] sensorReadings;
   private transient Random random;
 
   @JsonCreator
@@ -179,24 +179,29 @@ public class BreakableVoxel extends SensingVoxel {
     lastControlEnergy = 0d;
     lastAreaRatioEnergy = 0d;
     random = new Random(randomSeed);
+    sensorReadings = null;
     Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
     Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
     updateStructureMalfunctionType();
   }
 
   @Override
+  public double[] getSensorReadings() {
+    return switch (state.get(ComponentType.SENSORS)) {
+      case NONE, FROZEN -> sensorReadings;
+      case ZERO -> new double[sensorReadings.length];
+      case RANDOM -> getSensors().stream()
+          .map(s -> random(s.getDomains()))
+          .reduce(ArrayUtils::addAll)
+          .orElse(new double[sensorReadings.length]);
+    };
+  }
+
+  @Override
   public void act(double t) {
-    //sense
-    List<Pair<Sensor, double[]>> oldReadings = lastReadings.stream()
-        .map(p -> Pair.of(p.getLeft(), Arrays.copyOf(p.getRight(), p.getRight().length)))
-        .collect(Collectors.toList());
     super.act(t);
-    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.FROZEN)) {
-      lastReadings = oldReadings;
-    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.RANDOM)) {
-      lastReadings = getSensors().stream()
-          .map(s -> Pair.of(s, random(s.getDomains())))
-          .collect(Collectors.toList());
+    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE) || sensorReadings == null) {
+      sensorReadings = super.getSensorReadings();
     }
     //update counters
     triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastT);

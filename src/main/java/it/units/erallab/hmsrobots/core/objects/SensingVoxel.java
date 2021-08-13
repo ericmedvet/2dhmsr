@@ -20,11 +20,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SensingVoxel extends ControllableVoxel {
 
@@ -63,19 +62,10 @@ public class SensingVoxel extends ControllableVoxel {
     this.sensors = sensors;
   }
 
-  protected List<Pair<Sensor, double[]>> lastReadings = List.of(); // TODO remove
-
-  public List<Pair<Sensor, double[]>> getLastReadings() {
-    return lastReadings;
-  }  // TODO remove
-
   @Override
   public void act(double t) {
     super.act(t);
     sensors.forEach(s -> s.act(t));
-    lastReadings = sensors.stream()
-        .map(s -> Pair.of(s, s.sense(this, t)))
-        .collect(Collectors.toList());
   }
 
   @Override
@@ -85,6 +75,13 @@ public class SensingVoxel extends ControllableVoxel {
       s.setVoxel(this);
       s.reset();
     });
+  }
+
+  public double[] getSensorReadings() {
+    return sensors.stream()
+        .map(Sensor::getReadings)
+        .reduce(ArrayUtils::addAll)
+        .orElse(new double[sensors.stream().mapToInt(s -> s.getDomains().length).sum()]);
   }
 
   public List<Sensor> getSensors() {

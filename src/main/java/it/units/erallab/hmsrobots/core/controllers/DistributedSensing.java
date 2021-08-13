@@ -19,11 +19,9 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -160,7 +158,7 @@ public class DistributedSensing implements Controller<SensingVoxel> {
       }
       //get inputs
       double[] signals = getLastSignals(entry.getX(), entry.getY());
-      double[] inputs = flatten(entry.getValue().getLastReadings(), signals);
+      double[] inputs = ArrayUtils.addAll(entry.getValue().getSensorReadings(), signals);
       //compute outputs
       TimedRealFunction function = functions.get(entry.getX(), entry.getY());
       double[] outputs = function != null ? function.apply(t, inputs) : new double[1 + this.signals * Dir.values().length];
@@ -195,19 +193,6 @@ public class DistributedSensing implements Controller<SensingVoxel> {
       c = c + signals;
     }
     return values;
-  }
-
-  private double[] flatten(List<Pair<Sensor, double[]>> sensorsReadings, double... otherValues) {
-    int n = otherValues.length + sensorsReadings.stream().mapToInt(p -> p.getValue().length).sum();
-    double[] flatValues = new double[n];
-    System.arraycopy(otherValues, 0, flatValues, 0, otherValues.length);
-    int c = otherValues.length;
-    for (Pair<Sensor, double[]> sensorPair : sensorsReadings) {
-      double[] values = sensorPair.getValue();
-      System.arraycopy(values, 0, flatValues, c, values.length);
-      c = c + values.length;
-    }
-    return flatValues;
   }
 
   @Override

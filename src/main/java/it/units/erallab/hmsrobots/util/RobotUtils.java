@@ -42,9 +42,9 @@ public class RobotUtils {
       Map.entry("vx", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X), 0.5))),
       Map.entry("vy", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.Y), 0.5))),
       Map.entry("vxy", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))),
-      Map.entry("ax", (x, y) -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.X)), 0.5))),
-      Map.entry("ay", (x, y) -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.Y)), 0.5))),
-      Map.entry("axy", (x, y) -> new SoftNormalization(new Average(new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)), 0.5))),
+      Map.entry("ax", (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.X), 0.5))),
+      Map.entry("ay", (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.Y), 0.5))),
+      Map.entry("axy", (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))),
       Map.entry("px", (x, y) -> new Constant(x)),
       Map.entry("py", (x, y) -> new Constant(y)),
       Map.entry("m", (x, y) -> new Malfunction()),
@@ -157,12 +157,12 @@ public class RobotUtils {
             }
             return new SensingVoxel(
                 Utils.ofNonNull(
-                    sensor("a", x, y, body),
-                    sensor("m", x, y, body, pars.get("malfunction").equals("t")),
-                    sensor("t", x, y, body, y == 0),
-                    sensor("vxy", x, y, body, y == body.getH() - 1),
-                    sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t"))
-                ).stream()
+                        sensor("a", x, y, body),
+                        sensor("m", x, y, body, pars.get("malfunction").equals("t")),
+                        sensor("t", x, y, body, y == 0),
+                        sensor("vxy", x, y, body, y == body.getH() - 1),
+                        sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t"))
+                    ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
                     .collect(Collectors.toList())
             );
@@ -179,13 +179,13 @@ public class RobotUtils {
             }
             return new SensingVoxel(
                 Utils.ofNonNull(
-                    sensor("a", x, y, body),
-                    sensor("m", x, y, body, pars.get("malfunction").equals("t")),
-                    sensor("t", x, y, body, y == 0),
-                    sensor("vxy", x, y, body, y == body.getH() - 1),
-                    sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
-                    sensor("l5", x, y, body, x == body.getW() - 1)
-                ).stream()
+                        sensor("a", x, y, body),
+                        sensor("m", x, y, body, pars.get("malfunction").equals("t")),
+                        sensor("t", x, y, body, y == 0),
+                        sensor("vxy", x, y, body, y == body.getH() - 1),
+                        sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
+                        sensor("l5", x, y, body, x == body.getW() - 1)
+                    ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
                     .collect(Collectors.toList())
             );
