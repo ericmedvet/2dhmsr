@@ -279,7 +279,7 @@ public class Outcome {
   }
 
   private static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
-    //compute subsequences
+    // compute subsequences
     Map<List<Footprint>, List<Range<Double>>> sequences = new HashMap<>();
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
     List<Range<Double>> ranges = footprints.keySet().stream()
@@ -289,14 +289,17 @@ public class Outcome {
       for (int i = l; i <= footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
         List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
-        localRanges.add(Range.openClosed(
-            ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
-            ranges.get(i - 1).upperEndpoint() //last t of the last footprint
-        ));
+        // make sure there's no overlap
+        if (localRanges.size() == 0 || localRanges.get(localRanges.size() - 1).upperEndpoint() <= ranges.get(i - l).lowerEndpoint()) {
+          localRanges.add(Range.openClosed(
+              ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
+              ranges.get(i - 1).upperEndpoint() // last t of the last footprint
+          ));
+        }
         sequences.put(sequence, localRanges);
       }
     }
-    //compute median interval
+    // compute median interval
     List<Double> allIntervals = sequences.values().stream()
         .map(l -> IntStream.range(0, l.size() - 1)
             .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())

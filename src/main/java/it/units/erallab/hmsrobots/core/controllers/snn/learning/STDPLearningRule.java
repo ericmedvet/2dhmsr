@@ -60,6 +60,7 @@ public abstract class STDPLearningRule implements Parametrized, Serializable {
 
   public abstract double computeDeltaW(double deltaT);
 
+  // might try using tanh instead of max and min
   protected static double scaleParameter(double param, double min, double max) {
     return Math.max(Math.min(param, 1), -1) * (max - min) / 2 + min;
   }

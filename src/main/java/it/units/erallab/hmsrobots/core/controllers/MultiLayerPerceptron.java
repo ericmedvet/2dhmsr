@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  */
 public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized {
 
-  public enum ActivationFunction implements Function<Double,Double>{
+  public enum ActivationFunction implements Function<Double, Double> {
     RELU(x -> (x < 0) ? 0d : x),
     SIGMOID(x -> 1d / (1d + Math.exp(-x))),
     SIN(Math::sin),
@@ -47,7 +47,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
       return f;
     }
 
-    public Double apply(Double x){
+    public Double apply(Double x) {
       return f.apply(x);
     }
   }
