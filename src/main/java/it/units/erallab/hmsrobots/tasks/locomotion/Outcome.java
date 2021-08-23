@@ -279,24 +279,27 @@ public class Outcome {
   }
 
   private static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
-    //compute subsequences
+    // compute subsequences
     Map<List<Footprint>, List<Range<Double>>> sequences = new HashMap<>();
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
     List<Range<Double>> ranges = footprints.keySet().stream()
         .map(d -> Range.closedOpen(d, d + interval))
-        .collect(Collectors.toList()); //list of range of each footprint
+        .collect(Collectors.toList()); // list of range of each footprint
     for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
       for (int i = l; i <= footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
         List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
-        localRanges.add(Range.openClosed(
-            ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
-            ranges.get(i - 1).upperEndpoint() //last t of the last footprint
-        ));
+        // make sure there's no overlap
+        if (localRanges.size() == 0 || localRanges.get(localRanges.size() - 1).upperEndpoint() <= ranges.get(i - l).lowerEndpoint()) {
+          localRanges.add(Range.openClosed(
+              ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
+              ranges.get(i - 1).upperEndpoint() // last t of the last footprint
+          ));
+        }
         sequences.put(sequence, localRanges);
       }
     }
-    //compute median interval
+    // compute median interval
     List<Double> allIntervals = sequences.values().stream()
         .map(l -> IntStream.range(0, l.size() - 1)
             .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())
@@ -308,7 +311,7 @@ public class Outcome {
       return List.of();
     }
     double modeInterval = mode(allIntervals);
-    //compute gaits
+    // compute gaits
     return sequences.entrySet().stream()
         .filter(e -> e.getValue().size() > 1) // discard subsequences observed only once
         .map(e -> {
@@ -377,12 +380,12 @@ public class Outcome {
       intervals.add(times.get(i + 1) - times.get(i));
     }
     double avgInterval = intervals.stream().mapToDouble(d -> d).average().orElseThrow();
-    //pad
+    // pad
     int paddedSize = (int) Math.pow(2d, Math.ceil(Math.log(v.size()) / Math.log(2d)));
     if (paddedSize != v.size()) {
       v.addAll(Collections.nCopies(paddedSize - v.size(), 0d));
     }
-    //compute fft
+    // compute fft
     FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
     List<Double> f = List.of(fft.transform(v.stream()
         .mapToDouble(d -> d)
