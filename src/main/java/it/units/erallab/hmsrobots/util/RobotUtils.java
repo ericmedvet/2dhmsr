@@ -130,8 +130,8 @@ public class RobotUtils {
                             Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : random.nextDouble() > ratio ? v : new BreakableVoxel(
                                     v.getSensors(),
                                     random.nextInt(),
-                                    Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)),
-                                    Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 0d),
+                                    Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.ZERO)),
+                                    Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 30d),
                                     Double.POSITIVE_INFINITY
                             ))
                     );
