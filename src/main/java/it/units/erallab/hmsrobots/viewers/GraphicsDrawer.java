@@ -30,7 +30,6 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,25 +60,36 @@ public class GraphicsDrawer {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, ROBOT_CENTERS_INFO
   }
 
-  private Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
-      GeneralRenderingMode.ROBOT_CENTERS_INFO,
-      GeneralRenderingMode.TIME_INFO
-  ));
-  private Color gridColor = Color.GRAY;
-  private Color infoColor = Color.BLUE;
-  private Color backgroundColor = Color.WHITE;
-  private Color basicColor = Color.BLUE;
-  private double[] gridSizes = new double[]{2, 5, 10};
-  private float strokeWidth = 1f;
-  private boolean drawMiniature = true;
-  private float miniatureMagnifyRatio = 3f;
-  private List<Drawer> drawers = new ArrayList<>(MEDIUM_DETAIL_DRAWERS);
 
-  private GraphicsDrawer() {
+  private final static Color GRID_COLOR = Color.GRAY;
+  private final static Color INFO_COLOR = Color.BLUE;
+  private final static Color BACKGROUND_COLOR = Color.WHITE;
+  private final static Color BASIC_COLOR = Color.BLUE;
+  private final static double[] GRID_SIZES = new double[]{2, 5, 10};
+  private final static float STROKE_WIDTH = 1f;
+
+  private final Set<GeneralRenderingMode> generalRenderingModes;
+  private final boolean drawMiniature;
+  private final float miniatureMagnifyRatio;
+  private final List<Drawer> drawers;
+
+  public GraphicsDrawer(Set<GeneralRenderingMode> generalRenderingModes, boolean drawMiniature, float miniatureMagnifyRatio, List<Drawer> drawers) {
+    this.generalRenderingModes = generalRenderingModes;
+    this.drawMiniature = drawMiniature;
+    this.miniatureMagnifyRatio = miniatureMagnifyRatio;
+    this.drawers = drawers;
   }
 
-  public static GraphicsDrawer build() {
-    return new GraphicsDrawer();
+  public GraphicsDrawer() {
+    this(
+        Set.of(
+            GeneralRenderingMode.ROBOT_CENTERS_INFO,
+            GeneralRenderingMode.TIME_INFO
+        ),
+        true,
+        3f,
+        MEDIUM_DETAIL_DRAWERS
+    );
   }
 
   public void drawMiniature(double t, List<Snapshot> snapshots, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
@@ -116,15 +126,15 @@ public class GraphicsDrawer {
       at.translate(-worldFrame.min.x, -inWorldFrame.max.y);
       g.setTransform(at);
       //draw ground
-      Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
+      Stroke basicStroke = new BasicStroke(STROKE_WIDTH / (float) ratio);
       g.setStroke(basicStroke);
-      g.setColor(basicColor);
+      g.setColor(BASIC_COLOR);
       MINIATURE_GROUND_DRAWER.draw(t, List.of(groundSnapshot), g);
       //draw in world frame
       Shape rect = new Rectangle2D.Double(inWorldFrame.min.x, inWorldFrame.min.y, inWorldFrame.width(), inWorldFrame.height());
-      g.setColor(alphaed(infoColor, 0.25f));
+      g.setColor(alphaed(INFO_COLOR, 0.25f));
       g.fill(rect);
-      g.setColor(infoColor);
+      g.setColor(INFO_COLOR);
       g.draw(rect);
       //restore transform
       g.setTransform(oAt);
@@ -148,7 +158,7 @@ public class GraphicsDrawer {
     at.scale(ratio, -ratio);
     at.translate(-worldFrame.min.x, -worldFrame.max.y);
     //draw background
-    g.setColor(backgroundColor);
+    g.setColor(BACKGROUND_COLOR);
     g.fillRect(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
         (int) graphicsFrame.width(), (int) graphicsFrame.height()
@@ -156,7 +166,7 @@ public class GraphicsDrawer {
     //draw grid
     g.setTransform(at);
     if (generalRenderingModes.contains(GeneralRenderingMode.GRID_MAJOR) || generalRenderingModes.contains(GeneralRenderingMode.GRID_MINOR)) {
-      g.setColor(gridColor);
+      g.setColor(GRID_COLOR);
       g.setStroke(new BasicStroke(1f / (float) ratio));
       double gridSize = computeGridSize(worldFrame.min.x, worldFrame.max.x);
       if (generalRenderingModes.contains(GeneralRenderingMode.GRID_MAJOR)) {
@@ -185,7 +195,7 @@ public class GraphicsDrawer {
       }
     }
     //draw components
-    Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
+    Stroke basicStroke = new BasicStroke(STROKE_WIDTH / (float) ratio);
     for (Snapshot snapshot : snapshots) {
       recursivelyDraw(t, List.of(snapshot), g, basicStroke);
     }
@@ -215,7 +225,7 @@ public class GraphicsDrawer {
       sb.append((sb.length() > 0) ? String.format("%n") : "").append(info);
     }
     if (sb.length() > 0) {
-      g.setColor(infoColor);
+      g.setColor(INFO_COLOR);
       int relY = 1;
       for (String line : sb.toString().split(String.format("%n"))) {
         g.drawString(line, (int) graphicsFrame.min.x + 1, (int) graphicsFrame.min.y + relY + g.getFontMetrics().getMaxAscent());
@@ -251,12 +261,12 @@ public class GraphicsDrawer {
   private double computeGridSize(double x1, double x2) {
     double gridSize = (x2 - x1) / 10d;
     double exp = Math.floor(Math.log10(gridSize));
-    double guess = gridSizes[0];
+    double guess = GRID_SIZES[0];
     double err = Math.abs(gridSize / Math.pow(10d, exp) - guess);
-    for (int i = 1; i < gridSizes.length; i++) {
-      if (Math.abs(gridSize / Math.pow(10d, exp) - gridSizes[i]) < err) {
-        err = Math.abs(gridSize / Math.pow(10d, exp) - gridSizes[i]);
-        guess = gridSizes[i];
+    for (int i = 1; i < GRID_SIZES.length; i++) {
+      if (Math.abs(gridSize / Math.pow(10d, exp) - GRID_SIZES[i]) < err) {
+        err = Math.abs(gridSize / Math.pow(10d, exp) - GRID_SIZES[i]);
+        guess = GRID_SIZES[i];
       }
     }
     gridSize = guess * Math.pow(10d, exp);
@@ -266,7 +276,7 @@ public class GraphicsDrawer {
   private void recursivelyDraw(double t, final List<Snapshot> lineage, final Graphics2D g, Stroke basicStroke) {
     for (Drawer drawer : drawers) {
       g.setStroke(basicStroke);
-      g.setColor(basicColor);
+      g.setColor(BASIC_COLOR);
       drawer.draw(t, lineage, g);
     }
     for (Snapshot child : lineage.get(lineage.size() - 1).getChildren()) {

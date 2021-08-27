@@ -60,7 +60,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
   public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid) throws IOException {
-    this(w, h, startTime, frameRate, encoder, file, namesGrid, GraphicsDrawer.build());
+    this(w, h, startTime, frameRate, encoder, file, namesGrid, new GraphicsDrawer());
   }
 
   public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
@@ -132,7 +132,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     GridFileWriter gridFileWriter = new GridFileWriter(
         w, h, startTime, frameRate, encoder, file,
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        GraphicsDrawer.build()
+        new GraphicsDrawer()
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
         namedSolutions,

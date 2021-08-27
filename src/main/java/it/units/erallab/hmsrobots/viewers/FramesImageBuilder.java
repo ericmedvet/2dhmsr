@@ -67,7 +67,7 @@ public class FramesImageBuilder implements SnapshotListener {
       overallH = h * frames;
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
-    graphicsDrawer = GraphicsDrawer.build();
+    graphicsDrawer = new GraphicsDrawer();
     framer = new RobotFollower(frames, 1.5d, 100, RobotFollower.AggregateType.MAX);
     frameCount = 0;
   }

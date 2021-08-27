@@ -141,7 +141,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   }
 
   public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
-    this(namesGrid, executor, GraphicsDrawer.build());
+    this(namesGrid, executor, new GraphicsDrawer());
   }
 
   public void start(int delay) {
@@ -243,7 +243,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
         uiExecutor,
-        GraphicsDrawer.build()
+        new GraphicsDrawer()
     );
     gridOnlineViewer.start(3);
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
