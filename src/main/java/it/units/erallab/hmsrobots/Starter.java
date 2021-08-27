@@ -116,8 +116,8 @@ public class Starter {
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    plainWorm();
-    //cShaped();
+    //plainWorm();
+    cShaped();
     //multiped();
   }
 
@@ -240,8 +240,8 @@ public class Starter {
     Grid<? extends SensingVoxel> body = RobotUtils
         //.buildSensorizingFunction("uniform-l1-0.01")
         //.buildSensorizingFunction("uniform-l5-0")
-        .buildSensorizingFunction("uniform-l5+vxy+t-0.0")
-        .apply(RobotUtils.buildShape("worm-2x1"));
+        .buildSensorizingFunction("uniform-l5+vxy+t-0.01")
+        .apply(RobotUtils.buildShape("worm-5x2"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(
@@ -266,14 +266,14 @@ public class Starter {
 
   private static void cShaped() {
     Grid<Boolean> shape = Grid.create(8, 8, (x, y) -> x < 2 || y < 2 || y >= 6);
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t-0").apply(shape);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+vxy-0.05").apply(shape);
     Robot<?> robot = new Robot<>(
         new CentralizedSensing(body),
         SerializationUtils.clone(body)
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        20,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );

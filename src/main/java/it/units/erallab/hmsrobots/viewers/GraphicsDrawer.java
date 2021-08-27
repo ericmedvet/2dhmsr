@@ -30,6 +30,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,13 +42,12 @@ import java.util.stream.Collectors;
  */
 public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
 
-  private final static PolyDrawer MINIATURE_GROUND_DRAWER = PolyDrawer.build();
-  private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(Point2.build(0.65, 0.01), Point2.build(0.99, 0.35));
-
-  static {
-    MINIATURE_GROUND_DRAWER.setConfigurable("useTexture", false);
-    MINIATURE_GROUND_DRAWER.setConfigurable("strokeColor", null);
-  }
+  private final static PolyDrawer MINIATURE_GROUND_DRAWER = new PolyDrawer(Ground.class)
+      .setConfigurable("useTexture", false)
+      .setConfigurable("strokeColor", null);
+  private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(
+      Point2.build(0.65, 0.01), Point2.build(0.99, 0.35)
+  );
 
   public static final List<Drawer> LOW_DETAIL_DRAWERS = List.of(
       new PolyDrawer(Ground.class),
@@ -95,15 +95,19 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return new GraphicsDrawer();
   }
 
-  /*public void drawMiniature(SnapshotOLD snapshot, Graphics2D g, it.units.erallab.hmsrobots.core.geometry.BoundingBox graphicsFrame, it.units.erallab.hmsrobots.core.geometry.BoundingBox inWorldFrame) {
+  public void drawMiniature(List<Snapshot> snapshots, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
         (int) graphicsFrame.width(), (int) graphicsFrame.height()
     );
-    it.units.erallab.hmsrobots.core.objects.immutable.Ground ground = (it.units.erallab.hmsrobots.core.objects.immutable.Ground) snapshot.getObjects().stream().filter(i -> i instanceof it.units.erallab.hmsrobots.core.objects.immutable.Ground).findFirst().orElse(null);
-    if (ground != null) {
-      it.units.erallab.hmsrobots.core.geometry.BoundingBox worldFrame = ground.getShape().boundingBox();
+    //it.units.erallab.hmsrobots.core.objects.immutable.Ground ground = (it.units.erallab.hmsrobots.core.objects.immutable.Ground) snapshot.getObjects().stream().filter(i -> i instanceof it.units.erallab.hmsrobots.core.objects.immutable.Ground).findFirst().orElse(null);
+    Snapshot groundSnapshot = snapshots.stream()
+        .filter(s -> Ground.class.isAssignableFrom(s.getSnapshottableClass()))
+        .findFirst()
+        .orElse(null);
+    if (groundSnapshot != null) {
+      BoundingBox worldFrame = ((Poly) groundSnapshot.getContent()).boundingBox();
       if (miniatureMagnifyRatio != 1f) {
         Point2 center = inWorldFrame.center();
         double w = worldFrame.width();
@@ -129,7 +133,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
       g.setStroke(basicStroke);
       g.setColor(basicColor);
-      MINIATURE_GROUND_DRAWER.draw(ground, null, g);
+      MINIATURE_GROUND_DRAWER.draw(List.of(groundSnapshot), g);
       //draw in world frame
       Shape rect = new Rectangle2D.Double(inWorldFrame.min.x, inWorldFrame.min.y, inWorldFrame.width(), inWorldFrame.height());
       g.setColor(alphaed(infoColor, 0.25f));
@@ -140,7 +144,6 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       g.setTransform(oAt);
     }
   }
-*/
 
   public void draw(double t, List<Snapshot> snapshots, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, String... infos) {
     //set clipping area
@@ -234,9 +237,9 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       }
     }
     //draw miniature
-    /*if (drawMiniature) {
+    if (drawMiniature) {
       drawMiniature(
-          snapshot,
+          snapshots,
           g,
           it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
               Point2.build(
@@ -249,7 +252,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
           ),
           worldFrame
       );
-    }*/
+    }
   }
 
   private static <T> List<T> append(List<T> list, T t) {

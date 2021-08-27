@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.geometry;
 
 import java.io.Serializable;
 
-public class BoundingBox implements Serializable {
+public class BoundingBox implements Shape, Serializable {
 
   public final Point2 min;
   public final Point2 max;
@@ -60,8 +60,14 @@ public class BoundingBox implements Serializable {
     return BoundingBox.build(bb1.min, bb1.max, bb2.min, bb2.max);
   }
 
+  @Override
   public Point2 center() {
     return Point2.build((min.x + max.x) / 2d, (min.y + max.x) / 2d);
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return this;
   }
 
   public double width() {
