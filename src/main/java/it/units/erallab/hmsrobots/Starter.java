@@ -279,7 +279,7 @@ public class Starter {
     );
     //GridOnlineViewer.run(locomotion, robot);
     try {
-      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
+      GridFileWriter.save(locomotion, robot, 600, 400, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
     } catch (IOException e) {
       e.printStackTrace();
     }

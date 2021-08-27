@@ -27,7 +27,7 @@ import java.util.List;
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
 public interface Drawer {
-  void draw(List<Snapshot> lineage, Graphics2D g);
+  void draw(double t, List<Snapshot> lineage, Graphics2D g);
 
   static boolean match(Snapshot snapshot, Class<?> contentClass, Class<? extends Snapshottable> creatorClass) {
     return contentClass.isAssignableFrom(snapshot.getContent().getClass()) && creatorClass.isAssignableFrom(snapshot.getSnapshottableClass());

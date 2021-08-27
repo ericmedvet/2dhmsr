@@ -95,13 +95,12 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return new GraphicsDrawer();
   }
 
-  public void drawMiniature(List<Snapshot> snapshots, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
+  public void drawMiniature(double t, List<Snapshot> snapshots, Graphics2D g, BoundingBox graphicsFrame, BoundingBox inWorldFrame) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
         (int) graphicsFrame.width(), (int) graphicsFrame.height()
     );
-    //it.units.erallab.hmsrobots.core.objects.immutable.Ground ground = (it.units.erallab.hmsrobots.core.objects.immutable.Ground) snapshot.getObjects().stream().filter(i -> i instanceof it.units.erallab.hmsrobots.core.objects.immutable.Ground).findFirst().orElse(null);
     Snapshot groundSnapshot = snapshots.stream()
         .filter(s -> Ground.class.isAssignableFrom(s.getSnapshottableClass()))
         .findFirst()
@@ -133,7 +132,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
       g.setStroke(basicStroke);
       g.setColor(basicColor);
-      MINIATURE_GROUND_DRAWER.draw(List.of(groundSnapshot), g);
+      MINIATURE_GROUND_DRAWER.draw(t, List.of(groundSnapshot), g);
       //draw in world frame
       Shape rect = new Rectangle2D.Double(inWorldFrame.min.x, inWorldFrame.min.y, inWorldFrame.width(), inWorldFrame.height());
       g.setColor(alphaed(infoColor, 0.25f));
@@ -201,7 +200,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     //draw components
     Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
     for (Snapshot snapshot : snapshots) {
-      recursivelyDraw(List.of(snapshot), g, basicStroke);
+      recursivelyDraw(t, List.of(snapshot), g, basicStroke);
     }
     //restore transform
     g.setTransform(oAt);
@@ -239,6 +238,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     //draw miniature
     if (drawMiniature) {
       drawMiniature(
+          t,
           snapshots,
           g,
           it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
@@ -276,14 +276,14 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return gridSize;
   }
 
-  private void recursivelyDraw(final List<Snapshot> lineage, final Graphics2D g, Stroke basicStroke) {
+  private void recursivelyDraw(double t, final List<Snapshot> lineage, final Graphics2D g, Stroke basicStroke) {
     for (Drawer drawer : drawers) {
       g.setStroke(basicStroke);
       g.setColor(basicColor);
-      drawer.draw(lineage, g);
+      drawer.draw(t, lineage, g);
     }
     for (Snapshot child : lineage.get(lineage.size() - 1).getChildren()) {
-      recursivelyDraw(append(lineage, child), g, basicStroke);
+      recursivelyDraw(t, append(lineage, child), g, basicStroke);
     }
   }
 

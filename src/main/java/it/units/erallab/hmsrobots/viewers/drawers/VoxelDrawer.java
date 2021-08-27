@@ -57,7 +57,7 @@ public class VoxelDrawer implements Drawer, Configurable<VoxelDrawer> {
   }
 
   @Override
-  public void draw(List<Snapshot> lineage, Graphics2D g) {
+  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
     Snapshot last = lineage.get(lineage.size() - 1);
     if (!Drawer.match(last, VoxelPoly.class, Voxel.class)) {
       return;
