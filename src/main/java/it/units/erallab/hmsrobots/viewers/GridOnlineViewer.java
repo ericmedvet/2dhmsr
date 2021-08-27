@@ -23,6 +23,8 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.InfoDrawer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
@@ -206,6 +208,17 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     };
   }
 
+  private final static Drawer D = Drawer.of(List.of(
+      Drawer.clip(
+          BoundingBox.build(Point2.build(0.25d, 0.5d), Point2.build(0.5d, 0.6d)),
+          new InfoDrawer()
+      ),
+      Drawer.clip(
+          BoundingBox.build(Point2.build(0.1d, 0.5d), Point2.build(1.0d, 0.6d)),
+          new InfoDrawer()
+      )
+  ));
+
   private void renderFrame(Grid<TimedSnapshots> localSnapshotGrid) {
     //set local clip size
     double localW = (double) canvas.getWidth() / (double) namesGrid.getW();
@@ -217,12 +230,19 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
       if (entry.getValue() != null) {
         //obtain viewport
         BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue().snapshots, localW / localH);
+
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
+        D.draw(entry.getValue().t, List.of(entry.getValue().snapshots.get(0)), g);
+
         //draw
         graphicsDrawer.draw(
             entry.getValue().t, entry.getValue().snapshots, g,
-            it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
+            BoundingBox.build(
                 Point2.build(localW * entry.getX(), localH * entry.getY()),
-                Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
+                //Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
+                Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1) * 0.5d) // TODO ocio
             ),
             frame, namesGrid.get(entry.getX(), entry.getY())
         );

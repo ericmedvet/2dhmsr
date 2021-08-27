@@ -17,10 +17,15 @@
 
 package it.units.erallab.hmsrobots.viewers.drawers;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.viewers.Framer;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 
 /**
@@ -28,6 +33,62 @@ import java.util.List;
  */
 public interface Drawer {
   void draw(double t, List<Snapshot> lineage, Graphics2D g);
+
+  static Drawer of(List<Drawer> drawers) {
+    return (t, lineage, g) -> drawers.forEach(d -> d.draw(t, lineage, g));
+  }
+
+  static Drawer clip(BoundingBox boundingBox, Drawer drawer) {
+    return (t, lineage, g) -> {
+      AffineTransform originalTransform = g.getTransform();
+      Shape shape = g.getClip();
+      double clipX = shape.getBounds2D().getX();
+      double clipY = shape.getBounds2D().getY();
+      double clipW = shape.getBounds2D().getWidth();
+      double clipH = shape.getBounds2D().getHeight();
+      g.clip(new Rectangle2D.Double(
+          clipX + boundingBox.min.x * clipW,
+          clipY + boundingBox.min.y * clipH,
+          clipW * boundingBox.width(),
+          clipH * boundingBox.height()
+      ));
+      AffineTransform transform = new AffineTransform();
+      transform.translate(g.getClip().getBounds2D().getX(), g.getClip().getBounds2D().getY());
+      g.setTransform(transform);
+      //draw
+
+      System.out.println(g.getTransform());
+
+      drawer.draw(t, lineage, g);
+      //restore clip and transform
+      g.setClip(shape);
+      g.setTransform(originalTransform);
+    };
+  }
+
+  static Drawer transform(Framer framer, Drawer drawer) {
+    return (t, lineage, g) -> {
+      BoundingBox graphicsFrame = BoundingBox.build(
+          Point2.build(g.getClip().getBounds2D().getX(), g.getClip().getBounds2D().getY()),
+          Point2.build(g.getClip().getBounds2D().getMaxX(), g.getClip().getBounds2D().getMaxY())
+      );
+      BoundingBox worldFrame = framer.getFrame(lineage, graphicsFrame.width() / graphicsFrame.height());
+      //save original transform
+      AffineTransform oAt = g.getTransform();
+      //prepare transformation
+      double xRatio = graphicsFrame.width() / worldFrame.width();
+      double yRatio = graphicsFrame.height() / worldFrame.height();
+      double ratio = Math.min(xRatio, yRatio);
+      AffineTransform at = new AffineTransform();
+      at.translate(graphicsFrame.min.x, graphicsFrame.min.y);
+      at.scale(ratio, -ratio);
+      at.translate(-worldFrame.min.x, -worldFrame.max.y);
+      //draw
+      drawer.draw(t, lineage, g);
+      //restore transform
+      g.setTransform(oAt);
+    };
+  }
 
   static boolean match(Snapshot snapshot, Class<?> contentClass, Class<? extends Snapshottable> creatorClass) {
     return contentClass.isAssignableFrom(snapshot.getContent().getClass()) && creatorClass.isAssignableFrom(snapshot.getSnapshottableClass());
