@@ -14,15 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.core.objects;
+package it.units.erallab.hmsrobots.core.snapshots;
 
-import org.dyn4j.dynamics.World;
+import java.util.List;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public interface WorldObject {
+public interface SnapshotListener {
 
-  void addTo(World world);
+  void listen(double t, List<Snapshot> snapshots);
 
 }

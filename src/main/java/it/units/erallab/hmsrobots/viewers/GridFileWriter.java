@@ -16,8 +16,10 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
@@ -78,14 +80,14 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
-    return (SnapshotOLD snapshot) -> {
+    return (double t, List<Snapshot> snapshots) -> {
       List<Double> times = timesGrid.get(lX, lY);
-      double lastTime = times.isEmpty() ? Double.NEGATIVE_INFINITY : times.get(times.size() - 1);
-      if (snapshot.getTime() >= startTime && snapshot.getTime() - lastTime >= 1d / frameRate) {
-        int frameNumber = (int) Math.round((snapshot.getTime() - startTime) * frameRate);
+      double lastT = times.isEmpty() ? Double.NEGATIVE_INFINITY : times.get(times.size() - 1);
+      if (t >= startTime && t - lastT >= 1d / frameRate) {
+        int frameNumber = (int) Math.round((t - startTime) * frameRate);
         int lastFrameNumber = times.isEmpty() ? frameNumber : (int) Math.round((times.get(times.size() - 1) - startTime) * frameRate);
         synchronized (images) {
-          times.add(snapshot.getTime());
+          times.add(t);
           while (frameNumber >= images.size()) {
             images.add(new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR));
           }
@@ -95,11 +97,11 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
             double localW = (double) w / (double) namesGrid.getW();
             double localH = (double) h / (double) namesGrid.getH();
             //obtain viewport
-            it.units.erallab.hmsrobots.core.geometry.BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
+            BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshots, localW / localH);
             //draw
             graphicsDrawer.draw(
-                snapshot, g,
-                it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
+                t, snapshots, g,
+                BoundingBox.build(
                     Point2.build(localW * lX, localH * lY),
                     Point2.build(localW * (lX + 1), localH * (lY + 1))
                 ),

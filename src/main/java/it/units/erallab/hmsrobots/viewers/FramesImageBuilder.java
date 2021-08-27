@@ -1,24 +1,25 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
-import it.units.erallab.hmsrobots.viewers.drawers.*;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -45,8 +46,8 @@ public class FramesImageBuilder implements SnapshotListener {
   private final Framer framer;
   private final BufferedImage image;
 
-  private SnapshotOLD lastSnapshot;
   private int frameCount;
+  private double lastT = Double.NEGATIVE_INFINITY;
 
   private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
 
@@ -66,13 +67,7 @@ public class FramesImageBuilder implements SnapshotListener {
       overallH = h * frames;
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
-    graphicsDrawer = GraphicsDrawer.build().setConfigurable("drawers", List.of(
-        PolyDrawer.build(),
-        BoundingBoxDrawer.build(),
-        VoxelDrawer.build(),
-        SensorReadingsSectorDrawer.build(),
-        LidarDrawer.build()
-    ));
+    graphicsDrawer = GraphicsDrawer.build();
     framer = new RobotFollower(frames, 1.5d, 100, RobotFollower.AggregateType.MAX);
     frameCount = 0;
   }
@@ -82,23 +77,23 @@ public class FramesImageBuilder implements SnapshotListener {
   }
 
   @Override
-  public void listen(final SnapshotOLD snapshot) {
-    it.units.erallab.hmsrobots.core.geometry.BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
-    if ((snapshot.getTime() < initialT) || (snapshot.getTime() >= finalT)) { //out of time window
+  public void listen(double t, List<Snapshot> snapshots) {
+    BoundingBox worldFrame = framer.getFrame(snapshots, (double) w / (double) h);
+    if ((t < initialT) || (t >= finalT)) { //out of time window
       return;
     }
-    if ((lastSnapshot != null) && ((snapshot.getTime() - lastSnapshot.getTime()) < dT)) { //wait for next snapshot
+    if ((t - lastT) < dT) { //wait for next snapshot
       return;
     }
-    lastSnapshot = snapshot;
-    it.units.erallab.hmsrobots.core.geometry.BoundingBox imageFrame;
+    lastT = t;
+    BoundingBox imageFrame;
     if (direction.equals(Direction.HORIZONTAL)) {
-      imageFrame = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
+      imageFrame = BoundingBox.build(
           Point2.build(w * frameCount, 0),
           Point2.build(w * (frameCount + 1), h)
       );
     } else {
-      imageFrame = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(
+      imageFrame = BoundingBox.build(
           Point2.build(0, h * frameCount),
           Point2.build(w, h * (frameCount + 1))
       );
@@ -106,7 +101,7 @@ public class FramesImageBuilder implements SnapshotListener {
     L.fine(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
     frameCount = frameCount + 1;
     Graphics2D g = image.createGraphics();
-    graphicsDrawer.draw(snapshot, g, imageFrame, worldFrame, String.format("%d", frameCount));
+    graphicsDrawer.draw(t, snapshots, g, imageFrame, worldFrame, String.format("%d", frameCount));
     g.dispose();
   }
 

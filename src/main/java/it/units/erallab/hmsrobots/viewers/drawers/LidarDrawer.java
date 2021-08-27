@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers.drawers;
 
@@ -34,6 +34,8 @@ public class LidarDrawer implements Drawer, Configurable<LidarDrawer> {
 
   @ConfigurableField
   private Color strokeColor = Color.RED;
+  @ConfigurableField
+  private double circleSize = 0.5d;
 
   public static LidarDrawer build() {
     return new LidarDrawer();
@@ -71,15 +73,12 @@ public class LidarDrawer implements Drawer, Configurable<LidarDrawer> {
           )
       ));
       // draw only hits
-      if (rayHits[rayIdx] < 1d) {
-        double width = 0.5;
-        double height = 0.5;
-        // transform the center point to the upper left corner
+      if (rayHits[rayIdx] < rayLength) {
         g.draw(new Ellipse2D.Double(
-            (center.x + rayHits[rayIdx] * rayLength * Math.cos(direction)) - width / 2d,
-            (center.y + rayHits[rayIdx] * rayLength * Math.sin(direction)) - height / 2d,
-            width,
-            height
+            center.x + rayHits[rayIdx] * Math.cos(direction) - circleSize / 2d,
+            center.y + rayHits[rayIdx] * Math.sin(direction) - circleSize / 2d,
+            circleSize,
+            circleSize
         ));
       }
     }

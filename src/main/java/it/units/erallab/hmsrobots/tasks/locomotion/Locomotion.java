@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -16,17 +16,16 @@
  */
 package it.units.erallab.hmsrobots.tasks.locomotion;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
-import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
+import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.util.Utils;
-import it.units.erallab.hmsrobots.viewers.SnapshotListener;
 import org.apache.commons.lang3.time.StopWatch;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
@@ -81,7 +80,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     //translate on y
     double minYGap = robot.getVoxels().values().stream()
         .filter(Objects::nonNull)
-        .mapToDouble(v -> ((Voxel) v.immutable()).getShape().boundingBox().min.y - ground.yAt(v.getCenter().x))
+        .mapToDouble(v -> v.boundingBox().min.y - ground.yAt(v.getCenter().x))
         .min().orElse(0d);
     robot.translate(new Vector2(0, INITIAL_PLACEMENT_Y_GAP - minYGap));
     //get initial x

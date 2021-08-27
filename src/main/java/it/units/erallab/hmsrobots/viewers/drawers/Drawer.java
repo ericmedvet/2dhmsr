@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ public interface Drawer {
   void draw(List<Snapshot> lineage, Graphics2D g);
 
   static boolean match(Snapshot snapshot, Class<?> contentClass, Class<? extends Snapshottable> creatorClass) {
-    return snapshot.getContent().getClass().isAssignableFrom(contentClass) && snapshot.getSnapshottableClass().isAssignableFrom(creatorClass);
+    return contentClass.isAssignableFrom(snapshot.getContent().getClass()) && creatorClass.isAssignableFrom(snapshot.getSnapshottableClass());
   }
 
   static Snapshot lastMatching(List<Snapshot> lineage, Class<?> contentClass, Class<? extends Snapshottable> creatorClass) {

@@ -1,25 +1,27 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
+import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.Configurable;
 import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
@@ -28,7 +30,6 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,20 +42,32 @@ import java.util.stream.Collectors;
 public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
 
   private final static PolyDrawer MINIATURE_GROUND_DRAWER = PolyDrawer.build();
-  private final static it.units.erallab.hmsrobots.core.geometry.BoundingBox MINIATURE_REL_BOUNDING_BOX = it.units.erallab.hmsrobots.core.geometry.BoundingBox.build(Point2.build(0.65, 0.01), Point2.build(0.99, 0.35));
+  private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(Point2.build(0.65, 0.01), Point2.build(0.99, 0.35));
 
   static {
     MINIATURE_GROUND_DRAWER.setConfigurable("useTexture", false);
     MINIATURE_GROUND_DRAWER.setConfigurable("strokeColor", null);
   }
 
+  public static final List<Drawer> LOW_DETAIL_DRAWERS = List.of(
+      new PolyDrawer(Ground.class),
+      new VoxelDrawer()
+  );
+
+  public static final List<Drawer> MEDIUM_DETAIL_DRAWERS = List.of(
+      new PolyDrawer(Ground.class),
+      new VoxelDrawer(),
+      new SensorReadingsSectorDrawer(),
+      new LidarDrawer()
+  );
+
   public enum GeneralRenderingMode {
-    GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, VOXEL_COMPOUND_CENTERS_INFO
+    GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, ROBOT_CENTERS_INFO
   }
 
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
   private Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
-      GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO,
+      GeneralRenderingMode.ROBOT_CENTERS_INFO,
       GeneralRenderingMode.TIME_INFO
   ));
   @ConfigurableField
@@ -73,15 +86,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   @ConfigurableField(uiMin = 1, uiMax = 10)
   private float miniatureMagnifyRatio = 3f;
   @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
-  private List<DrawerOLD<?>> drawers = new ArrayList<>(List.of(
-      BoundingBoxDrawer.build(),
-      VoxelDrawer.build(),
-      VoxelBody.build(),
-      PolyDrawer.build(),
-      VoxelJoint.build(),
-      LidarDrawer.build(),
-      SensorReadingsSectorDrawer.build()
-  ));
+  private List<Drawer> drawers = new ArrayList<>(MEDIUM_DETAIL_DRAWERS);
 
   private GraphicsDrawer() {
   }
@@ -90,7 +95,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return new GraphicsDrawer();
   }
 
-  public void drawMiniature(SnapshotOLD snapshot, Graphics2D g, it.units.erallab.hmsrobots.core.geometry.BoundingBox graphicsFrame, it.units.erallab.hmsrobots.core.geometry.BoundingBox inWorldFrame) {
+  /*public void drawMiniature(SnapshotOLD snapshot, Graphics2D g, it.units.erallab.hmsrobots.core.geometry.BoundingBox graphicsFrame, it.units.erallab.hmsrobots.core.geometry.BoundingBox inWorldFrame) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -135,8 +140,9 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       g.setTransform(oAt);
     }
   }
+*/
 
-  public void draw(SnapshotOLD snapshot, Graphics2D g, it.units.erallab.hmsrobots.core.geometry.BoundingBox graphicsFrame, it.units.erallab.hmsrobots.core.geometry.BoundingBox worldFrame, String... infos) {
+  public void draw(double t, List<Snapshot> snapshots, Graphics2D g, BoundingBox graphicsFrame, BoundingBox worldFrame, String... infos) {
     //set clipping area
     g.setClip(
         (int) graphicsFrame.min.x, (int) graphicsFrame.min.y,
@@ -190,17 +196,9 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       }
     }
     //draw components
-    List<Point2> compoundCenters = new ArrayList<>();
     Stroke basicStroke = new BasicStroke(strokeWidth / (float) ratio);
-    for (Immutable immutable : snapshot.getObjects()) {
-      recursivelyDraw(immutable, null, g, basicStroke);
-      if (generalRenderingModes.contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
-        if (immutable instanceof it.units.erallab.hmsrobots.core.objects.immutable.Robot) {
-          Point2[] centers = new Point2[immutable.getChildren().size()];
-          centers = immutable.getChildren().stream().map(v -> ((it.units.erallab.hmsrobots.core.objects.immutable.Voxel) v).getShape().center()).collect(Collectors.toList()).toArray(centers);
-          compoundCenters.add(Point2.average(centers));
-        }
-      }
+    for (Snapshot snapshot : snapshots) {
+      recursivelyDraw(List.of(snapshot), g, basicStroke);
     }
     //restore transform
     g.setTransform(oAt);
@@ -210,12 +208,16 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       sb.append((sb.length() > 0) ? " " : "").append(String.format("vp=(%.0f;%.0f)->(%.0f;%.0f)", worldFrame.min.x, worldFrame.min.y, worldFrame.max.x, worldFrame.max.y));
     }
     if (generalRenderingModes.contains(GeneralRenderingMode.TIME_INFO)) {
-      sb.append((sb.length() > 0) ? " " : "").append(String.format("t=%.2f", snapshot.getTime()));
+      sb.append((sb.length() > 0) ? " " : "").append(String.format("t=%.2f", t));
     }
-    if (generalRenderingModes.contains(GeneralRenderingMode.VOXEL_COMPOUND_CENTERS_INFO)) {
-      if (!compoundCenters.isEmpty()) {
+    if (generalRenderingModes.contains(GeneralRenderingMode.ROBOT_CENTERS_INFO)) {
+      List<Point2> robotCenters = snapshots.stream()
+          .filter(s -> Robot.class.isAssignableFrom(s.getSnapshottableClass()))
+          .map(s -> ((BoundingBox) s.getContent()).center())
+          .collect(Collectors.toList());
+      if (!robotCenters.isEmpty()) {
         sb.append((sb.length() > 0) ? String.format("%n") : "").append("c:");
-        for (Point2 center : compoundCenters) {
+        for (Point2 center : robotCenters) {
           sb.append(String.format(" (%.0f,%.0f)", center.x, center.y));
         }
       }
@@ -232,7 +234,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
       }
     }
     //draw miniature
-    if (drawMiniature) {
+    /*if (drawMiniature) {
       drawMiniature(
           snapshot,
           g,
@@ -247,7 +249,13 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
           ),
           worldFrame
       );
-    }
+    }*/
+  }
+
+  private static <T> List<T> append(List<T> list, T t) {
+    List<T> newList = new ArrayList<>(list);
+    newList.add(t);
+    return newList;
   }
 
   private double computeGridSize(double x1, double x2) {
@@ -265,17 +273,14 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     return gridSize;
   }
 
-  private void recursivelyDraw(final Immutable immutable, final Immutable parent, final Graphics2D g, Stroke basicStroke) {
-    boolean drawChildren = false;
-    for (DrawerOLD drawer : drawers) {
-      if (drawer.canDraw(immutable.getClass())) {
-        g.setStroke(basicStroke);
-        g.setColor(basicColor);
-        drawChildren = drawChildren || drawer.draw(immutable, parent, g);
-      }
+  private void recursivelyDraw(final List<Snapshot> lineage, final Graphics2D g, Stroke basicStroke) {
+    for (Drawer drawer : drawers) {
+      g.setStroke(basicStroke);
+      g.setColor(basicColor);
+      drawer.draw(lineage, g);
     }
-    if (drawChildren) {
-      immutable.getChildren().forEach(c -> recursivelyDraw(c, immutable, g, basicStroke));
+    for (Snapshot child : lineage.get(lineage.size() - 1).getChildren()) {
+      recursivelyDraw(append(lineage, child), g, basicStroke);
     }
   }
 

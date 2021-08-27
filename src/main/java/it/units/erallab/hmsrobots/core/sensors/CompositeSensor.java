@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 
 /**
@@ -45,6 +46,12 @@ public abstract class CompositeSensor extends AbstractSensor {
   public void reset() {
     super.reset();
     sensor.reset();
+  }
+
+  @Override
+  public void setVoxel(SensingVoxel voxel) {
+    super.setVoxel(voxel);
+    sensor.setVoxel(voxel);
   }
 
   @Override

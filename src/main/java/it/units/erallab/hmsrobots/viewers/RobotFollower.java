@@ -1,27 +1,28 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.collect.EvictingQueue;
-import it.units.erallab.hmsrobots.core.objects.immutable.Robot;
-import it.units.erallab.hmsrobots.core.objects.immutable.SnapshotOLD;
-import it.units.erallab.hmsrobots.core.objects.immutable.Voxel;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+
+import java.util.List;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -33,30 +34,26 @@ public class RobotFollower implements Framer {
   }
 
   private double sizeRelativeMargin;
-  private final int compounds;
+  private final int nOfRobots;
   private final AggregateType aggregateType;
 
   private final EvictingQueue<BoundingBox> enclosingFrames;
 
   public RobotFollower(int windowSize, double sizeRelativeMargin, int nOfRobots, AggregateType aggregateType) {
     this.sizeRelativeMargin = sizeRelativeMargin;
-    this.compounds = nOfRobots;
+    this.nOfRobots = nOfRobots;
     this.aggregateType = aggregateType;
     enclosingFrames = EvictingQueue.create(windowSize);
   }
 
   @Override
-  public BoundingBox getFrame(SnapshotOLD snapshot, double ratio) {
+  public BoundingBox getFrame(List<Snapshot> snapshots, double ratio) {
     //get enclosing bounding box
-    BoundingBox enclosing = snapshot.getObjects().stream()
-        .filter(o -> o instanceof Robot)
-        .limit(compounds)
-        .map(o -> o.getChildren().stream()
-            .filter(c -> c instanceof Voxel)
-            .map(c -> ((Voxel) c).getShape().boundingBox())
-            .reduce((b1, b2) -> BoundingBox.largest(b1, b2))
-            .get())
-        .reduce((b1, b2) -> BoundingBox.largest(b1, b2))
+    BoundingBox enclosing = snapshots.stream()
+        .filter(s -> Robot.class.isAssignableFrom(s.getSnapshottableClass()))
+        .limit(nOfRobots)
+        .map(s -> (BoundingBox) s.getContent())
+        .reduce(BoundingBox::largest)
         .get();
     //add to queue
     enclosingFrames.offer(enclosing);
