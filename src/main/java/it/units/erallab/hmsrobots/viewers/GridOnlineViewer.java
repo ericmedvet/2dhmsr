@@ -90,7 +90,6 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     canvas.setPreferredSize(dimension);
     canvas.setMinimumSize(dimension);
     canvas.setMaximumSize(dimension);
-    getContentPane().add(new ConfigurablePane(graphicsDrawer), BorderLayout.LINE_END);
     getContentPane().add(canvas, BorderLayout.CENTER);
     //pack
     pack();

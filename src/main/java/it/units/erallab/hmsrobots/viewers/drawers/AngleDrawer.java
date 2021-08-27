@@ -22,22 +22,26 @@ import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.util.List;
 
 
-public class AngleDrawer implements Drawer, Configurable<AngleDrawer> {
+public class AngleDrawer implements Drawer {
 
-  @ConfigurableField
-  private Color strokeColor = Color.BLACK;
+  private final static Color COLOR = Color.BLACK;
 
-  public static AngleDrawer build() {
-    return new AngleDrawer();
+  private final Color strokeColor;
+
+  public AngleDrawer(Color strokeColor) {
+    this.strokeColor = strokeColor;
   }
+
+  public AngleDrawer() {
+    this(COLOR);
+  }
+
 
   @Override
   public void draw(double t, List<Snapshot> lineage, Graphics2D g) {

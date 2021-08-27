@@ -22,8 +22,6 @@ import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
 
 import java.awt.*;
@@ -40,11 +38,9 @@ import java.util.stream.Collectors;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
+public class GraphicsDrawer {
 
-  private final static PolyDrawer MINIATURE_GROUND_DRAWER = new PolyDrawer(Ground.class)
-      .setConfigurable("useTexture", false)
-      .setConfigurable("strokeColor", null);
+  private final static PolyDrawer MINIATURE_GROUND_DRAWER = new PolyDrawer(alphaed(Color.BLACK, 0.25f), Ground.class);
   private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(
       Point2.build(0.65, 0.01), Point2.build(0.99, 0.35)
   );
@@ -55,7 +51,7 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
   );
 
   public static final List<Drawer> MEDIUM_DETAIL_DRAWERS = List.of(
-      new PolyDrawer(Ground.class),
+      new PolyDrawer(PolyDrawer.TEXTURE_PAINT, Ground.class),
       new VoxelDrawer(),
       new SensorReadingsSectorDrawer(),
       new LidarDrawer()
@@ -65,27 +61,18 @@ public class GraphicsDrawer implements Configurable<GraphicsDrawer> {
     GRID_MAJOR, GRID_MINOR, VIEWPORT_INFO, TIME_INFO, ROBOT_CENTERS_INFO
   }
 
-  @ConfigurableField(uiType = ConfigurableField.Type.BASIC, enumClass = GeneralRenderingMode.class)
   private Set<GeneralRenderingMode> generalRenderingModes = new HashSet<>(Set.of(
       GeneralRenderingMode.ROBOT_CENTERS_INFO,
       GeneralRenderingMode.TIME_INFO
   ));
-  @ConfigurableField
   private Color gridColor = Color.GRAY;
-  @ConfigurableField
   private Color infoColor = Color.BLUE;
-  @ConfigurableField
   private Color backgroundColor = Color.WHITE;
-  @ConfigurableField
   private Color basicColor = Color.BLUE;
   private double[] gridSizes = new double[]{2, 5, 10};
-  @ConfigurableField(uiMin = 1, uiMax = 5)
   private float strokeWidth = 1f;
-  @ConfigurableField
   private boolean drawMiniature = true;
-  @ConfigurableField(uiMin = 1, uiMax = 10)
   private float miniatureMagnifyRatio = 3f;
-  @ConfigurableField(uiType = ConfigurableField.Type.BASIC)
   private List<Drawer> drawers = new ArrayList<>(MEDIUM_DETAIL_DRAWERS);
 
   private GraphicsDrawer() {

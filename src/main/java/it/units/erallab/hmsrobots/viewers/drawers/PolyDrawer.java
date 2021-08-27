@@ -19,8 +19,6 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
@@ -28,35 +26,37 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-public class PolyDrawer implements Drawer, Configurable<PolyDrawer> {
+public class PolyDrawer implements Drawer {
 
-  @ConfigurableField
-  private Color strokeColor = Color.BLACK;
-  @ConfigurableField
-  private Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.25f);
-  @ConfigurableField
-  private boolean useTexture = true;
-  private final TexturePaint texturePaint;
+  private final static Color COLOR = Color.BLACK;
   private final static int TEXTURE_SIZE = 4;
   private final static Color TEXTURE_COLOR = Color.GRAY;
+  public final static TexturePaint TEXTURE_PAINT = createTexturePaint();
+
+  private final Color strokeColor;
+  private final Color fillColor;
+  private final boolean useTexture;
 
   private final Class<? extends Snapshottable> creatorClass;
 
   public PolyDrawer(Class<? extends Snapshottable> creatorClass) {
-    this.texturePaint = createTexturePaint();
-    this.creatorClass = creatorClass;
+    this(COLOR, creatorClass);
   }
 
-  public PolyDrawer(Class<? extends Snapshottable> creatorClass, Color color) {
-    this.texturePaint = createTexturePaint();
+
+  public PolyDrawer(Color color, Class<? extends Snapshottable> creatorClass) {
     this.creatorClass = creatorClass;
-    useTexture = false;
     strokeColor = color;
     fillColor = GraphicsDrawer.alphaed(color, 0.25f);
+    useTexture = false;
   }
 
-  public static PolyDrawer build() {
-    return new PolyDrawer(Snapshottable.class);
+  public PolyDrawer(TexturePaint texturePaint, Class<? extends Snapshottable> creatorClass) {
+    this.creatorClass = creatorClass;
+    strokeColor = COLOR;
+    fillColor = GraphicsDrawer.alphaed(COLOR, 0.25f);
+    texturePaint = TEXTURE_PAINT;
+    useTexture = true;
   }
 
   @Override
@@ -69,8 +69,7 @@ public class PolyDrawer implements Drawer, Configurable<PolyDrawer> {
     Path2D path = GraphicsDrawer.toPath(poly, true);
     if (useTexture || fillColor != null) {
       if (useTexture) {
-        g.setPaint(texturePaint);
-
+        g.setPaint(TEXTURE_PAINT);
       } else {
         g.setColor(fillColor);
       }
@@ -82,7 +81,7 @@ public class PolyDrawer implements Drawer, Configurable<PolyDrawer> {
     }
   }
 
-  private TexturePaint createTexturePaint() {
+  private static TexturePaint createTexturePaint() {
     BufferedImage texture = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
     Graphics2D g = texture.createGraphics();
     g.setColor(GraphicsDrawer.alphaed(TEXTURE_COLOR, 0.5f));

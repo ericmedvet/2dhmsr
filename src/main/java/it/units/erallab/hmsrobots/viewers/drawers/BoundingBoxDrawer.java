@@ -20,29 +20,28 @@ import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
-public class BoundingBoxDrawer implements Drawer, Configurable<BoundingBoxDrawer> {
+public class BoundingBoxDrawer implements Drawer {
 
-  @ConfigurableField
-  private Color fillColor = GraphicsDrawer.alphaed(Color.PINK, 0.5f);
-  @ConfigurableField
-  private Color strokeColor = Color.PINK;
+  private final static Color COLOR = Color.PINK;
 
+  private final Color fillColor;
+  private final Color strokeColor;
   private final Class<? extends Snapshottable> creatorClass;
 
-  public BoundingBoxDrawer(Class<? extends Snapshottable> creatorClass) {
+  public BoundingBoxDrawer(Color fillColor, Color strokeColor, Class<? extends Snapshottable> creatorClass) {
+    this.fillColor = fillColor;
+    this.strokeColor = strokeColor;
     this.creatorClass = creatorClass;
   }
 
-  public static BoundingBoxDrawer build() {
-    return new BoundingBoxDrawer(Snapshottable.class);
+  public BoundingBoxDrawer(Class<? extends Snapshottable> creatorClass) {
+    this(COLOR, GraphicsDrawer.alphaed(COLOR, 0.5f), creatorClass);
   }
 
   @Override

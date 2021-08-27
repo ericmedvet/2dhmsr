@@ -22,24 +22,27 @@ import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.util.List;
 
-public class LidarDrawer implements Drawer, Configurable<LidarDrawer> {
+public class LidarDrawer implements Drawer {
 
-  @ConfigurableField
-  private Color strokeColor = Color.RED;
-  @ConfigurableField
-  private double circleSize = 0.5d;
+  private final static Color COLOR = Color.RED;
+  private final static double CIRCLE_SIZE = 0.5d;
 
-  public static LidarDrawer build() {
-    return new LidarDrawer();
+  private final Color strokeColor;
+
+  public LidarDrawer(Color strokeColor) {
+    this.strokeColor = strokeColor;
   }
+
+  public LidarDrawer() {
+    this(COLOR);
+  }
+
 
   @Override
   public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
@@ -75,10 +78,10 @@ public class LidarDrawer implements Drawer, Configurable<LidarDrawer> {
       // draw only hits
       if (rayHits[rayIdx] < rayLength) {
         g.draw(new Ellipse2D.Double(
-            center.x + rayHits[rayIdx] * Math.cos(direction) - circleSize / 2d,
-            center.y + rayHits[rayIdx] * Math.sin(direction) - circleSize / 2d,
-            circleSize,
-            circleSize
+            center.x + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
+            center.y + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
+            CIRCLE_SIZE,
+            CIRCLE_SIZE
         ));
       }
     }

@@ -22,8 +22,6 @@ import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Configurable;
-import it.units.erallab.hmsrobots.util.ConfigurableField;
 import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
 
 import java.awt.*;
@@ -32,29 +30,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class SensorReadingsSectorDrawer implements Drawer, Configurable<SensorReadingsSectorDrawer> {
+public class SensorReadingsSectorDrawer implements Drawer {
 
-  @ConfigurableField
-  private Color fillColor = GraphicsDrawer.alphaed(Color.BLACK, 0.5f);
-  @ConfigurableField
-  private Color strokeColor = Color.BLACK;
-  @ConfigurableField(uiMin = 0f, uiMax = 2f * (float) Math.PI)
-  private float spanAngle = (float) Math.PI;
-  @ConfigurableField(uiMin = 0.001f * (float) Math.PI, uiMax = 0.5f * (float) Math.PI)
-  private float angleResolution = 0.01f * (float) Math.PI;
-  @ConfigurableField
-  private boolean sensorFrame = true;
-  @ConfigurableField
-  private boolean rotated = true;
+  private final static Color COLOR = Color.BLACK;
+  private final static float SPAN_ANGLE = (float) Math.PI;
+  private final static float ANGLE_RESOLUTION = 0.01f * (float) Math.PI;
+  private final static boolean SENSOR_FRAME = true;
+  private final static boolean ROTATED = true;
 
-  public static SensorReadingsSectorDrawer build() {
-    return new SensorReadingsSectorDrawer();
+  private final Color fillColor;
+  private final Color strokeColor;
+
+  public SensorReadingsSectorDrawer(Color color) {
+    this.fillColor = GraphicsDrawer.alphaed(color, 0.33f);
+    this.strokeColor = color;
   }
 
-  private Path2D getSector(Point2 c, double r, double a1, double a2) {
+  public SensorReadingsSectorDrawer() {
+    this(COLOR);
+  }
+
+  private static Path2D getSector(Point2 c, double r, double a1, double a2) {
     Path2D sector = new Path2D.Double();
     sector.moveTo(c.x, c.y);
-    for (double a = a1; a < a2; a = a + angleResolution) {
+    for (double a = a1; a < a2; a = a + ANGLE_RESOLUTION) {
       sector.lineTo(c.x + r * Math.cos(a), c.y + r * Math.sin(a));
     }
     sector.lineTo(c.x + r * Math.cos(a2), c.y + r * Math.sin(a2));
@@ -80,12 +79,12 @@ public class SensorReadingsSectorDrawer implements Drawer, Configurable<SensorRe
     Point2 center = voxelPoly.center();
     double voxelAngle = Math.atan2((voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y), (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)) / 2d +
         Math.atan2((voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y), (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)) / 2d;
-    double angle = rotated ? voxelAngle : 0d;
-    double sensorSliceAngle = spanAngle / (double) readings.size();
+    double angle = ROTATED ? voxelAngle : 0d;
+    double sensorSliceAngle = SPAN_ANGLE / (double) readings.size();
     for (int i = 0; i < readings.size(); i++) {
       double sensorStartingAngle = angle + (double) i * sensorSliceAngle;
       double valueSliceAngle = sensorSliceAngle / (double) readings.get(i).getReadings().length;
-      if (sensorFrame) {
+      if (SENSOR_FRAME) {
         g.setColor(strokeColor);
         Path2D sector = getSector(center, radius, sensorStartingAngle, sensorStartingAngle + sensorSliceAngle);
         g.draw(sector);
