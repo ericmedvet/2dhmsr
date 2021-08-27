@@ -168,7 +168,6 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         int c = 0;
         //System.out.println("^^^^ "+neurons.length);
         for (int l = 1; l<neurons.length; l++){
-            //System.out.println("@ "+l+" "+neurons[l-1]);
             unflatWeights[l-1] = new double[neurons[l]][];
         for (int i = 0; i < neurons[l]; i++) {
             unflatWeights[l-1][i] = new double[4];
@@ -179,7 +178,6 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         }
 
         }
-        //System.out.println("@@## "+neurons[neurons.length-1]);
         return unflatWeights;
     }
 
@@ -198,6 +196,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                 }
             }
         }
+
         return flatWeights;
     }
 
@@ -205,14 +204,16 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         int n = 4 * ((Arrays.stream(neurons).sum()) - neurons[0]); //first layer does not have hebb coeff
         double[] flatHebbCoef = new double[n];
         int c = 0;
-        for (int l = 1; l < hebbCoef.length; l++) {
-            for (int i = 0; i < neurons[l]; i++) {
+        for (int l = 0; l < hebbCoef.length; l++) {
+            for (int i = 0; i < neurons[l+1]; i++) {
                 for (int w = 0; w < 4; w++) {
-                    flatHebbCoef[c] = hebbCoef[l - 1][i][w];
+                    flatHebbCoef[c] = hebbCoef[l][i][w];
+                    //System.out.println("@@ "+flatHebbCoef[c]);
                     c = c + 1;
                 }
             }
         }
+        //System.out.println("@@## "+c);
         return flatHebbCoef;
     }
 
@@ -379,6 +380,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
 
     @Override
     public double[] getParams() {
+
         return flatHebbCoef(hebbCoef, neurons);
     }
 
@@ -447,8 +449,10 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
     @Override
     public void setParams(double[] params) {
         double[][][] tmp = unflatHebbCoef(params, neurons);
+        System.out.println("set params");
         for (int l=1; l< neurons.length; l++) {
             for (int i = 0; i < neurons[l]; i++) {
+                System.out.println(l+"    "+neurons[l]);
                 for (int j = 0; j < 4; j++) {
                     hebbCoef[l][i][j] = tmp[l][i][j];
                 }

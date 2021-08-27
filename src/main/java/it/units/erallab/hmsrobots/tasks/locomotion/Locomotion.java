@@ -105,7 +105,18 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
             ;
             double[] activationsValues = {0d};
             if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof MultiLayerPerceptron){
-                activationsValues = flatten(((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).values);
+                double[] tmp= ((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).values[0];
+                double[] tmp1= ((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).values[1];
+                activationsValues = new double[tmp.length+tmp1.length];
+                System.arraycopy(tmp,0,activationsValues,0,tmp.length);
+                System.arraycopy(tmp1,0,activationsValues,tmp.length, tmp1.length);
+            }
+            if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel ){
+                activationsValues = ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();
+
+            }
+            if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel ){
+                activationsValues = ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();
 
             }
 
