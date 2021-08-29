@@ -20,7 +20,6 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 
 import java.awt.*;
-import java.util.List;
 
 /**
  * @author "Eric Medvet" on 2021/08/27 for 2dhmsr
@@ -30,7 +29,7 @@ public class InfoDrawer implements Drawer {
   private final static Color INFO_COLOR = Color.BLUE;
 
   @Override
-  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
+  public void draw(double t, Snapshot snapshot, Graphics2D g) {
     //prepare string
     StringBuilder sb = new StringBuilder();
     sb.append(String.format("t=%05.2f", t));

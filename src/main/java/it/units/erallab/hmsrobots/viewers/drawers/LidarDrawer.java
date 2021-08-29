@@ -17,18 +17,16 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.sensors.Lidar;
+import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
+import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
-import java.util.List;
 
-public class LidarDrawer implements Drawer {
+public class LidarDrawer extends RecursiveDrawer {
 
   private final static Color COLOR = Color.RED;
   private final static double CIRCLE_SIZE = 0.5d;
@@ -36,6 +34,7 @@ public class LidarDrawer implements Drawer {
   private final Color strokeColor;
 
   public LidarDrawer(Color strokeColor) {
+    super(Filter.matches(null, SensingVoxel.class, null));
     this.strokeColor = strokeColor;
   }
 
@@ -45,18 +44,13 @@ public class LidarDrawer implements Drawer {
 
 
   @Override
-  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
-    Snapshot last = lineage.get(lineage.size() - 1);
-    if (!Drawer.match(last, LidarReadings.class, Lidar.class)) {
-      return;
+  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+    Snapshot lidarSnapshot = snapshot.getChildren().stream().filter(s -> s.getContent() instanceof LidarReadings).findFirst().orElse(null);
+    if (lidarSnapshot == null) {
+      return false;
     }
-    LidarReadings lidarReadings = (LidarReadings) last.getContent();
-    Snapshot voxel = Drawer.lastMatching(lineage, VoxelPoly.class, Snapshottable.class);
-    if (voxel == null) {
-      //should not happen
-      return;
-    }
-    VoxelPoly voxelPoly = (VoxelPoly) voxel.getContent();
+    LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
+    VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
     Point2 center = voxelPoly.center();
     double angle = lidarReadings.getVoxelAngle();
     double rayLength = lidarReadings.getDomains()[0].getMax();
@@ -68,7 +62,7 @@ public class LidarDrawer implements Drawer {
       direction += angle;
       // Draw a ray from the given start point towards the given direction
       g.setColor(strokeColor);
-      g.draw(GraphicsDrawer.toPath(
+      g.draw(DrawingUtils.toPath(
           center,
           Point2.build(
               center.x + rayLength * Math.cos(direction),
@@ -85,6 +79,7 @@ public class LidarDrawer implements Drawer {
         ));
       }
     }
+    return false;
   }
 
 }

@@ -16,13 +16,11 @@
  */
 package it.units.erallab.hmsrobots.core.snapshots;
 
-import java.util.List;
-
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public interface SnapshotListener {
 
-  void listen(double t, List<Snapshot> snapshots);
+  void listen(double t, Snapshot snapshot);
 
 }

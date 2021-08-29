@@ -23,7 +23,6 @@ import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -77,8 +76,8 @@ public class FramesImageBuilder implements SnapshotListener {
   }
 
   @Override
-  public void listen(double t, List<Snapshot> snapshots) {
-    BoundingBox worldFrame = framer.getFrame(snapshots, (double) w / (double) h);
+  public void listen(double t, Snapshot snapshot) {
+    BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
     if ((t < initialT) || (t >= finalT)) { //out of time window
       return;
     }
@@ -101,7 +100,7 @@ public class FramesImageBuilder implements SnapshotListener {
     L.fine(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
     frameCount = frameCount + 1;
     Graphics2D g = image.createGraphics();
-    graphicsDrawer.draw(t, snapshots, g, imageFrame, worldFrame, String.format("%d", frameCount));
+    //graphicsDrawer.draw(t, snapshot, g, imageFrame, worldFrame, String.format("%d", frameCount));
     g.dispose();
   }
 

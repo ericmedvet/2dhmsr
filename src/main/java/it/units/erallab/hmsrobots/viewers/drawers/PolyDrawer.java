@@ -18,15 +18,13 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
+import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
-import java.util.List;
 
-public class PolyDrawer implements Drawer {
+public class PolyDrawer extends RecursiveDrawer {
 
   private final static Color COLOR = Color.BLACK;
   private final static int TEXTURE_SIZE = 4;
@@ -36,37 +34,37 @@ public class PolyDrawer implements Drawer {
   private final Color strokeColor;
   private final Color fillColor;
   private final boolean useTexture;
+  private final boolean goDeeper;
 
-  private final Class<? extends Snapshottable> creatorClass;
-
-  public PolyDrawer(Class<? extends Snapshottable> creatorClass) {
-    this(COLOR, creatorClass);
+  public PolyDrawer(Filter filter, boolean goDeeper) {
+    this(COLOR, filter, goDeeper);
   }
 
 
-  public PolyDrawer(Color color, Class<? extends Snapshottable> creatorClass) {
-    this.creatorClass = creatorClass;
+  public PolyDrawer(Color color, Filter filter, boolean goDeeper) {
+    super(filter);
+    this.goDeeper = goDeeper;
     strokeColor = color;
-    fillColor = GraphicsDrawer.alphaed(color, 0.25f);
+    fillColor = DrawingUtils.alphaed(color, 0.25f);
     useTexture = false;
   }
 
-  public PolyDrawer(TexturePaint texturePaint, Class<? extends Snapshottable> creatorClass) {
-    this.creatorClass = creatorClass;
+  public PolyDrawer(TexturePaint texturePaint, Filter filter, boolean goDeeper) {
+    super(filter);
+    this.goDeeper = goDeeper;
     strokeColor = COLOR;
-    fillColor = GraphicsDrawer.alphaed(COLOR, 0.25f);
+    fillColor = DrawingUtils.alphaed(COLOR, 0.25f);
     texturePaint = TEXTURE_PAINT;
     useTexture = true;
   }
 
   @Override
-  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
-    Snapshot last = lineage.get(lineage.size() - 1);
-    if (!Drawer.match(last, Poly.class, creatorClass)) {
-      return;
+  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+    if (!(snapshot.getContent() instanceof Poly)) {
+      return goDeeper;
     }
-    Poly poly = (Poly) last.getContent();
-    Path2D path = GraphicsDrawer.toPath(poly, true);
+    Poly poly = (Poly) snapshot.getContent();
+    Path2D path = DrawingUtils.toPath(poly, true);
     if (useTexture || fillColor != null) {
       if (useTexture) {
         g.setPaint(TEXTURE_PAINT);
@@ -79,14 +77,15 @@ public class PolyDrawer implements Drawer {
       g.setColor(strokeColor);
       g.draw(path);
     }
+    return goDeeper;
   }
 
   private static TexturePaint createTexturePaint() {
     BufferedImage texture = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
     Graphics2D g = texture.createGraphics();
-    g.setColor(GraphicsDrawer.alphaed(TEXTURE_COLOR, 0.5f));
+    g.setColor(DrawingUtils.alphaed(TEXTURE_COLOR, 0.5f));
     g.fillRect(0, 0, 2, 2);
-    g.setColor(GraphicsDrawer.alphaed(TEXTURE_COLOR, 0.75f));
+    g.setColor(DrawingUtils.alphaed(TEXTURE_COLOR, 0.75f));
     g.fillRect(1, 0, 1, 1);
     g.fillRect(0, 1, 1, 1);
     g.dispose();

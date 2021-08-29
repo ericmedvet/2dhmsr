@@ -21,21 +21,20 @@ import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
+import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
-import java.util.List;
 
-public class VoxelDrawer implements Drawer {
+public class VoxelDrawer extends RecursiveDrawer {
 
   public enum FillType {APPLIED_FORCE, AREA_RATIO, NONE}
 
   private final static Color STROKE_COLOR = Color.BLUE;
-  private final static Color REST_FILL_COLOR = GraphicsDrawer.alphaed(Color.YELLOW, 0.5f);
-  private final static Color SHRUNK_FILL_COLOR = GraphicsDrawer.alphaed(Color.RED, 0.5f);
-  private final static Color EXPANDED_FILL_COLOR = GraphicsDrawer.alphaed(Color.GREEN, 0.5f);
-  private final static Color MALFUNCTION_COLOR = GraphicsDrawer.alphaed(Color.BLACK, 0.75f);
+  private final static Color REST_FILL_COLOR = DrawingUtils.alphaed(Color.YELLOW, 0.5f);
+  private final static Color SHRUNK_FILL_COLOR = DrawingUtils.alphaed(Color.RED, 0.5f);
+  private final static Color EXPANDED_FILL_COLOR = DrawingUtils.alphaed(Color.GREEN, 0.5f);
+  private final static Color MALFUNCTION_COLOR = DrawingUtils.alphaed(Color.BLACK, 0.75f);
   private final static float MALFUNCTION_STROKE_WIDTH = 3f;
   private final static float SHRUNK_RATIO = 0.75f;
   private final static float EXPANDEND_RATIO = 1.25f;
@@ -43,6 +42,7 @@ public class VoxelDrawer implements Drawer {
   private final FillType fillType;
 
   public VoxelDrawer(FillType fillType) {
+    super(Filter.matches(null, Voxel.class, null));
     this.fillType = fillType;
   }
 
@@ -51,46 +51,43 @@ public class VoxelDrawer implements Drawer {
   }
 
   @Override
-  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
-    Snapshot last = lineage.get(lineage.size() - 1);
-    if (!Drawer.match(last, VoxelPoly.class, Voxel.class)) {
-      return;
-    }
-    VoxelPoly voxelPoly = (VoxelPoly) last.getContent();
-    Path2D path = GraphicsDrawer.toPath(voxelPoly, true);
+  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+    VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
+    Path2D path = DrawingUtils.toPath(voxelPoly, true);
     g.setColor(STROKE_COLOR);
     g.draw(path);
     if (fillType.equals(FillType.AREA_RATIO)) {
-      g.setColor(GraphicsDrawer.linear(
+      g.setColor(DrawingUtils.linear(
           SHRUNK_FILL_COLOR, REST_FILL_COLOR, EXPANDED_FILL_COLOR,
           SHRUNK_RATIO, 1f, EXPANDEND_RATIO,
           (float) voxelPoly.getAreaRatio()
       ));
       g.fill(path);
     } else if (fillType.equals(FillType.APPLIED_FORCE)) {
-      g.setColor(GraphicsDrawer.linear(
+      g.setColor(DrawingUtils.linear(
           SHRUNK_FILL_COLOR, REST_FILL_COLOR, EXPANDED_FILL_COLOR,
           -1f, 0f, 1f,
           (float) voxelPoly.getLastAppliedForce()
       ));
       g.fill(path);
     }
-    if (BreakableVoxel.class.isAssignableFrom(last.getSnapshottableClass())) {
+    if (BreakableVoxel.class.isAssignableFrom(snapshot.getSnapshottableClass())) {
       g.setColor(MALFUNCTION_COLOR);
       g.setStroke(new BasicStroke(MALFUNCTION_STROKE_WIDTH / (float) g.getTransform().getScaleX()));
       if (!voxelPoly.getMalfunctions().get(BreakableVoxel.ComponentType.ACTUATOR).equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(GraphicsDrawer.toPath(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[2]));
+        g.draw(DrawingUtils.toPath(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[2]));
       }
       if (!voxelPoly.getMalfunctions().get(BreakableVoxel.ComponentType.SENSORS).equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(GraphicsDrawer.toPath(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[3]));
+        g.draw(DrawingUtils.toPath(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[3]));
       }
       if (!voxelPoly.getMalfunctions().get(BreakableVoxel.ComponentType.STRUCTURE).equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(GraphicsDrawer.toPath(
+        g.draw(DrawingUtils.toPath(
             Point2.average(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[3]),
             Point2.average(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[2])
         ));
       }
     }
+    return false;
   }
 
 }

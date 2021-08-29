@@ -22,8 +22,6 @@ import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 
-import java.util.List;
-
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
@@ -47,9 +45,9 @@ public class RobotFollower implements Framer {
   }
 
   @Override
-  public BoundingBox getFrame(List<Snapshot> snapshots, double ratio) {
+  public BoundingBox getFrame(Snapshot snapshot, double ratio) {
     //get enclosing bounding box
-    BoundingBox enclosing = snapshots.stream()
+    BoundingBox enclosing = snapshot.getChildren().stream()// TODO should not assume robots are world children
         .filter(s -> Robot.class.isAssignableFrom(s.getSnapshottableClass()))
         .limit(nOfRobots)
         .map(s -> (BoundingBox) s.getContent())

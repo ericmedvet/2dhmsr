@@ -19,14 +19,12 @@ package it.units.erallab.hmsrobots.viewers;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 
-import java.util.List;
-
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 @FunctionalInterface
 public interface Framer {
 
-  BoundingBox getFrame(List<Snapshot> snapshot, double ratio);
+  BoundingBox getFrame(Snapshot snapshot, double ratio);
 
 }

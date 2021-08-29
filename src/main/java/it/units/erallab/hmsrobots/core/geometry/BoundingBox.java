@@ -23,6 +23,13 @@ public class BoundingBox implements Shape, Serializable {
   public final Point2 min;
   public final Point2 max;
 
+  public static BoundingBox build(double minX, double minY, double maxX, double maxY) {
+    return build(
+        Point2.build(minX, minY),
+        Point2.build(maxX, maxY)
+    );
+  }
+
   public static BoundingBox build(Point2... points) {
     if (points.length == 0) {
       throw new IllegalArgumentException("Cannot build on 0 points");

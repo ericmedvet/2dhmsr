@@ -19,38 +19,34 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
+import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.List;
 
-public class BoundingBoxDrawer implements Drawer {
+public class BoundingBoxDrawer extends RecursiveDrawer {
 
   private final static Color COLOR = Color.PINK;
 
   private final Color fillColor;
   private final Color strokeColor;
-  private final Class<? extends Snapshottable> creatorClass;
+  private final boolean goDeeper;
 
-  public BoundingBoxDrawer(Color fillColor, Color strokeColor, Class<? extends Snapshottable> creatorClass) {
+
+  public BoundingBoxDrawer(Color fillColor, Color strokeColor, Filter filter, boolean goDeeper) {
+    super(filter);
     this.fillColor = fillColor;
     this.strokeColor = strokeColor;
-    this.creatorClass = creatorClass;
+    this.goDeeper = goDeeper;
   }
 
-  public BoundingBoxDrawer(Class<? extends Snapshottable> creatorClass) {
-    this(COLOR, GraphicsDrawer.alphaed(COLOR, 0.5f), creatorClass);
+  public BoundingBoxDrawer(Filter filter, boolean goDeeper) {
+    this(COLOR, DrawingUtils.alphaed(COLOR, 0.5f), filter, goDeeper);
   }
 
   @Override
-  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
-    Snapshot last = lineage.get(lineage.size() - 1);
-    if (!Drawer.match(last, Shape.class, creatorClass)) {
-      return;
-    }
-    BoundingBox box = ((Shape) last.getContent()).boundingBox();
+  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+    BoundingBox box = ((Shape) snapshot.getContent()).boundingBox();
     Rectangle2D rect = new Rectangle2D.Double(
         box.min.x,
         box.min.y,
@@ -61,6 +57,7 @@ public class BoundingBoxDrawer implements Drawer {
     g.fill(rect);
     g.setColor(strokeColor);
     g.draw(rect);
+    return goDeeper;
   }
 
 }

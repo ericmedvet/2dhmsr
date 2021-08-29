@@ -16,29 +16,11 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
-import it.units.erallab.hmsrobots.core.objects.Ground;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.viewers.drawers.*;
-
-import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class GraphicsDrawer {
-
+  /*
   private final static PolyDrawer MINIATURE_GROUND_DRAWER = new PolyDrawer(alphaed(Color.BLACK, 0.25f), Ground.class);
   private final static BoundingBox MINIATURE_REL_BOUNDING_BOX = BoundingBox.build(
       Point2.build(0.65, 0.01), Point2.build(0.99, 0.35)
@@ -333,5 +315,5 @@ public class GraphicsDrawer {
         (float) color.getBlue() / 255f,
         alpha);
   }
-
+*/
 }

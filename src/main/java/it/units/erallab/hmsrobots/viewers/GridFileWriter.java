@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.Task;
@@ -79,7 +78,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
-    return (double t, List<Snapshot> snapshots) -> {
+    return (double t, Snapshot snapshot) -> {
       List<Double> times = timesGrid.get(lX, lY);
       double lastT = times.isEmpty() ? Double.NEGATIVE_INFINITY : times.get(times.size() - 1);
       if (t >= startTime && t - lastT >= 1d / frameRate) {
@@ -96,8 +95,9 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
             double localW = (double) w / (double) namesGrid.getW();
             double localH = (double) h / (double) namesGrid.getH();
             //obtain viewport
-            BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshots, localW / localH);
+            BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
             //draw
+            /*
             graphicsDrawer.draw(
                 t, snapshots, g,
                 BoundingBox.build(
@@ -106,7 +106,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
                 ),
                 frame, namesGrid.get(lX, lY)
             );
-            g.dispose();
+            g.dispose();*/
           }
         }
       }

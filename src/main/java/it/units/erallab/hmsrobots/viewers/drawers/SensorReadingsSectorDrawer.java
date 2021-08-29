@@ -22,7 +22,7 @@ import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.viewers.GraphicsDrawer;
+import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class SensorReadingsSectorDrawer implements Drawer {
+public class SensorReadingsSectorDrawer extends RecursiveDrawer {
 
   private final static Color COLOR = Color.BLACK;
   private final static float SPAN_ANGLE = (float) Math.PI;
@@ -42,7 +42,8 @@ public class SensorReadingsSectorDrawer implements Drawer {
   private final Color strokeColor;
 
   public SensorReadingsSectorDrawer(Color color) {
-    this.fillColor = GraphicsDrawer.alphaed(color, 0.33f);
+    super(Filter.matches(null, SensingVoxel.class, null));
+    this.fillColor = DrawingUtils.alphaed(color, 0.33f);
     this.strokeColor = color;
   }
 
@@ -62,18 +63,14 @@ public class SensorReadingsSectorDrawer implements Drawer {
   }
 
   @Override
-  public void draw(double t, List<Snapshot> lineage, Graphics2D g) {
-    Snapshot last = lineage.get(lineage.size() - 1);
-    if (!Drawer.match(last, VoxelPoly.class, SensingVoxel.class)) {
-      return;
-    }
-    VoxelPoly voxelPoly = (VoxelPoly) last.getContent();
-    List<ScopedReadings> readings = last.getChildren().stream()
+  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+    VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
+    List<ScopedReadings> readings = snapshot.getChildren().stream()
         .filter(s -> s.getContent() instanceof ScopedReadings)
         .map(s -> (ScopedReadings) s.getContent())
         .collect(Collectors.toList());
     if (readings.isEmpty()) {
-      return;
+      return false;
     }
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
@@ -100,5 +97,6 @@ public class SensorReadingsSectorDrawer implements Drawer {
         g.fill(sector);
       }
     }
+    return false;
   }
 }

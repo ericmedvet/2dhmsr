@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Settings;
@@ -49,10 +50,12 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
     if (listener != null) {
       listener.listen(
           newT,
-          objects.stream()
-              .filter(o -> o instanceof Snapshottable)
-              .map(o -> ((Snapshottable) o).getSnapshot())
-              .collect(Collectors.toList())
+          Snapshot.world(
+              objects.stream()
+                  .filter(o -> o instanceof Snapshottable)
+                  .map(o -> ((Snapshottable) o).getSnapshot())
+                  .collect(Collectors.toList())
+          )
       );
     }
     return newT;
