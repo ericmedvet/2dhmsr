@@ -93,6 +93,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
         double initCenterX = robot.getCenter().x;
         //add robot to world
         robot.addTo(world);
+
         worldObjects.add(robot);
         //run
         List<Outcome.Observation> observations = new ArrayList<>((int) Math.ceil(finalT / settings.getStepFrequency()));
@@ -125,6 +126,8 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
                     t,
                     Point2.build(robot.getCenter()),
                     ground.yAt(robot.getCenter().x),
+                    voxelPosition(robot),
+                    terrainHeights(robot,ground),
                     footprint(robot, FOOTPRINT_BINS),
                     mask(robot, MASK_BINS),
                     robot.getVoxels().values().stream()
@@ -197,6 +200,30 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
             }
         }
         return mask;
+    }
+    private static Grid<Point2> voxelPosition(Robot<?> robot){
+        Grid<Point2> grid = Grid.create(robot.getVoxels().getW(), robot.getVoxels().getH());
+        for (int i=0;i< grid.getH(); i++){
+            for(int j=0;j<grid.getW();j++){
+                if (robot.getVoxels().get(i,j) != null){
+                    Vector2 vox =robot.getVoxels().get(i,j).getCenter();
+                    grid.set(i,j, Point2.build(vox));
+                }
+            }
+        }
+        return grid;
+    }
+    private static Grid<Double> terrainHeights(Robot<?> robot, Ground ground) {
+        Grid<Double> grid = Grid.create(robot.getVoxels().getW(), robot.getVoxels().getH());
+        for (int i=0;i< grid.getH(); i++){
+            for(int j=0;j<grid.getW();j++){
+                if (robot.getVoxels().get(i,j) != null) {
+                    Vector2 vox = robot.getVoxels().get(i, j).getCenter();
+                    grid.set(i,j, ground.yAt(vox.x));
+                }
+            }
+        }
+        return grid;
     }
 
     private static Footprint footprint(Robot<?> robot, int n) {

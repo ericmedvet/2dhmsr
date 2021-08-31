@@ -50,9 +50,10 @@ public class Outcome {
         private final double areaRatioEnergy;
         private final double computationTime;
         private final double[] inputs;
+        private final Grid<Double> terrainHeights;
+        private final Grid<Point2> centerPositions;
 
-
-        public Observation(double[] inputs, double time, Point2 centerPosition, double terrainHeight, Footprint footprint, Grid<Boolean> posture, double controlEnergy, double areaRatioEnergy, double computationTime) {
+        public Observation(double[] inputs, double time, Point2 centerPosition, double terrainHeight, Grid<Point2> centerPositions, Grid<Double> terrainHeights, Footprint footprint, Grid<Boolean> posture, double controlEnergy, double areaRatioEnergy, double computationTime) {
             this.time = time;
             this.centerPosition = centerPosition;
             this.terrainHeight = terrainHeight;
@@ -62,6 +63,9 @@ public class Outcome {
             this.areaRatioEnergy = areaRatioEnergy;
             this.computationTime = computationTime;
             this.inputs = inputs;
+            this.terrainHeights =terrainHeights;
+            this.centerPositions = centerPositions;
+
         }
 
         public double getTime() {
@@ -172,12 +176,21 @@ public class Outcome {
     }
 
     private final List<Observation> observations;
+    private double[] desc;
 
     public Outcome(List<Observation> observations) {
         observations.sort(Comparator.comparingDouble(Observation::getTime));
         this.observations = Collections.unmodifiableList(observations);
+        this.desc = new double[2];
     }
 
+    public double[] getDesc(){
+        return this.desc;
+    }
+
+    public void setDesc(double[] desc){
+        this.desc=desc;
+    }
 
     public double[][] getDataObservation() {
         double[][] data = new double[this.observations.size()][];
@@ -187,6 +200,42 @@ public class Outcome {
             c++;
         }
         return data;
+    }
+
+    public double[][] getCenterPosition(){
+        double[][] data = new double[2][this.observations.size()];
+        int c = 0;
+        for (Observation ob : this.observations) {
+            data[0][c] = ob.centerPosition.x;
+            data[1][c] = ob.centerPosition.y;
+            c++;
+        }
+        return data;
+
+    }
+
+    public double[][] getCenterPositions(){
+        int ss =(int)(this.observations.get(0).centerPositions.stream().filter(Objects::nonNull).count())*2;
+        System.out.println(ss);
+        double[][] data = new double[ss][this.observations.size()];
+        int c = 0;
+        for (Observation ob : this.observations) {
+            int cc =0;
+            for (Grid.Entry<Point2> ep2 :ob.centerPositions){
+                Point2 p2 = ep2.getValue();
+                if (p2 != null){
+                    System.out.println(cc+"  "+c);
+                    data[cc][c] = p2.x;
+                    data[cc+1][c] = p2.y;
+                    cc+=2;
+                }
+
+            }
+
+            c++;
+        }
+        return data;
+
     }
 
     public double getComputationTime() {
