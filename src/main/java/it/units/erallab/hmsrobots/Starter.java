@@ -112,9 +112,9 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
-    //rollingBall();
+    rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();

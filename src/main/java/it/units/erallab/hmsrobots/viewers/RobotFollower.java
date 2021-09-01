@@ -31,7 +31,7 @@ public class RobotFollower implements Framer {
     MAX, AVG
   }
 
-  private double sizeRelativeMargin;
+  private final double sizeRelativeMargin;
   private final int nOfRobots;
   private final AggregateType aggregateType;
 
@@ -113,14 +113,6 @@ public class RobotFollower implements Framer {
         Point2.average(b1.min, b2.min),
         Point2.average(b1.max, b2.max)
     );
-  }
-
-  public void setSizeRelativeMargin(double sizeRelativeMargin) {
-    this.sizeRelativeMargin = sizeRelativeMargin;
-  }
-
-  public double getSizeRelativeMargin() {
-    return sizeRelativeMargin;
   }
 
 }

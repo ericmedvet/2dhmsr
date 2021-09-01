@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -26,18 +26,31 @@ import java.awt.*;
  */
 public class InfoDrawer implements Drawer {
 
+  private final String string;
   private final static Color INFO_COLOR = Color.BLUE;
+
+  public InfoDrawer(String string) {
+    this.string = string;
+  }
+
+  public InfoDrawer() {
+    this("");
+  }
 
   @Override
   public void draw(double t, Snapshot snapshot, Graphics2D g) {
     //prepare string
     StringBuilder sb = new StringBuilder();
+    if (!string.isEmpty()) {
+      sb.append(string);
+      sb.append("\n");
+    }
     sb.append(String.format("t=%05.2f", t));
     //write
     g.setColor(INFO_COLOR);
-    int relY = 1;
+    int relY = g.getClipBounds().y + 1;
     for (String line : sb.toString().split(String.format("%n"))) {
-      g.drawString(line, 1, relY + g.getFontMetrics().getMaxAscent());
+      g.drawString(line, g.getClipBounds().x + 1, relY + g.getFontMetrics().getMaxAscent());
       relY = relY + g.getFontMetrics().getMaxAscent() + 1;
     }
   }

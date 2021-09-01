@@ -22,14 +22,10 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import it.units.erallab.hmsrobots.viewers.Framer;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -47,46 +43,32 @@ public interface Drawer {
     return (t, snapshot, g) -> drawers.forEach(d -> d.draw(t, snapshot, g));
   }
 
-
-  static void main(String[] args) throws IOException {
-    int w = 1000;
-    int h = 500;
-    BufferedImage bi = new BufferedImage(1000, 500, BufferedImage.TYPE_3BYTE_BGR);
-    Graphics2D g = bi.createGraphics();
-    g.setClip(new Rectangle2D.Double(0, 0, w, h));
-    System.out.println("device-bounds: " + g.getDeviceConfiguration().getBounds());
-    System.out.println("g clip: " + g.getClip());
-    System.out.println("g clip-bound: " + g.getClipBounds());
-
-    g.setColor(Color.RED);
-    g.drawRect(0, 0, w, h);
-    g.drawLine(10, 10, w - 10, h - 10);
-    g.drawLine(10, h - 10, w - 10, 10);
-
-    Drawer d = Drawer.of(
-        new InfoDrawer(),
-        diagonals(),
-        Drawer.clip(BoundingBox.build(0, 0.5, 0.5, 1), diagonals()),
-        Drawer.clip(BoundingBox.build(0.5, 0.5, 1, 1), diagonals())
-    );
-    d.draw(1.23, null, g);
-    g.dispose();
-
-    ImageIO.write(bi, "png", new File("/home/eric/img.png"));
+  static Drawer diagonals() {
+    return diagonals(Color.GREEN);
   }
 
-  static Drawer diagonals() {
+  static Drawer diagonals(Color color) {
     return (t, snapshot, g) -> {
       Rectangle2D r = (Rectangle2D) g.getClip();
-      g.setColor(Color.GREEN);
+      g.setColor(color);
       g.draw(new Line2D.Double(r.getX(), r.getY(), r.getMaxX(), r.getMaxY()));
       g.draw(new Line2D.Double(r.getX(), r.getMaxY(), r.getMaxX(), r.getY()));
     };
   }
 
+  static Drawer clear() {
+    return clear(Color.WHITE);
+  }
+
+  static Drawer clear(Color color) {
+    return (t, snapshot, g) -> {
+      g.setColor(color);
+      g.fill(g.getClip());
+    };
+  }
+
   static Drawer clip(BoundingBox boundingBox, Drawer drawer) {
     return (t, snapshot, g) -> {
-      AffineTransform originalTransform = g.getTransform();
       Shape shape = g.getClip();
       double clipX = shape.getBounds2D().getX();
       double clipY = shape.getBounds2D().getY();
@@ -98,13 +80,9 @@ public interface Drawer {
           clipW * boundingBox.width(),
           clipH * boundingBox.height()
       ));
-      AffineTransform transform = new AffineTransform();
-      transform.translate(g.getClip().getBounds2D().getX(), g.getClip().getBounds2D().getY());
-      g.setTransform(transform);
       //draw
       drawer.draw(t, snapshot, g);
       //restore clip and transform
-      g.setTransform(originalTransform);
       g.setClip(shape);
     };
   }

@@ -11,3 +11,6 @@ b has to be done: one way to do that is to abstract a general Drawer interface t
  the list of snapshots (or the lineage, or the lineage with elements decorated with the sibling or sibling-of-type
  index), the graphicFrame and an indication on whether to clip/rescale the graphicFrame to a world coordinates, and draws.
  That made, GraphicDrawer can be generalized.
+
+Update of 1/9/2021 16:49
+done in a way similar to b. now going to clean

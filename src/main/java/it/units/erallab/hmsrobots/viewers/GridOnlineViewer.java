@@ -18,12 +18,12 @@ package it.units.erallab.hmsrobots.viewers;
 
 import com.google.common.base.Stopwatch;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.viewers.drawers.*;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
@@ -56,31 +56,41 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   private final static int INIT_WIN_WIDTH = 1000;
   private final static int INIT_WIN_HEIGHT = 600;
 
-  private final Grid<String> namesGrid;
+  private final Grid<Drawer> drawersGrid;
   private final Queue<Grid<TimedSnapshot>> gridQueue;
   private final Grid<Queue<TimedSnapshot>> queueGrid;
-  private final Grid<Framer> framerGrid;
 
   private final Canvas canvas;
-  private final GraphicsDrawer graphicsDrawer;
   private final ScheduledExecutorService executor;
 
   private double t;
   private final boolean running;
 
-  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor, GraphicsDrawer graphicsDrawer) {
+  public GridOnlineViewer(Grid<String> namesGrid, Grid<Drawer> drawersGrid, ScheduledExecutorService executor) {
     super("World viewer");
-    this.namesGrid = namesGrid;
+    if (namesGrid.getW() != drawersGrid.getW() || namesGrid.getH() != drawersGrid.getH()) {
+      throw new IllegalArgumentException("Names grid and drawers grid should have the same size");
+    }
+    this.drawersGrid = Grid.create(
+        namesGrid.getW(),
+        namesGrid.getH(),
+        (x, y) -> Drawer.clip(
+            BoundingBox.build(
+                (double) x / (double) namesGrid.getW(),
+                (double) y / (double) namesGrid.getH(),
+                (double) (x + 1) / (double) namesGrid.getW(),
+                (double) (y + 1) / (double) namesGrid.getH()
+            ),
+            Drawers.basicWithMiniWorld(namesGrid.get(x, y))
+        )
+    );
     this.executor = executor;
     //create things
-    framerGrid = Grid.create(namesGrid);
     gridQueue = new LinkedList<>();
     queueGrid = Grid.create(namesGrid);
     //create drawer
-    this.graphicsDrawer = graphicsDrawer;
     for (int x = 0; x < namesGrid.getW(); x++) {
       for (int y = 0; y < namesGrid.getH(); y++) {
-        framerGrid.set(x, y, new RobotFollower(FRAME_RATE * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));
         queueGrid.set(x, y, new LinkedList<>());
       }
     }
@@ -142,7 +152,11 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   }
 
   public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
-    this(namesGrid, executor, new GraphicsDrawer());
+    this(
+        namesGrid,
+        Grid.create(namesGrid, s -> Drawers.basicWithMiniWorld()),
+        executor
+    );
   }
 
   public void start(int delay) {
@@ -193,10 +207,6 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     executor.scheduleAtFixedRate(drawer, Math.round(delay * 1000d), Math.round(1000d / (double) FRAME_RATE), TimeUnit.MILLISECONDS);
   }
 
-  private String name(Enum<?> e) {
-    return e.name().replace("_", " ").toLowerCase();
-  }
-
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
     return (double t, Snapshot snapshot) -> {
@@ -207,33 +217,6 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     };
   }
 
-  private final static Drawer D = Drawer.of(
-      Drawer.clip(
-          BoundingBox.build(0.0d, 0.0d, 0.5d, 0.05d),
-          Drawer.of(
-              new InfoDrawer(),
-              Drawer.diagonals()
-          )
-      ),
-      Drawer.clip(
-          BoundingBox.build(0.5d, 0.0d, 1d, 0.05d),
-          Drawer.of(
-              new InfoDrawer(),
-              Drawer.diagonals()
-          )
-      ),
-      Drawer.clip(
-          BoundingBox.build(0d, 0.05d, 1.0d, 1d),
-          Drawer.transform(
-              new RobotFollower(100, 1.5d, 100, RobotFollower.AggregateType.MAX),
-              Drawer.of(
-                  new PolyDrawer(PolyDrawer.TEXTURE_PAINT, RecursiveDrawer.Filter.matches(null, Ground.class, null), false),
-                  new VoxelDrawer()
-              )
-          )
-      )
-  );
-
   private void renderFrame(Grid<TimedSnapshot> localSnapshotGrid) {
     //get graphics
     Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
@@ -241,42 +224,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     //iterate over snapshot grid
     for (Grid.Entry<TimedSnapshot> entry : localSnapshotGrid) {
       if (entry.getValue() != null) {
-
-        DrawingUtils.draw(
-            entry.getValue().t,
-            entry.getValue().snapshot,
-            g,
-            BoundingBox.build(
-                (double) entry.getX() / (double) localSnapshotGrid.getW(),
-                (double) entry.getY() / (double) localSnapshotGrid.getH(),
-                (double) (entry.getX() + 1) / (double) localSnapshotGrid.getW(),
-                (double) (entry.getY() + 1) / (double) localSnapshotGrid.getH()
-            ),
-            D
-        );
-
-        /*
-        //obtain viewport
-        BoundingBox frame = framerGrid.get(entry.getX(), entry.getY()).getFrame(entry.getValue().snapshot, localW / localH);
-
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
-        D.draw(entry.getValue().t, List.of(entry.getValue().snapshot.get(0)), g);
-
-        //draw
-        graphicsDrawer.draw(
-            entry.getValue().t, entry.getValue().snapshot, g,
-            BoundingBox.build(
-                Point2.build(localW * entry.getX(), localH * entry.getY()),
-                //Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1))
-                Point2.build(localW * (entry.getX() + 1), localH * (entry.getY() + 1) * 0.5d) // TODO ocio
-            ),
-            frame, namesGrid.get(entry.getX(), entry.getY())
-        );
-         */
-
-
+        drawersGrid.get(entry.getX(), entry.getY()).draw(entry.getValue().t, entry.getValue().snapshot, g);
       }
     }
     //dispose and encode
@@ -293,8 +241,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        uiExecutor,
-        new GraphicsDrawer()
+        uiExecutor
     );
     gridOnlineViewer.start(3);
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
@@ -317,7 +264,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   }
 
   public static <S> void run(Task<S, ?> task, S s) {
-    run(task, Grid.create(1, 1, Pair.of("solution", s)));
+    run(task, Grid.create(1, 1, Pair.of("", s)));
   }
 
 }

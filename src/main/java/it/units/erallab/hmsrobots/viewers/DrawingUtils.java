@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -17,16 +17,13 @@
 
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
 
 /**
  * @author "Eric Medvet" on 2021/08/29 for 2dhmsr
@@ -86,29 +83,10 @@ public class DrawingUtils {
         alpha);
   }
 
-  public static void draw(double t, Snapshot snapshot, Graphics2D g, BoundingBox boundingBox, Drawer drawer) {
-    AffineTransform originalTransform = g.getTransform();
-    Shape shape = g.getClip();
-    double clipX = shape.getBounds2D().getX();
-    double clipY = shape.getBounds2D().getY();
-    double clipW = shape.getBounds2D().getWidth();
-    double clipH = shape.getBounds2D().getHeight();
-    g.clip(new Rectangle2D.Double(
-        clipX + boundingBox.min.x * clipW,
-        clipY + boundingBox.min.y * clipH,
-        clipW * boundingBox.width(),
-        clipH * boundingBox.height()
-    ));
-    AffineTransform transform = new AffineTransform();
-    transform.translate(g.getClip().getBounds2D().getX(), g.getClip().getBounds2D().getY());
+  public static void draw(double t, Snapshot snapshot, Graphics2D g, Drawer drawer) {
     g.setColor(Color.WHITE);
     g.fill(g.getClip());
-    g.setTransform(transform);
-    //draw
     drawer.draw(t, snapshot, g);
-    //restore clip and transform
-    g.setTransform(originalTransform);
-    g.setClip(shape);
   }
 
   public static Stroke getScaleIndependentStroke(float thickness, float scale) {
