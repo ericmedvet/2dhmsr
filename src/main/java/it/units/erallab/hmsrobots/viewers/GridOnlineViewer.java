@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
-  private class TimedSnapshot {
+  private static class TimedSnapshot {
     private final double t;
     private final Snapshot snapshot;
 
@@ -151,13 +151,13 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     );
   }
 
-  public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
+  /*public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
     this(
         namesGrid,
         Grid.create(namesGrid, s -> Drawers.basicWithMiniWorld()),
         executor
     );
-  }
+  }*/
 
   public void start(int delay) {
     setVisible(true);
@@ -241,6 +241,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
+        Grid.create(namedSolutions, p -> Drawers.basicWithMiniWorld(p.getLeft())),
         uiExecutor
     );
     gridOnlineViewer.start(3);

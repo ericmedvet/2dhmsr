@@ -43,7 +43,6 @@ public class Drawers {
         Drawer.of(
             new PolyDrawer(RecursiveDrawer.Filter.matches(null, Ground.class, null), false),
             new VoxelDrawer()
-            //new BoundingBoxDrawer(RecursiveDrawer.Filter.matches(null, Robot.class, null), false)
         )
     );
   }

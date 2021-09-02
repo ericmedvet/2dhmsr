@@ -34,9 +34,11 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -104,7 +106,7 @@ public class Starter {
         )
     );
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL
+        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
     );
     Outcome result = locomotion.apply(robot, framesImageBuilder);
     BufferedImage image = framesImageBuilder.getImage();
@@ -114,11 +116,11 @@ public class Starter {
   public static void main(String[] args) {
     //bipeds();
     //rollingOne();
-    rollingBall();
+    //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
-    //multiped();
+    multiped();
   }
 
   private static void bipeds() {
@@ -179,6 +181,11 @@ public class Starter {
     namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
     GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    /*try {
+      GridFileWriter.save(locomotion, namedSolutionGrid, 300, 200, 1, 20, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/bipeds.mp4"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }*/
   }
 
   private static void multiped() {
@@ -199,14 +206,14 @@ public class Starter {
         Locomotion.createTerrain("hilly-0.3-1-0"),
         new Settings()
     );
-    GridOnlineViewer.run(locomotion, robot);
-    /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    //GridOnlineViewer.run(locomotion, robot);
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic());
     locomotion.apply(robot, framesImageBuilder);
     try {
       ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
     } catch (IOException e) {
       e.printStackTrace();
-    }*/
+    }
   }
 
   private static void breakingWorm() {

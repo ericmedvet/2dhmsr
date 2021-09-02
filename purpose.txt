@@ -14,3 +14,10 @@ b has to be done: one way to do that is to abstract a general Drawer interface t
 
 Update of 1/9/2021 16:49
 done in a way similar to b. now going to clean
+
+Update of 2/9/2021 18:40
+Cleaning done. Still to do:
+- better InfoDrawer (with robot centers)
+- nicer Framer interface (with windows t and num of robots to monitor)
+- controllers as snapshottable
+- example of drawers for controllers

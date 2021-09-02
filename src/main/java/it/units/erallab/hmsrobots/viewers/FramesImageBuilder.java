@@ -17,9 +17,9 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -41,33 +41,33 @@ public class FramesImageBuilder implements SnapshotListener {
   private final int h;
   private final Direction direction;
 
-  private final GraphicsDrawer graphicsDrawer;
-  private final Framer framer;
+  private final Drawer drawer;
   private final BufferedImage image;
+
+  private final int nOfFrames;
 
   private int frameCount;
   private double lastT = Double.NEGATIVE_INFINITY;
 
   private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
 
-  public FramesImageBuilder(double initialT, double finalT, double dT, int w, int h, Direction direction) {
+  public FramesImageBuilder(double initialT, double finalT, double dT, int w, int h, Direction direction, Drawer drawer) {
     this.initialT = initialT;
     this.finalT = finalT;
     this.dT = dT;
     this.w = w;
     this.h = h;
     this.direction = direction;
-    int frames = (int) Math.floor((finalT - initialT) / dT);
+    this.drawer = drawer;
+    nOfFrames = (int) Math.ceil((finalT - initialT) / dT);
     int overallW = w;
     int overallH = h;
     if (direction.equals(Direction.HORIZONTAL)) {
-      overallW = w * frames;
+      overallW = w * nOfFrames;
     } else {
-      overallH = h * frames;
+      overallH = h * nOfFrames;
     }
     image = new BufferedImage(overallW, overallH, BufferedImage.TYPE_3BYTE_BGR);
-    graphicsDrawer = new GraphicsDrawer();
-    framer = new RobotFollower(frames, 1.5d, 100, RobotFollower.AggregateType.MAX);
     frameCount = 0;
   }
 
@@ -77,7 +77,6 @@ public class FramesImageBuilder implements SnapshotListener {
 
   @Override
   public void listen(double t, Snapshot snapshot) {
-    BoundingBox worldFrame = framer.getFrame(snapshot, (double) w / (double) h);
     if ((t < initialT) || (t >= finalT)) { //out of time window
       return;
     }
@@ -87,20 +86,15 @@ public class FramesImageBuilder implements SnapshotListener {
     lastT = t;
     BoundingBox imageFrame;
     if (direction.equals(Direction.HORIZONTAL)) {
-      imageFrame = BoundingBox.build(
-          Point2.build(w * frameCount, 0),
-          Point2.build(w * (frameCount + 1), h)
-      );
+      imageFrame = BoundingBox.build((double) frameCount / (double) nOfFrames, 0, (double) (frameCount + 1) / (double) nOfFrames, 1d);
     } else {
-      imageFrame = BoundingBox.build(
-          Point2.build(0, h * frameCount),
-          Point2.build(w, h * (frameCount + 1))
-      );
+      imageFrame = BoundingBox.build(0, (double) frameCount / (double) nOfFrames, 1, (double) (frameCount + 1) / (double) nOfFrames);
     }
-    L.fine(String.format("Rendering frame %d: %s to %s", frameCount, worldFrame, imageFrame));
+    L.info(String.format("Rendering frame %d on %s", frameCount, imageFrame));
     frameCount = frameCount + 1;
     Graphics2D g = image.createGraphics();
-    //graphicsDrawer.draw(t, snapshot, g, imageFrame, worldFrame, String.format("%d", frameCount));
+    g.setClip(0, 0, image.getWidth(), image.getHeight());
+    Drawer.clip(imageFrame, drawer).draw(t, snapshot, g);
     g.dispose();
   }
 

@@ -21,6 +21,8 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -49,30 +51,36 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private final VideoUtils.EncoderFacility encoder;
   private final File file;
 
-  private final Grid<String> namesGrid;
+  private final Grid<Drawer> drawersGrid;
   private final Grid<List<Double>> timesGrid;
-  private final Grid<Framer> framerGrid;
   private final List<BufferedImage> images;
-
-  private final GraphicsDrawer graphicsDrawer;
 
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
-  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid) throws IOException {
-    this(w, h, startTime, frameRate, encoder, file, namesGrid, new GraphicsDrawer());
-  }
-
-  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
+  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, Grid<Drawer> drawersGrid) throws IOException {
+    if (namesGrid.getW() != drawersGrid.getW() || namesGrid.getH() != drawersGrid.getH()) {
+      throw new IllegalArgumentException("Names grid and drawers grid should have the same size");
+    }
+    this.drawersGrid = Grid.create(
+        namesGrid.getW(),
+        namesGrid.getH(),
+        (x, y) -> Drawer.clip(
+            BoundingBox.build(
+                (double) x / (double) namesGrid.getW(),
+                (double) y / (double) namesGrid.getH(),
+                (double) (x + 1) / (double) namesGrid.getW(),
+                (double) (y + 1) / (double) namesGrid.getH()
+            ),
+            Drawers.basicWithMiniWorld(namesGrid.get(x, y))
+        )
+    );
     this.w = w;
     this.h = h;
     this.startTime = startTime;
-    this.namesGrid = namesGrid;
     this.frameRate = frameRate;
     this.encoder = encoder;
     this.file = file;
     images = new ArrayList<>();
-    this.graphicsDrawer = graphicsDrawer;
-    framerGrid = Grid.create(namesGrid.getW(), namesGrid.getH(), (x, y) -> new RobotFollower((int) frameRate * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));
     timesGrid = Grid.create(namesGrid.getW(), namesGrid.getH(), (x, y) -> new ArrayList<>());
   }
 
@@ -92,21 +100,9 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
           for (int i = lastFrameNumber; i <= frameNumber; i++) {
             BufferedImage image = images.get(i);
             Graphics2D g = image.createGraphics();
-            double localW = (double) w / (double) namesGrid.getW();
-            double localH = (double) h / (double) namesGrid.getH();
-            //obtain viewport
-            BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
-            //draw
-            /*
-            graphicsDrawer.draw(
-                t, snapshots, g,
-                BoundingBox.build(
-                    Point2.build(localW * lX, localH * lY),
-                    Point2.build(localW * (lX + 1), localH * (lY + 1))
-                ),
-                frame, namesGrid.get(lX, lY)
-            );
-            g.dispose();*/
+            g.setClip(0, 0, image.getWidth(), image.getHeight());
+            drawersGrid.get(lX, lY).draw(t, snapshot, g);
+            g.dispose();
           }
         }
       }
@@ -132,7 +128,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     GridFileWriter gridFileWriter = new GridFileWriter(
         w, h, startTime, frameRate, encoder, file,
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        new GraphicsDrawer()
+        Grid.create(namedSolutions, p -> Drawers.basicWithMiniWorld(p.getLeft()))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
         namedSolutions,
