@@ -17,7 +17,10 @@ done in a way similar to b. now going to clean
 
 Update of 2/9/2021 18:40
 Cleaning done. Still to do:
-- better InfoDrawer (with robot centers)
-- nicer Framer interface (with windows t and num of robots to monitor)
-- controllers as snapshottable
-- example of drawers for controllers
+a better InfoDrawer (with robot centers)
+b nicer Framer interface (with windows t and num of robots to monitor)
+c controllers as snapshottable
+d example of drawers for controllers
+
+Update of 3/9/2021 12.34
+Most done. Still c and d missing.

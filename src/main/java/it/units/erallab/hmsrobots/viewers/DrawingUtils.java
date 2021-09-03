@@ -19,8 +19,6 @@ package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
@@ -83,13 +81,8 @@ public class DrawingUtils {
         alpha);
   }
 
-  public static void draw(double t, Snapshot snapshot, Graphics2D g, Drawer drawer) {
-    g.setColor(Color.WHITE);
-    g.fill(g.getClip());
-    drawer.draw(t, snapshot, g);
-  }
-
   public static Stroke getScaleIndependentStroke(float thickness, float scale) {
     return new BasicStroke(thickness / scale);
   }
+
 }

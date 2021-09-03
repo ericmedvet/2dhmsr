@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class SensorReadingsSectorDrawer extends RecursiveDrawer {
+public class SensorReadingsSectorDrawer extends SubtreeDrawer {
 
   private final static Color COLOR = Color.BLACK;
   private final static float SPAN_ANGLE = (float) Math.PI;
@@ -42,7 +42,7 @@ public class SensorReadingsSectorDrawer extends RecursiveDrawer {
   private final Color strokeColor;
 
   public SensorReadingsSectorDrawer(Color color) {
-    super(Filter.matches(null, SensingVoxel.class, null));
+    super(Extractor.matches(VoxelPoly.class, SensingVoxel.class, null));
     this.fillColor = DrawingUtils.alphaed(color, 0.33f);
     this.strokeColor = color;
   }
@@ -63,14 +63,14 @@ public class SensorReadingsSectorDrawer extends RecursiveDrawer {
   }
 
   @Override
-  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
     List<ScopedReadings> readings = snapshot.getChildren().stream()
         .filter(s -> s.getContent() instanceof ScopedReadings)
         .map(s -> (ScopedReadings) s.getContent())
         .collect(Collectors.toList());
     if (readings.isEmpty()) {
-      return false;
+      return;
     }
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
@@ -97,6 +97,5 @@ public class SensorReadingsSectorDrawer extends RecursiveDrawer {
         g.fill(sector);
       }
     }
-    return false;
   }
 }

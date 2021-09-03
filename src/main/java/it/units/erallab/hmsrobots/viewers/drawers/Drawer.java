@@ -95,7 +95,7 @@ public interface Drawer {
           g.getClip().getBounds2D().getMaxX(),
           g.getClip().getBounds2D().getMaxY()
       );
-      BoundingBox worldFrame = framer.getFrame(snapshot, graphicsFrame.width() / graphicsFrame.height());
+      BoundingBox worldFrame = framer.getFrame(t, snapshot, graphicsFrame.width() / graphicsFrame.height());
       //save original transform and stroke
       AffineTransform oAt = g.getTransform();
       Stroke oStroke = g.getStroke();

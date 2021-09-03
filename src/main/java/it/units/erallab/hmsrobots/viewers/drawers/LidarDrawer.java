@@ -26,7 +26,7 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 
-public class LidarDrawer extends RecursiveDrawer {
+public class LidarDrawer extends SubtreeDrawer {
 
   private final static Color COLOR = Color.RED;
   private final static double CIRCLE_SIZE = 0.5d;
@@ -34,7 +34,7 @@ public class LidarDrawer extends RecursiveDrawer {
   private final Color strokeColor;
 
   public LidarDrawer(Color strokeColor) {
-    super(Filter.matches(null, SensingVoxel.class, null));
+    super(Extractor.matches(null, SensingVoxel.class, null));
     this.strokeColor = strokeColor;
   }
 
@@ -44,10 +44,10 @@ public class LidarDrawer extends RecursiveDrawer {
 
 
   @Override
-  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     Snapshot lidarSnapshot = snapshot.getChildren().stream().filter(s -> s.getContent() instanceof LidarReadings).findFirst().orElse(null);
     if (lidarSnapshot == null) {
-      return false;
+      return;
     }
     LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
@@ -79,7 +79,6 @@ public class LidarDrawer extends RecursiveDrawer {
         ));
       }
     }
-    return false;
   }
 
 }

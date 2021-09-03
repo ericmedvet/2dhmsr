@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
-import it.units.erallab.hmsrobots.viewers.RobotFollower;
+import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
 public class Drawers {
   private Drawers() {
@@ -27,9 +27,9 @@ public class Drawers {
 
   private static Drawer world() {
     return Drawer.transform(
-        new RobotFollower(60, 1.5d, 100, RobotFollower.AggregateType.MAX),
+        new AllRobotFollower(1.5d, 2),
         Drawer.of(
-            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, RecursiveDrawer.Filter.matches(null, Ground.class, null), false),
+            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
             new VoxelDrawer(),
             new SensorReadingsSectorDrawer(),
             new LidarDrawer()
@@ -39,9 +39,9 @@ public class Drawers {
 
   private static Drawer miniWorld() {
     return Drawer.transform(
-        new RobotFollower(120, 5d, 100, RobotFollower.AggregateType.MAX),
+        new AllRobotFollower(5, 4),
         Drawer.of(
-            new PolyDrawer(RecursiveDrawer.Filter.matches(null, Ground.class, null), false),
+            new PolyDrawer(SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
             new VoxelDrawer()
         )
     );

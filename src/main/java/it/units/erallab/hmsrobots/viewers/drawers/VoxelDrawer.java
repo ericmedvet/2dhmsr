@@ -26,7 +26,7 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import java.awt.*;
 import java.awt.geom.Path2D;
 
-public class VoxelDrawer extends RecursiveDrawer {
+public class VoxelDrawer extends SubtreeDrawer {
 
   public enum FillType {APPLIED_FORCE, AREA_RATIO, NONE}
 
@@ -42,7 +42,7 @@ public class VoxelDrawer extends RecursiveDrawer {
   private final FillType fillType;
 
   public VoxelDrawer(FillType fillType) {
-    super(Filter.matches(null, Voxel.class, null));
+    super(Extractor.matches(VoxelPoly.class, Voxel.class, null));
     this.fillType = fillType;
   }
 
@@ -51,7 +51,7 @@ public class VoxelDrawer extends RecursiveDrawer {
   }
 
   @Override
-  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
     Path2D path = DrawingUtils.toPath(voxelPoly, true);
     g.setColor(STROKE_COLOR);
@@ -87,7 +87,6 @@ public class VoxelDrawer extends RecursiveDrawer {
         ));
       }
     }
-    return false;
   }
 
 }

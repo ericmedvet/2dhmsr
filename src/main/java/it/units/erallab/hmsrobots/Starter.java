@@ -116,11 +116,11 @@ public class Starter {
   public static void main(String[] args) {
     //bipeds();
     //rollingOne();
-    //rollingBall();
+    rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
-    multiped();
+    //multiped();
   }
 
   private static void bipeds() {
@@ -172,7 +172,7 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        30,
         Locomotion.createTerrain("steppy-3-10-0"),
         new Settings()
     );
@@ -206,7 +206,7 @@ public class Starter {
         Locomotion.createTerrain("hilly-0.3-1-0"),
         new Settings()
     );
-    //GridOnlineViewer.run(locomotion, robot);
+    GridOnlineViewer.run(locomotion, robot);
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic());
     locomotion.apply(robot, framesImageBuilder);
     try {

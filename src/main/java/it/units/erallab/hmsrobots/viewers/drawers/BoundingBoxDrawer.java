@@ -24,28 +24,26 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
-public class BoundingBoxDrawer extends RecursiveDrawer {
+public class BoundingBoxDrawer extends SubtreeDrawer {
 
   private final static Color COLOR = Color.PINK;
 
   private final Color fillColor;
   private final Color strokeColor;
-  private final boolean goDeeper;
 
 
-  public BoundingBoxDrawer(Color fillColor, Color strokeColor, Filter filter, boolean goDeeper) {
-    super(filter);
+  public BoundingBoxDrawer(Color fillColor, Color strokeColor, Extractor extractor) {
+    super(extractor);
     this.fillColor = fillColor;
     this.strokeColor = strokeColor;
-    this.goDeeper = goDeeper;
   }
 
-  public BoundingBoxDrawer(Filter filter, boolean goDeeper) {
-    this(COLOR, DrawingUtils.alphaed(COLOR, 0.5f), filter, goDeeper);
+  public BoundingBoxDrawer(Extractor extractor) {
+    this(COLOR, DrawingUtils.alphaed(COLOR, 0.5f), extractor);
   }
 
   @Override
-  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     BoundingBox box = ((Shape) snapshot.getContent()).boundingBox();
     Rectangle2D rect = new Rectangle2D.Double(
         box.min.x,
@@ -57,7 +55,6 @@ public class BoundingBoxDrawer extends RecursiveDrawer {
     g.fill(rect);
     g.setColor(strokeColor);
     g.draw(rect);
-    return goDeeper;
   }
 
 }

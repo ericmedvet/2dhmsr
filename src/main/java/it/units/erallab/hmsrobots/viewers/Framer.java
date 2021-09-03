@@ -25,6 +25,6 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 @FunctionalInterface
 public interface Framer {
 
-  BoundingBox getFrame(Snapshot snapshot, double ratio);
+  BoundingBox getFrame(double t, Snapshot snapshot, double ratio);
 
 }

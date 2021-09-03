@@ -24,7 +24,7 @@ import java.awt.*;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 
-public class PolyDrawer extends RecursiveDrawer {
+public class PolyDrawer extends SubtreeDrawer {
 
   private final static Color COLOR = Color.BLACK;
   private final static int TEXTURE_SIZE = 4;
@@ -34,24 +34,21 @@ public class PolyDrawer extends RecursiveDrawer {
   private final Color strokeColor;
   private final Color fillColor;
   private final boolean useTexture;
-  private final boolean goDeeper;
 
-  public PolyDrawer(Filter filter, boolean goDeeper) {
-    this(COLOR, filter, goDeeper);
+  public PolyDrawer(Extractor extractor) {
+    this(COLOR, extractor);
   }
 
 
-  public PolyDrawer(Color color, Filter filter, boolean goDeeper) {
-    super(filter);
-    this.goDeeper = goDeeper;
+  public PolyDrawer(Color color, Extractor extractor) {
+    super(extractor);
     strokeColor = color;
     fillColor = DrawingUtils.alphaed(color, 0.25f);
     useTexture = false;
   }
 
-  public PolyDrawer(TexturePaint texturePaint, Filter filter, boolean goDeeper) {
-    super(filter);
-    this.goDeeper = goDeeper;
+  public PolyDrawer(TexturePaint texturePaint, Extractor extractor) {
+    super(extractor);
     strokeColor = COLOR;
     fillColor = DrawingUtils.alphaed(COLOR, 0.25f);
     texturePaint = TEXTURE_PAINT;
@@ -59,9 +56,9 @@ public class PolyDrawer extends RecursiveDrawer {
   }
 
   @Override
-  protected boolean innerDraw(double t, Snapshot snapshot, Graphics2D g) {
+  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     if (!(snapshot.getContent() instanceof Poly)) {
-      return goDeeper;
+      return;
     }
     Poly poly = (Poly) snapshot.getContent();
     Path2D path = DrawingUtils.toPath(poly, true);
@@ -77,7 +74,6 @@ public class PolyDrawer extends RecursiveDrawer {
       g.setColor(strokeColor);
       g.draw(path);
     }
-    return goDeeper;
   }
 
   private static TexturePaint createTexturePaint() {
