@@ -22,6 +22,7 @@ import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public interface Sensor extends Serializable, Actionable, Snapshottable {
@@ -37,6 +38,12 @@ public interface Sensor extends Serializable, Actionable, Snapshottable {
 
     public static Domain of(double min, double max) {
       return new Domain(min, max);
+    }
+
+    public static Domain[] of(double min, double max, int n) {
+      Domain[] domains = new Domain[n];
+      Arrays.fill(domains, Domain.of(min, max));
+      return domains;
     }
 
     public double getMin() {

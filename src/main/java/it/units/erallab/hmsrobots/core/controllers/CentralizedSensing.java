@@ -19,15 +19,21 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.Collection;
 import java.util.Objects;
 
 /**
  * @author eric
  */
-public class CentralizedSensing implements Controller<SensingVoxel> {
+public class CentralizedSensing implements Controller<SensingVoxel>, Snapshottable {
 
   @JsonProperty
   private final int nOfInputs;
@@ -38,6 +44,11 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private TimedRealFunction function;
 
+  private double[] inputs;
+  private double[] outputs;
+  private Sensor.Domain[] inputDomains;
+  private final Sensor.Domain[] outputDomains;
+
   public CentralizedSensing(
       @JsonProperty("nOfInputs") int nOfInputs,
       @JsonProperty("nOfOutputs") int nOfOutputs,
@@ -45,6 +56,7 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   ) {
     this.nOfInputs = nOfInputs;
     this.nOfOutputs = nOfOutputs;
+    outputDomains = Sensor.Domain.of(-1d, 1d, nOfOutputs);
     setFunction(function);
   }
 
@@ -97,13 +109,20 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
     //collect inputs
-    double[] inputs = voxels.values().stream()
+    inputs = voxels.values().stream()
         .filter(Objects::nonNull)
         .map(SensingVoxel::getSensorReadings)
         .reduce(ArrayUtils::addAll)
         .orElse(new double[nOfInputs]);
+    inputDomains = voxels.values().stream()
+        .filter(Objects::nonNull)
+        .map(SensingVoxel::getSensors)
+        .flatMap(Collection::stream)
+        .map(Sensor::getDomains)
+        .reduce(ArrayUtils::addAll)
+        .orElse(Sensor.Domain.of(-1d, 1d, nOfInputs));
     //compute outputs
-    double[] outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
+    outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
     //apply inputs
     int c = 0;
     for (SensingVoxel voxel : voxels.values()) {
@@ -129,4 +148,20 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
         "function=" + function +
         '}';
   }
+
+  @Override
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(
+        new StackedScopedReadings(
+            new ScopedReadings(inputs, inputDomains),
+            new ScopedReadings(outputs, outputDomains)
+        ),
+        getClass()
+    );
+    if (function instanceof Snapshottable) {
+      snapshot.getChildren().add(((Snapshottable) function).getSnapshot());
+    }
+    return snapshot;
+  }
+
 }

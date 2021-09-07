@@ -73,7 +73,6 @@ public class Drawers {
 
   public static Drawer basicWithMiniWorld() {
     return basicWithMiniWorld("");
-
   }
 
 

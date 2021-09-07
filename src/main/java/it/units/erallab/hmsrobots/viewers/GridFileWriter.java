@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
@@ -71,7 +72,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
                 (double) (x + 1) / (double) namesGrid.getW(),
                 (double) (y + 1) / (double) namesGrid.getH()
             ),
-            Drawers.basicWithMiniWorld(namesGrid.get(x, y))
+            drawersGrid.get(x, y)
         )
     );
     this.w = w;
@@ -123,12 +124,12 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     ));
   }
 
-  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Function<String, Drawer> drawerSupplier) throws IOException {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridFileWriter gridFileWriter = new GridFileWriter(
         w, h, startTime, frameRate, encoder, file,
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        Grid.create(namedSolutions, p -> Drawers.basicWithMiniWorld(p.getLeft()))
+        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.getLeft()))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
         namedSolutions,
@@ -138,6 +139,10 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     );
     runner.run();
     executor.shutdownNow();
+  }
+
+  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+    save(task, namedSolutions, w, h, startTime, frameRate, encoder, file, Drawers::basicWithMiniWorld);
   }
 
   public static <S> void save(Task<S, ?> task, List<S> ss, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {

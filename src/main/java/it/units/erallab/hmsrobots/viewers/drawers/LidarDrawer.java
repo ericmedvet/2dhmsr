@@ -25,11 +25,13 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.util.List;
 
 public class LidarDrawer extends SubtreeDrawer {
 
   private final static Color COLOR = Color.RED;
   private final static double CIRCLE_SIZE = 0.5d;
+  private final static Extractor LIDAR_EXTRACTOR = Extractor.matches(LidarReadings.class, null, null);
 
   private final Color strokeColor;
 
@@ -45,38 +47,40 @@ public class LidarDrawer extends SubtreeDrawer {
 
   @Override
   protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
-    Snapshot lidarSnapshot = snapshot.getChildren().stream().filter(s -> s.getContent() instanceof LidarReadings).findFirst().orElse(null);
-    if (lidarSnapshot == null) {
+    List<Snapshot> lidarSnapshots = LIDAR_EXTRACTOR.extract(snapshot);
+    if (lidarSnapshots.isEmpty()) {
       return;
     }
-    LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
     Point2 center = voxelPoly.center();
-    double angle = lidarReadings.getVoxelAngle();
-    double rayLength = lidarReadings.getDomains()[0].getMax();
-    double[] rayDirections = lidarReadings.getRayDirections();
-    double[] rayHits = lidarReadings.getReadings();
-    for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {
-      double direction = rayDirections[rayIdx];
-      // take into account rotation angle
-      direction += angle;
-      // Draw a ray from the given start point towards the given direction
-      g.setColor(strokeColor);
-      g.draw(DrawingUtils.toPath(
-          center,
-          Point2.build(
-              center.x + rayLength * Math.cos(direction),
-              center.y + rayLength * Math.sin(direction)
-          )
-      ));
-      // draw only hits
-      if (rayHits[rayIdx] < rayLength) {
-        g.draw(new Ellipse2D.Double(
-            center.x + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
-            center.y + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
-            CIRCLE_SIZE,
-            CIRCLE_SIZE
+    for (Snapshot lidarSnapshot : lidarSnapshots) {
+      LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
+      double angle = lidarReadings.getVoxelAngle();
+      double rayLength = lidarReadings.getDomains()[0].getMax();
+      double[] rayDirections = lidarReadings.getRayDirections();
+      double[] rayHits = lidarReadings.getReadings();
+      for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {
+        double direction = rayDirections[rayIdx];
+        // take into account rotation angle
+        direction += angle;
+        // Draw a ray from the given start point towards the given direction
+        g.setColor(strokeColor);
+        g.draw(DrawingUtils.toPath(
+            center,
+            Point2.build(
+                center.x + rayLength * Math.cos(direction),
+                center.y + rayLength * Math.sin(direction)
+            )
         ));
+        // draw only hits
+        if (rayHits[rayIdx] < rayLength) {
+          g.draw(new Ellipse2D.Double(
+              center.x + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
+              center.y + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
+              CIRCLE_SIZE,
+              CIRCLE_SIZE
+          ));
+        }
       }
     }
   }

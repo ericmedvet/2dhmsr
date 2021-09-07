@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -81,7 +82,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
                 (double) (x + 1) / (double) namesGrid.getW(),
                 (double) (y + 1) / (double) namesGrid.getH()
             ),
-            Drawers.basicWithMiniWorld(namesGrid.get(x, y))
+            drawersGrid.get(x, y)
         )
     );
     this.executor = executor;
@@ -150,14 +151,6 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
         }
     );
   }
-
-  /*public GridOnlineViewer(Grid<String> namesGrid, ScheduledExecutorService executor) {
-    this(
-        namesGrid,
-        Grid.create(namesGrid, s -> Drawers.basicWithMiniWorld()),
-        executor
-    );
-  }*/
 
   public void start(int delay) {
     setVisible(true);
@@ -236,12 +229,12 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     Toolkit.getDefaultToolkit().sync();
   }
 
-  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions) {
+  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, Function<String, Drawer> drawerSupplier) {
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
         Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        Grid.create(namedSolutions, p -> Drawers.basicWithMiniWorld(p.getLeft())),
+        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.getLeft())),
         uiExecutor
     );
     gridOnlineViewer.start(3);
@@ -252,6 +245,10 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
         executor
     );
     runner.run();
+  }
+
+  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions) {
+    run(task, namedSolutions, Drawers::basicWithMiniWorld);
   }
 
   public static <S> void run(Task<S, ?> task, List<S> ss) {

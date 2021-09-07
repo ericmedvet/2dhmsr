@@ -70,10 +70,6 @@ public abstract class SubtreeDrawer implements Drawer {
 
   @Override
   public void draw(double t, Snapshot snapshot, Graphics2D g) {
-    recursiveDraw(t, snapshot, 0, g);
-  }
-
-  private void recursiveDraw(double t, Snapshot snapshot, int index, Graphics2D g) {
     extractor.extract(snapshot).forEach(s -> innerDraw(t, s, g));
   }
 
