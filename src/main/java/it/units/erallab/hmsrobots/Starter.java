@@ -120,9 +120,9 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    //bipeds();
+    bipeds();
     //rollingOne();
-    rollingBall();
+    //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
@@ -182,11 +182,26 @@ public class Starter {
         Locomotion.createTerrain("steppy-3-10-0"),
         new Settings()
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(3, 1);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
-    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
-    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
-    GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    namedSolutionGrid.set(1, 0, Pair.of("centralized", centralized));
+    namedSolutionGrid.set(2, 0, Pair.of("phasesRobot", phasesRobot));
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    Function<String, Drawer> drawerSupplier = s -> Drawer.of(
+        Drawer.clip(
+            BoundingBox.build(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld(s)
+        ),
+        Drawer.clip(
+            BoundingBox.build(0d, 0.5d, 1d, 1d),
+            new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, null, null), 10d)
+        )
+    );
+    GridOnlineViewer.run(
+        locomotion,
+        namedSolutionGrid,
+        drawerSupplier
+    );
     /*try {
       GridFileWriter.save(locomotion, namedSolutionGrid, 300, 200, 1, 20, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/bipeds.mp4"));
     } catch (IOException e) {

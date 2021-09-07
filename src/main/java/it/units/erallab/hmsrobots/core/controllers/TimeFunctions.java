@@ -19,16 +19,25 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
+
+import java.util.Objects;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class TimeFunctions implements Controller<ControllableVoxel> {
+public class TimeFunctions implements Controller<ControllableVoxel>, Snapshottable {
 
   @JsonProperty
   private final Grid<SerializableFunction<Double, Double>> functions;
+
+  private double[] outputs;
 
   @JsonCreator
   public TimeFunctions(
@@ -39,10 +48,15 @@ public class TimeFunctions implements Controller<ControllableVoxel> {
 
   @Override
   public void control(double t, Grid<? extends ControllableVoxel> voxels) {
+    outputs = new double[(int) voxels.values().stream().filter(Objects::nonNull).count()];
+    int c = 0;
     for (Grid.Entry<? extends ControllableVoxel> entry : voxels) {
       SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
       if ((entry.getValue() != null) && (function != null)) {
-        entry.getValue().applyForce(function.apply(t));
+        double v = function.apply(t);
+        entry.getValue().applyForce(v);
+        outputs[c] = v;
+        c = c + 1;
       }
     }
   }
@@ -53,6 +67,14 @@ public class TimeFunctions implements Controller<ControllableVoxel> {
 
   public Grid<SerializableFunction<Double, Double>> getFunctions() {
     return functions;
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return new Snapshot(
+        new StackedScopedReadings(new ScopedReadings(outputs, Sensor.Domain.of(-1d, 1d, outputs.length))),
+        getClass()
+    );
   }
 
   @Override
