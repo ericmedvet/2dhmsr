@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.util.Domain;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;

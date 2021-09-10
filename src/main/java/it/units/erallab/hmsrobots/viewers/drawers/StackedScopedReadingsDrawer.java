@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -88,9 +88,9 @@ public class StackedScopedReadingsDrawer extends SubtreeDrawer {
           c = c + 1;
           g.setColor(DrawingUtils.linear(minColor, maxColor, 0f, 1f, (float) v));
           g.fill(new Rectangle2D.Double(
-              clipX + x * clipW - cellW,
+              clipX + x * clipW - 2 * cellW, // 2* is for avoing gaps in the plot
               clipY + y * clipH,
-              cellW,
+              2 * cellW, //2* is for avoing gaps in the plot
               cellH
           ));
         }

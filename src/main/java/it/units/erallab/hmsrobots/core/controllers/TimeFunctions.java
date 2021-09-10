@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
@@ -72,7 +72,7 @@ public class TimeFunctions implements Controller<ControllableVoxel>, Snapshottab
   @Override
   public Snapshot getSnapshot() {
     return new Snapshot(
-        new StackedScopedReadings(new ScopedReadings(outputs, Sensor.Domain.of(-1d, 1d, outputs.length))),
+        new StackedScopedReadings(new ScopedReadings(outputs, Domain.of(-1d, 1d, outputs.length))),
         getClass()
     );
   }

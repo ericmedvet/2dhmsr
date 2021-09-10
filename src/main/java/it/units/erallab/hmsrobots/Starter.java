@@ -36,10 +36,7 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
-import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
-import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
-import it.units.erallab.hmsrobots.viewers.drawers.StackedScopedReadingsDrawer;
-import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
+import it.units.erallab.hmsrobots.viewers.drawers.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -47,10 +44,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -165,7 +159,7 @@ public class Starter {
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
-        new int[]{2},
+        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
         centralizedSensing.nOfOutputs()
     );
     double[] ws = mlp.getParams();
@@ -193,8 +187,20 @@ public class Starter {
             Drawers.basicWithMiniWorld(s)
         ),
         Drawer.clip(
-            BoundingBox.build(0d, 0.5d, 1d, 1d),
-            new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, null, null), 10d)
+            BoundingBox.build(0d, 0.5d, 1d, .75d),
+            Drawer.of(
+                Drawer.clear(),
+                new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, CentralizedSensing.class, null), 10d),
+                new InfoDrawer("controller i/o", Set.of(), 0d)
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.build(0d, 0.75d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, MultiLayerPerceptron.class, null), 10d),
+                new InfoDrawer("mlp neurons activation", Set.of(), 0d)
+            )
         )
     );
     GridOnlineViewer.run(

@@ -18,10 +18,10 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
@@ -89,7 +89,7 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
       g.setColor(fillColor);
       for (int j = 0; j < readings.get(i).getReadings().length; j++) {
         double value = readings.get(i).getReadings()[j];
-        Sensor.Domain d = readings.get(i).getDomains()[j];
+        Domain d = readings.get(i).getDomains()[j];
         double normalizedRadius = radius * Math.min(1d, Math.max(0d, (value - d.getMin()) / (d.getMax() - d.getMin())));
         double valueStartingAngle = sensorStartingAngle + (double) j * valueSliceAngle;
         double valueEndingAngle = valueStartingAngle + valueSliceAngle;

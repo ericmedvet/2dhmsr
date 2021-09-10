@@ -14,22 +14,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.util.Domain;
+package it.units.erallab.hmsrobots.util;
 
-public class Angle extends AbstractSensor {
+import java.io.Serializable;
+import java.util.Arrays;
 
-  private final static Domain[] DOMAINS = new Domain[]{
-      Domain.of(-Math.PI, Math.PI)
-  };
+public class Domain implements Serializable {
+  private final double min;
+  private final double max;
 
-  public Angle() {
-    super(DOMAINS);
+  private Domain(double min, double max) {
+    this.min = min;
+    this.max = max;
   }
 
-  @Override
-  protected double[] sense(double t) {
-    return new double[]{voxel.getAngle()};
+  public static Domain of(double min, double max) {
+    return new Domain(min, max);
+  }
+
+  public static Domain[] of(double min, double max, int n) {
+    Domain[] domains = new Domain[n];
+    Arrays.fill(domains, Domain.of(min, max));
+    return domains;
+  }
+
+  public double getMin() {
+    return min;
+  }
+
+  public double getMax() {
+    return max;
   }
 }
