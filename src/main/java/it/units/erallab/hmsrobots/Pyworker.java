@@ -93,6 +93,8 @@ public class Pyworker implements Runnable {
         return hc;
     }
 
+
+
     private int[] innerNeurons(int nOfInputs, int nOfOutputs, int nOfInnerLayers, double innerLayerRatio) {
         int[] innerNeurons = new int[nOfInnerLayers];
         int centerSize = (int) Math.max(2, Math.round(nOfInputs * innerLayerRatio));

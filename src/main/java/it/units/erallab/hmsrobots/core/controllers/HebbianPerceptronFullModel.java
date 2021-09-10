@@ -294,7 +294,21 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
     private double[] norm(double[] vector) {
         double mmin = Arrays.stream(vector).min().getAsDouble();
         double mmax = Arrays.stream(vector).max().getAsDouble();
-        return Arrays.stream(vector).sequential().map(d -> 2 * ((d - mmin) / (mmax - mmin)) - 1).toArray();
+        if (mmin != mmax) {
+            for (int i = 0; i < vector.length; i++) {
+                Double tmp = 2 * ((vector[i] - mmin) / (mmax - mmin)) - 1;
+                if (tmp.isNaN()) {
+                    System.out.println(Arrays.toString(vector));
+                    System.out.println(vector[i]);
+                    System.out.println(mmin);
+                    System.out.println(mmax);
+                    throw new IllegalArgumentException(String.format("nan weights"));
+                }
+                vector[i] = tmp;
+            }
+        }
+
+        return vector;
     }
 
     private double[] bound(double[] vector) {
@@ -345,9 +359,10 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
                 }
 
                 for (int i = 0; i < neurons[l - 1]; i++) {
-                    weights[l - 1][i][o] = v_j[i];
+                    weights[l - 1][i][o] = norm[i];
                     //weights[l - 1][i][o] *= 100;
                 }
+
             }
         }
 

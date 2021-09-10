@@ -115,6 +115,8 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
             if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel ){
                 activationsValues = ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();
 
+                //System.out.println(Arrays.toString(activationsValues));
+
             }
             if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel ){
                 activationsValues = ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();

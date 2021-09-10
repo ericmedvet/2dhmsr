@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class HebbianPerceptronOutputModel implements Serializable, RealFunction, Parametrized {
 
@@ -314,6 +316,7 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                     v_j[i] = weights[l - 1][i][o];
                 }
                 double[] norm;
+
                 if (this.normalization[0] == this.normalization[1]) {
                     norm = norm(v_j);
                 } else {
@@ -321,7 +324,9 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
                 }
 
                 for (int i = 0; i < neurons[l - 1]; i++) {
-                    weights[l - 1][i][o] = v_j[i];
+
+                    weights[l - 1][i][o] = norm[i];
+
                     //weights[l - 1][i][o] *= 100;
                 }
             }
@@ -333,7 +338,21 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
     private double[] norm(double[] vector) {
         double mmin = Arrays.stream(vector).min().getAsDouble();
         double mmax = Arrays.stream(vector).max().getAsDouble();
-        return Arrays.stream(vector).sequential().map(d -> 2 * ((d - mmin) / (mmax - mmin)) - 1).toArray();
+        if (mmin != mmax) {
+            for (int i = 0; i < vector.length; i++) {
+                Double tmp = 2 * ((vector[i] - mmin) / (mmax - mmin)) - 1;
+                if (tmp.isNaN()) {
+                    System.out.println(Arrays.toString(vector));
+                    System.out.println(vector[i]);
+                    System.out.println(mmin);
+                    System.out.println(mmax);
+                    throw new IllegalArgumentException(String.format("nan weights"));
+                }
+                vector[i] = tmp;
+            }
+        }
+
+        return vector;
     }
 
     private double[] bound(double[] vector) {
@@ -389,9 +408,12 @@ public class HebbianPerceptronOutputModel implements Serializable, RealFunction,
         }
 
         hebbianUpdate(values);
+        double[] pre = this.getWeights();
         if (!(this.normalization == null)) {
             hebbianNormalization();
         }
+        double[] post = this.getWeights();
+        //System.out.println(Arrays.toString(IntStream.range(0, post.length).mapToDouble(i ->pre[i]-post[i]).toArray()));
 
         return values[neurons.length - 1];
     }
