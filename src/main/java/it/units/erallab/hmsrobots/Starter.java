@@ -208,11 +208,18 @@ public class Starter {
         namedSolutionGrid,
         drawerSupplier
     );
-    /*try {
-      GridFileWriter.save(locomotion, namedSolutionGrid, 300, 200, 1, 20, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/bipeds.mp4"));
+    try {
+      GridFileWriter.save(
+          locomotion,
+          namedSolutionGrid,
+          300, 200, 1, 20,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL,
+          new File("/home/eric/bipeds.mp4"),
+          drawerSupplier
+      );
     } catch (IOException e) {
       e.printStackTrace();
-    }*/
+    }
   }
 
   private static void multiped() {
