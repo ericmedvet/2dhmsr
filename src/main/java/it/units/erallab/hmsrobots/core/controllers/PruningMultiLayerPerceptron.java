@@ -161,7 +161,6 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     }
   }
 
-
   private void prune(List<Pair<int[], Double>> localPairs) {
     localPairs.sort(Comparator.comparing(Pair::getValue));
     localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.getKey()));
@@ -185,24 +184,28 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     if (input.length != neurons[0]) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
-    double[][] values = new double[neurons.length][];
-    values[0] = Arrays.stream(input).map(activationFunction::apply).toArray();
+    activationValues[0] = Arrays.stream(input).map(activationFunction::apply).toArray();
     for (int i = 1; i < neurons.length; i++) {
-      values[i] = new double[neurons[i]];
+      activationValues[i] = new double[neurons[i]];
       for (int j = 0; j < neurons[i]; j++) {
         double sum = prunedWeights[i - 1][j][0]; //set the bias
         for (int k = 1; k < neurons[i - 1] + 1; k++) {
-          double signal = values[i - 1][k - 1] * prunedWeights[i - 1][j][k];
+          double signal = activationValues[i - 1][k - 1] * prunedWeights[i - 1][j][k];
           sum = sum + signal;
           double delta = signal - means[i - 1][j][k];
           means[i - 1][j][k] = means[i - 1][j][k] + delta / ((double) counter + 1d);
           absMeans[i - 1][j][k] = absMeans[i - 1][j][k] + (Math.abs(signal) - absMeans[i - 1][j][k]) / ((double) counter + 1d);
           meanDiffSquareSums[i - 1][j][k] = meanDiffSquareSums[i - 1][j][k] + delta * (signal - means[i - 1][j][k]);
         }
-        values[i][j] = activationFunction.apply(sum);
+        activationValues[i][j] = activationFunction.apply(sum);
       }
     }
     counter = counter + 1;
-    return values[neurons.length - 1];
+    return activationValues[neurons.length - 1];
+  }
+
+  @Override
+  public double[][][] getWeights() {
+    return prunedWeights;
   }
 }

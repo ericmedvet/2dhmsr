@@ -18,10 +18,9 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
 import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
@@ -196,6 +195,10 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     return neurons;
   }
 
+  public double[][] getActivationValues() {
+    return activationValues;
+  }
+
   @Override
   public double[] getParams() {
     return MultiLayerPerceptron.flat(weights, neurons);
@@ -204,14 +207,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
   @Override
   public Snapshot getSnapshot() {
     return new Snapshot(
-        new StackedScopedReadings(
-            Arrays.stream(activationValues)
-                .map(v -> new ScopedReadings(
-                    v,
-                    Domain.of(activationFunction.getDomain().getMin(), activationFunction.getDomain().getMax(), v.length)
-                ))
-                .toArray(ScopedReadings[]::new)
-        ),
+        new MLPState(getActivationValues(), getWeights(), activationFunction.getDomain()),
         getClass()
     );
   }

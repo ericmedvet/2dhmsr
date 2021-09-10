@@ -26,6 +26,7 @@ import it.units.erallab.hmsrobots.core.sensors.Angle;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
@@ -44,7 +45,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -156,11 +160,15 @@ public class Starter {
     );
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
         new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
-        centralizedSensing.nOfOutputs()
+        centralizedSensing.nOfOutputs(),
+        10d,
+        PruningMultiLayerPerceptron.Context.NETWORK,
+        PruningMultiLayerPerceptron.Criterion.ABS_SIGNAL_MEAN,
+        0.95
     );
     double[] ws = mlp.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
@@ -187,39 +195,29 @@ public class Starter {
             Drawers.basicWithMiniWorld(s)
         ),
         Drawer.clip(
-            BoundingBox.build(0d, 0.5d, 1d, .75d),
+            BoundingBox.build(0d, 0.5d, 1d, 1d),
             Drawer.of(
                 Drawer.clear(),
-                new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, CentralizedSensing.class, null), 10d),
-                new InfoDrawer("controller i/o", Set.of(), 0d)
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.build(0d, 0.75d, 1d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, MultiLayerPerceptron.class, null), 10d),
-                new InfoDrawer("mlp neurons activation", Set.of(), 0d)
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d, EnumSet.allOf(MLPDrawer.Part.class))
             )
         )
     );
-    GridOnlineViewer.run(
-        locomotion,
-        namedSolutionGrid,
-        drawerSupplier
-    );
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid, drawerSupplier);
+    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
+
     try {
       GridFileWriter.save(
           locomotion,
-          namedSolutionGrid,
-          300, 200, 1, 20,
+          Grid.create(1, 1, Pair.of("", centralized)),
+          800, 800, 1, 24,
           VideoUtils.EncoderFacility.FFMPEG_SMALL,
-          new File("/home/eric/bipeds.mp4"),
+          new File("/home/eric/biped-pruning-mlp.mp4"),
           drawerSupplier
       );
     } catch (IOException e) {
       e.printStackTrace();
     }
+
   }
 
   private static void multiped() {

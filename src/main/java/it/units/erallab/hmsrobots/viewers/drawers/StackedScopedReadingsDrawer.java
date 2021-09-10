@@ -41,21 +41,19 @@ public class StackedScopedReadingsDrawer extends SubtreeDrawer {
   private final double windowT;
   private final Color minColor;
   private final Color maxColor;
-  private final Color lineColor;
 
   private final SortedMap<Double, StackedScopedReadings> readings;
 
-  public StackedScopedReadingsDrawer(Extractor extractor, double windowT, Color minColor, Color maxColor, Color lineColor) {
+  public StackedScopedReadingsDrawer(Extractor extractor, double windowT, Color minColor, Color maxColor) {
     super(extractor);
     this.windowT = windowT;
     this.minColor = minColor;
     this.maxColor = maxColor;
-    this.lineColor = lineColor;
     readings = new TreeMap<>();
   }
 
   public StackedScopedReadingsDrawer(Extractor extractor, double windowT) {
-    this(extractor, windowT, MIN_COLOR, MAX_COLOR, LINE_COLOR);
+    this(extractor, windowT, MIN_COLOR, MAX_COLOR);
   }
 
   @Override
