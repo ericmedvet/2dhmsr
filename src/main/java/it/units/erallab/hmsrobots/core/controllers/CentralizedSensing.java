@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -20,17 +20,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author eric
  */
-public class CentralizedSensing implements Controller<SensingVoxel> {
+public class CentralizedSensing implements Controller<SensingVoxel>, Snapshottable {
 
   @JsonProperty
   private final int nOfInputs;
@@ -41,6 +45,11 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private TimedRealFunction function;
 
+  private double[] inputs;
+  private double[] outputs;
+  private Domain[] inputDomains;
+  private final Domain[] outputDomains;
+
   public CentralizedSensing(
       @JsonProperty("nOfInputs") int nOfInputs,
       @JsonProperty("nOfOutputs") int nOfOutputs,
@@ -48,6 +57,7 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   ) {
     this.nOfInputs = nOfInputs;
     this.nOfOutputs = nOfOutputs;
+    outputDomains = Domain.of(-1d, 1d, nOfOutputs);
     setFunction(function);
   }
 
@@ -63,7 +73,7 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
     return voxels.values().stream()
         .filter(Objects::nonNull)
         .mapToInt(v -> v.getSensors().stream()
-            .mapToInt(s -> s.domains().length)
+            .mapToInt(s -> s.getDomains().length)
             .sum())
         .sum();
   }
@@ -100,23 +110,22 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
     //collect inputs
-    double[] inputs = new double[nOfInputs];
-    int c = 0;
-    List<List<Pair<Sensor, double[]>>> allReadings = voxels.values().stream()
+    inputs = voxels.values().stream()
         .filter(Objects::nonNull)
-        .map(SensingVoxel::getLastReadings)
-        .collect(Collectors.toList());
-    for (List<Pair<Sensor, double[]>> readings : allReadings) {
-      for (Pair<Sensor, double[]> sensorPair : readings) {
-        double[] sensorReadings = sensorPair.getValue();
-        System.arraycopy(sensorReadings, 0, inputs, c, sensorReadings.length);
-        c = c + sensorReadings.length;
-      }
-    }
+        .map(SensingVoxel::getSensorReadings)
+        .reduce(ArrayUtils::addAll)
+        .orElse(new double[nOfInputs]);
+    inputDomains = voxels.values().stream()
+        .filter(Objects::nonNull)
+        .map(SensingVoxel::getSensors)
+        .flatMap(Collection::stream)
+        .map(Sensor::getDomains)
+        .reduce(ArrayUtils::addAll)
+        .orElse(Domain.of(-1d, 1d, nOfInputs));
     //compute outputs
-    double[] outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
+    outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
     //apply inputs
-    c = 0;
+    int c = 0;
     for (SensingVoxel voxel : voxels.values()) {
       if (voxel != null) {
         if (c < outputs.length) {
@@ -140,4 +149,20 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
         "function=" + function +
         '}';
   }
+
+  @Override
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(
+        new StackedScopedReadings(
+            new ScopedReadings(inputs, inputDomains),
+            new ScopedReadings(outputs, outputDomains)
+        ),
+        getClass()
+    );
+    if (function instanceof Snapshottable) {
+      snapshot.getChildren().add(((Snapshottable) function).getSnapshot());
+    }
+    return snapshot;
+  }
+
 }

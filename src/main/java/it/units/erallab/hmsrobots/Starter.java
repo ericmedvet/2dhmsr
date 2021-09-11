@@ -17,14 +17,17 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.Angle;
-import it.units.erallab.hmsrobots.core.sensors.Derivative;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
+import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
+import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -34,9 +37,11 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
+import it.units.erallab.hmsrobots.viewers.drawers.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +49,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /**
@@ -104,7 +110,7 @@ public class Starter {
         )
     );
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL
+        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
     );
     Outcome result = locomotion.apply(robot, framesImageBuilder);
     BufferedImage image = framesImageBuilder.getImage();
@@ -154,11 +160,15 @@ public class Starter {
     );
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
-        new int[]{2},
-        centralizedSensing.nOfOutputs()
+        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
+        centralizedSensing.nOfOutputs(),
+        10d,
+        PruningMultiLayerPerceptron.Context.NETWORK,
+        PruningMultiLayerPerceptron.Criterion.ABS_SIGNAL_MEAN,
+        0.95
     );
     double[] ws = mlp.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
@@ -170,15 +180,44 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        30,
         Locomotion.createTerrain("steppy-3-10-0"),
         new Settings()
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(3, 1);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
-    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
-    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
-    GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    namedSolutionGrid.set(1, 0, Pair.of("centralized", centralized));
+    namedSolutionGrid.set(2, 0, Pair.of("phasesRobot", phasesRobot));
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    Function<String, Drawer> drawerSupplier = s -> Drawer.of(
+        Drawer.clip(
+            BoundingBox.build(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld(s)
+        ),
+        Drawer.clip(
+            BoundingBox.build(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d, EnumSet.allOf(MLPDrawer.Part.class))
+            )
+        )
+    );
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid, drawerSupplier);
+    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
+
+    try {
+      GridFileWriter.save(
+          locomotion,
+          Grid.create(1, 1, Pair.of("", centralized)),
+          800, 800, 1, 24,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL,
+          new File("/home/eric/biped-pruning-mlp.mp4"),
+          drawerSupplier
+      );
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
   }
 
   private static void multiped() {
@@ -200,13 +239,13 @@ public class Starter {
         new Settings()
     );
     GridOnlineViewer.run(locomotion, robot);
-    /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic());
     locomotion.apply(robot, framesImageBuilder);
     try {
       ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
     } catch (IOException e) {
       e.printStackTrace();
-    }*/
+    }
   }
 
   private static void breakingWorm() {
@@ -238,9 +277,9 @@ public class Starter {
 
   private static void plainWorm() {
     Grid<? extends SensingVoxel> body = RobotUtils
-        .buildSensorizingFunction("uniform-l1-0.01")
+        //.buildSensorizingFunction("uniform-l1-0.01")
         //.buildSensorizingFunction("uniform-l5-0")
-        //.buildSensorizingFunction("uniformAll-0")
+        .buildSensorizingFunction("uniform-l5+vxy+t-0.01")
         .apply(RobotUtils.buildShape("worm-5x2"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
@@ -257,7 +296,7 @@ public class Starter {
     robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        30,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
@@ -266,20 +305,20 @@ public class Starter {
 
   private static void cShaped() {
     Grid<Boolean> shape = Grid.create(8, 8, (x, y) -> x < 2 || y < 2 || y >= 6);
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t-0").apply(shape);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+vxy-0.05").apply(shape);
     Robot<?> robot = new Robot<>(
         new CentralizedSensing(body),
         SerializationUtils.clone(body)
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        20,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
     //GridOnlineViewer.run(locomotion, robot);
     try {
-      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
+      GridFileWriter.save(locomotion, robot, 600, 400, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -290,7 +329,7 @@ public class Starter {
     //one voxel robot
     Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
         new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
-        new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)),
+        new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.25),
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
@@ -310,7 +349,7 @@ public class Starter {
   private static void rollingBall() {
     Random random = new Random();
     Grid<Boolean> shape = RobotUtils.buildShape("ball-7");
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+l5-0").apply(shape);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0").apply(shape);
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
@@ -329,11 +368,37 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        20,
         Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
-    GridOnlineViewer.run(locomotion, robot);
+    Function<String, Drawer> drawerSupplier = s -> Drawer.of(
+        Drawer.clip(
+            BoundingBox.build(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld(s)
+        ),
+        Drawer.clip(
+            BoundingBox.build(0d, 0.5d, 1d, 1d),
+            new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, null, null), 10d)
+        )
+    );
+    GridOnlineViewer.run(
+        locomotion,
+        Grid.create(1, 1, Pair.of("", robot)),
+        drawerSupplier
+    );
+    try {
+      GridFileWriter.save(
+          locomotion,
+          Grid.create(1, 1, Pair.of("", robot)),
+          600, 600,
+          0, 30,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/ball-w-activity.mp4"),
+          drawerSupplier
+      );
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
 }

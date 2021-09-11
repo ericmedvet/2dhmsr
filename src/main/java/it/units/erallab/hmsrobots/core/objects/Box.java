@@ -16,9 +16,10 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.util.Point2;
-import it.units.erallab.hmsrobots.util.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
@@ -28,7 +29,7 @@ import org.dyn4j.geometry.Vector2;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Box implements WorldObject {
+public class Box implements WorldObject, Snapshottable {
 
   private final static double FRICTION = 1d;
   private final static double RESTITUTION = 0.5d;
@@ -47,14 +48,17 @@ public class Box implements WorldObject {
   }
 
   @Override
-  public Immutable immutable() {
+  public Snapshot getSnapshot() {
     Rectangle rectangle = (Rectangle) body.getFixture(0).getShape();
-    return new it.units.erallab.hmsrobots.core.objects.immutable.Box(Poly.build(
-        Point2.build(rectangle.getVertices()[0]),
-        Point2.build(rectangle.getVertices()[1]),
-        Point2.build(rectangle.getVertices()[2]),
-        Point2.build(rectangle.getVertices()[3])
-    ));
+    return new Snapshot(
+        Poly.build(
+            Point2.build(rectangle.getVertices()[0]),
+            Point2.build(rectangle.getVertices()[1]),
+            Point2.build(rectangle.getVertices()[2]),
+            Point2.build(rectangle.getVertices()[3])
+        ),
+        getClass()
+    );
   }
 
   @Override
