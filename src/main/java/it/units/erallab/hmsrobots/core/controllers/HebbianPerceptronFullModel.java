@@ -2,28 +2,47 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Parametrized;
-import org.apache.commons.math3.util.Pair;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class HebbianPerceptronFullModel implements Serializable, RealFunction, Parametrized {
+public class HebbianPerceptronFullModel implements Serializable, RealFunction, Parametrized, Resettable, Snapshottable {
 
 
-    public enum ActivationFunction {
-        RELU((Double x) -> (x < 0) ? 0d : x),
-        SIGMOID((Double x) -> 1d / (1d + Math.exp(-x))),
-        TANH(Math::tanh);
+
+
+    public enum ActivationFunction implements Function<Double, Double> {
+        RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
+        SIGMOID(x -> 1d / (1d + Math.exp(-x)), Domain.of(0d, 1d)),
+        SIN(Math::sin, Domain.of(-1d, 1d)),
+        TANH(Math::tanh, Domain.of(-1d, 1d));
 
         private final Function<Double, Double> f;
+        private final Domain domain;
 
-        ActivationFunction(Function<Double, Double> f) {
+        ActivationFunction(Function<Double, Double> f, Domain domain) {
             this.f = f;
+            this.domain = domain;
         }
 
+        public Function<Double, Double> getF() {
+            return f;
+        }
+
+        public Domain getDomain() {
+            return domain;
+        }
+
+        public Double apply(Double x) {
+            return f.apply(x);
+        }
     }
 
     @JsonProperty
@@ -44,6 +63,9 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
     private final HashMap<Integer, Integer> mapper;
     @JsonProperty
     private final double[] normalization;
+
+    private double[][] activationsValues;
+    private boolean flag = true;
 
     @JsonCreator
     public HebbianPerceptronFullModel(
@@ -73,6 +95,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         this.normalization = normalization;
         this.mapper = mapper;
         this.eta = eta;
+        System.out.println(countWeights(neurons));
         if (flatHebbCoef(hebbCoef, neurons).length != 4 * countWeights(neurons)) {
             throw new IllegalArgumentException(String.format(
                     "Wrong number of hebbian coeff: %d   expected, %d found",
@@ -110,7 +133,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         );
     }
 
-    public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbCoef, double eta, Random rnd, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
+    public HebbianPerceptronFullModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbCoef, double eta, Random rnd, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
 
         this(
                 activationFunction,
@@ -160,6 +183,16 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
     public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[][][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
         this(activationFunction, nOfInput, innerNeurons, nOfOutput, new double[countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput))], flatHebbCoef(initHebbCoef(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput)), eta, disabled, mapper, normalization);
 
+    }
+
+    @Override
+    public void reset() {
+
+    }
+
+    @Override
+    public Snapshot getSnapshot() {
+        return new Snapshot(new MLPState(this.activationsValues, this.weights, this.activationFunction.domain), this.getClass());
     }
 
     public static double[][][] unflat(double[] flatWeights, int[] neurons) {
@@ -393,28 +426,30 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         if (input.length != neurons[0]) {
             throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
         }
-        double[][] values = new double[neurons.length][];
-        values[0] = new double[neurons[0]];
-        System.arraycopy(input, 0, values[0], 0, input.length);
-        values[0][values[0].length - 1] = 1d; //set the bias
+        activationsValues = new double[neurons.length][];
+        activationsValues[0] = new double[neurons[0]];
+        System.arraycopy(input, 0, activationsValues[0], 0, input.length);
+        activationsValues[0][activationsValues[0].length - 1] = 1d; //set the bias
         for (int i = 1; i < neurons.length; i++) {
-            values[i] = new double[neurons[i]];
+            activationsValues[i] = new double[neurons[i]];
             for (int j = 0; j < neurons[i]; j++) {
                 double sum = 0d;
                 for (int k = 0; k < neurons[i - 1]; k++) {
-                    sum = sum + values[i - 1][k] * weights[i - 1][k][j];
+                    sum = sum + activationsValues[i - 1][k] * weights[i - 1][k][j];
                 }
-                values[i][j] = activationFunction.f.apply(sum);
+                activationsValues[i][j] = activationFunction.f.apply(sum);
             }
         }
 
-        hebbianUpdate(values);
+        if (flag) {
+            hebbianUpdate(activationsValues);
 
-        if (!(this.normalization == null)) {
-            hebbianNormalization();
+            if (!(this.normalization == null)) {
+                hebbianNormalization();
+            }
         }
 
-        return values[neurons.length - 1];
+        return activationsValues[neurons.length - 1];
     }
 
     public double[][][] getWeightsM() {
@@ -425,6 +460,9 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         return neurons;
     }
 
+    private void invert(){
+        this.flag = !flag;
+    }
 
     public double[] getWeights() {
         return flat(weights, neurons);

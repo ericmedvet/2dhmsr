@@ -159,6 +159,7 @@ public class MLPDrawer extends SubtreeDrawer {
           .mapToDouble(s -> max(s.getWeights()))
           .max().orElse(0d);
       draw(t, states, s -> flat(s.getWeights()), min, max, wBB, g);
+
       if (parts.contains(Part.LEGEND)) {
         drawLegend(
             min, max,

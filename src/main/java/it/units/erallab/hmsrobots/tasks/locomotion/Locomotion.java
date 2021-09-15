@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.tasks.locomotion;
 
 import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
 import it.units.erallab.hmsrobots.core.controllers.HebbianPerceptronFullModel;
-import it.units.erallab.hmsrobots.core.controllers.HebbianPerceptronOutputModel;
+import it.units.erallab.hmsrobots.core.controllers.HebbianMultilayerPerceptronIncomingModel;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
@@ -41,7 +41,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
@@ -92,17 +91,22 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     double initCenterX = robot.getCenter().x;
     //add robot to world
     robot.addTo(world);
-
-    worldObjects.add(robot);
+    if ( ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel) {
+      double[] etas = ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).getEta();
+      etas = Arrays.stream(etas).map(d->0d).toArray();
+      ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).setEta(etas);
+    }
+      worldObjects.add(robot);
     //run
     List<Outcome.Observation> observations = new ArrayList<>((int) Math.ceil(finalT / settings.getStepFrequency()));
     double t = 0d;
+
     //System.out.println("pre start");
     while (t < finalT) {
       //System.out.println("pre upd "+t);
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       //System.out.println("pre obs "+t);
-      ;
+
       double[] activationsValues = {0d};
       if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof MultiLayerPerceptron){
         double[] tmp= ((MultiLayerPerceptron)((CentralizedSensing) robot.getController()).getFunction()).getActivationValues()[0];
@@ -111,13 +115,13 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
         System.arraycopy(tmp,0,activationsValues,0,tmp.length);
         System.arraycopy(tmp1,0,activationsValues,tmp.length, tmp1.length);
       }
-      if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel ){
-        activationsValues = ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();
+      if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianMultilayerPerceptronIncomingModel){
+        activationsValues = ((HebbianMultilayerPerceptronIncomingModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();
 
         //System.out.println(Arrays.toString(activationsValues));
 
       }
-      if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel ){
+      if ( robot.getController() instanceof CentralizedSensing && ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel){
         activationsValues = ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).getWeights();
 
       }
@@ -141,14 +145,15 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
                       .sum() - (observations.isEmpty() ? 0d : observations.get(observations.size() - 1).getAreaRatioEnergy()),
               (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
-      //System.out.println("post obs "+t);
     }
     stopWatch.stop();
+    System.out.println("end ");
     if (robot.getController() instanceof CentralizedSensing)
       if ( ((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronFullModel){
+        System.out.println(Arrays.toString(((HebbianPerceptronFullModel) ((CentralizedSensing) robot.getController()).getFunction()).getWeights()));
         ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).resetInitWeights();
-      }else if(((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel){
-        ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).resetInitWeights();
+      }else if(((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianMultilayerPerceptronIncomingModel){
+        ((HebbianMultilayerPerceptronIncomingModel)((CentralizedSensing) robot.getController()).getFunction()).resetInitWeights();
       }
 
     //prepare outcome

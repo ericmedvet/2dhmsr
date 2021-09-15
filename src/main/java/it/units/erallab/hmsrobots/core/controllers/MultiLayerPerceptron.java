@@ -118,6 +118,8 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
   }
 
   public static double[][][] unflat(double[] flatWeights, int[] neurons) {
+    System.out.println(flatWeights.length);
+    System.out.println(countWeights(neurons));
     double[][][] unflatWeights = new double[neurons.length - 1][][];
     int c = 0;
     for (int i = 1; i < neurons.length; i++) {

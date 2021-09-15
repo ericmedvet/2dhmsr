@@ -1,19 +1,29 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.sensors.Lidar;
+import it.units.erallab.hmsrobots.core.sensors.Normalization;
+import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.util.Utils;
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
+import it.units.erallab.hmsrobots.viewers.GridFileWriter;
+import it.units.erallab.hmsrobots.viewers.VideoUtils;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
+import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
+import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -85,8 +95,8 @@ public class Pyworker implements Runnable {
     public double[] getHebbCoeff(String serialized){
         Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
         double[] hc;
-        if (((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel){
-            hc = ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
+        if (((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianMultilayerPerceptronIncomingModel){
+            hc = ((HebbianMultilayerPerceptronIncomingModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
         }else{
             hc = ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
         }
@@ -169,6 +179,64 @@ public class Pyworker implements Runnable {
         List<double[][]> results = mapI(Arrays.asList(serialized.clone()), transformation, terrain, executorService);
         return results.stream().toArray(double[][][]::new);
 
+    }
+    public String makeSer(String serialized, double[] weights) {
+        Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+
+        robot = new Robot(robot.getController(),
+                RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
+
+        if (weights.length > 0) {
+            ((HebbianPerceptronFullModel) ((CentralizedSensing) robot.getController()).getFunction()).setWeights(weights);
+        }
+        return SerializationUtils.serialize(robot, SerializationUtils.Mode.GZIPPED_JSON);
+    }
+    public void makeVideo(String serialized, boolean convertLidar, String terrainName, String filename, double[] weights){
+        Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+        if (convertLidar){
+            robot = new Robot(robot.getController(),
+                    RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
+        }
+        if (weights.length>0){
+            ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).setWeights(weights);
+        }
+        Locomotion locomotion = new Locomotion(
+                60,
+                Locomotion.createTerrain(terrainName),
+                new Settings()
+        );
+        System.out.println("ehi");
+        Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
+        //namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
+        namedSolutionGrid.set(0, 0, Pair.of("centralized", robot));
+        Function<String, Drawer> drawerSupplier = s -> Drawer.of(
+                Drawer.clip(
+                        BoundingBox.build(0d, 0d, 1d, 0.5d),
+                        Drawers.basicWithMiniWorld(s)
+                ),
+                Drawer.clip(
+                        BoundingBox.build(0d, 0.5d, 1d, 1d),
+                        Drawer.of(
+                                Drawer.clear(),
+                                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d, EnumSet.allOf(MLPDrawer.Part.class))
+                        )
+                )
+        );
+        //GridOnlineViewer.run(locomotion, namedSolutionGrid, drawerSupplier);
+        //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
+        System.out.println("ohi");
+        try {
+            GridFileWriter.save(
+                    locomotion,
+                    Grid.create(1, 1, Pair.of("", robot)),
+                    400, 400, 1, 24,
+                    VideoUtils.EncoderFacility.JCODEC,
+                    new File(filename),
+                    drawerSupplier
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static double[] validatationSerialized(String serialized) {
