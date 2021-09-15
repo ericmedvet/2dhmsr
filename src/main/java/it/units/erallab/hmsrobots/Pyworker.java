@@ -20,6 +20,7 @@ import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
 import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
 import org.apache.commons.lang3.tuple.Pair;
+import org.checkerframework.checker.units.qual.A;
 import org.dyn4j.dynamics.Settings;
 
 import java.io.File;
@@ -36,7 +37,8 @@ import static java.util.Arrays.stream;
 public class Pyworker implements Runnable {
     double[][] terrain;
     double duration;
-    Function<List<Double>, Robot<?>> builder;
+    Function<double[], Robot<?>> builder;
+    Function<List<Double>, Robot<?>> builder1;
     Function<Robot<?>, List<Double>> fitness;
     List<List<Double>> genotypes = new ArrayList<>();
     List<List<Double>> results = new ArrayList<>();
@@ -51,6 +53,9 @@ public class Pyworker implements Runnable {
         this.terrain = Locomotion.createTerrain(terrain);
         this.builder = i -> new Robot<>(
                 SerializationUtils.clone(buildController(centralizedSensing, i, controller)),
+                SerializationUtils.clone(body));
+        this.builder1 = i -> new Robot<>(
+                SerializationUtils.clone(buildController(centralizedSensing, i.stream().mapToDouble(Double::doubleValue).toArray(), controller)),
                 SerializationUtils.clone(body));
         this.fitness = robot -> {
             Locomotion locomotion = new Locomotion(duration, this.terrain, new Settings());
@@ -89,14 +94,14 @@ public class Pyworker implements Runnable {
     }
 */
     public String getRobotSerialized(double[] genome) {
-        return SerializationUtils.serialize(builder.apply(DoubleStream.of(genome).boxed().collect(Collectors.toList())));
+        return SerializationUtils.serialize(builder.apply(genome));
     }
 
     public double[] getHebbCoeff(String serialized){
         Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
         double[] hc;
-        if (((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianMultilayerPerceptronIncomingModel){
-            hc = ((HebbianMultilayerPerceptronIncomingModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
+        if (((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel){
+            hc = ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
         }else{
             hc = ((HebbianPerceptronFullModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
         }
@@ -121,8 +126,10 @@ public class Pyworker implements Runnable {
         return innerNeurons;
     }
 
-    private CentralizedSensing buildController(CentralizedSensing centralizedSensing, List<Double> weights, String controller) {
+    private CentralizedSensing buildController(CentralizedSensing centralizedSensing, double[] weights, String controller) {
         String mlp = "MLP-(?<ratio>\\d+(\\.\\d+)?)-(?<nLayers>\\d+)(-(?<actFun>(sin|tanh|sigmoid|relu)))?";
+        String hlp = "HLP-(?<type>(full|output))-(?<eta>\\d+(\\.\\d+)?)(-(?<actFun>(tanh|sigmoid|relu)))-(?<ratio>\\d+(\\.\\d+)?)-(?<nLayers>\\d+)-(?<seed>-?\\d+)(-(?<min>-?\\d+(\\.\\d+)?))?(-(?<max>\\d+(\\.\\d+)?))?";
+
         Map<String, String> params;
         if ((params = params(mlp, controller)) != null) {
             //(MultiLayerPerceptron.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput)
@@ -132,10 +139,50 @@ public class Pyworker implements Runnable {
                     centralizedSensing.nOfInputs(),
                     innerNeurons(centralizedSensing.nOfInputs(), centralizedSensing.nOfOutputs(), Integer.parseInt(params.get("nLayers")), Double.parseDouble(params.get("ratio"))),
                     centralizedSensing.nOfOutputs(),
-                    weights.stream().mapToDouble(Double::doubleValue).toArray()
+                    weights
             );
+
             centralizedSensing.setFunction(func);
             return centralizedSensing;
+        }
+        if ((params = params(hlp, controller)) != null) {
+
+            if (params.get("type").equals("full")) {
+
+                HebbianPerceptronFullModel full = new HebbianPerceptronFullModel(
+                        params.containsKey("actFun") ? HebbianPerceptronFullModel.ActivationFunction.valueOf(params.get("actFun").toUpperCase()) : HebbianPerceptronFullModel.ActivationFunction.TANH,
+                        centralizedSensing.nOfInputs(),
+                        innerNeurons(centralizedSensing.nOfInputs(), centralizedSensing.nOfOutputs(), Integer.parseInt(params.get("nLayers")), Double.parseDouble(params.get("ratio"))),
+                        centralizedSensing.nOfOutputs(),
+                        Double.parseDouble(params.get("eta")),
+                        new HashSet<>(),
+                        new HashMap<>(),
+                        params.containsKey("min") && params.containsKey("max") ? new double[]{Double.parseDouble(params.get("min").replace("n","-")),Double.parseDouble(params.get("max")) } : null
+                        );
+                //System.out.println(Arrays.toString(weights));
+
+                full.setInitWeights(weights);
+                full.setWeights(weights);
+                centralizedSensing.setFunction(full);
+                return centralizedSensing;
+
+            } else {
+                HebbianPerceptronOutputModel incoming = new HebbianPerceptronOutputModel(
+                        params.containsKey("actFun") ? HebbianPerceptronOutputModel.ActivationFunction.valueOf(params.get("actFun").toUpperCase()) : HebbianPerceptronOutputModel.ActivationFunction.TANH,
+                        centralizedSensing.nOfInputs(),
+                        innerNeurons(centralizedSensing.nOfInputs(), centralizedSensing.nOfOutputs(), Integer.parseInt(params.get("nLayers")), Double.parseDouble(params.get("ratio"))),
+                        centralizedSensing.nOfOutputs(),
+                        Double.parseDouble(params.get("eta")),
+                        new HashSet<>(),
+                        new HashMap<>(),
+                        params.containsKey("min") && params.containsKey("max") ? new double[]{Double.parseDouble(params.get("min").replace("n","-")),Double.parseDouble(params.get("max")) } : null
+                );
+                incoming.setWeights(weights);
+                centralizedSensing.setFunction(incoming);
+                return centralizedSensing;
+
+            }
+
         }
         throw new IllegalArgumentException(String.format("Unknown mapper name: %s", controller));
 
@@ -187,19 +234,25 @@ public class Pyworker implements Runnable {
                 RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
 
         if (weights.length > 0) {
+
+            ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).setInitWeights(weights);
             ((HebbianPerceptronFullModel) ((CentralizedSensing) robot.getController()).getFunction()).setWeights(weights);
         }
         return SerializationUtils.serialize(robot, SerializationUtils.Mode.GZIPPED_JSON);
     }
     public void makeVideo(String serialized, boolean convertLidar, String terrainName, String filename, double[] weights){
         Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+        System.out.println("333"+Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getWeights()));
         if (convertLidar){
             robot = new Robot(robot.getController(),
                     RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
         }
         if (weights.length>0){
+            ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).setInitWeights(weights);
             ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).setWeights(weights);
         }
+        ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).invert();
+
         Locomotion locomotion = new Locomotion(
                 60,
                 Locomotion.createTerrain(terrainName),
@@ -240,15 +293,19 @@ public class Pyworker implements Runnable {
     }
 
     public static double[] validatationSerialized(String serialized) {
-        String[] terrains = {"flat", "hilly-3-10-0", "hilly-3-10-1", "hilly-3-10-2", "hilly-3-10-3", "hilly-3-10-4", "steppy-3-10-0", "steppy-3-10-1", "steppy-3-10-2", "steppy-3-10-3", "steppy-3-10-4"
-        };
+        String[] terrains = {"hilly-3-30-0", "hilly-3-30-1", "hilly-3-30-2", "hilly-3-30-3", "hilly-3-30-4"};
         double[] vels = new double[terrains.length];
         int c = 0;
+        Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
         for (String terrain : terrains) {
             Locomotion locomotion = new Locomotion(60, Locomotion.createTerrain(terrain), new Settings());
-            Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+            robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+
+            System.out.println(Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getWeights()));
+            //System.out.println(Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getParams()));
             //System.out.println("pre apply");
             Outcome outcome = locomotion.apply(robot, null);
+            System.out.println("----------");
             vels[c] = outcome.getVelocity();
             c++;
         }
@@ -314,7 +371,7 @@ public class Pyworker implements Runnable {
     @Override
     public void run() {
         try {
-            results = map(this.genotypes, this.builder, this.fitness, executorService);
+            results = map(this.genotypes, this.builder1, this.fitness, executorService);
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }

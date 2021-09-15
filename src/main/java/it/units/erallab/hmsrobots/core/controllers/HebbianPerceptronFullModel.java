@@ -95,7 +95,6 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         this.normalization = normalization;
         this.mapper = mapper;
         this.eta = eta;
-        System.out.println(countWeights(neurons));
         if (flatHebbCoef(hebbCoef, neurons).length != 4 * countWeights(neurons)) {
             throw new IllegalArgumentException(String.format(
                     "Wrong number of hebbian coeff: %d   expected, %d found",
@@ -103,20 +102,6 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
                     flatHebbCoef(hebbCoef, neurons).length
             ));
         }
-    }
-
-    public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
-        this(
-                activationFunction,
-                unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
-                unflatHebbCoef(hebbCoef, countNeurons(nOfInput, innerNeurons, nOfOutput)),
-                countNeurons(nOfInput, innerNeurons, nOfOutput),
-                initEta(eta, countNeurons(nOfInput, innerNeurons, nOfOutput)),
-                disabled,
-                mapper,
-                null
-
-        );
     }
 
     public HebbianPerceptronFullModel(HebbianPerceptronFullModel.ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
@@ -187,11 +172,12 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
 
     @Override
     public void reset() {
-
+        this.resetInitWeights();
     }
 
     @Override
     public Snapshot getSnapshot() {
+        //System.out.println(Arrays.toString(flat(this.weights, this.neurons)));
         return new Snapshot(new MLPState(this.activationsValues, this.weights, this.activationFunction.domain), this.getClass());
     }
 
@@ -272,7 +258,9 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         double[][][][] unflatHebbCoef = new double[neurons.length - 1][][][];
         int c = 0;
         for (int i = 0; i < neurons.length - 1; i++) {
+            unflatHebbCoef[i] = new double[neurons[i]][][];
             for (int j = 0; j < neurons[i]; j++) {
+                unflatHebbCoef[i][j] = new double[neurons[i + 1]][];
                 for (int k = 0; k < neurons[i + 1]; k++) {
                     unflatHebbCoef[i][j][k] = new double[]{0, 0, 0, 0};
                 }
@@ -423,9 +411,11 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
 
     @Override
     public double[] apply(double[] input) {
+
         if (input.length != neurons[0]) {
             throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
         }
+        //System.out.println(Arrays.toString(flat(this.weights, this.neurons)));
         activationsValues = new double[neurons.length][];
         activationsValues[0] = new double[neurons[0]];
         System.arraycopy(input, 0, activationsValues[0], 0, input.length);
@@ -460,7 +450,7 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         return neurons;
     }
 
-    private void invert(){
+    public void invert(){
         this.flag = !flag;
     }
 
@@ -478,6 +468,16 @@ public class HebbianPerceptronFullModel implements Serializable, RealFunction, P
         return flatHebbCoef(hebbCoef, neurons);
     }
 
+    public void setInitWeights(double[] params) {
+        double[][][] newWeights = unflat(params, neurons);
+        for (int l = 0; l < newWeights.length; l++) {
+            for (int s = 0; s < newWeights[l].length; s++) {
+                for (int d = 0; d < newWeights[l][s].length; d++) {
+                    startingWeights[l][s][d] = newWeights[l][s][d];
+                }
+            }
+        }
+    }
 
     public void setWeights(double[] params) {
         double[][][] newWeights = unflat(params, neurons);

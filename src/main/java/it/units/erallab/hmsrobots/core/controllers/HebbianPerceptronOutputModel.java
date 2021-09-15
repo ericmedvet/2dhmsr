@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class HebbianMultilayerPerceptronIncomingModel implements Serializable, RealFunction, Parametrized, Resettable, Snapshottable {
+public class HebbianPerceptronOutputModel implements Serializable, RealFunction, Parametrized, Resettable, Snapshottable {
 
     public enum ActivationFunction implements Function<Double, Double> {
         RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
@@ -64,7 +64,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
     private double[][] activationsValues;
 
     @JsonCreator
-    public HebbianMultilayerPerceptronIncomingModel(
+    public HebbianPerceptronOutputModel(
             @JsonProperty("activationFunction") ActivationFunction activationFunction,
             @JsonProperty("weights") double[][][] weights,
             @JsonProperty("hebbCoef") double[][][] hebbCoef,
@@ -106,7 +106,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
         }
     }
 
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
         this(
                 activationFunction,
                 unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -118,7 +118,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
                 normalization
         );
     }
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper) {
         this(
                 activationFunction,
                 unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -131,7 +131,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
         );
     }
 
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput,
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput,
                                                     double[] hebbCoef, double eta, Random rnd, HashSet<Integer> disabled,
                                                     HashMap<Integer, Integer> mapper, double[] normalization) {
 
@@ -146,7 +146,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
         );
     }
 
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
         this(activationFunction, nOfInput, innerNeurons, nOfOutput,
                 new double[countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput))],
                 flatHebbCoef(initHebbCoef(countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -154,7 +154,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
 
     }
 
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double[][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double[] hebbCoef, double[][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
         this(
                 activationFunction,
                 unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -167,7 +167,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
         );
     }
 
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbCoef, double[][] eta, Random rnd, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbCoef, double[][] eta, Random rnd, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
 
         this(
                 activationFunction,
@@ -181,7 +181,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
         );
     }
 
-    public HebbianMultilayerPerceptronIncomingModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
+    public HebbianPerceptronOutputModel(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[][] eta, HashSet<Integer> disabled, HashMap<Integer, Integer> mapper, double[] normalization) {
         this(activationFunction, nOfInput, innerNeurons, nOfOutput,
                 new double[countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput))],
                 flatHebbCoef(initHebbCoef(countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -565,7 +565,7 @@ public class HebbianMultilayerPerceptronIncomingModel implements Serializable, R
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final HebbianMultilayerPerceptronIncomingModel other = (HebbianMultilayerPerceptronIncomingModel) obj;
+        final HebbianPerceptronOutputModel other = (HebbianPerceptronOutputModel) obj;
         if (this.activationFunction != other.activationFunction) {
             return false;
         }
