@@ -203,9 +203,9 @@ public class Starter {
         )
     );
     //GridOnlineViewer.run(locomotion, namedSolutionGrid, drawerSupplier);
-    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
 
-    try {
+    /*try {
       GridFileWriter.save(
           locomotion,
           Grid.create(1, 1, Pair.of("", centralized)),
@@ -216,7 +216,7 @@ public class Starter {
       );
     } catch (IOException e) {
       e.printStackTrace();
-    }
+    }*/
 
   }
 
