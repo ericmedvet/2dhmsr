@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.DistanceJoint;
@@ -114,16 +114,16 @@ public class ControllableVoxel extends Voxel {
   }
 
   @Override
-  public Snapshot getSnapshot() {
-    Snapshot snapshot = new Snapshot(new VoxelPoly(
+  public VoxelPoly getVoxelPoly() {
+    return new VoxelPoly(
         getVertices(),
+        getAngle(),
+        Touch.isTouchingGround(this),
         getAreaRatio(),
         getAreaRatioEnergy(),
         getLastAppliedForce(),
         getControlEnergy()
-    ), getClass());
-    fillSnapshot(snapshot);
-    return snapshot;
+    );
   }
 
   @Override

@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
@@ -27,7 +28,6 @@ import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
-import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -37,7 +37,10 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
-import it.units.erallab.hmsrobots.viewers.drawers.*;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
+import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
+import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -45,11 +48,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -118,9 +119,9 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
-    //rollingBall();
+    rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
@@ -372,6 +373,38 @@ public class Starter {
         Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
+
+    Outcome o = locomotion.apply(robot);
+    System.out.println(o);
+    System.out.println(BehaviorUtils.computeMainGait(
+        0.5,
+        4,
+        new TreeMap<>(o.getObservations().entrySet().stream()
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> e.getValue().getVoxelPolies().values().stream().filter(Objects::nonNull).collect(Collectors.toList())
+            )))
+        ,
+        8
+    ));
+    System.out.println(BehaviorUtils.computeQuantizedSpectrum(
+        new TreeMap<>(o.getObservations().entrySet().stream()
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().y - e.getValue().getTerrainHeight()
+            ))),
+        0, 5, 8
+    ));
+    System.out.println(o.getObservations().entrySet().stream()
+        .collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().y - e.getValue().getTerrainHeight()
+        )));
+
+    if (true) {
+      return;
+    }
+
     Function<String, Drawer> drawerSupplier = s -> Drawer.of(
         Drawer.clip(
             BoundingBox.build(0d, 0d, 1d, 0.5d),
@@ -379,7 +412,9 @@ public class Starter {
         ),
         Drawer.clip(
             BoundingBox.build(0d, 0.5d, 1d, 1d),
-            new StackedScopedReadingsDrawer(SubtreeDrawer.Extractor.matches(StackedScopedReadings.class, null, null), 10d)
+            Drawer.of(
+                Drawer.clear()
+            )
         )
     );
     GridOnlineViewer.run(
@@ -387,6 +422,7 @@ public class Starter {
         Grid.create(1, 1, Pair.of("", robot)),
         drawerSupplier
     );
+    /*
     try {
       GridFileWriter.save(
           locomotion,
@@ -399,6 +435,7 @@ public class Starter {
     } catch (IOException e) {
       e.printStackTrace();
     }
+     */
   }
 
 }

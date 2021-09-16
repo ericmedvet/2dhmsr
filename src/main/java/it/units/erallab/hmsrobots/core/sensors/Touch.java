@@ -16,6 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
+import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Domain;
 import org.dyn4j.dynamics.Body;
 
@@ -32,17 +34,33 @@ public class Touch extends AbstractSensor {
 
   @Override
   public double[] sense(double t) {
+    return isTouching(voxel) ? new double[]{1d} : new double[]{0d};
+  }
+
+  public static boolean isTouching(Voxel voxel) {
     for (Body vertexBody : voxel.getVertexBodies()) {
       List<Body> inContactBodies = vertexBody.getInContactBodies(false);
       for (Body inContactBody : inContactBodies) {
         Object userData = inContactBody.getUserData();
         if (userData == null) {
-          return new double[]{1d};
+          return true;
         } else if (userData != vertexBody.getUserData()) {
-          return new double[]{1d};
+          return true;
         }
       }
     }
-    return new double[]{0d};
+    return false;
+  }
+
+  public static boolean isTouchingGround(Voxel voxel) {
+    for (Body vertexBody : voxel.getVertexBodies()) {
+      List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      for (Body inContactBody : inContactBodies) {
+        if (inContactBody.getUserData().equals(Ground.class)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

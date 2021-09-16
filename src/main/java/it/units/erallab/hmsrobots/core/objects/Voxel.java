@@ -24,6 +24,7 @@ import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.geometry.Vector;
+import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
@@ -386,21 +387,27 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
 
   @Override
   public Snapshot getSnapshot() {
-    Snapshot snapshot = new Snapshot(new VoxelPoly(
-        getVertices(),
-        getAreaRatio(),
-        getAreaRatioEnergy()
-    ), getClass());
+    Snapshot snapshot = new Snapshot(getVoxelPoly(), getClass());
     fillSnapshot(snapshot);
     return snapshot;
   }
 
+  public VoxelPoly getVoxelPoly() {
+    return new VoxelPoly(
+        getVertices(),
+        getAngle(),
+        Touch.isTouchingGround(this),
+        getAreaRatio(),
+        getAreaRatioEnergy()
+    );
+  }
+
   protected List<Point2> getVertices() {
     return List.of(
-        Point2.build(getIndexedVertex(0, 3)),
-        Point2.build(getIndexedVertex(1, 2)),
-        Point2.build(getIndexedVertex(2, 1)),
-        Point2.build(getIndexedVertex(3, 0))
+        Point2.of(getIndexedVertex(0, 3)),
+        Point2.of(getIndexedVertex(1, 2)),
+        Point2.of(getIndexedVertex(2, 1)),
+        Point2.of(getIndexedVertex(3, 0))
     );
   }
 
@@ -415,9 +422,9 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     //add joints
     for (DistanceJoint joint : springJoints) {
       snapshot.getChildren().add(new Snapshot(
-          Vector.build(
-              Point2.build(joint.getAnchor1()),
-              Point2.build(joint.getAnchor2())
+          Vector.of(
+              Point2.of(joint.getAnchor1()),
+              Point2.of(joint.getAnchor2())
           ),
           getClass()
       ));
@@ -437,8 +444,8 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       maxY = Math.max(maxY, point.y);
     }
     return BoundingBox.build(
-        Point2.build(minX, minY),
-        Point2.build(maxX, maxY)
+        Point2.of(minX, minY),
+        Point2.of(maxX, maxY)
     );
   }
 
@@ -457,9 +464,9 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     for (int i = 0; i < 4; i++) {
       Vector2 tV = rectangle.getVertices()[i].copy();
       t.transform(tV);
-      vertices[i] = Point2.build(tV);
+      vertices[i] = Point2.of(tV);
     }
-    return Poly.build(vertices);
+    return Poly.of(vertices);
   }
 
   @Override
@@ -502,11 +509,11 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   }
 
   public double getAreaRatio() {
-    Poly poly = Poly.build(
-        Point2.build(getIndexedVertex(0, 3)),
-        Point2.build(getIndexedVertex(1, 2)),
-        Point2.build(getIndexedVertex(2, 1)),
-        Point2.build(getIndexedVertex(3, 0))
+    Poly poly = Poly.of(
+        Point2.of(getIndexedVertex(0, 3)),
+        Point2.of(getIndexedVertex(1, 2)),
+        Point2.of(getIndexedVertex(2, 1)),
+        Point2.of(getIndexedVertex(3, 0))
     );
     return poly.area() / sideLength / sideLength;
   }

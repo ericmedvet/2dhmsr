@@ -29,27 +29,39 @@ import java.util.Map;
  */
 public class VoxelPoly extends Poly {
 
+  private final double angle;
+  private final boolean isTouchingGround;
   private final double areaRatio;
   private final double areaRatioEnergy;
   private final double lastAppliedForce;
   private final double controlEnergy;
   private final Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions;
 
-  public VoxelPoly(List<Point2> vertexes, double areaRatio, double areaRatioEnergy) {
-    this(vertexes, areaRatio, areaRatioEnergy, 0d, 0d);
+  public VoxelPoly(List<Point2> vertexes, double angle, boolean isTouchingGround, double areaRatio, double areaRatioEnergy) {
+    this(vertexes, angle, isTouchingGround, areaRatio, areaRatioEnergy, 0d, 0d);
   }
 
-  public VoxelPoly(List<Point2> vertexes, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy) {
-    this(vertexes, areaRatio, areaRatioEnergy, lastAppliedForce, controlEnergy, Map.of());
+  public VoxelPoly(List<Point2> vertexes, double angle, boolean isTouchingGround, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy) {
+    this(vertexes, angle, isTouchingGround, areaRatio, areaRatioEnergy, lastAppliedForce, controlEnergy, Map.of());
   }
 
-  public VoxelPoly(List<Point2> vertexes, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy, Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions) {
+  public VoxelPoly(List<Point2> vertexes, double angle, boolean isTouchingGround, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy, Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions) {
     super(vertexes);
+    this.angle = angle;
+    this.isTouchingGround = isTouchingGround;
     this.areaRatio = areaRatio;
     this.areaRatioEnergy = areaRatioEnergy;
     this.lastAppliedForce = lastAppliedForce;
     this.controlEnergy = controlEnergy;
     this.malfunctions = malfunctions;
+  }
+
+  public double getAngle() {
+    return angle;
+  }
+
+  public boolean isTouchingGround() {
+    return isTouchingGround;
   }
 
   public double getAreaRatio() {

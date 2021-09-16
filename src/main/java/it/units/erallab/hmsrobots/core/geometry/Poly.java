@@ -36,7 +36,7 @@ public class Poly implements Shape {
     this.vertexes = vertexes;
   }
 
-  public static Poly build(Point2... vertexes) {
+  public static Poly of(Point2... vertexes) {
     return new Poly(vertexes);
   }
 

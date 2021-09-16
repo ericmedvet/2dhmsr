@@ -31,11 +31,11 @@ public class Point2 implements Shape {
     this.y = y;
   }
 
-  public static Point2 build(double x, double y) {
+  public static Point2 of(double x, double y) {
     return new Point2(x, y);
   }
 
-  public static Point2 build(Vector2 v) {
+  public static Point2 of(Vector2 v) {
     return new Point2(v.x, v.y);
   }
 
@@ -48,7 +48,7 @@ public class Point2 implements Shape {
       cy = cy + point.y;
       n = n + 1;
     }
-    return Point2.build(cx / n, cy / n);
+    return Point2.of(cx / n, cy / n);
   }
 
   @Override

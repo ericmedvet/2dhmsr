@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (c) "Eric Medvet" 2021.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -15,10 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package it.units.erallab.hmsrobots.tasks.locomotion;
+package it.units.erallab.hmsrobots.behavior;
 
 import java.util.Arrays;
 
+/**
+ * @author "Eric Medvet" on 2021/09/16 for 2dhmsr
+ */
 public class Footprint {
   private final boolean[] mask;
 
@@ -56,3 +59,4 @@ public class Footprint {
     return sb.toString();
   }
 }
+
