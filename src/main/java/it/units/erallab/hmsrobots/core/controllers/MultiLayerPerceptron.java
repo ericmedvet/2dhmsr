@@ -35,7 +35,9 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     RELU(x -> (x < 0) ? 0d : x),
     SIGMOID(x -> 1d / (1d + Math.exp(-x))),
     SIN(Math::sin),
-    TANH(Math::tanh);
+    TANH(Math::tanh),
+    SIGN(x -> { if (x > 0) return 1d; else if (x == 0) return 0d; else return -1d; }),
+    IDENTITY(x -> x);
 
     private final Function<Double, Double> f;
 
