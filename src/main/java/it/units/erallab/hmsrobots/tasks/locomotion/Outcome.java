@@ -76,7 +76,7 @@ public class Outcome {
         .filter(Objects::nonNull)
         .mapToDouble(VoxelPoly::getControlEnergy)
         .sum();
-    double finalEnergy = observations.get(observations.firstKey()).getVoxelPolies().values().stream()
+    double finalEnergy = observations.get(observations.lastKey()).getVoxelPolies().values().stream()
         .filter(Objects::nonNull)
         .mapToDouble(VoxelPoly::getControlEnergy)
         .sum();
@@ -88,7 +88,7 @@ public class Outcome {
         .filter(Objects::nonNull)
         .mapToDouble(VoxelPoly::getAreaRatioEnergy)
         .sum();
-    double finalEnergy = observations.get(observations.firstKey()).getVoxelPolies().values().stream()
+    double finalEnergy = observations.get(observations.lastKey()).getVoxelPolies().values().stream()
         .filter(Objects::nonNull)
         .mapToDouble(VoxelPoly::getAreaRatioEnergy)
         .sum();
