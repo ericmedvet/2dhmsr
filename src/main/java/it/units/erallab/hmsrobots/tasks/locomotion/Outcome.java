@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -30,15 +30,11 @@ public class Outcome {
   public static class Observation {
     private final Grid<VoxelPoly> voxelPolies;
     private final double terrainHeight;
-    private final double controlEnergy;
-    private final double areaRatioEnergy;
     private final double computationTime;
 
-    public Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double controlEnergy, double areaRatioEnergy, double computationTime) {
+    public Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
       this.voxelPolies = voxelPolies;
       this.terrainHeight = terrainHeight;
-      this.controlEnergy = controlEnergy;
-      this.areaRatioEnergy = areaRatioEnergy;
       this.computationTime = computationTime;
     }
 
@@ -48,14 +44,6 @@ public class Outcome {
 
     public double getTerrainHeight() {
       return terrainHeight;
-    }
-
-    public double getControlEnergy() {
-      return controlEnergy;
-    }
-
-    public double getAreaRatioEnergy() {
-      return areaRatioEnergy;
     }
 
     public double getComputationTime() {
@@ -75,7 +63,6 @@ public class Outcome {
 
   public double getDistance() {
     Point2 initialCenter = BehaviorUtils.center(observations.get(observations.firstKey()).getVoxelPolies().values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
-    ;
     Point2 finalCenter = BehaviorUtils.center(observations.get(observations.lastKey()).getVoxelPolies().values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
     return finalCenter.x - initialCenter.x;
   }
@@ -84,12 +71,36 @@ public class Outcome {
     return observations.lastKey() - observations.firstKey();
   }
 
+  public double getControlEnergy() {
+    double initialEnergy = observations.get(observations.firstKey()).getVoxelPolies().values().stream()
+        .filter(Objects::nonNull)
+        .mapToDouble(VoxelPoly::getControlEnergy)
+        .sum();
+    double finalEnergy = observations.get(observations.firstKey()).getVoxelPolies().values().stream()
+        .filter(Objects::nonNull)
+        .mapToDouble(VoxelPoly::getControlEnergy)
+        .sum();
+    return finalEnergy - initialEnergy;
+  }
+
+  public double getAreaRatioEnergy() {
+    double initialEnergy = observations.get(observations.firstKey()).getVoxelPolies().values().stream()
+        .filter(Objects::nonNull)
+        .mapToDouble(VoxelPoly::getAreaRatioEnergy)
+        .sum();
+    double finalEnergy = observations.get(observations.firstKey()).getVoxelPolies().values().stream()
+        .filter(Objects::nonNull)
+        .mapToDouble(VoxelPoly::getAreaRatioEnergy)
+        .sum();
+    return finalEnergy - initialEnergy;
+  }
+
   public double getControlPower() {
-    return (observations.get(observations.lastKey()).getControlEnergy() - observations.get(observations.firstKey()).getControlEnergy()) / getTime();
+    return getControlEnergy() / getTime();
   }
 
   public double getAreaRatioPower() {
-    return (observations.get(observations.lastKey()).getAreaRatioEnergy() - observations.get(observations.firstKey()).getAreaRatioEnergy()) / getTime();
+    return getAreaRatioEnergy() / getTime();
   }
 
   public SortedMap<Double, Observation> getObservations() {

@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.tasks.locomotion;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
@@ -92,14 +91,6 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       observations.put(t, new Outcome.Observation(
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
           ground.yAt(robot.getCenter().x),
-          robot.getVoxels().values().stream()
-              .filter(Objects::nonNull)
-              .mapToDouble(ControllableVoxel::getControlEnergy)
-              .sum(),
-          robot.getVoxels().values().stream()
-              .filter(Objects::nonNull)
-              .mapToDouble(ControllableVoxel::getAreaRatioEnergy)
-              .sum(),
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
     }
