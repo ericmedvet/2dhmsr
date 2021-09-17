@@ -21,7 +21,7 @@ import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Shape;
-import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Domain;
@@ -299,15 +299,28 @@ public class BehaviorUtils {
         .getKey();
   }
 
-  public static Function<Snapshot, Collection<? extends VoxelPoly>> voxelPolies() {
+  public static Function<Snapshot, Grid<? extends VoxelPoly>> voxelPolies() {
     return s -> {
-      if (!Robot.class.isAssignableFrom(s.getSnapshottableClass())) {
+      if (!RobotShape.class.isAssignableFrom(s.getContent().getClass())) {
         throw new IllegalArgumentException("Cannot extract voxel polies from a snapshots of a non robot");
       }
-      return s.getChildren().stream()
-          .filter(c -> VoxelPoly.class.isAssignableFrom(c.getContent().getClass()))
-          .map(c -> (VoxelPoly) c.getContent())
-          .collect(Collectors.toList());
+      return ((RobotShape) s.getContent()).getPolies();
+    };
+  }
+
+  public static Function<Double, Double> firstDifference() {
+    return new Function<>() {
+      double last = Double.NaN;
+
+      @Override
+      public Double apply(Double current) {
+        double d = 0d;
+        if (!Double.isNaN(last)) {
+          d = current - last;
+        }
+        last = current;
+        return d;
+      }
     };
   }
 

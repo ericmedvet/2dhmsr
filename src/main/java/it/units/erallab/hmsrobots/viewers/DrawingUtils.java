@@ -28,6 +28,14 @@ import java.awt.geom.Path2D;
  */
 public class DrawingUtils {
 
+  public static class Colors {
+    public final static Color text = Color.BLUE;
+    public final static Color axes = Color.BLACK;
+    public final static Color data = Color.RED;
+  }
+
+  public enum Alignment {LEFT, CENTER, RIGHT}
+
   private DrawingUtils() {
   }
 

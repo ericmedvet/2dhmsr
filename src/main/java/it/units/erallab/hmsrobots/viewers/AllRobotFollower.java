@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
@@ -43,8 +44,8 @@ public class AllRobotFollower implements Framer {
   @Override
   public BoundingBox getFrame(double t, Snapshot snapshot, double ratio) {
     //get current bounding box
-    SubtreeDrawer.Extractor.matches(BoundingBox.class, Robot.class, null).extract(snapshot).stream()
-        .map(s -> (BoundingBox) s.getContent())
+    SubtreeDrawer.Extractor.matches(Shape.class, Robot.class, null).extract(snapshot).stream()
+        .map(s -> ((Shape) s.getContent()).boundingBox())
         .reduce(BoundingBox::largest)
         .ifPresent(boundingBox -> boundingBoxes.put(t, boundingBox));
     //clean

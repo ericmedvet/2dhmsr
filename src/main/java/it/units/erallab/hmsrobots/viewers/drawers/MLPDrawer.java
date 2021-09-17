@@ -41,7 +41,6 @@ public class MLPDrawer extends SubtreeDrawer {
   private final static Color MIN_COLOR = Color.RED;
   private final static Color ZERO_COLOR = Color.BLACK;
   private final static Color MAX_COLOR = Color.GREEN;
-  private final static Color LINE_COLOR = Color.BLUE;
 
   private final static double LEGEND_COLORS = 15;
 
@@ -50,23 +49,25 @@ public class MLPDrawer extends SubtreeDrawer {
   private final Color minColor;
   private final Color zeroColor;
   private final Color maxColor;
-  private final Color lineColor;
+  private final Color axesColor;
+  private final Color textColor;
 
   private final SortedMap<Double, MLPState> states;
 
-  public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts, Color minColor, Color zeroColor, Color maxColor, Color lineColor) {
+  public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts, Color minColor, Color zeroColor, Color maxColor, Color axesColor, Color textColor) {
     super(extractor);
     this.windowT = windowT;
     this.parts = parts;
     this.minColor = minColor;
     this.zeroColor = zeroColor;
     this.maxColor = maxColor;
-    this.lineColor = lineColor;
+    this.axesColor = axesColor;
+    this.textColor = textColor;
     states = new TreeMap<>();
   }
 
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts) {
-    this(extractor, windowT, parts, MIN_COLOR, ZERO_COLOR, MAX_COLOR, LINE_COLOR);
+    this(extractor, windowT, parts, MIN_COLOR, ZERO_COLOR, MAX_COLOR, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
   }
 
   public MLPDrawer(Extractor extractor, double windowT) {
@@ -112,12 +113,14 @@ public class MLPDrawer extends SubtreeDrawer {
         pBB.max.y
     ) : pBB;
     if (parts.contains(Part.T_AXIS)) {
-      g.setColor(lineColor);
+      g.setColor(axesColor);
       g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
       double maxT = states.lastKey();
       for (double tickT = Math.ceil(maxT - windowT); tickT < maxT; tickT++) {
+        g.setColor(axesColor);
         double x = (tickT - maxT + windowT) / windowT * (pBB.max.x - pBB.min.x) + pBB.min.x;
         g.draw(new Line2D.Double(x, pBB.max.y, x, pBB.max.y + textH));
+        g.setColor(textColor);
         String s = String.format("%.0f", tickT);
         g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max.y + 2 * textH));
       }
@@ -193,19 +196,19 @@ public class MLPDrawer extends SubtreeDrawer {
       g.setColor(DrawingUtils.linear(minColor, zeroColor, maxColor, (float) min, 0f, (float) max, (float) vMin));
       g.fill(new Rectangle2D.Double(colorX, yMin, textW, deltaY));
       if (i == 0) {
-        g.setColor(lineColor);
+        g.setColor(textColor);
         String s = String.format("%.1f", vMin);
         g.drawString(s,
             (float) (colorX - textW - g.getFontMetrics().stringWidth(s)),
             (float) (yMin + g.getFontMetrics().getHeight()));
       } else if (vMin <= 0 && vMax >= 0) {
-        g.setColor(lineColor);
+        g.setColor(textColor);
         String s = "0";
         g.drawString(s,
             (float) (colorX - textW - g.getFontMetrics().stringWidth(s)),
             (float) (yMin + deltaY / 2d + g.getFontMetrics().getHeight() / 2d));
       } else if (i >= LEGEND_COLORS - 1) {
-        g.setColor(lineColor);
+        g.setColor(textColor);
         String s = String.format("%.1f", vMax);
         g.drawString(s,
             (float) (colorX - textW - g.getFontMetrics().stringWidth(s)),
@@ -217,15 +220,17 @@ public class MLPDrawer extends SubtreeDrawer {
   private void drawStructure(int[] sizes, IntFunction<String> namer, BoundingBox bb, double textW, Graphics2D g) {
     double n = Arrays.stream(sizes).sum();
     double bbH = bb.max.y - bb.min.y;
-    g.setColor(lineColor);
+    g.setColor(axesColor);
     double c = 0;
     for (int i = 0; i < sizes.length; i++) {
       double minY = bb.min.y + c / n * bbH;
       c = c + sizes[i];
       double maxY = bb.min.y + c / n * bbH;
+      g.setColor(axesColor);
       g.draw(new Line2D.Double(bb.min.x, minY, bb.min.x + textW, minY));
       g.draw(new Line2D.Double(bb.min.x, maxY, bb.min.x + textW, maxY));
       g.draw(new Line2D.Double(bb.min.x + textW, minY, bb.min.x + textW, maxY));
+      g.setColor(textColor);
       String s = namer.apply(i);
       g.drawString(s, (float) (bb.min.x + 2 * textW), (float) ((minY + maxY) / 2d + g.getFontMetrics().getHeight() / 2));
     }

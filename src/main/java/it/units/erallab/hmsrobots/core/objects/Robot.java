@@ -21,8 +21,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -37,6 +39,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -103,15 +106,18 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
 
   @Override
   public Snapshot getSnapshot() {
-    Snapshot snapshot = new Snapshot(boundingBox(), getClass());
+    Grid<Snapshot> voxelSnapshots = Grid.create(voxels, v -> v == null ? null : v.getSnapshot());
+    Snapshot snapshot = new Snapshot(
+        new RobotShape(
+            Grid.create(voxelSnapshots, s -> s == null ? null : ((VoxelPoly) s.getContent())),
+            boundingBox()
+        ),
+        getClass()
+    );
     if (controller instanceof Snapshottable) {
       snapshot.getChildren().add(((Snapshottable) controller).getSnapshot());
     }
-    for (Voxel voxel : voxels.values()) {
-      if (voxel!=null) {
-        snapshot.getChildren().add(voxel.getSnapshot());
-      }
-    }
+    snapshot.getChildren().addAll(voxelSnapshots.values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
     return snapshot;
   }
 

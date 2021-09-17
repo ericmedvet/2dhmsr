@@ -17,15 +17,12 @@
 
 package it.units.erallab.hmsrobots.viewers.drawers;
 
-import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.awt.geom.Rectangle2D;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -33,38 +30,29 @@ import java.util.function.Function;
 /**
  * @author "Eric Medvet" on 2021/09/17 for 2dhmsr
  */
-public class SpectrumDrawer extends SubtreeDrawer {
-
+public class SignalDrawer extends SubtreeDrawer {
 
   private final Function<Snapshot, Double> function;
   private final double windowT;
-  private final double minF;
-  private final double maxF;
-  private final int nBins;
 
-  private final Color barFillColor;
-  private final Color barLineColor;
+  private final Color signalColor;
   private final Color axesColor;
   private final Color textColor;
 
   private final SortedMap<Double, Double> signal;
 
-  public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins, Color barFillColor, Color barLineColor, Color axesColor, Color textColor) {
+  public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, Color signalColor, Color axesColor, Color textColor) {
     super(extractor);
     this.function = function;
     this.windowT = windowT;
-    this.minF = minF;
-    this.maxF = maxF;
-    this.nBins = nBins;
-    this.barFillColor = barFillColor;
-    this.barLineColor = barLineColor;
+    this.signalColor = signalColor;
     this.axesColor = axesColor;
     this.textColor = textColor;
     signal = new TreeMap<>();
   }
 
-  public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins) {
-    this(extractor, function, windowT, minF, maxF, nBins, DrawingUtils.alphaed(DrawingUtils.Colors.data, .5f), DrawingUtils.Colors.data, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
+  public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT) {
+    this(extractor, function, windowT, DrawingUtils.Colors.data, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
   }
 
   @Override
@@ -75,11 +63,6 @@ public class SpectrumDrawer extends SubtreeDrawer {
     while (signal.firstKey() < (t - windowT)) {
       signal.remove(signal.firstKey());
     }
-    //compute spectrum
-    SortedMap<Domain, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
-    double maxValue = spectrum.values().stream().mapToDouble(d -> d).max().orElse(0d);
-    Domain[] domains = spectrum.keySet().toArray(Domain[]::new);
-    double[] values = spectrum.values().stream().mapToDouble(d -> d).toArray();
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     double textW = g.getFontMetrics().charWidth('m');
@@ -95,27 +78,37 @@ public class SpectrumDrawer extends SubtreeDrawer {
         oBB.max.x - textW,
         oBB.max.y - 3 * textH
     );
-    double binW = pBB.width() / (double) nBins;
-    //draw bars
-    for (int i = 0; i < nBins; i++) {
-      double minX = pBB.min.x + (double) i * binW;
-      double barH = pBB.height() * values[i] / maxValue;
-      Shape shape = new Rectangle2D.Double(minX, pBB.min.y + pBB.height() - barH, binW, barH);
-      g.setColor(barFillColor);
-      g.fill(shape);
-      g.setColor(barLineColor);
-      g.draw(shape);
+    //draw data
+    double minV = signal.values().stream().mapToDouble(v -> v).min().orElse(0d);
+    double maxV = signal.values().stream().mapToDouble(v -> v).max().orElse(1d);
+    //draw data
+    g.setColor(signalColor);
+    double[] ts = signal.keySet().stream().mapToDouble(v -> v).toArray();
+    double[] vs = signal.values().stream().mapToDouble(v -> v).toArray();
+    for (int i = 1; i < ts.length; i++) {
+      double x1 = pBB.max.x - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
+      double x2 = pBB.max.x - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
+      double y1 = pBB.max.y - (vs[i - 1] - minV) / (maxV - minV) * pBB.height();
+      double y2 = pBB.max.y - (vs[i] - minV) / (maxV - minV) * pBB.height();
+      g.draw(new Line2D.Double(x1, y1, x2, y2));
     }
     //draw x-axis
     g.setColor(axesColor);
     g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
-    for (int i = 0; i <= nBins; i++) {
-      double x = pBB.min.x + (double) i * binW;
+    double maxT = signal.lastKey();
+    for (double tickT = Math.ceil(maxT - windowT); tickT < maxT; tickT++) {
       g.setColor(axesColor);
+      double x = (tickT - maxT + windowT) / windowT * (pBB.max.x - pBB.min.x) + pBB.min.x;
       g.draw(new Line2D.Double(x, pBB.max.y, x, pBB.max.y + textH));
       g.setColor(textColor);
-      String s = String.format("%.1f", (i < nBins) ? domains[i].getMin() : domains[i - 1].getMax());
-      g.drawString(s, (float) x - g.getFontMetrics().stringWidth(s) / 2f, (float) (pBB.max.y + 2 * textH));
+      String s = String.format("%.0f", tickT);
+      g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max.y + 2 * textH));
+    }
+    //draw 0-line
+    if (maxV > 0 && minV < 0) {
+      g.setColor(axesColor);
+      double y = pBB.max.y - (0 - minV) / (maxV - minV) * pBB.height();
+      g.draw(new Line2D.Double(pBB.min.x, y, pBB.max.x, y));
     }
     //draw y-axis
     g.setColor(axesColor);
@@ -123,8 +116,9 @@ public class SpectrumDrawer extends SubtreeDrawer {
     g.draw(new Line2D.Double(pBB.min.x - textW, pBB.max.y, pBB.min.x, pBB.max.y));
     g.draw(new Line2D.Double(pBB.min.x - textW, pBB.min.y, pBB.min.x, pBB.min.y));
     g.setColor(textColor);
-    String s = String.format("%.1f", maxValue);
+    String s = String.format("%.1f", minV);
     g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.min.y + textH / 2d));
-    g.drawString("0", (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth("0")), (float) (pBB.max.y + textH / 2d));
+    s = String.format("%.1f", maxV);
+    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.max.y + textH / 2d));
   }
 }

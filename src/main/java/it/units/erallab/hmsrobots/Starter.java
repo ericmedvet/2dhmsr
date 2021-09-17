@@ -16,9 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.controllers.*;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -36,10 +34,7 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
-import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
-import it.units.erallab.hmsrobots.viewers.drawers.SpectrumDrawer;
-import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -51,7 +46,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /**
@@ -183,64 +177,23 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         30,
-        Locomotion.createTerrain("steppy-3-10-0"),
+        Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(3, 1);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
-    namedSolutionGrid.set(1, 0, Pair.of("centralized", centralized));
-    namedSolutionGrid.set(2, 0, Pair.of("phasesRobot", phasesRobot));
-    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
-    Function<String, Drawer> drawerSupplier = s -> Drawer.of(
-        Drawer.clip(
-            BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld(s)
-        ),
-        Drawer.clip(
-            BoundingBox.of(0d, 0.75d, .33d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(null, Robot.class, null),
-                    BehaviorUtils.voxelPolies().andThen(polies -> polies.iterator().next().getAngle()),
-                    5, 0, 2, 10, false
-                )
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(.33d, 0.75d, .66d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(null, Robot.class, null),
-                    BehaviorUtils.voxelPolies().andThen(polies -> polies.iterator().next().center().x),
-                    5, 0, 2, 10, true
-                )
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(.66d, 0.75d, 1d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(null, Robot.class, null),
-                    BehaviorUtils.voxelPolies().andThen(polies -> polies.iterator().next().center().y),
-                    5, 0, 2, 10, true
-                )
-            )
-        )
-    );
-    GridOnlineViewer.run(locomotion, namedSolutionGrid, drawerSupplier);
-    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
-
+    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
+    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndSpectra);
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
     try {
       GridFileWriter.save(
           locomotion,
-          Grid.create(1, 1, Pair.of("", centralized)),
-          800, 600, 1, 24,
+          Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
+          600, 600, 1, 24,
           VideoUtils.EncoderFacility.FFMPEG_SMALL,
           new File("/home/eric/biped-spectra.mp4"),
-          drawerSupplier
+          Drawers::basicWithMiniWorldAndSpectra
       );
     } catch (IOException e) {
       e.printStackTrace();
@@ -401,49 +354,10 @@ public class Starter {
         new Settings()
     );
 
-    Function<String, Drawer> drawerSupplier = s -> Drawer.of(
-        Drawer.clip(
-            BoundingBox.of(0d, 0d, 1d, 0.75d),
-            Drawers.basicWithMiniWorld(s)
-        ),
-        Drawer.clip(
-            BoundingBox.of(0d, 0.75d, .33d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(null, Robot.class, null),
-                    BehaviorUtils.voxelPolies().andThen(polies -> polies.iterator().next().getAngle()),
-                    5, 0, 4, 10, false
-                )
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(.33d, 0.75d, .66d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(null, Robot.class, null),
-                    BehaviorUtils.voxelPolies().andThen(polies -> polies.iterator().next().center().x),
-                    5, 0, 4, 10, true
-                )
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(.66d, 0.75d, 1d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(null, Robot.class, null),
-                    BehaviorUtils.voxelPolies().andThen(polies -> polies.iterator().next().center().y),
-                    5, 0, 4, 10, true
-                )
-            )
-        )
-    );
     GridOnlineViewer.run(
         locomotion,
         Grid.create(1, 1, Pair.of("", robot)),
-        drawerSupplier
+        s -> Drawers.basicWithMiniWorld(s)
     );
     /*
     try {

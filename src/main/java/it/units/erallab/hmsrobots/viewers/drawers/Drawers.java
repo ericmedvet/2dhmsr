@@ -17,15 +17,21 @@
 
 package it.units.erallab.hmsrobots.viewers.drawers;
 
+import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
+
+import java.util.function.Function;
 
 public class Drawers {
   private Drawers() {
   }
 
-  private static Drawer world() {
+  public static Drawer world() {
     return Drawer.transform(
         new AllRobotFollower(1.5d, 2),
         Drawer.of(
@@ -37,12 +43,104 @@ public class Drawers {
     );
   }
 
-  private static Drawer miniWorld() {
+  public static Drawer miniWorld() {
     return Drawer.transform(
         new AllRobotFollower(5, 4),
         Drawer.of(
             new PolyDrawer(SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
             new VoxelDrawer()
+        )
+    );
+  }
+
+  public static Drawer spectra(int robotIndex, double windowT, double minF, double maxF, int nBins, boolean firstDifference) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, .333d, .5d),
+            Drawer.of(
+                Drawer.clear(),
+                new SignalDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
+                    BehaviorUtils.voxelPolies()
+                        .andThen(BehaviorUtils::getCentralElement)
+                        .andThen(VoxelPoly::getAngle)
+                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
+                    windowT
+                ),
+                Drawer.text("angle" + (firstDifference ? "'" : ""))
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.333d, 0d, .666d, .5d),
+            Drawer.of(
+                Drawer.clear(),
+                new SignalDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
+                    BehaviorUtils.voxelPolies()
+                        .andThen(BehaviorUtils::getCentralElement)
+                        .andThen(p -> p.center().x)
+                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
+                    windowT
+                ),
+                Drawer.text("x" + (firstDifference ? "'" : ""))
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.666d, 0d, 1d, .5d),
+            Drawer.of(
+                Drawer.clear(),
+                new SignalDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
+                    BehaviorUtils.voxelPolies()
+                        .andThen(BehaviorUtils::getCentralElement)
+                        .andThen(p -> p.center().y)
+                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
+                    windowT
+                ),
+                Drawer.text("y" + (firstDifference ? "'" : ""))
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, .333d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new SpectrumDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
+                    BehaviorUtils.voxelPolies()
+                        .andThen(BehaviorUtils::getCentralElement)
+                        .andThen(VoxelPoly::getAngle)
+                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
+                    windowT, minF, maxF, nBins
+                )
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.333d, 0.5d, .666d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new SpectrumDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
+                    BehaviorUtils.voxelPolies()
+                        .andThen(BehaviorUtils::getCentralElement)
+                        .andThen(p -> p.center().x)
+                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
+                    windowT, minF, maxF, nBins
+                )
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.666d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new SpectrumDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
+                    BehaviorUtils.voxelPolies()
+                        .andThen(BehaviorUtils::getCentralElement)
+                        .andThen(p -> p.center().y)
+                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
+                    windowT, minF, maxF, nBins
+                )
+            )
         )
     );
   }
@@ -62,6 +160,27 @@ public class Drawers {
         Drawer.clip(
             BoundingBox.of(0.5d, 0.01d, 0.95d, 0.2d),
             miniWorld()
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer basicWithMiniWorldAndSpectra(String string) {
+    return Drawer.of(
+        Drawer.clear(),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.0d, 1d, 0.5d),
+            Drawer.of(
+                world(),
+                Drawer.clip(
+                    BoundingBox.of(0.5d, 0.01d, 0.95d, 0.2d),
+                    miniWorld()
+                )
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            spectra(0, 5, 0, 2, 8, false)
         ),
         new InfoDrawer(string)
     );
