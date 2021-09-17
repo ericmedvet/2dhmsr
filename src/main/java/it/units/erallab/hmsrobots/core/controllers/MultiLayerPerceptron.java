@@ -39,7 +39,9 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
     SIGMOID(x -> 1d / (1d + Math.exp(-x)), Domain.of(0d, 1d)),
     SIN(Math::sin, Domain.of(-1d, 1d)),
-    TANH(Math::tanh, Domain.of(-1d, 1d));
+    TANH(Math::tanh, Domain.of(-1d, 1d)),
+    SIGN(x -> { if (x > 0) return 1d; else if (x == 0) return 0d; else return -1d; }),
+    IDENTITY(x -> x);
 
     private final Function<Double, Double> f;
     private final Domain domain;
