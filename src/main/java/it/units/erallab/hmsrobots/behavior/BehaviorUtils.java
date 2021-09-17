@@ -21,6 +21,8 @@ import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Shape;
+import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -175,7 +177,8 @@ public class BehaviorUtils {
     return spectrum;
   }
 
-  public static SortedMap<Domain, Double> computeQuantizedSpectrum(SortedMap<Double, Double> spectrum, double minF, double maxF, int nBins) {
+  public static SortedMap<Domain, Double> computeQuantizedSpectrum(SortedMap<Double, Double> signal, double minF, double maxF, int nBins) {
+    SortedMap<Double, Double> spectrum = computeSpectrum(signal);
     SortedMap<Domain, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(Domain::getMin));
     double binSpan = (maxF - minF) / (double) nBins;
     for (int i = 0; i < nBins; i++) {
@@ -294,6 +297,18 @@ public class BehaviorUtils {
         .max(Map.Entry.comparingByValue())
         .orElseThrow()
         .getKey();
+  }
+
+  public static Function<Snapshot, Collection<? extends VoxelPoly>> voxelPolies() {
+    return s -> {
+      if (!Robot.class.isAssignableFrom(s.getSnapshottableClass())) {
+        throw new IllegalArgumentException("Cannot extract voxel polies from a snapshots of a non robot");
+      }
+      return s.getChildren().stream()
+          .filter(c -> VoxelPoly.class.isAssignableFrom(c.getContent().getClass()))
+          .map(c -> (VoxelPoly) c.getContent())
+          .collect(Collectors.toList());
+    };
   }
 
 }

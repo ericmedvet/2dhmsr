@@ -42,7 +42,7 @@ public class Poly implements Shape {
 
   @Override
   public BoundingBox boundingBox() {
-    return BoundingBox.build(vertexes);
+    return BoundingBox.of(vertexes);
   }
 
   public Point2[] getVertexes() {

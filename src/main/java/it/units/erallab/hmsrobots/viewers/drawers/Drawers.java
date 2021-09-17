@@ -60,7 +60,7 @@ public class Drawers {
         Drawer.clear(),
         world(),
         Drawer.clip(
-            BoundingBox.build(0.5d, 0.01d, 0.95d, 0.2d),
+            BoundingBox.of(0.5d, 0.01d, 0.95d, 0.2d),
             miniWorld()
         ),
         new InfoDrawer(string)

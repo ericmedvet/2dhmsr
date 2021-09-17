@@ -86,9 +86,9 @@ public class FramesImageBuilder implements SnapshotListener {
     lastT = t;
     BoundingBox imageFrame;
     if (direction.equals(Direction.HORIZONTAL)) {
-      imageFrame = BoundingBox.build((double) frameCount / (double) nOfFrames, 0, (double) (frameCount + 1) / (double) nOfFrames, 1d);
+      imageFrame = BoundingBox.of((double) frameCount / (double) nOfFrames, 0, (double) (frameCount + 1) / (double) nOfFrames, 1d);
     } else {
-      imageFrame = BoundingBox.build(0, (double) frameCount / (double) nOfFrames, 1, (double) (frameCount + 1) / (double) nOfFrames);
+      imageFrame = BoundingBox.of(0, (double) frameCount / (double) nOfFrames, 1, (double) (frameCount + 1) / (double) nOfFrames);
     }
     L.info(String.format("Rendering frame %d on %s", frameCount, imageFrame));
     frameCount = frameCount + 1;

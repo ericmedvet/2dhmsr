@@ -87,25 +87,25 @@ public class MLPDrawer extends SubtreeDrawer {
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     double textW = g.getFontMetrics().charWidth('m');
-    BoundingBox oBB = BoundingBox.build(
+    BoundingBox oBB = BoundingBox.of(
         g.getClip().getBounds2D().getX(),
         g.getClip().getBounds2D().getY(),
         g.getClip().getBounds2D().getMaxX(),
         g.getClip().getBounds2D().getMaxY()
     );
-    BoundingBox pBB = BoundingBox.build(
+    BoundingBox pBB = BoundingBox.of(
         parts.contains(Part.LEGEND) ? (oBB.min.x + 6 * textW) : oBB.min.x,
         oBB.min.y,
         parts.contains(Part.STRUCTURE_AXIS) ? (oBB.max.x - 5 * textW) : oBB.max.x,
         parts.contains(Part.T_AXIS) ? (oBB.max.y - 3 * textH) : oBB.max.y
     );
-    BoundingBox aBB = parts.contains(Part.WEIGHTS) ? BoundingBox.build(
+    BoundingBox aBB = parts.contains(Part.WEIGHTS) ? BoundingBox.of(
         pBB.min.x,
         pBB.min.y,
         pBB.max.x,
         pBB.min.y + (pBB.max.y - pBB.min.y) / 2d - textH / 2d
     ) : pBB;
-    BoundingBox wBB = parts.contains(Part.ACTIVATION_VALUES) ? BoundingBox.build(
+    BoundingBox wBB = parts.contains(Part.ACTIVATION_VALUES) ? BoundingBox.of(
         pBB.min.x,
         aBB.max.y + textH / 2d,
         pBB.max.x,
@@ -133,7 +133,7 @@ public class MLPDrawer extends SubtreeDrawer {
       if (parts.contains(Part.LEGEND)) {
         drawLegend(
             min, max,
-            BoundingBox.build(
+            BoundingBox.of(
                 oBB.min.x,
                 aBB.min.y + textH,
                 aBB.min.x - textW,
@@ -146,7 +146,7 @@ public class MLPDrawer extends SubtreeDrawer {
         drawStructure(
             Arrays.stream(current.getActivationValues()).mapToInt(v -> v.length).toArray(),
             i -> "l" + i,
-            BoundingBox.build(aBB.max.x, aBB.min.y, oBB.max.x, aBB.max.y),
+            BoundingBox.of(aBB.max.x, aBB.min.y, oBB.max.x, aBB.max.y),
             textW, g
         );
       }
@@ -162,7 +162,7 @@ public class MLPDrawer extends SubtreeDrawer {
       if (parts.contains(Part.LEGEND)) {
         drawLegend(
             min, max,
-            BoundingBox.build(
+            BoundingBox.of(
                 oBB.min.x,
                 wBB.min.y + textH,
                 wBB.min.x - textW,
@@ -175,7 +175,7 @@ public class MLPDrawer extends SubtreeDrawer {
         drawStructure(
             Arrays.stream(flat(current.getWeights())).mapToInt(v -> v.length).toArray(),
             i -> "w" + i + (i + 1),
-            BoundingBox.build(wBB.max.x, wBB.min.y, oBB.max.x, wBB.max.y),
+            BoundingBox.of(wBB.max.x, wBB.min.y, oBB.max.x, wBB.max.y),
             textW, g
         );
       }

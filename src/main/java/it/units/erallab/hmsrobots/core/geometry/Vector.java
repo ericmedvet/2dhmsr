@@ -32,7 +32,7 @@ public class Vector implements Shape {
 
   @Override
   public BoundingBox boundingBox() {
-    return BoundingBox.build(start, end);
+    return BoundingBox.of(start, end);
   }
 
   @Override

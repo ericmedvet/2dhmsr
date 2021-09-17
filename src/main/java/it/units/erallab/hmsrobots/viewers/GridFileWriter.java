@@ -66,7 +66,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
         namesGrid.getW(),
         namesGrid.getH(),
         (x, y) -> Drawer.clip(
-            BoundingBox.build(
+            BoundingBox.of(
                 (double) x / (double) namesGrid.getW(),
                 (double) y / (double) namesGrid.getH(),
                 (double) (x + 1) / (double) namesGrid.getW(),

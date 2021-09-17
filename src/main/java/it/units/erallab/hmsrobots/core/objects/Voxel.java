@@ -443,7 +443,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       minY = Math.min(minY, point.y);
       maxY = Math.max(maxY, point.y);
     }
-    return BoundingBox.build(
+    return BoundingBox.of(
         Point2.of(minX, minY),
         Point2.of(maxX, maxY)
     );

@@ -53,7 +53,7 @@ public class Point2 implements Shape {
 
   @Override
   public BoundingBox boundingBox() {
-    return BoundingBox.build(this);
+    return BoundingBox.of(this);
   }
 
   @Override

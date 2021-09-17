@@ -89,7 +89,7 @@ public interface Drawer {
 
   static Drawer transform(Framer framer, Drawer drawer) {
     return (t, snapshot, g) -> {
-      BoundingBox graphicsFrame = BoundingBox.build(
+      BoundingBox graphicsFrame = BoundingBox.of(
           g.getClip().getBounds2D().getX(),
           g.getClip().getBounds2D().getY(),
           g.getClip().getBounds2D().getMaxX(),

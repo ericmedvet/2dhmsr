@@ -54,13 +54,13 @@ public class AllRobotFollower implements Framer {
     //aggregate
     BoundingBox aggregated = boundingBoxes.values().stream()
         .reduce(BoundingBox::largest)
-        .orElse(BoundingBox.build(0, 0, 1, 1));
+        .orElse(BoundingBox.of(0, 0, 1, 1));
     //enlarge
     double cx = (aggregated.min.x + aggregated.max.x) / 2d;
     double cy = (aggregated.min.y + aggregated.max.y) / 2d;
     double w = aggregated.max.x - aggregated.min.x;
     double h = aggregated.max.y - aggregated.min.y;
-    BoundingBox enlarged = BoundingBox.build(
+    BoundingBox enlarged = BoundingBox.of(
         cx - w / 2d * sizeRelativeMargin,
         cy - h / 2d * sizeRelativeMargin,
         cx + w / 2d * sizeRelativeMargin,
@@ -71,7 +71,7 @@ public class AllRobotFollower implements Framer {
     double fRatio = (enlarged.max.x - enlarged.min.x) / (enlarged.max.y - enlarged.min.y);
     if (fRatio > ratio) {
       //enlarge h
-      adjusted = BoundingBox.build(
+      adjusted = BoundingBox.of(
           enlarged.min.x,
           cy - h / 2d * sizeRelativeMargin * fRatio / ratio,
           enlarged.max.x,
@@ -79,7 +79,7 @@ public class AllRobotFollower implements Framer {
       );
     } else if (fRatio < ratio) {
       //enlarge w
-      adjusted = BoundingBox.build(
+      adjusted = BoundingBox.of(
           cx - w / 2d * sizeRelativeMargin * ratio / fRatio,
           enlarged.min.y,
           cx + w / 2d * sizeRelativeMargin * ratio / fRatio,
