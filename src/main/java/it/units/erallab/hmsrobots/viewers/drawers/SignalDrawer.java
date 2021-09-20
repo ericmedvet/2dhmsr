@@ -116,9 +116,9 @@ public class SignalDrawer extends SubtreeDrawer {
     g.draw(new Line2D.Double(pBB.min.x - textW, pBB.max.y, pBB.min.x, pBB.max.y));
     g.draw(new Line2D.Double(pBB.min.x - textW, pBB.min.y, pBB.min.x, pBB.min.y));
     g.setColor(textColor);
-    String s = String.format("%.1f", minV);
+    String s = String.format("%.1f", maxV);
     g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.min.y + textH / 2d));
-    s = String.format("%.1f", maxV);
+    s = String.format("%.1f", minV);
     g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.max.y + textH / 2d));
   }
 }

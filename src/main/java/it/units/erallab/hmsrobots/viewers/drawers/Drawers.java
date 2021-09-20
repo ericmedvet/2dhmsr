@@ -180,7 +180,7 @@ public class Drawers {
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
-            spectra(0, 5, 0, 2, 8, false)
+            spectra(0, 5, 0, 2, 8, true)
         ),
         new InfoDrawer(string)
     );
