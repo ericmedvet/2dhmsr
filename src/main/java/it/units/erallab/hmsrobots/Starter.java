@@ -176,16 +176,17 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        30,
+        10,
         Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
+
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
     namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
     //GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndSpectra);
-    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
+    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
     try {
       GridFileWriter.save(
           locomotion,

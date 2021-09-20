@@ -23,32 +23,24 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
+import java.util.Arrays;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
  * @author "Eric Medvet" on 2021/09/17 for 2dhmsr
  */
-public class SignalDrawer extends SubtreeDrawer {
-
-  private final Function<Snapshot, Double> function;
-  private final double windowT;
+public class SignalDrawer extends MemoryDrawer<Double> {
 
   private final Color signalColor;
   private final Color axesColor;
   private final Color textColor;
 
-  private final SortedMap<Double, Double> signal;
-
   public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, Color signalColor, Color axesColor, Color textColor) {
-    super(extractor);
-    this.function = function;
-    this.windowT = windowT;
+    super(extractor, function, windowT);
     this.signalColor = signalColor;
     this.axesColor = axesColor;
     this.textColor = textColor;
-    signal = new TreeMap<>();
   }
 
   public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT) {
@@ -56,13 +48,7 @@ public class SignalDrawer extends SubtreeDrawer {
   }
 
   @Override
-  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
-    double current = function.apply(snapshot);
-    //update memory
-    signal.put(t, current);
-    while (signal.firstKey() < (t - windowT)) {
-      signal.remove(signal.firstKey());
-    }
+  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, Double> memory, Graphics2D g) {
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     double textW = g.getFontMetrics().charWidth('m');
@@ -79,12 +65,11 @@ public class SignalDrawer extends SubtreeDrawer {
         oBB.max.y - 3 * textH
     );
     //draw data
-    double minV = signal.values().stream().mapToDouble(v -> v).min().orElse(0d);
-    double maxV = signal.values().stream().mapToDouble(v -> v).max().orElse(1d);
-    //draw data
     g.setColor(signalColor);
-    double[] ts = signal.keySet().stream().mapToDouble(v -> v).toArray();
-    double[] vs = signal.values().stream().mapToDouble(v -> v).toArray();
+    double[] ts = memory.keySet().stream().mapToDouble(v -> v).toArray();
+    double[] vs = memory.values().stream().mapToDouble(v -> v).toArray();
+    double minV = Arrays.stream(vs).min().orElse(0d);
+    double maxV = Arrays.stream(vs).max().orElse(0d);
     for (int i = 1; i < ts.length; i++) {
       double x1 = pBB.max.x - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
       double x2 = pBB.max.x - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
@@ -95,7 +80,7 @@ public class SignalDrawer extends SubtreeDrawer {
     //draw x-axis
     g.setColor(axesColor);
     g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
-    double maxT = signal.lastKey();
+    double maxT = memory.lastKey();
     for (double tickT = Math.ceil(maxT - windowT); tickT < maxT; tickT++) {
       g.setColor(axesColor);
       double x = (tickT - maxT + windowT) / windowT * (pBB.max.x - pBB.min.x) + pBB.min.x;

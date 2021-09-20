@@ -307,21 +307,5 @@ public class BehaviorUtils {
       return ((RobotShape) s.getContent()).getPolies();
     };
   }
-
-  public static Function<Double, Double> firstDifference() {
-    return new Function<>() {
-      double last = Double.NaN;
-
-      @Override
-      public Double apply(Double current) {
-        double d = 0d;
-        if (!Double.isNaN(last)) {
-          d = current - last;
-        }
-        last = current;
-        return d;
-      }
-    };
-  }
-
+  
 }

@@ -550,6 +550,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
 
   @Override
   public void reset() {
+    assemble();
     areaRatioEnergy = 0d;
   }
 

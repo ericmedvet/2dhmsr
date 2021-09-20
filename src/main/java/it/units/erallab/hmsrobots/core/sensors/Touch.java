@@ -56,7 +56,7 @@ public class Touch extends AbstractSensor {
     for (Body vertexBody : voxel.getVertexBodies()) {
       List<Body> inContactBodies = vertexBody.getInContactBodies(false);
       for (Body inContactBody : inContactBodies) {
-        if (inContactBody.getUserData().equals(Ground.class)) {
+        if ((inContactBody.getUserData() != null) && (inContactBody.getUserData().equals(Ground.class))) {
           return true;
         }
       }

@@ -26,7 +26,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.stream.DoubleStream;
@@ -34,7 +37,7 @@ import java.util.stream.DoubleStream;
 /**
  * @author "Eric Medvet" on 2021/09/10 for 2dhmsr
  */
-public class MLPDrawer extends SubtreeDrawer {
+public class MLPDrawer extends MemoryDrawer<MLPState> {
 
   public enum Part {ACTIVATION_VALUES, WEIGHTS, LEGEND, T_AXIS, STRUCTURE_AXIS}
 
@@ -44,7 +47,6 @@ public class MLPDrawer extends SubtreeDrawer {
 
   private final static double LEGEND_COLORS = 15;
 
-  private final double windowT;
   private final Set<Part> parts;
   private final Color minColor;
   private final Color zeroColor;
@@ -52,18 +54,15 @@ public class MLPDrawer extends SubtreeDrawer {
   private final Color axesColor;
   private final Color textColor;
 
-  private final SortedMap<Double, MLPState> states;
 
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts, Color minColor, Color zeroColor, Color maxColor, Color axesColor, Color textColor) {
-    super(extractor);
-    this.windowT = windowT;
+    super(extractor, s -> (MLPState) s.getContent(), windowT);
     this.parts = parts;
     this.minColor = minColor;
     this.zeroColor = zeroColor;
     this.maxColor = maxColor;
     this.axesColor = axesColor;
     this.textColor = textColor;
-    states = new TreeMap<>();
   }
 
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts) {
@@ -75,16 +74,8 @@ public class MLPDrawer extends SubtreeDrawer {
   }
 
   @Override
-  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
-    if (!(snapshot.getContent() instanceof MLPState)) {
-      return;
-    }
-    MLPState current = (MLPState) snapshot.getContent();
-    //update memory
-    states.put(t, current);
-    while (states.firstKey() < (t - windowT)) {
-      states.remove(states.firstKey());
-    }
+  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, MLPState> memory, Graphics2D g) {
+    MLPState current = memory.get(memory.lastKey());
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     double textW = g.getFontMetrics().charWidth('m');
@@ -115,7 +106,7 @@ public class MLPDrawer extends SubtreeDrawer {
     if (parts.contains(Part.T_AXIS)) {
       g.setColor(axesColor);
       g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
-      double maxT = states.lastKey();
+      double maxT = memory.lastKey();
       for (double tickT = Math.ceil(maxT - windowT); tickT < maxT; tickT++) {
         g.setColor(axesColor);
         double x = (tickT - maxT + windowT) / windowT * (pBB.max.x - pBB.min.x) + pBB.min.x;
@@ -126,13 +117,13 @@ public class MLPDrawer extends SubtreeDrawer {
       }
     }
     if (parts.contains(Part.ACTIVATION_VALUES)) {
-      double min = current.getActivationDomain().getMin() > Double.NEGATIVE_INFINITY ? current.getActivationDomain().getMin() : states.values().stream()
+      double min = current.getActivationDomain().getMin() > Double.NEGATIVE_INFINITY ? current.getActivationDomain().getMin() : memory.values().stream()
           .mapToDouble(s -> min(s.getActivationValues()))
           .min().orElse(0d);
-      double max = current.getActivationDomain().getMax() < Double.POSITIVE_INFINITY ? current.getActivationDomain().getMax() : states.values().stream()
+      double max = current.getActivationDomain().getMax() < Double.POSITIVE_INFINITY ? current.getActivationDomain().getMax() : memory.values().stream()
           .mapToDouble(s -> max(s.getActivationValues()))
           .max().orElse(0d);
-      draw(t, states, MLPState::getActivationValues, min, max, aBB, g);
+      draw(t, memory, MLPState::getActivationValues, min, max, aBB, g);
       if (parts.contains(Part.LEGEND)) {
         drawLegend(
             min, max,
@@ -155,13 +146,13 @@ public class MLPDrawer extends SubtreeDrawer {
       }
     }
     if (parts.contains(Part.WEIGHTS)) {
-      double min = states.values().stream()
+      double min = memory.values().stream()
           .mapToDouble(s -> min(s.getWeights()))
           .min().orElse(0d);
-      double max = states.values().stream()
+      double max = memory.values().stream()
           .mapToDouble(s -> max(s.getWeights()))
           .max().orElse(0d);
-      draw(t, states, s -> flat(s.getWeights()), min, max, wBB, g);
+      draw(t, memory, s -> flat(s.getWeights()), min, max, wBB, g);
       if (parts.contains(Part.LEGEND)) {
         drawLegend(
             min, max,

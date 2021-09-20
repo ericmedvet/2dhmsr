@@ -60,13 +60,13 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
   ) {
     this.controller = controller;
     this.voxels = voxels;
-    assemble();
+    reset();
   }
 
   @Serial
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
-    assemble();
+    reset();
   }
 
   private void assemble() {
@@ -142,6 +142,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
   @Override
   public void reset() {
     voxels.values().stream().filter(Objects::nonNull).forEach(ControllableVoxel::reset);
+    assemble();
     controller.reset();
   }
 

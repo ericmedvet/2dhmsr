@@ -22,10 +22,12 @@ import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Drawers {
   private Drawers() {
@@ -53,93 +55,61 @@ public class Drawers {
     );
   }
 
+  public static Drawer signalAndSpectrum(int robotIndex, double windowT, double minF, double maxF, int nBins, String title, Supplier<Function<Snapshot, Double>> functionSupplier) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, .5d),
+            Drawer.of(
+                Drawer.clear(),
+                new SignalDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                    functionSupplier.get(),
+                    windowT
+                ),
+                Drawer.text(title)
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new SpectrumDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                    functionSupplier.get(),
+                    windowT, minF, maxF, nBins
+                )
+            )
+        )
+    );
+  }
+
   public static Drawer spectra(int robotIndex, double windowT, double minF, double maxF, int nBins, boolean firstDifference) {
     return Drawer.of(
         Drawer.clip(
-            BoundingBox.of(0d, 0d, .333d, .5d),
-            Drawer.of(
-                Drawer.clear(),
-                new SignalDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
-                    BehaviorUtils.voxelPolies()
-                        .andThen(BehaviorUtils::getCentralElement)
-                        .andThen(VoxelPoly::getAngle)
-                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
-                    windowT
-                ),
-                Drawer.text("angle" + (firstDifference ? "'" : ""))
+            BoundingBox.of(0d, 0d, .333d, 1d),
+            signalAndSpectrum(
+                robotIndex, windowT, minF, maxF, nBins, "x" + (firstDifference ? "'" : ""),
+                () -> BehaviorUtils.voxelPolies()
+                    .andThen(BehaviorUtils::getCentralElement)
+                    .andThen(p -> p.center().x)
             )
         ),
         Drawer.clip(
-            BoundingBox.of(0.333d, 0d, .666d, .5d),
-            Drawer.of(
-                Drawer.clear(),
-                new SignalDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
-                    BehaviorUtils.voxelPolies()
-                        .andThen(BehaviorUtils::getCentralElement)
-                        .andThen(p -> p.center().x)
-                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
-                    windowT
-                ),
-                Drawer.text("x" + (firstDifference ? "'" : ""))
+            BoundingBox.of(0.333d, 0d, .666d, 1d),
+            signalAndSpectrum(
+                robotIndex, windowT, minF, maxF, nBins, "y" + (firstDifference ? "'" : ""),
+                () -> BehaviorUtils.voxelPolies()
+                    .andThen(BehaviorUtils::getCentralElement)
+                    .andThen(p -> p.center().y)
             )
         ),
         Drawer.clip(
-            BoundingBox.of(0.666d, 0d, 1d, .5d),
-            Drawer.of(
-                Drawer.clear(),
-                new SignalDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
-                    BehaviorUtils.voxelPolies()
-                        .andThen(BehaviorUtils::getCentralElement)
-                        .andThen(p -> p.center().y)
-                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
-                    windowT
-                ),
-                Drawer.text("y" + (firstDifference ? "'" : ""))
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(0d, 0.5d, .333d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
-                    BehaviorUtils.voxelPolies()
-                        .andThen(BehaviorUtils::getCentralElement)
-                        .andThen(VoxelPoly::getAngle)
-                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
-                    windowT, minF, maxF, nBins
-                )
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(0.333d, 0.5d, .666d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
-                    BehaviorUtils.voxelPolies()
-                        .andThen(BehaviorUtils::getCentralElement)
-                        .andThen(p -> p.center().x)
-                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
-                    windowT, minF, maxF, nBins
-                )
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(0.666d, 0.5d, 1d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null),
-                    BehaviorUtils.voxelPolies()
-                        .andThen(BehaviorUtils::getCentralElement)
-                        .andThen(p -> p.center().y)
-                        .andThen(firstDifference ? BehaviorUtils.firstDifference() : Function.identity()),
-                    windowT, minF, maxF, nBins
-                )
+            BoundingBox.of(0.666d, 0d, 1d, 1d),
+            signalAndSpectrum(
+                robotIndex, windowT, minF, maxF, nBins, "angle" + (firstDifference ? "'" : ""),
+                () -> BehaviorUtils.voxelPolies()
+                    .andThen(BehaviorUtils::getCentralElement)
+                    .andThen(VoxelPoly::getAngle)
             )
         )
     );

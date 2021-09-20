@@ -27,17 +27,13 @@ import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
  * @author "Eric Medvet" on 2021/09/17 for 2dhmsr
  */
-public class SpectrumDrawer extends SubtreeDrawer {
+public class SpectrumDrawer extends MemoryDrawer<Double> {
 
-
-  private final Function<Snapshot, Double> function;
-  private final double windowT;
   private final double minF;
   private final double maxF;
   private final int nBins;
@@ -47,12 +43,8 @@ public class SpectrumDrawer extends SubtreeDrawer {
   private final Color axesColor;
   private final Color textColor;
 
-  private final SortedMap<Double, Double> signal;
-
   public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins, Color barFillColor, Color barLineColor, Color axesColor, Color textColor) {
-    super(extractor);
-    this.function = function;
-    this.windowT = windowT;
+    super(extractor, function, windowT);
     this.minF = minF;
     this.maxF = maxF;
     this.nBins = nBins;
@@ -60,7 +52,6 @@ public class SpectrumDrawer extends SubtreeDrawer {
     this.barLineColor = barLineColor;
     this.axesColor = axesColor;
     this.textColor = textColor;
-    signal = new TreeMap<>();
   }
 
   public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins) {
@@ -68,15 +59,9 @@ public class SpectrumDrawer extends SubtreeDrawer {
   }
 
   @Override
-  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
-    double current = function.apply(snapshot);
-    //update memory
-    signal.put(t, current);
-    while (signal.firstKey() < (t - windowT)) {
-      signal.remove(signal.firstKey());
-    }
+  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, Double> memory, Graphics2D g) {
     //compute spectrum
-    SortedMap<Domain, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
+    SortedMap<Domain, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(memory, minF, maxF, nBins);
     double maxValue = spectrum.values().stream().mapToDouble(d -> d).max().orElse(0d);
     Domain[] domains = spectrum.keySet().toArray(Domain[]::new);
     double[] values = spectrum.values().stream().mapToDouble(d -> d).toArray();
