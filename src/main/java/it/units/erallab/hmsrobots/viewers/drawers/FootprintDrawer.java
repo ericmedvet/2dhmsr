@@ -77,15 +77,15 @@ public class FootprintDrawer extends MemoryDrawer<Footprint> {
     g.setColor(touchColor);
     double[] ts = memory.keySet().stream().mapToDouble(v -> v).toArray();
     Footprint[] footprints = memory.values().toArray(Footprint[]::new);
+    double h = pBB.height() / (double) n;
     for (int i = 1; i < ts.length; i++) {
       double x1 = pBB.max.x - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
       double x2 = pBB.max.x - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
       boolean[] mask = footprints[i].getMask();
       for (int j = 0; j < n; j++) {
         if (mask[j]) {
-          double y1 = pBB.max.y - (double) (j + 1) / (double) n * pBB.height();
-          double y2 = pBB.max.y - (double) j / (double) n * pBB.height();
-          g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
+          double y1 = pBB.min.y + (double) j / (double) n * pBB.height();
+          g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, h));
         }
       }
     }

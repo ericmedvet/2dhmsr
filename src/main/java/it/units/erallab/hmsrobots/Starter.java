@@ -235,7 +235,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         30,
-        Locomotion.createTerrain("downhill-30"),
+        Locomotion.createTerrain("downhill-20"),
         new Settings()
     );
 
@@ -243,7 +243,7 @@ public class Starter {
     namedSolutionGrid.set(0, 0, Pair.of("biped", bipedRobot));
     namedSolutionGrid.set(1, 0, Pair.of("ball", ballRobot));
     GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndFootprintsAndPosture);
-    if (true) {
+    if (false) {
       try {
         GridFileWriter.save(
             locomotion,
