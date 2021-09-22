@@ -118,6 +118,7 @@ public class ControllableVoxel extends Voxel {
     return new VoxelPoly(
         getVertices(),
         getAngle(),
+        getLinearVelocity(),
         Touch.isTouchingGround(this),
         getAreaRatio(),
         getAreaRatioEnergy(),

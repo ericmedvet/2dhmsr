@@ -50,7 +50,7 @@ public class StackedScopedReadingsDrawer extends MemoryDrawer<StackedScopedReadi
   }
 
   @Override
-  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, StackedScopedReadings> memory, Graphics2D g) {
+  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, StackedScopedReadings> memory, Graphics2D g) { //TODO rewrite like MLPState
     StackedScopedReadings currentReading = memory.get(memory.lastKey());
     //plot
     double clipX = g.getClip().getBounds2D().getX();

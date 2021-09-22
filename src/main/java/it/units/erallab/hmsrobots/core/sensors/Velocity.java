@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.util.Domain;
 import org.dyn4j.geometry.Vector2;
 
@@ -57,7 +58,8 @@ public class Velocity extends AbstractSensor {
   public double[] sense(double t) {
     double[] values = new double[domains.length];
     int c = 0;
-    Vector2 velocity = voxel.getLinearVelocity();
+    Point2 linearVelocity = voxel.getLinearVelocity();
+    Vector2 velocity = new Vector2(linearVelocity.x, linearVelocity.y);
     double angle = voxel.getAngle();
     if (axes.contains(Axis.X)) {
       if (!rotated) {

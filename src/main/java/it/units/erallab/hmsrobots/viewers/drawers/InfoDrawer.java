@@ -22,6 +22,7 @@ import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.util.List;
@@ -34,8 +35,6 @@ import java.util.stream.Collectors;
 public class InfoDrawer implements Drawer {
 
   public enum RobotInfo {CENTER_POSITION, CENTER_VELOCITY}
-
-  private final static Color INFO_COLOR = Color.BLUE;
 
   private final String string;
   private final Set<RobotInfo> robotInfos;
@@ -115,7 +114,7 @@ public class InfoDrawer implements Drawer {
       }
     }
     //write
-    g.setColor(INFO_COLOR);
+    g.setColor(DrawingUtils.Colors.text);
     int relY = g.getClipBounds().y + 1;
     for (String line : sb.toString().split(String.format("%n"))) {
       g.drawString(line, g.getClipBounds().x + 1, relY + g.getFontMetrics().getMaxAscent());

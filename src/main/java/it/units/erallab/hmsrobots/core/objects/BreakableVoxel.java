@@ -163,6 +163,7 @@ public class BreakableVoxel extends SensingVoxel {
     return new VoxelPoly(
         getVertices(),
         getAngle(),
+        getLinearVelocity(),
         Touch.isTouchingGround(this),
         getAreaRatio(),
         getAreaRatioEnergy(),

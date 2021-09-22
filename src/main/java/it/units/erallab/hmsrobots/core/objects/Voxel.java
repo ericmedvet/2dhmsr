@@ -396,6 +396,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     return new VoxelPoly(
         getVertices(),
         getAngle(),
+        getLinearVelocity(),
         Touch.isTouchingGround(this),
         getAreaRatio(),
         getAreaRatioEnergy()
@@ -498,14 +499,14 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     return vertexBodies;
   }
 
-  public Vector2 getLinearVelocity() {
+  public Point2 getLinearVelocity() {
     double x = 0d;
     double y = 0d;
     for (Body vertex : vertexBodies) {
       x = x + vertex.getLinearVelocity().x;
       y = y + vertex.getLinearVelocity().y;
     }
-    return new Vector2(x / (double) vertexBodies.length, y / (double) vertexBodies.length);
+    return Point2.of(x / (double) vertexBodies.length, y / (double) vertexBodies.length);
   }
 
   public double getAreaRatio() {

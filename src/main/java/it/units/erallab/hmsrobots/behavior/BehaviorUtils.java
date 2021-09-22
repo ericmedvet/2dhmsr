@@ -299,7 +299,7 @@ public class BehaviorUtils {
         .getKey();
   }
 
-  public static Function<Snapshot, Grid<? extends VoxelPoly>> voxelPolies() {
+  public static Function<Snapshot, Grid<? extends VoxelPoly>> voxelPolyGrid() {
     return s -> {
       if (!RobotShape.class.isAssignableFrom(s.getContent().getClass())) {
         throw new IllegalArgumentException("Cannot extract voxel polies from a snapshots of a non robot");
@@ -307,5 +307,5 @@ public class BehaviorUtils {
       return ((RobotShape) s.getContent()).getPolies();
     };
   }
-  
+
 }

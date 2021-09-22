@@ -83,31 +83,31 @@ public class Drawers {
     );
   }
 
-  public static Drawer spectra(int robotIndex, double windowT, double minF, double maxF, int nBins, boolean firstDifference) {
+  public static Drawer spectra(int robotIndex, double windowT, double minF, double maxF, int nBins) {
     return Drawer.of(
         Drawer.clip(
             BoundingBox.of(0d, 0d, .333d, 1d),
             signalAndSpectrum(
-                robotIndex, windowT, minF, maxF, nBins, "x" + (firstDifference ? "'" : ""),
-                () -> BehaviorUtils.voxelPolies()
+                robotIndex, windowT, minF, maxF, nBins, "vx",
+                () -> BehaviorUtils.voxelPolyGrid()
                     .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(p -> p.center().x)
+                    .andThen(p -> p.getLinearVelocity().x)
             )
         ),
         Drawer.clip(
             BoundingBox.of(0.333d, 0d, .666d, 1d),
             signalAndSpectrum(
-                robotIndex, windowT, minF, maxF, nBins, "y" + (firstDifference ? "'" : ""),
-                () -> BehaviorUtils.voxelPolies()
+                robotIndex, windowT, minF, maxF, nBins, "vy",
+                () -> BehaviorUtils.voxelPolyGrid()
                     .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(p -> p.center().y)
+                    .andThen(p -> p.getLinearVelocity().y)
             )
         ),
         Drawer.clip(
             BoundingBox.of(0.666d, 0d, 1d, 1d),
             signalAndSpectrum(
-                robotIndex, windowT, minF, maxF, nBins, "angle" + (firstDifference ? "'" : ""),
-                () -> BehaviorUtils.voxelPolies()
+                robotIndex, windowT, minF, maxF, nBins, "angle",
+                () -> BehaviorUtils.voxelPolyGrid()
                     .andThen(BehaviorUtils::getCentralElement)
                     .andThen(VoxelPoly::getAngle)
             )
@@ -135,6 +135,28 @@ public class Drawers {
     );
   }
 
+  public static Drawer footprintsAndPosture(int robotIndex, double windowT, int nFootprint, int nPosture) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0.0d, .666d, 1d),
+            new FootprintDrawer(
+                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                windowT,
+                nFootprint
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.666d, 0.0d, 1d, 1d),
+            new PostureDrawer(
+                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                windowT,
+                nPosture,
+                false
+            )
+        )
+    );
+  }
+
   public static Drawer basicWithMiniWorldAndSpectra(String string) {
     return Drawer.of(
         Drawer.clear(),
@@ -150,7 +172,28 @@ public class Drawers {
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
-            spectra(0, 5, 0, 2, 8, true)
+            spectra(0, 5, 0, 2, 8)
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer basicWithMiniWorldAndFootprintsAndPosture(String string) {
+    return Drawer.of(
+        Drawer.clear(),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.0d, 1d, 0.5d),
+            Drawer.of(
+                world(),
+                Drawer.clip(
+                    BoundingBox.of(0.5d, 0.01d, 0.95d, 0.2d),
+                    miniWorld()
+                )
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            footprintsAndPosture(0, 5, 8, 16)
         ),
         new InfoDrawer(string)
     );

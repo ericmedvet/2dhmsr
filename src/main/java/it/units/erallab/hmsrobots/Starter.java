@@ -114,14 +114,16 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
     //multiped();
+    bipedAndBall();
   }
+
 
   private static void bipeds() {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
@@ -200,6 +202,61 @@ public class Starter {
       e.printStackTrace();
     }
 
+  }
+
+  private static void bipedAndBall() {
+    //simple biped
+    Grid<? extends SensingVoxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
+    double f = 1d;
+    Robot<ControllableVoxel> bipedRobot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            bipedBody.getW(),
+            bipedBody.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) bipedBody.getW()))
+        )),
+        SerializationUtils.clone(bipedBody)
+    );
+    //centralized ball
+    Random random = new Random();
+    Grid<? extends SensingVoxel> ballBody = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0").apply(RobotUtils.buildShape("ball-7"));
+    CentralizedSensing centralizedSensing = new CentralizedSensing(ballBody);
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[0],
+        centralizedSensing.nOfOutputs()
+    );
+    mlp.setParams(IntStream.range(0, mlp.getParams().length).mapToDouble(i -> random.nextGaussian()).toArray());
+    centralizedSensing.setFunction(mlp);
+    Robot<SensingVoxel> ballRobot = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(ballBody)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("downhill-30"),
+        new Settings()
+    );
+
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(2, 1);
+    namedSolutionGrid.set(0, 0, Pair.of("biped", bipedRobot));
+    namedSolutionGrid.set(1, 0, Pair.of("ball", ballRobot));
+    GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndFootprintsAndPosture);
+    if (true) {
+      try {
+        GridFileWriter.save(
+            locomotion,
+            namedSolutionGrid,
+            800, 400, 1, 24,
+            VideoUtils.EncoderFacility.FFMPEG_SMALL,
+            new File("/home/eric/biped+ball-footprints+posture.mp4"),
+            Drawers::basicWithMiniWorldAndFootprintsAndPosture
+        );
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   private static void multiped() {
