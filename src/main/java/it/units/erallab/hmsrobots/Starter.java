@@ -207,7 +207,7 @@ public class Starter {
   private static void bipedAndBall() {
     //simple biped
     Grid<? extends SensingVoxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
-    double f = 1d;
+    double f = 2d;
     Robot<ControllableVoxel> bipedRobot = new Robot<>(
         new TimeFunctions(Grid.create(
             bipedBody.getW(),
@@ -235,7 +235,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         30,
-        Locomotion.createTerrain("downhill-20"),
+        Locomotion.createTerrain("downhill-15"),
         new Settings()
     );
 

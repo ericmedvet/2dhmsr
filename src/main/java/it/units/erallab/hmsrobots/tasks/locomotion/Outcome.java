@@ -18,12 +18,15 @@
 package it.units.erallab.hmsrobots.tasks.locomotion;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
+import it.units.erallab.hmsrobots.behavior.Footprint;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Grid;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Outcome {
 
@@ -120,9 +123,88 @@ public class Outcome {
   public double getCorrectedEfficiency() {
     return getDistance() / (1d + getControlPower() * getTime());
   }
-  
+
   public Outcome subOutcome(double startT, double endT) {
     return new Outcome(observations.subMap(startT, endT));
   }
 
+  public SortedMap<Domain, Double> getCenterXPositionSpectrum(double minF, double maxF, int nBins) {
+    SortedMap<Double, Double> signal = new TreeMap<>(
+        observations.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().x
+        )));
+    return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
+  }
+
+  public SortedMap<Domain, Double> getCenterYPositionSpectrum(double minF, double maxF, int nBins) {
+    SortedMap<Double, Double> signal = new TreeMap<>(
+        observations.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().y
+        )));
+    return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
+  }
+
+  public SortedMap<Domain, Double> getCenterXVelocitySpectrum(double minF, double maxF, int nBins) {
+    SortedMap<Double, Double> signal = new TreeMap<>(
+        observations.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().x
+        )));
+    return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
+  }
+
+  public SortedMap<Domain, Double> getCenterYVelocitySpectrum(double minF, double maxF, int nBins) {
+    SortedMap<Double, Double> signal = new TreeMap<>(
+        observations.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().y
+        )));
+    return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
+  }
+
+  public SortedMap<Domain, Double> getCenterAngleSpectrum(double minF, double maxF, int nBins) {
+    SortedMap<Double, Double> signal = new TreeMap<>(
+        observations.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getAngle()
+        )));
+    return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
+  }
+
+  public Grid<Boolean> getAveragePosture(int n) {
+    return BehaviorUtils.computeAveragePosture(
+        observations.values().stream()
+            .map(o -> BehaviorUtils.computePosture(
+                o.getVoxelPolies().values().stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList()),
+                n
+            ))
+            .collect(Collectors.toList())
+    );
+  }
+
+  public List<SortedMap<Domain, Double>> getFootprintsSpectra(int n, double minF, double maxF, int nBins) {
+    SortedMap<Double, Footprint> footprints = new TreeMap<>(
+        observations.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> BehaviorUtils.computeFootprint(
+                e.getValue().getVoxelPolies().values().stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList()),
+                n
+            ))));
+    return IntStream.range(0, n)
+        .mapToObj(i -> BehaviorUtils.computeQuantizedSpectrum(
+            new TreeMap<>(
+                footprints.entrySet().stream().collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> e.getValue().getMask()[i] ? 1d : 0d
+                ))),
+            minF, maxF, nBins
+        ))
+        .collect(Collectors.toList());
+  }
 }

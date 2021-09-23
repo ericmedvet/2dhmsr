@@ -151,7 +151,7 @@ public class Drawers {
                 SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
                 windowT,
                 nPosture,
-                false
+                true
             )
         )
     );
@@ -193,7 +193,7 @@ public class Drawers {
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
-            footprintsAndPosture(0, 5, 8, 16)
+            footprintsAndPosture(0, 5, 4, 8)
         ),
         new InfoDrawer(string)
     );
