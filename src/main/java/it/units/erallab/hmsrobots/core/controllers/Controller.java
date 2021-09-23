@@ -30,4 +30,16 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
 
   void control(double t, Grid<? extends V> voxels);
 
+  static <K extends ControllableVoxel> Controller<K> empty() {
+    return new Controller<K>() {
+      @Override
+      public void control(double t, Grid<? extends K> voxels) {
+      }
+
+      @Override
+      public void reset() {
+      }
+    };
+  }
+
 }
