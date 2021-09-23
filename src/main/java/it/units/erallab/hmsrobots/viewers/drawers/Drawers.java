@@ -62,7 +62,7 @@ public class Drawers {
             Drawer.of(
                 Drawer.clear(),
                 new SignalDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
                     functionSupplier.get(),
                     windowT
                 ),
@@ -74,7 +74,7 @@ public class Drawers {
             Drawer.of(
                 Drawer.clear(),
                 new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
                     functionSupplier.get(),
                     windowT, minF, maxF, nBins
                 )
@@ -140,7 +140,7 @@ public class Drawers {
         Drawer.clip(
             BoundingBox.of(0d, 0.0d, .666d, 1d),
             new FootprintDrawer(
-                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
                 windowT,
                 nFootprint
             )
@@ -148,7 +148,7 @@ public class Drawers {
         Drawer.clip(
             BoundingBox.of(0.666d, 0.0d, 1d, 1d),
             new PostureDrawer(
-                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, null), //TODO should use robotIndex
+                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
                 windowT,
                 nPosture,
                 false

@@ -29,6 +29,7 @@ import java.util.List;
  */
 public abstract class SubtreeDrawer implements Drawer {
 
+  @FunctionalInterface
   public interface Extractor {
     List<Snapshot> extract(Snapshot snapshot);
 
@@ -44,8 +45,12 @@ public abstract class SubtreeDrawer implements Drawer {
     }
 
     private static void extract(List<Snapshot> snapshots, Snapshot s, Class<?> contentClass, Class<? extends Snapshottable> snapshottableClass, Integer index) {
+      int c = 0;
       for (int i = 0; i < s.getChildren().size(); i++) {
-        if (matches(s.getChildren().get(i), i, contentClass, snapshottableClass, index)) {
+        if (matches(s.getChildren().get(i), 0, contentClass, snapshottableClass, null)) {
+          c = c + 1;
+        }
+        if (matches(s.getChildren().get(i), c - 1, contentClass, snapshottableClass, index)) {
           snapshots.add(s.getChildren().get(i));
         }
         extract(snapshots, s.getChildren().get(i), contentClass, snapshottableClass, index);
@@ -58,7 +63,6 @@ public abstract class SubtreeDrawer implements Drawer {
           (snapshottableClass == null || snapshottableClass.isAssignableFrom(snapshot.getSnapshottableClass())) &&
           (index == null || index == i);
     }
-
 
   }
 
