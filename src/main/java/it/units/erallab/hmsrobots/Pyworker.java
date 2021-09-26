@@ -99,6 +99,7 @@ public class Pyworker implements Runnable {
 
     public double[] getHebbCoeff(String serialized){
         Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+
         double[] hc;
         if (((CentralizedSensing) robot.getController()).getFunction() instanceof HebbianPerceptronOutputModel){
             hc = ((HebbianPerceptronOutputModel)((CentralizedSensing) robot.getController()).getFunction()).getParams();
@@ -209,6 +210,8 @@ public class Pyworker implements Runnable {
         Locomotion locomotion = new Locomotion(duration, terrain, new Settings());
         System.out.println("here");
         Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+        robot = new Robot(robot.getController(),
+                RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
         System.out.println("pre apply");
         Outcome outcome = locomotion.apply(robot, null);
         System.out.println("post apply");
@@ -240,6 +243,49 @@ public class Pyworker implements Runnable {
         }
         return SerializationUtils.serialize(robot, SerializationUtils.Mode.GZIPPED_JSON);
     }
+
+    public void makeVideoT(String serialized, boolean convertLidar, String terrainName, String filename, double[] weights){
+        Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+
+        Locomotion locomotion = new Locomotion(
+                60,
+                Locomotion.createTerrain(terrainName),
+                new Settings()
+        );
+        System.out.println("ehi");
+        Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 1);
+        //namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
+        namedSolutionGrid.set(0, 0, Pair.of("centralized", robot));
+        Function<String, Drawer> drawerSupplier = s -> Drawer.of(
+                Drawer.clip(
+                        BoundingBox.build(0d, 0d, 1d, 0.5d),
+                        Drawers.basicWithMiniWorld(s)
+                ),
+                Drawer.clip(
+                        BoundingBox.build(0d, 0.5d, 1d, 1d),
+                        Drawer.of(
+                                Drawer.clear(),
+                                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d, EnumSet.allOf(MLPDrawer.Part.class))
+                        )
+                )
+        );
+        //GridOnlineViewer.run(locomotion, namedSolutionGrid, drawerSupplier);
+        //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
+        System.out.println("ohi");
+        try {
+            GridFileWriter.save(
+                    locomotion,
+                    Grid.create(1, 1, Pair.of("", robot)),
+                    400, 400, 1, 24,
+                    VideoUtils.EncoderFacility.JCODEC,
+                    new File(filename),
+                    drawerSupplier
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void makeVideo(String serialized, boolean convertLidar, String terrainName, String filename, double[] weights){
         Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
         System.out.println("333"+Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getWeights()));
@@ -250,8 +296,9 @@ public class Pyworker implements Runnable {
         if (weights.length>0){
             ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).setInitWeights(weights);
             ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).setWeights(weights);
+            ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).invert();
         }
-        ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).invert();
+        //((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).invert();
 
         Locomotion locomotion = new Locomotion(
                 60,
@@ -300,12 +347,37 @@ public class Pyworker implements Runnable {
         for (String terrain : terrains) {
             Locomotion locomotion = new Locomotion(60, Locomotion.createTerrain(terrain), new Settings());
             robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
-
+            robot = new Robot(robot.getController(),
+                    RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
             System.out.println(Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getWeights()));
+            ((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).invert();
             //System.out.println(Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getParams()));
             //System.out.println("pre apply");
             Outcome outcome = locomotion.apply(robot, null);
             System.out.println("----------");
+            vels[c] = outcome.getVelocity();
+            c++;
+        }
+        return vels;
+    }
+
+    public static double[] validatationSerializedTimed(String serialized, double t) {
+        String[] terrains = {"hilly-3-30-0", "hilly-3-30-1", "hilly-3-30-2", "hilly-3-30-3", "hilly-3-30-4"};
+        double[] vels = new double[terrains.length];
+        int c = 0;
+        Robot robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+        for (String terrain : terrains) {
+            Locomotion locomotion = new Locomotion(60, Locomotion.createTerrain(terrain), new Settings(), t);
+            robot = SerializationUtils.deserialize(serialized, Robot.class, SerializationUtils.Mode.GZIPPED_JSON);
+            robot = new Robot(robot.getController(),
+                    RobotUtils.buildSensorizingFunction("high_biped-0.01-f").apply(RobotUtils.buildShape("biped-4x3")));
+            //System.out.println(Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getWeights()));
+
+            //System.out.println(Arrays.toString(((HebbianPerceptronFullModel)((CentralizedSensing)robot.getController()).getFunction()).getParams()));
+            //System.out.println("pre apply");
+            Outcome outcome = locomotion.apply(robot, null);
+            System.out.println(outcome);
+            System.out.println("----------  ");
             vels[c] = outcome.getVelocity();
             c++;
         }
