@@ -53,7 +53,7 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
   }
 
   public PostureDrawer(Extractor extractor, double windowT, int n, boolean isBoolean) {
-    this(extractor, windowT, n, isBoolean, DrawingUtils.Colors.data, DrawingUtils.Colors.axes);
+    this(extractor, windowT, n, isBoolean, DrawingUtils.Colors.DATA, DrawingUtils.Colors.AXES);
   }
 
   @Override

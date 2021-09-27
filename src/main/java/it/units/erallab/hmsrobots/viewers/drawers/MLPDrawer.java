@@ -41,10 +41,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
 
   public enum Part {ACTIVATION_VALUES, WEIGHTS, LEGEND, T_AXIS, STRUCTURE_AXIS}
 
-  private final static Color MIN_COLOR = Color.RED;
-  private final static Color ZERO_COLOR = Color.BLACK;
-  private final static Color MAX_COLOR = Color.GREEN;
-
   private final static double LEGEND_COLORS = 15;
 
   private final Set<Part> parts;
@@ -66,7 +62,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   }
 
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts) {
-    this(extractor, windowT, parts, MIN_COLOR, ZERO_COLOR, MAX_COLOR, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
+    this(extractor, windowT, parts, DrawingUtils.Colors.DATA_NEGATIVE, DrawingUtils.Colors.DATA_ZERO, DrawingUtils.Colors.DATA_POSITIVE, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
   }
 
   public MLPDrawer(Extractor extractor, double windowT) {
@@ -183,7 +179,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
     for (int i = 0; i < LEGEND_COLORS; i++) {
       double vMin = min + deltaV * i;
       double vMax = vMin + deltaV;
-      double yMin = bb.min.y + deltaY * i;
+      double yMin = bb.max.y - deltaY * (i + 1);
       g.setColor(DrawingUtils.linear(minColor, zeroColor, maxColor, (float) min, 0f, (float) max, (float) vMin));
       g.fill(new Rectangle2D.Double(colorX, yMin, textW, deltaY));
       if (i == 0) {

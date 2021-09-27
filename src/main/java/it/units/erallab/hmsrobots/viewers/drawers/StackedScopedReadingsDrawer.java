@@ -33,9 +33,6 @@ import java.util.SortedMap;
  */
 public class StackedScopedReadingsDrawer extends MemoryDrawer<StackedScopedReadings> {
 
-  private final static Color MIN_COLOR = Color.GREEN;
-  private final static Color MAX_COLOR = Color.RED;
-
   private final Color minColor;
   private final Color maxColor;
 
@@ -46,7 +43,7 @@ public class StackedScopedReadingsDrawer extends MemoryDrawer<StackedScopedReadi
   }
 
   public StackedScopedReadingsDrawer(Extractor extractor, double windowT) {
-    this(extractor, windowT, MIN_COLOR, MAX_COLOR);
+    this(extractor, windowT, DrawingUtils.Colors.DATA_POSITIVE, DrawingUtils.Colors.DATA_NEGATIVE);
   }
 
   @Override

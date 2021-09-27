@@ -44,7 +44,7 @@ public class SignalDrawer extends MemoryDrawer<Double> {
   }
 
   public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT) {
-    this(extractor, function, windowT, DrawingUtils.Colors.data, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
+    this(extractor, function, windowT, DrawingUtils.Colors.DATA, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
   }
 
   @Override

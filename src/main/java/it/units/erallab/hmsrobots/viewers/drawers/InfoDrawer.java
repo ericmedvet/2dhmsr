@@ -114,7 +114,7 @@ public class InfoDrawer implements Drawer {
       }
     }
     //write
-    g.setColor(DrawingUtils.Colors.text);
+    g.setColor(DrawingUtils.Colors.TEXT);
     int relY = g.getClipBounds().y + 1;
     for (String line : sb.toString().split(String.format("%n"))) {
       g.drawString(line, g.getClipBounds().x + 1, relY + g.getFontMetrics().getMaxAscent());
