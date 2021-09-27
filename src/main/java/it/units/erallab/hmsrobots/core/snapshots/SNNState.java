@@ -35,6 +35,7 @@ public class SNNState extends MLPState {
 
   private static double[][] computeFiringRates(int[][][] spikes) {
     double[][] firingRates = new double[spikes.length][];
+    System.out.println(spikes.length);
     for (int i = 0; i < firingRates.length; i++) {
       firingRates[i] = Arrays.stream(spikes[i]).sequential().mapToDouble(s -> Arrays.stream(s).sum() * 1d / s.length).toArray();
     }

@@ -7,7 +7,6 @@ import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.snapshots.SNNState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
@@ -54,7 +53,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       }
     }
     weightsInTime = new HashMap<>();
-    weightsInTime.put(previousApplicationTime, flat(weights,neurons));
+    weightsInTime.put(previousApplicationTime, flat(weights, neurons));
     reset();
   }
 
@@ -110,6 +109,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       }
     }
     // iterating over layers
+    int outlayer = 0;
     for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
       QuantizedSpikingFunction[] layer = neurons[layerIndex];
       thisLayersOutputs = new int[layer.length][];
@@ -124,6 +124,10 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
           Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * deltaT + previousApplicationTime));
         }
       }
+      currentSpikes[layerIndex] = new int[thisLayersOutputs.length][];
+      for (int i = 0; i < currentSpikes[layerIndex].length; i++) {
+        currentSpikes[layerIndex][i] = Arrays.stream(thisLayersOutputs[i]).toArray();
+      }
       if (layerIndex == neurons.length - 1) {
         break;
       }
@@ -134,8 +138,8 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
         }
       }
       previousLayersOutputs = thisLayersOutputs;
-      currentSpikes[layerIndex] = thisLayersOutputs;
     }
+    System.out.println(outlayer);
     previousApplicationTime = t;
     return thisLayersOutputs;
   }
@@ -257,9 +261,9 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
   }
 
   @Override
-  public Snapshot getSnapshot(){
+  public Snapshot getSnapshot() {
     return new Snapshot(
-      new SNNState(getCurrentSpikes(), getWeights()),
+        new SNNState(getCurrentSpikes(), getWeights()),
         getClass()
     );
   }

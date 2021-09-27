@@ -17,6 +17,10 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedLIFNeuron;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedMultilayerSpikingNetwork;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedMultilayerSpikingNetworkWithConverters;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -25,6 +29,8 @@ import it.units.erallab.hmsrobots.core.sensors.Angle;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
+import it.units.erallab.hmsrobots.core.snapshots.SNNState;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -34,7 +40,10 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
+import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
+import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
@@ -46,6 +55,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /**
@@ -114,6 +124,7 @@ public class Starter {
   }
 
   public static void main(String[] args) {
+    bipedsWithBrain();
     //bipeds();
     //rollingOne();
     //rollingBall();
@@ -121,9 +132,64 @@ public class Starter {
     //plainWorm();
     //cShaped();
     //multiped();
-    bipedAndBall();
+    //bipedAndBall();
   }
 
+  private static void bipedsWithBrain() {
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
+    Random random = new Random();
+    //centralized sensing
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
+    QuantizedMultilayerSpikingNetwork snn = new QuantizedMultilayerSpikingNetwork(
+        centralizedSensing.nOfInputs(),
+        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
+        centralizedSensing.nOfOutputs(),
+        (x, y) -> new QuantizedLIFNeuron()
+    );
+    QuantizedMultilayerSpikingNetworkWithConverters snnWithConverters = new QuantizedMultilayerSpikingNetworkWithConverters(snn);
+    double[] ws = snnWithConverters.getParams();
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
+    snnWithConverters.setParams(ws);
+    centralizedSensing.setFunction(snnWithConverters);
+    Robot<SensingVoxel> centralized = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(body)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("steppy-3-10-0"),
+        new Settings()
+    );
+    Function<String, Drawer> drawerSupplier = s -> Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld(s)
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(SNNState.class, null, null), 15d, EnumSet.allOf(MLPDrawer.Part.class))
+            )
+        )
+    );
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), drawerSupplier);
+
+    /*try {
+      GridFileWriter.save(
+          locomotion,
+          Grid.create(1, 1, Pair.of("", centralized)),
+          800, 800, 1, 24,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL,
+          new File("/home/eric/biped-pruning-mlp.mp4"),
+          drawerSupplier
+      );
+    } catch (IOException e) {
+      e.printStackTrace();
+    }*/
+
+  }
 
   private static void bipeds() {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
