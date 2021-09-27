@@ -35,12 +35,10 @@ import java.util.stream.IntStream;
 
 public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
 
-  private final static double INITIAL_PLACEMENT_X_GAP = 1d;
-  private final static double INITIAL_PLACEMENT_Y_GAP = 1d;
-  private final static double TERRAIN_BORDER_HEIGHT = 100d;
+  public final static double INITIAL_PLACEMENT_X_GAP = 1d;
+  public final static double INITIAL_PLACEMENT_Y_GAP = 1d;
+  public final static double TERRAIN_BORDER_HEIGHT = 100d;
   public static final int TERRAIN_LENGTH = 2000;
-  private static final int FOOTPRINT_BINS = 8;
-  private static final int MASK_BINS = 16;
   public static final double TERRAIN_BORDER_WIDTH = 10d;
 
   private final double finalT;
