@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
+import it.units.erallab.hmsrobots.core.snapshots.SNNState;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
@@ -12,7 +16,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized {
+public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized, Snapshottable {
 
   @JsonProperty
   protected final QuantizedSpikingFunction[][] neurons;    // layer + position in the layer
@@ -22,6 +26,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   protected boolean spikesTracker = false;
   protected final List<Double>[][] spikes;
+  protected final int[][][] currentSpikes;
 
   protected boolean weightsTracker = false;
   protected final Map<Double, double[]> weightsInTime;
@@ -41,6 +46,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       ));
     }
     spikes = new List[neurons.length][];
+    currentSpikes = new int[neurons.length][][];
     for (int i = 0; i < neurons.length; i++) {
       spikes[i] = new List[neurons[i].length];
       for (int j = 0; j < spikes[i].length; j++) {
@@ -128,6 +134,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
         }
       }
       previousLayersOutputs = thisLayersOutputs;
+      currentSpikes[layerIndex] = thisLayersOutputs;
     }
     previousApplicationTime = t;
     return thisLayersOutputs;
@@ -247,6 +254,18 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   public Map<Double, double[]> getWeightsInTime() {
     return weightsInTime;
+  }
+
+  @Override
+  public Snapshot getSnapshot(){
+    return new Snapshot(
+      new SNNState(getCurrentSpikes(), getWeights()),
+        getClass()
+    );
+  }
+
+  public int[][][] getCurrentSpikes() {
+    return currentSpikes;
   }
 
   @Override

@@ -8,6 +8,8 @@ import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.Quant
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedUniformWithMemoryValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable {
+public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable, Snapshottable {
 
   @JsonProperty
   private final N multilayerSpikingNetwork;
@@ -120,12 +122,17 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
     return multilayerSpikingNetwork.getSpikes();
   }
 
-  public void setWeightsTracker(boolean weightsTracker){
+  public void setWeightsTracker(boolean weightsTracker) {
     multilayerSpikingNetwork.setWeightsTracker(weightsTracker);
   }
 
   public Map<Double, double[]> getWeightsInTime() {
     return multilayerSpikingNetwork.getWeightsInTime();
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return multilayerSpikingNetwork.getSnapshot();
   }
 
   @Override
