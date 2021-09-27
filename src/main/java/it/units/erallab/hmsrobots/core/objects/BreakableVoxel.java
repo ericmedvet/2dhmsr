@@ -1,31 +1,31 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as eric)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.immutable.ControllableVoxel;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
-import org.apache.commons.lang3.tuple.Pair;
+import it.units.erallab.hmsrobots.core.sensors.Touch;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.util.Domain;
+import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BreakableVoxel extends SensingVoxel {
 
@@ -57,6 +57,7 @@ public class BreakableVoxel extends SensingVoxel {
   private transient double lastBreakT;
   private transient double lastControlEnergy;
   private transient double lastAreaRatioEnergy;
+  private transient double[] sensorReadings;
   private transient Random random;
 
   @JsonCreator
@@ -149,7 +150,7 @@ public class BreakableVoxel extends SensingVoxel {
         || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
   }
 
-  private double[] random(Sensor.Domain[] domains) {
+  private double[] random(Domain[] domains) {
     double[] values = new double[domains.length];
     for (int i = 0; i < domains.length; i++) {
       values[i] = random.nextDouble() * (domains[i].getMax() - domains[i].getMin()) + domains[i].getMin();
@@ -158,20 +159,18 @@ public class BreakableVoxel extends SensingVoxel {
   }
 
   @Override
-  public Immutable immutable() {
-    ControllableVoxel superImmutable = (ControllableVoxel) super.immutable();
-    it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel immutable = new it.units.erallab.hmsrobots.core.objects.immutable.BreakableVoxel(
-        superImmutable.getShape(),
-        superImmutable.getAreaRatio(),
-        superImmutable.getAreaRatioEnergy(),
-        superImmutable.getLastAppliedForce(),
-        superImmutable.getControlEnergy(),
-        state.get(ComponentType.ACTUATOR),
-        state.get(ComponentType.SENSORS),
-        state.get(ComponentType.STRUCTURE)
+  public VoxelPoly getVoxelPoly() {
+    return new VoxelPoly(
+        getVertices(),
+        getAngle(),
+        getLinearVelocity(),
+        Touch.isTouchingGround(this),
+        getAreaRatio(),
+        getAreaRatioEnergy(),
+        getLastAppliedForce(),
+        getControlEnergy(),
+        new EnumMap<>(state)
     );
-    immutable.getChildren().addAll(superImmutable.getChildren());
-    return immutable;
   }
 
   @Override
@@ -182,24 +181,29 @@ public class BreakableVoxel extends SensingVoxel {
     lastControlEnergy = 0d;
     lastAreaRatioEnergy = 0d;
     random = new Random(randomSeed);
+    sensorReadings = null;
     Arrays.stream(MalfunctionTrigger.values()).sequential().forEach(trigger -> triggerCounters.put(trigger, 0d));
     Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
     updateStructureMalfunctionType();
   }
 
   @Override
+  public double[] getSensorReadings() {
+    return switch (state.get(ComponentType.SENSORS)) {
+      case NONE, FROZEN -> sensorReadings;
+      case ZERO -> new double[sensorReadings.length];
+      case RANDOM -> getSensors().stream()
+          .map(s -> random(s.getDomains()))
+          .reduce(ArrayUtils::addAll)
+          .orElse(new double[sensorReadings.length]);
+    };
+  }
+
+  @Override
   public void act(double t) {
-    //sense
-    List<Pair<Sensor, double[]>> oldReadings = lastReadings.stream()
-        .map(p -> Pair.of(p.getLeft(), Arrays.copyOf(p.getRight(), p.getRight().length)))
-        .collect(Collectors.toList());
     super.act(t);
-    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.FROZEN)) {
-      lastReadings = oldReadings;
-    } else if (state.get(ComponentType.SENSORS).equals(MalfunctionType.RANDOM)) {
-      lastReadings = getSensors().stream()
-          .map(s -> Pair.of(s, random(s.domains())))
-          .collect(Collectors.toList());
+    if (state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE) || sensorReadings == null) {
+      sensorReadings = super.getSensorReadings();
     }
     //update counters
     triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastT);

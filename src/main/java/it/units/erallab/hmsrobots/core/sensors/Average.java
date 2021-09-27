@@ -18,43 +18,21 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
 
-import java.util.TreeMap;
-
-public class Average implements Sensor {
-
-  @JsonProperty
-  private final Sensor sensor;
-  @JsonProperty
-  private final double interval;
-  private final TreeMap<Double, double[]> readings;
+public class Average extends AggregatorSensor {
 
   @JsonCreator
   public Average(
       @JsonProperty("sensor") Sensor sensor,
       @JsonProperty("interval") double interval
   ) {
-    this.sensor = sensor;
-    this.interval = interval;
-    readings = new TreeMap<>();
+    super(sensor.getDomains(), sensor, interval);
+    reset();
   }
 
   @Override
-  public Domain[] domains() {
-    return sensor.domains();
-  }
-
-  @Override
-  public double[] sense(Voxel voxel, double t) {
-    double[] currentReadings = sensor.sense(voxel, t);
-    readings.put(t, currentReadings);
-    double t0 = readings.firstKey();
-    while (t0 < (t - interval)) {
-      readings.remove(t0);
-      t0 = readings.firstKey();
-    }
-    double[] sums = new double[currentReadings.length];
+  protected double[] aggregate(double t) {
+    double[] sums = new double[readings.firstEntry().getValue().length];
     for (double[] pastReadings : readings.values()) {
       for (int i = 0; i < sums.length; i++) {
         sums[i] = sums[i] + pastReadings[i];
@@ -66,11 +44,4 @@ public class Average implements Sensor {
     return sums;
   }
 
-  @Override
-  public String toString() {
-    return "Average{" +
-        "sensor=" + sensor +
-        ", interval=" + interval +
-        '}';
-  }
 }

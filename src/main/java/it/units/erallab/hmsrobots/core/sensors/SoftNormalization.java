@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,37 +19,28 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.immutable.SensorReading;
+import it.units.erallab.hmsrobots.util.Domain;
 
-import java.util.Arrays;
+import java.util.Collections;
 
-public class SoftNormalization implements Sensor, ReadingAugmenter {
-
-  @JsonProperty
-  private final Sensor sensor;
-  private final Sensor.Domain[] domains;
+public class SoftNormalization extends CompositeSensor {
 
   @JsonCreator
   public SoftNormalization(
       @JsonProperty("sensor") Sensor sensor
   ) {
-    this.sensor = sensor;
-    domains = new Sensor.Domain[sensor.domains().length];
-    Arrays.fill(domains, Sensor.Domain.of(0d, 1d));
+    super(
+        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
+        sensor
+    );
   }
 
   @Override
-  public Sensor.Domain[] domains() {
-    return domains;
-  }
-
-  @Override
-  public double[] sense(Voxel voxel, double t) {
-    double[] innerValues = sensor.sense(voxel, t);
+  public double[] sense(double t) {
+    double[] innerValues = sensor.getReadings();
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
-      Sensor.Domain d = sensor.domains()[i];
+      Domain d = sensor.getDomains()[i];
       double v = (innerValues[i] - d.getMin()) / (d.getMax() - d.getMin());
       //tanh(((x*2)-1)*2)/2+1/2
       values[i] = Math.tanh(((v * 2d) - 1d) * 2d) / 2d + 0.5d;
@@ -57,19 +48,5 @@ public class SoftNormalization implements Sensor, ReadingAugmenter {
     return values;
   }
 
-  @Override
-  public String toString() {
-    return "SoftNormalization{" +
-        "sensor=" + sensor +
-        '}';
-  }
-
-  @Override
-  public SensorReading augment(SensorReading reading, Voxel voxel) {
-    if (sensor instanceof ReadingAugmenter) {
-      return ((ReadingAugmenter) sensor).augment(reading, voxel);
-    }
-    return reading;
-  }
 
 }

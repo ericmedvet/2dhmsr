@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,9 +18,13 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.util.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
@@ -35,11 +39,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot<V extends ControllableVoxel> implements LivingObject, Serializable {
+public class Robot<V extends ControllableVoxel> implements Actionable, Serializable, WorldObject, Snapshottable {
 
   @JsonProperty
   private final Controller<V> controller;
@@ -55,13 +60,13 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
   ) {
     this.controller = controller;
     this.voxels = voxels;
-    assemble();
+    reset();
   }
 
   @Serial
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
-    assemble();
+    reset();
   }
 
   private void assemble() {
@@ -100,14 +105,20 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
   }
 
   @Override
-  public Immutable immutable() {
-    it.units.erallab.hmsrobots.core.objects.immutable.Robot immutable = new it.units.erallab.hmsrobots.core.objects.immutable.Robot();
-    for (Voxel voxel : voxels.values()) {
-      if (voxel != null) {
-        immutable.getChildren().add(voxel.immutable());
-      }
+  public Snapshot getSnapshot() {
+    Grid<Snapshot> voxelSnapshots = Grid.create(voxels, v -> v == null ? null : v.getSnapshot());
+    Snapshot snapshot = new Snapshot(
+        new RobotShape(
+            Grid.create(voxelSnapshots, s -> s == null ? null : ((VoxelPoly) s.getContent())),
+            boundingBox()
+        ),
+        getClass()
+    );
+    if (controller instanceof Snapshottable) {
+      snapshot.getChildren().add(((Snapshottable) controller).getSnapshot());
     }
-    return immutable;
+    snapshot.getChildren().addAll(voxelSnapshots.values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+    return snapshot;
   }
 
   @Override
@@ -131,6 +142,7 @@ public class Robot<V extends ControllableVoxel> implements LivingObject, Seriali
   @Override
   public void reset() {
     voxels.values().stream().filter(Objects::nonNull).forEach(ControllableVoxel::reset);
+    assemble();
     controller.reset();
   }
 

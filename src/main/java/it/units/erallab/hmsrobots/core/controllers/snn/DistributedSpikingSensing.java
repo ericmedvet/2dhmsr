@@ -99,7 +99,7 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
                 new int[]{DistributedSensing.nOfInputs(v, signals), DistributedSensing.nOfInputs(v, signals)},
                 DistributedSensing.nOfOutputs(v, signals), (x, y) -> spikingFunction)),
         Grid.create(voxels, v -> (v == null) ? null : SerializationUtils.clone(spikeTrainToValueConverter)),
-        Grid.create(voxels, v -> (v == null) ? null : IntStream.range(0, v.getSensors().stream().mapToInt(s -> s.domains().length).sum()).mapToObj(i -> SerializationUtils.clone(valueToSpikeTrainConverter)).toArray(ValueToSpikeTrainConverter[]::new))
+        Grid.create(voxels, v -> (v == null) ? null : IntStream.range(0, v.getSensors().stream().mapToInt(s -> s.getDomains().length).sum()).mapToObj(i -> SerializationUtils.clone(valueToSpikeTrainConverter)).toArray(ValueToSpikeTrainConverter[]::new))
     );
   }
 
@@ -136,7 +136,7 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
       }
       //get inputs
       SortedSet<Double>[] signals = getLastSignals(entry.getX(), entry.getY());
-      SortedSet<Double>[] sensorValues = convertSensorReadings(entry.getValue().getLastReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
+      SortedSet<Double>[] sensorValues = convertSensorReadings(entry.getValue().getSensorReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
       SortedSet<Double>[] inputs = ArrayUtils.addAll(signals, sensorValues);
       //compute outputs
       MultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
@@ -175,10 +175,9 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
   }
 
   @SuppressWarnings("unchecked")
-  private SortedSet<Double>[] convertSensorReadings(List<Pair<Sensor, double[]>> sensorsReadings, ValueToSpikeTrainConverter[] valueToSpikeTrainConverters, double t) {
-    double[] inputValues = Arrays.stream(sensorsReadings.stream().map(Pair::getValue).reduce(new double[0], ArrayUtils::addAll)).toArray();
-    SortedSet<Double>[] convertedValues = new SortedSet[inputValues.length];
-    IntStream.range(0, inputValues.length).forEach(i -> convertedValues[i] = valueToSpikeTrainConverters[i].convert(inputValues[i], t - previousTime, t));
+  private SortedSet<Double>[] convertSensorReadings(double[] sensorsReadings, ValueToSpikeTrainConverter[] valueToSpikeTrainConverters, double t) {
+    SortedSet<Double>[] convertedValues = new SortedSet[sensorsReadings.length];
+    IntStream.range(0, sensorsReadings.length).forEach(i -> convertedValues[i] = valueToSpikeTrainConverters[i].convert(sensorsReadings[i], t - previousTime, t));
     return convertedValues;
   }
 

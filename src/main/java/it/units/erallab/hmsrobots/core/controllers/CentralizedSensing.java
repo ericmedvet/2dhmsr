@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -20,78 +20,68 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
+import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author eric
  */
-public class CentralizedSensing implements Controller<SensingVoxel> {
+public class CentralizedSensing implements Controller<SensingVoxel>, Snapshottable {
 
   @JsonProperty
-  protected final int nOfInputs;
+  private final int nOfInputs;
   @JsonProperty
-  protected final int nOfOutputs;
-  @JsonProperty
-  protected final boolean doubleOutput;
+  private final int nOfOutputs;
 
   @JsonProperty
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-  protected TimedRealFunction function;
+  private TimedRealFunction function;
+
+  private double[] inputs;
+  private double[] outputs;
+  private Domain[] inputDomains;
+  private final Domain[] outputDomains;
 
   public CentralizedSensing(
-          @JsonProperty("nOfInputs") int nOfInputs,
-          @JsonProperty("nOfOutputs") int nOfOutputs,
-          @JsonProperty("function") TimedRealFunction function,
-          @JsonProperty("doubleOutput") boolean doubleOutput
+      @JsonProperty("nOfInputs") int nOfInputs,
+      @JsonProperty("nOfOutputs") int nOfOutputs,
+      @JsonProperty("function") TimedRealFunction function
   ) {
     this.nOfInputs = nOfInputs;
-    this.doubleOutput = doubleOutput;
-    this.nOfOutputs = doubleOutput ? (2 * nOfOutputs) : nOfOutputs;
+    this.nOfOutputs = nOfOutputs;
+    outputDomains = Domain.of(-1d, 1d, nOfOutputs);
     setFunction(function);
   }
 
-  public CentralizedSensing(int nOfInputs, int nOfOutputs, TimedRealFunction function) {
-    this(nOfInputs, nOfOutputs, function, false);
-  }
-
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, boolean doubleOutput) {
-    this(voxels, RealFunction.build(in -> new double[nOfOutputs(voxels,doubleOutput)], nOfInputs(voxels), nOfOutputs(voxels,doubleOutput)), doubleOutput);
-  }
-
   public CentralizedSensing(Grid<? extends SensingVoxel> voxels) {
-    this(voxels, false);
-  }
-
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, TimedRealFunction function, boolean doubleOutput) {
-    this(nOfInputs(voxels), nOfOutputs(voxels), function, doubleOutput);
+    this(voxels, RealFunction.build(in -> new double[nOfOutputs(voxels)], nOfInputs(voxels), nOfOutputs(voxels)));
   }
 
   public CentralizedSensing(Grid<? extends SensingVoxel> voxels, TimedRealFunction function) {
-    this(voxels, function, false);
+    this(nOfInputs(voxels), nOfOutputs(voxels), function);
   }
 
   public static int nOfInputs(Grid<? extends SensingVoxel> voxels) {
     return voxels.values().stream()
-            .filter(Objects::nonNull)
-            .mapToInt(v -> v.getSensors().stream()
-                    .mapToInt(s -> s.domains().length)
-                    .sum())
-            .sum();
+        .filter(Objects::nonNull)
+        .mapToInt(v -> v.getSensors().stream()
+            .mapToInt(s -> s.getDomains().length)
+            .sum())
+        .sum();
   }
 
   public static int nOfOutputs(Grid<? extends SensingVoxel> voxels) {
     return (int) voxels.values().stream()
-            .filter(Objects::nonNull)
-            .count();
-  }
-
-  public static int nOfOutputs(Grid<? extends SensingVoxel> voxels, boolean doubleOutput) {
-    return doubleOutput ? 2 * nOfOutputs(voxels) : nOfOutputs(voxels);
+        .filter(Objects::nonNull)
+        .count();
   }
 
   public int nOfInputs() {
@@ -109,9 +99,9 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   public void setFunction(TimedRealFunction function) {
     if (function.getInputDimension() != nOfInputs || function.getOutputDimension() != nOfOutputs) {
       throw new IllegalArgumentException(String.format(
-              "Wrong dimension of input or output in provided function: R^%d->R^%d expected, R^%d->R^%d found",
-              nOfInputs, nOfOutputs,
-              function.getInputDimension(), function.getOutputDimension()
+          "Wrong dimension of input or output in provided function: R^%d->R^%d expected, R^%d->R^%d found",
+          nOfInputs, nOfOutputs,
+          function.getInputDimension(), function.getOutputDimension()
       ));
     }
     this.function = function;
@@ -120,29 +110,27 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
     //collect inputs
-    double[] inputs = new double[nOfInputs];
-    int c = 0;
-    List<List<Pair<Sensor, double[]>>> allReadings = voxels.values().stream()
-            .filter(Objects::nonNull)
-            .map(SensingVoxel::getLastReadings)
-            .collect(Collectors.toList());
-    for (List<Pair<Sensor, double[]>> readings : allReadings) {
-      for (Pair<Sensor, double[]> sensorPair : readings) {
-        double[] sensorReadings = sensorPair.getValue();
-        System.arraycopy(sensorReadings, 0, inputs, c, sensorReadings.length);
-        c = c + sensorReadings.length;
-      }
-    }
+    inputs = voxels.values().stream()
+        .filter(Objects::nonNull)
+        .map(SensingVoxel::getSensorReadings)
+        .reduce(ArrayUtils::addAll)
+        .orElse(new double[nOfInputs]);
+    inputDomains = voxels.values().stream()
+        .filter(Objects::nonNull)
+        .map(SensingVoxel::getSensors)
+        .flatMap(Collection::stream)
+        .map(Sensor::getDomains)
+        .reduce(ArrayUtils::addAll)
+        .orElse(Domain.of(-1d, 1d, nOfInputs));
     //compute outputs
-    double[] outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
+    outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
     //apply inputs
-    c = 0;
+    int c = 0;
     for (SensingVoxel voxel : voxels.values()) {
       if (voxel != null) {
         if (c < outputs.length) {
-          double output = doubleOutput ? ((outputs[c] - outputs[c + 1]) / 2d) : outputs[c];
-          voxel.applyForce(output);
-          c = doubleOutput ? (c + 2) : (c + 1);
+          voxel.applyForce(outputs[c]);
+          c = c + 1;
         }
       }
     }
@@ -158,7 +146,23 @@ public class CentralizedSensing implements Controller<SensingVoxel> {
   @Override
   public String toString() {
     return "CentralizedSensing{" +
-            "function=" + function +
-            '}';
+        "function=" + function +
+        '}';
   }
+
+  @Override
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(
+        new StackedScopedReadings(
+            new ScopedReadings(inputs, inputDomains),
+            new ScopedReadings(outputs, outputDomains)
+        ),
+        getClass()
+    );
+    if (function instanceof Snapshottable) {
+      snapshot.getChildren().add(((Snapshottable) function).getSnapshot());
+    }
+    return snapshot;
+  }
+
 }

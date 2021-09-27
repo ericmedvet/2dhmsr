@@ -93,7 +93,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
                 new int[]{DistributedSensing.nOfInputs(v, signals), DistributedSensing.nOfInputs(v, signals)},
                 DistributedSensing.nOfOutputs(v, signals), (x, y) -> spikingFunction)),
         Grid.create(voxels, v -> (v == null) ? null : SerializationUtils.clone(spikeTrainToValueConverter)),
-        Grid.create(voxels, v -> (v == null) ? null : IntStream.range(0, v.getSensors().stream().mapToInt(s -> s.domains().length).sum()).mapToObj(i -> SerializationUtils.clone(valueToSpikeTrainConverter)).toArray(QuantizedValueToSpikeTrainConverter[]::new))
+        Grid.create(voxels, v -> (v == null) ? null : IntStream.range(0, v.getSensors().stream().mapToInt(s -> s.getDomains().length).sum()).mapToObj(i -> SerializationUtils.clone(valueToSpikeTrainConverter)).toArray(QuantizedValueToSpikeTrainConverter[]::new))
     );
   }
 
@@ -128,7 +128,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
       }
       //get inputs
       int[][] signals = getLastSignals(entry.getX(), entry.getY());
-      int[][] sensorValues = convertSensorReadings(entry.getValue().getLastReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
+      int[][] sensorValues = convertSensorReadings(entry.getValue().getSensorReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
       int[][] inputs = ArrayUtils.addAll(signals, sensorValues);
       //compute outputs
       QuantizedMultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
@@ -165,10 +165,9 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
     return values;
   }
 
-  private int[][] convertSensorReadings(List<Pair<Sensor, double[]>> sensorsReadings, QuantizedValueToSpikeTrainConverter[] valueToSpikeTrainConverters, double t) {
-    double[] inputValues = Arrays.stream(sensorsReadings.stream().map(Pair::getValue).reduce(new double[0], ArrayUtils::addAll)).toArray();
-    int[][] convertedValues = new int[inputValues.length][];
-    IntStream.range(0, inputValues.length).forEach(i -> convertedValues[i] = valueToSpikeTrainConverters[i].convert(inputValues[i], t - previousTime, t));
+  private int[][] convertSensorReadings(double[] sensorsReadings, QuantizedValueToSpikeTrainConverter[] valueToSpikeTrainConverters, double t) {
+    int[][] convertedValues = new int[sensorsReadings.length][];
+    IntStream.range(0, sensorsReadings.length).forEach(i -> convertedValues[i] = valueToSpikeTrainConverters[i].convert(sensorsReadings[i], t - previousTime, t));
     return convertedValues;
   }
 

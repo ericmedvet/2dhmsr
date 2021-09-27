@@ -18,6 +18,10 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
@@ -29,22 +33,30 @@ import java.util.stream.Collectors;
 /**
  * @author eric
  */
-public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized {
+public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized, Snapshottable {
 
   public enum ActivationFunction implements Function<Double, Double> {
-    RELU(x -> (x < 0) ? 0d : x),
-    SIGMOID(x -> 1d / (1d + Math.exp(-x))),
-    SIN(Math::sin),
-    TANH(Math::tanh);
+    RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
+    SIGMOID(x -> 1d / (1d + Math.exp(-x)), Domain.of(0d, 1d)),
+    SIN(Math::sin, Domain.of(-1d, 1d)),
+    TANH(Math::tanh, Domain.of(-1d, 1d)),
+    SIGN(Math::signum, Domain.of(-1d, 1d)),
+    IDENTITY(x -> x, Domain.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
 
     private final Function<Double, Double> f;
+    private final Domain domain;
 
-    ActivationFunction(Function<Double, Double> f) {
+    ActivationFunction(Function<Double, Double> f, Domain domain) {
       this.f = f;
+      this.domain = domain;
     }
 
     public Function<Double, Double> getF() {
       return f;
+    }
+
+    public Domain getDomain() {
+      return domain;
     }
 
     public Double apply(Double x) {
@@ -59,6 +71,8 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
   @JsonProperty
   protected final int[] neurons;
 
+  protected final double[][] activationValues;
+
   @JsonCreator
   public MultiLayerPerceptron(
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
@@ -68,6 +82,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     this.activationFunction = activationFunction;
     this.weights = weights;
     this.neurons = neurons;
+    activationValues = new double[neurons.length][];
     if (flat(weights, neurons).length != countWeights(neurons)) {
       throw new IllegalArgumentException(String.format(
           "Wrong number of weights: %d expected, %d found",
@@ -150,19 +165,18 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     if (input.length != neurons[0]) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
     }
-    double[][] values = new double[neurons.length][];
-    values[0] = Arrays.stream(input).map(activationFunction.f::apply).toArray();
+    activationValues[0] = Arrays.stream(input).map(activationFunction.f::apply).toArray();
     for (int i = 1; i < neurons.length; i++) {
-      values[i] = new double[neurons[i]];
+      activationValues[i] = new double[neurons[i]];
       for (int j = 0; j < neurons[i]; j++) {
         double sum = weights[i - 1][j][0]; //set the bias
         for (int k = 1; k < neurons[i - 1] + 1; k++) {
-          sum = sum + values[i - 1][k - 1] * weights[i - 1][j][k];
+          sum = sum + activationValues[i - 1][k - 1] * weights[i - 1][j][k];
         }
-        values[i][j] = activationFunction.apply(sum);
+        activationValues[i][j] = activationFunction.apply(sum);
       }
     }
-    return values[neurons.length - 1];
+    return activationValues[neurons.length - 1];
   }
 
   @Override
@@ -183,9 +197,21 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     return neurons;
   }
 
+  public double[][] getActivationValues() {
+    return activationValues;
+  }
+
   @Override
   public double[] getParams() {
     return MultiLayerPerceptron.flat(weights, neurons);
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return new Snapshot(
+        new MLPState(getActivationValues(), getWeights(), activationFunction.getDomain()),
+        getClass()
+    );
   }
 
   @Override
@@ -248,4 +274,5 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     }
     return sb.toString();
   }
+
 }

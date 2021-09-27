@@ -16,12 +16,13 @@
  */
 package it.units.erallab.hmsrobots.viewers;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Snapshot;
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.Task;
-import it.units.erallab.hmsrobots.util.BoundingBox;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.Point2;
-import it.units.erallab.hmsrobots.viewers.drawers.SensorReading;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
@@ -50,70 +52,64 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   private final VideoUtils.EncoderFacility encoder;
   private final File file;
 
-  private final Grid<String> namesGrid;
+  private final Grid<Drawer> drawersGrid;
   private final Grid<List<Double>> timesGrid;
-  private final Grid<Framer> framerGrid;
   private final List<BufferedImage> images;
-
-  private final GraphicsDrawer graphicsDrawer;
 
   private static final Logger L = Logger.getLogger(GridFileWriter.class.getName());
 
-  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid) throws IOException {
-    this(w, h, startTime, frameRate, encoder, file, namesGrid, GraphicsDrawer.build());
-  }
-
-  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, GraphicsDrawer graphicsDrawer) throws IOException {
+  public GridFileWriter(int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Grid<String> namesGrid, Grid<Drawer> drawersGrid) throws IOException {
+    if (namesGrid.getW() != drawersGrid.getW() || namesGrid.getH() != drawersGrid.getH()) {
+      throw new IllegalArgumentException("Names grid and drawers grid should have the same size");
+    }
+    this.drawersGrid = Grid.create(
+        namesGrid.getW(),
+        namesGrid.getH(),
+        (x, y) -> Drawer.clip(
+            BoundingBox.of(
+                (double) x / (double) namesGrid.getW(),
+                (double) y / (double) namesGrid.getH(),
+                (double) (x + 1) / (double) namesGrid.getW(),
+                (double) (y + 1) / (double) namesGrid.getH()
+            ),
+            drawersGrid.get(x, y)
+        )
+    );
     this.w = w;
     this.h = h;
     this.startTime = startTime;
-    this.namesGrid = namesGrid;
     this.frameRate = frameRate;
     this.encoder = encoder;
     this.file = file;
     images = new ArrayList<>();
-    this.graphicsDrawer = graphicsDrawer;
-    framerGrid = Grid.create(namesGrid.getW(), namesGrid.getH(), (x, y) -> new RobotFollower((int) frameRate * 3, 1.5d, 100, RobotFollower.AggregateType.MAX));
     timesGrid = Grid.create(namesGrid.getW(), namesGrid.getH(), (x, y) -> new ArrayList<>());
   }
 
   @Override
   public SnapshotListener listener(final int lX, final int lY) {
-    return (Snapshot snapshot) -> {
+    return (double t, Snapshot snapshot) -> {
       List<Double> times = timesGrid.get(lX, lY);
-      double lastTime = times.isEmpty() ? Double.NEGATIVE_INFINITY : times.get(times.size() - 1);
-      if (snapshot.getTime() >= startTime && snapshot.getTime() - lastTime >= 1d / frameRate) {
-        int frameNumber = (int) Math.round((snapshot.getTime() - startTime) * frameRate);
+      double lastT = times.isEmpty() ? Double.NEGATIVE_INFINITY : times.get(times.size() - 1);
+      if (t >= startTime && t - lastT >= 1d / frameRate) {
+        int frameNumber = (int) Math.round((t - startTime) * frameRate);
         int lastFrameNumber = times.isEmpty() ? frameNumber : (int) Math.round((times.get(times.size() - 1) - startTime) * frameRate);
         synchronized (images) {
-          times.add(snapshot.getTime());
+          times.add(t);
           while (frameNumber >= images.size()) {
             images.add(new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR));
           }
           for (int i = lastFrameNumber; i <= frameNumber; i++) {
             BufferedImage image = images.get(i);
             Graphics2D g = image.createGraphics();
-            double localW = (double) w / (double) namesGrid.getW();
-            double localH = (double) h / (double) namesGrid.getH();
-            //obtain viewport
-            BoundingBox frame = framerGrid.get(lX, lY).getFrame(snapshot, localW / localH);
-            //draw
-            graphicsDrawer.draw(
-                    snapshot, g,
-                    BoundingBox.build(
-                            Point2.build(localW * lX, localH * lY),
-                            Point2.build(localW * (lX + 1), localH * (lY + 1))
-                    ),
-                    frame, namesGrid.get(lX, lY).lines().toArray(String[]::new)
-            );
+            g.setClip(0, 0, image.getWidth(), image.getHeight());
+            drawersGrid.get(lX, lY).draw(t, snapshot, g);
             g.dispose();
           }
         }
       }
-    }
-
-            ;
+    };
   }
+
 
   @Override
   public void flush() throws IOException {
@@ -122,34 +118,31 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     VideoUtils.encodeAndSave(images, frameRate, file, encoder);
     long millis = stopWatch.getTime(TimeUnit.MILLISECONDS);
     L.fine(String.format(
-            "Video saved: %.1fMB written in %.2fs",
-            Files.size(file.toPath()) / 1024f / 1024f,
-            millis / 1000f
+        "Video saved: %.1fMB written in %.2fs",
+        Files.size(file.toPath()) / 1024f / 1024f,
+        millis / 1000f
     ));
   }
 
-  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Function<String, Drawer> drawerSupplier) throws IOException {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridFileWriter gridFileWriter = new GridFileWriter(
-            w, h, startTime, frameRate, encoder, file,
-            Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-            GraphicsDrawer.build().setConfigurable("drawers", List.of(
-                    it.units.erallab.hmsrobots.viewers.drawers.Ground.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Robot.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Voxel.build(),
-                    SensorReading.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Lidar.build(),
-                    it.units.erallab.hmsrobots.viewers.drawers.Angle.build()
-            ))
+        w, h, startTime, frameRate, encoder, file,
+        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
+        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.getLeft()))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
-            namedSolutions,
-            task,
-            gridFileWriter,
-            executor
+        namedSolutions,
+        task,
+        gridFileWriter,
+        executor
     );
     runner.run();
     executor.shutdownNow();
+  }
+
+  public static <S> void save(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {
+    save(task, namedSolutions, w, h, startTime, frameRate, encoder, file, Drawers::basicWithMiniWorld);
   }
 
   public static <S> void save(Task<S, ?> task, List<S> ss, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file) throws IOException {

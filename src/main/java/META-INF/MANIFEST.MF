@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: it.units.erallab.hmsrobots.FineLocomotionStarter
+Main-Class: it.units.erallab.hmsrobots.Starter

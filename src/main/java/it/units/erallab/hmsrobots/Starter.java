@@ -16,19 +16,15 @@
  */
 package it.units.erallab.hmsrobots;
 
-import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
-import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
-import it.units.erallab.hmsrobots.core.controllers.RealFunction;
-import it.units.erallab.hmsrobots.core.controllers.TimeFunctions;
-import it.units.erallab.hmsrobots.core.controllers.snn.*;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.AverageFrequencySpikeTrainToValueConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.MovingAverageSpikeTrainToValueConverter;
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.UniformWithMemoryValueToSpikeTrainConverter;
+import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.core.sensors.*;
+import it.units.erallab.hmsrobots.core.sensors.Angle;
+import it.units.erallab.hmsrobots.core.sensors.Lidar;
+import it.units.erallab.hmsrobots.core.sensors.Trend;
+import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -38,9 +34,11 @@ import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridFileWriter;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.VideoUtils;
+import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +106,7 @@ public class Starter {
         )
     );
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL
+        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
     );
     Outcome result = locomotion.apply(robot, framesImageBuilder);
     BufferedImage image = framesImageBuilder.getImage();
@@ -116,124 +114,19 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    //comb();
-    //lShaped();
-    //snn();
-    bipeds();
+    //bipeds();
     //rollingOne();
-    //jumpingTwo();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
     //multiped();
+    bipedAndBall();
   }
 
-  private static void lShaped() {
-    //one voxel robot
-    Grid<SensingVoxel> body = Grid.create(5, 5, (x, y) -> (x == 0 || y == 4) ? new SensingVoxel(List.of(
-        new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
-        new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)),
-        new Angle(),
-        new Lidar(10, Map.of(Lidar.Side.E, 4))
-    )) : null);
-    Robot<?> robot = new Robot<>(
-        new TimeFunctions(Grid.create(5, 5, t -> t > 2 ? 1d : 0d)),
-        body
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        5,
-        Locomotion.createTerrain("flat"),
-        new Settings()
-    );
-    Robot<?> r01 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
-    Robot<?> r02 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
-    System.out.println(locomotion.apply(robot));
-    System.out.println(locomotion.apply(r01));
-    System.out.println(locomotion.apply(r02));
-    Robot<?> r11 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
-    Robot<?> r12 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
-    GridOnlineViewer.run(locomotion, List.of(r01, r11, r12));
-    System.out.println(locomotion.apply(robot));
-    System.out.println(locomotion.apply(r11));
-    System.out.println(locomotion.apply(r12));
-    //Robot<?> r21 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
-    //r21.reset();
-  }
-
-  private static void comb() {
-    //one voxel robot
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+a+vxy-0.01").apply(RobotUtils.buildShape("comb-9x4"));
-    Robot<?> robot = new Robot<>(
-        new TimeFunctions(Grid.create(5, 5, t -> t > 2 ? 1d : 0d)),
-        body
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        5,
-        Locomotion.createTerrain("flat"),
-        new Settings()
-    );
-    Robot<?> r01 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
-    Robot<?> r02 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
-    System.out.println(locomotion.apply(robot));
-    System.out.println(locomotion.apply(r01));
-    System.out.println(locomotion.apply(r02));
-    Robot<?> r11 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
-    Robot<?> r12 = SerializationUtils.clone(robot, SerializationUtils.Mode.JSON);
-    GridOnlineViewer.run(locomotion, List.of(r01, r11, r12));
-    System.out.println(locomotion.apply(robot));
-    System.out.println(locomotion.apply(r11));
-    System.out.println(locomotion.apply(r12));
-    //Robot<?> r21 = SerializationUtils.clone(robot, SerializationUtils.Mode.JAVA);
-    //r21.reset();
-  }
-
-  private static void snn() {
-    Random random = new Random();
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-4x3"));
-    //centralized sensing
-    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultilayerSpikingNetwork multilayerSpikingNetwork = new MultilayerSpikingNetwork(centralizedSensing.nOfInputs(),
-        new int[]{2},
-        centralizedSensing.nOfOutputs(),
-        (l, i) -> new LIFNeuron());
-    MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(multilayerSpikingNetwork);
-    double[] ws = msn.getParams();
-    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
-    msn.setParams(ws);
-    centralizedSensing.setFunction(msn);
-    Robot<SensingVoxel> robot = new Robot<>(
-        centralizedSensing,
-        SerializationUtils.clone(body)
-    );
-    Locomotion locomotion = new Locomotion(
-        10,
-        Locomotion.createTerrain("hilly-0.3-1-0"),
-        new Settings()
-    );
-    //GridOnlineViewer.run(locomotion, robot);
-    try {
-      System.out.println("doing 1st video");
-      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/video.1.mp4"));
-      robot = SerializationUtils.clone(robot);
-      System.out.println("doing 2nd video");
-      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/video.2.mp4"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
-    locomotion.apply(robot, framesImageBuilder);
-    try {
-      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }*/
-  }
 
   private static void bipeds() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouchFootSighted-f-f-0.01").apply(RobotUtils.buildShape("biped-4x3"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
@@ -246,7 +139,7 @@ public class Starter {
     );
     //distribute sensing
     Random random = new Random();
-    /*DistributedSensing distributedSensing = new DistributedSensing(body, 1);
+    DistributedSensing distributedSensing = new DistributedSensing(body, 1);
     for (Grid.Entry<? extends SensingVoxel> entry : body) {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
           MultiLayerPerceptron.ActivationFunction.TANH,
@@ -262,44 +155,23 @@ public class Starter {
     Robot<SensingVoxel> distHetero = new Robot<>(
         distributedSensing,
         SerializationUtils.clone(body)
-    );*/
-    DistributedSpikingSensing distributedSpikingSensing = new DistributedSpikingSensing(body, 1, new LIFNeuronWithHomeostasis(), new UniformWithMemoryValueToSpikeTrainConverter(), new AverageFrequencySpikeTrainToValueConverter());
-    for (Grid.Entry<? extends SensingVoxel> entry : body) {
-      MultilayerSpikingNetwork multilayerSpikingNetwork = new MultilayerSpikingNetwork(
-          distributedSpikingSensing.nOfInputs(entry.getX(), entry.getY()),
-          new int[]{2},
-          distributedSpikingSensing.nOfOutputs(entry.getX(), entry.getY()),
-          (x, y) -> new LIFNeuronWithHomeostasis()
-      );
-      double[] ws = multilayerSpikingNetwork.getParams();
-      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 8d - 3d);
-      multilayerSpikingNetwork.setParams(ws);
-      distributedSpikingSensing.getFunctions().set(entry.getX(), entry.getY(), multilayerSpikingNetwork);
-    }
-    Robot<SensingVoxel> distHetero = new Robot<>(
-        distributedSpikingSensing,
-        SerializationUtils.clone(body)
     );
-
     //centralized sensing
-    CentralizedSensing centralizedSensing = new CentralizedSensing(body, true);
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
+    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
-        new int[]{2},
-        centralizedSensing.nOfOutputs()
+        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
+        centralizedSensing.nOfOutputs(),
+        10d,
+        PruningMultiLayerPerceptron.Context.NETWORK,
+        PruningMultiLayerPerceptron.Criterion.ABS_SIGNAL_MEAN,
+        0.95
     );
     double[] ws = mlp.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
-    MultilayerSpikingNetworkWithConverters msn = new MultilayerSpikingNetworkWithConverters(
-        new MultilayerSpikingNetwork(centralizedSensing.nOfInputs(), new int[]{2}, centralizedSensing.nOfOutputs(), (x, y) -> new LIFNeuron())
-    );
-    double[] msnWeights = msn.getParams();
-    IntStream.range(0, msnWeights.length).forEach(i -> msnWeights[i] = random.nextDouble() * 2d - 1d);
-    msn.setParams(msnWeights);
-    centralizedSensing.setFunction(msn);
     Robot<SensingVoxel> centralized = new Robot<>(
         centralizedSensing,
         SerializationUtils.clone(body)
@@ -307,14 +179,84 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(
         10,
-        Locomotion.createTerrain("flat"),
+        Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
+
     Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
     namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
-    GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndSpectra);
+    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
+    try {
+      GridFileWriter.save(
+          locomotion,
+          Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
+          600, 600, 1, 24,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL,
+          new File("/home/eric/biped-spectra.mp4"),
+          Drawers::basicWithMiniWorldAndSpectra
+      );
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  private static void bipedAndBall() {
+    //simple biped
+    Grid<? extends SensingVoxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
+    double f = 2d;
+    Robot<ControllableVoxel> bipedRobot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            bipedBody.getW(),
+            bipedBody.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) bipedBody.getW()))
+        )),
+        SerializationUtils.clone(bipedBody)
+    );
+    //centralized ball
+    Random random = new Random();
+    Grid<? extends SensingVoxel> ballBody = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0").apply(RobotUtils.buildShape("ball-7"));
+    CentralizedSensing centralizedSensing = new CentralizedSensing(ballBody);
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[0],
+        centralizedSensing.nOfOutputs()
+    );
+    mlp.setParams(IntStream.range(0, mlp.getParams().length).mapToDouble(i -> random.nextGaussian()).toArray());
+    centralizedSensing.setFunction(mlp);
+    Robot<SensingVoxel> ballRobot = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(ballBody)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("downhill-15"),
+        new Settings()
+    );
+
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(2, 1);
+    namedSolutionGrid.set(0, 0, Pair.of("biped", bipedRobot));
+    namedSolutionGrid.set(1, 0, Pair.of("ball", ballRobot));
+    GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndFootprintsAndPosture);
+    if (false) {
+      try {
+        GridFileWriter.save(
+            locomotion,
+            namedSolutionGrid,
+            800, 400, 1, 24,
+            VideoUtils.EncoderFacility.FFMPEG_SMALL,
+            new File("/home/eric/biped+ball-footprints+posture.mp4"),
+            Drawers::basicWithMiniWorldAndFootprintsAndPosture
+        );
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   private static void multiped() {
@@ -336,13 +278,13 @@ public class Starter {
         new Settings()
     );
     GridOnlineViewer.run(locomotion, robot);
-    /*FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 600, 300, FramesImageBuilder.Direction.VERTICAL);
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5, 7, .75, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic());
     locomotion.apply(robot, framesImageBuilder);
     try {
       ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
     } catch (IOException e) {
       e.printStackTrace();
-    }*/
+    }
   }
 
   private static void breakingWorm() {
@@ -374,9 +316,9 @@ public class Starter {
 
   private static void plainWorm() {
     Grid<? extends SensingVoxel> body = RobotUtils
-        .buildSensorizingFunction("uniform-l1-0.01")
+        //.buildSensorizingFunction("uniform-l1-0.01")
         //.buildSensorizingFunction("uniform-l5-0")
-        //.buildSensorizingFunction("uniformAll-0")
+        .buildSensorizingFunction("uniform-l5+vxy+t-0.01")
         .apply(RobotUtils.buildShape("worm-5x2"));
     double f = 1d;
     Robot<?> robot = new Robot<>(
@@ -393,7 +335,7 @@ public class Starter {
     robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        30,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
@@ -402,20 +344,20 @@ public class Starter {
 
   private static void cShaped() {
     Grid<Boolean> shape = Grid.create(8, 8, (x, y) -> x < 2 || y < 2 || y >= 6);
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t-0").apply(shape);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+vxy-0.05").apply(shape);
     Robot<?> robot = new Robot<>(
         new CentralizedSensing(body),
         SerializationUtils.clone(body)
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        10,
+        20,
         Locomotion.createTerrain("flatWithStart-2"),
         new Settings()
     );
     //GridOnlineViewer.run(locomotion, robot);
     try {
-      GridFileWriter.save(locomotion, robot, 300, 200, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
+      GridFileWriter.save(locomotion, robot, 600, 400, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/cshaped.mp4"));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -426,7 +368,7 @@ public class Starter {
     //one voxel robot
     Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
         new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
-        new Derivative(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y)),
+        new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.25),
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
@@ -443,43 +385,10 @@ public class Starter {
     GridOnlineViewer.run(locomotion, robot);
   }
 
-  public static SpikingNeuron[][] jumpingTwo() {
-    //two voxels robot
-    Grid<SensingVoxel> oneBody = Grid.create(1, 2, (x, y) -> new SensingVoxel(List.of(new Touch())));
-    SpikingNeuron[][] spikingNeurons = new SpikingNeuron[2][2];
-    for (int i = 0; i < spikingNeurons.length; i++)
-      for (int j = 0; j < spikingNeurons[i].length; j++)
-        spikingNeurons[i][j] = new IzhikevicNeuron(true);
-    double[][][] weights = new double[1][2][2];
-    weights[0][0][0] = 10;
-    weights[0][0][1] = 0;
-    weights[0][1][0] = 0;
-    weights[0][1][1] = 0;
-    MultilayerSpikingNetworkWithConverters m = new MultilayerSpikingNetworkWithConverters(
-        new MultilayerSpikingNetwork(spikingNeurons, weights),
-        new UniformWithMemoryValueToSpikeTrainConverter(50),
-        new MovingAverageSpikeTrainToValueConverter(50, 5)
-    );
-    //MultiLayerPerceptron m = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,2,new int[]{}, 2, new double[]{0,-100,0,0,0,0});
-    Robot<SensingVoxel> robot = new Robot<>(
-        new CentralizedSensing(oneBody, m),
-        oneBody
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        5,
-        //new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
-        Locomotion.createTerrain("flat"),
-        new Settings()
-    );
-    GridOnlineViewer.run(locomotion, robot);
-    return spikingNeurons;
-  }
-
   private static void rollingBall() {
     Random random = new Random();
     Grid<Boolean> shape = RobotUtils.buildShape("ball-7");
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+l5-0").apply(shape);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0").apply(shape);
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
@@ -498,11 +407,30 @@ public class Starter {
     );
     //episode
     Locomotion locomotion = new Locomotion(
-        60,
+        20,
         Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
-    GridOnlineViewer.run(locomotion, robot);
+
+    GridOnlineViewer.run(
+        locomotion,
+        Grid.create(1, 1, Pair.of("", robot)),
+        s -> Drawers.basicWithMiniWorld(s)
+    );
+    /*
+    try {
+      GridFileWriter.save(
+          locomotion,
+          Grid.create(1, 1, Pair.of("", robot)),
+          600, 600,
+          0, 30,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/ball-w-activity.mp4"),
+          drawerSupplier
+      );
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+     */
   }
 
 }

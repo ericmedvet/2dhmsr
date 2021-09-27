@@ -16,9 +16,10 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
-import it.units.erallab.hmsrobots.core.objects.immutable.Immutable;
-import it.units.erallab.hmsrobots.util.Point2;
-import it.units.erallab.hmsrobots.util.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
@@ -32,7 +33,7 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Ground implements WorldObject {
+public class Ground implements WorldObject, Snapshottable {
 
   private static final double MIN_Y_THICKNESS = 50d;
 
@@ -83,12 +84,12 @@ public class Ground implements WorldObject {
   }
 
   @Override
-  public Immutable immutable() {
+  public Snapshot getSnapshot() {
     Point2[] vertices = new Point2[polygon.size()];
     for (int i = 0; i < vertices.length; i++) {
-      vertices[i] = Point2.build(polygon.get(i));
+      vertices[i] = Point2.of(polygon.get(i));
     }
-    return new it.units.erallab.hmsrobots.core.objects.immutable.Ground(Poly.build(vertices));
+    return new Snapshot(Poly.of(vertices), getClass());
   }
 
   @Override
