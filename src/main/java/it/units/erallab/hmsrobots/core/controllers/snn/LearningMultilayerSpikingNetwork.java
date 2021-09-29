@@ -20,15 +20,19 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
   @JsonProperty
   private final STDPLearningRule[][][] learningRules;           // layer + start neuron + end neuron
 
+  @JsonProperty
+  private final double[][][] initialWeights;
+
   private final SortedSet<Double>[][] previousTimeOutputSpikes; // absolute time
 
   @JsonCreator
   @SuppressWarnings("unchecked")
   public LearningMultilayerSpikingNetwork(
       @JsonProperty("neurons") SpikingFunction[][] neurons,
-      @JsonProperty("weights") double[][][] weights,
+      @JsonProperty("initialWeights") double[][][] initialWeights,
       @JsonProperty("learningRules") STDPLearningRule[][][] learningRules) {
-    super(neurons, weights);
+    super(neurons, copyWeights(initialWeights));
+    this.initialWeights = initialWeights;
     this.learningRules = learningRules;
     previousTimeOutputSpikes = new SortedSet[neurons.length][];
     for (int i = 0; i < neurons.length; i++) {
@@ -178,6 +182,26 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
       }
     }
     return learningRules;
+  }
+
+  private static double[][][] copyWeights(double[][][] initialWeights, double[][][] targetArray) {
+    for (int i = 0; i < targetArray.length; i++) {
+      targetArray[i] = new double[initialWeights[i].length][];
+      for (int j = 0; j < targetArray[i].length; j++) {
+        targetArray[i][j] = Arrays.copyOf(initialWeights[i][j], initialWeights[i][j].length);
+      }
+    }
+    return targetArray;
+  }
+
+  private static double[][][] copyWeights(double[][][] initialWeights) {
+    return copyWeights(initialWeights, new double[initialWeights.length][][]);
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    copyWeights(initialWeights,weights);
   }
 
 }
