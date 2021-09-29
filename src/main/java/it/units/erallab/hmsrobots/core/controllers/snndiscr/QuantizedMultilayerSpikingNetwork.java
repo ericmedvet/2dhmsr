@@ -109,7 +109,6 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       }
     }
     // iterating over layers
-    int outlayer = 0;
     for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
       QuantizedSpikingFunction[] layer = neurons[layerIndex];
       thisLayersOutputs = new int[layer.length][];
@@ -139,7 +138,6 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       }
       previousLayersOutputs = thisLayersOutputs;
     }
-    System.out.println(outlayer);
     previousApplicationTime = t;
     return thisLayersOutputs;
   }

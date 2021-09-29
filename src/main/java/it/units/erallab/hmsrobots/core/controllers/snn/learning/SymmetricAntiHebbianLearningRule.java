@@ -13,4 +13,9 @@ public class SymmetricAntiHebbianLearningRule extends SymmetricSTPDLearningRule 
     return 0;
   }
 
+  @Override
+  public String toString() {
+    return "AntiHebbian" + super.toString();
+  }
+
 }

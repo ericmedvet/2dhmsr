@@ -40,21 +40,19 @@ public class GridMultipleEpisodesRunner<S> implements Runnable {
   static {
     try {
       LogManager.getLogManager().readConfiguration(GridMultipleEpisodesRunner.class.getClassLoader().getResourceAsStream("logging.properties"));
-    } catch (IOException ex) {
-      //ignore
-    } catch (SecurityException ex) {
+    } catch (IOException | SecurityException ex) {
       //ignore
     }
   }
 
-  private final Grid<Pair<S,Task<S,?>>> solutionsGrid;
+  private final Grid<Pair<S, Task<S, ?>>> solutionsGrid;
 
   private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
   private static final Logger L = Logger.getLogger(GridMultipleEpisodesRunner.class.getName());
 
-  public GridMultipleEpisodesRunner(Grid<Pair<S,Task<S,?>>> solutionsGrid, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
+  public GridMultipleEpisodesRunner(Grid<Pair<S, Task<S, ?>>> solutionsGrid, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
     this.solutionsGrid = solutionsGrid;
     this.executor = executor;
     this.gridSnapshotListener = gridSnapshotListener;
@@ -65,19 +63,20 @@ public class GridMultipleEpisodesRunner<S> implements Runnable {
     //start episodes
     List<Future<?>> results = new ArrayList<>();
     solutionsGrid.stream()
-            .forEach(entry -> results.add(executor.submit(() -> {
-              L.fine(String.format("Starting %s in position (%d,%d)", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY()));
-              S solution = entry.getValue().getLeft();
-              Task<S,?> task = entry.getValue().getRight();
-              Object outcome = task.apply(SerializationUtils.clone(solution), gridSnapshotListener.listener(entry.getX(), entry.getY()));
-              L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
-            })));
+        .forEach(entry -> results.add(executor.submit(() -> {
+          L.fine(String.format("Starting %s in position (%d,%d)", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY()));
+          S solution = entry.getValue().getLeft();
+          Task<S, ?> task = entry.getValue().getRight();
+          Object outcome = task.apply(SerializationUtils.clone(solution), gridSnapshotListener.listener(entry.getX(), entry.getY()));
+          L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
+        })));
     //wait for results
     for (Future<?> result : results) {
       try {
         result.get();
       } catch (InterruptedException | ExecutionException ex) {
-        L.log(Level.SEVERE, String.format("Cannot obtain one result due to %s", ex), ex);
+        ex.printStackTrace();
+        //L.log(Level.SEVERE, String.format("Cannot obtain one result due to %s", ex), ex);
       }
     }
     //flush and write

@@ -12,5 +12,10 @@ public class SymmetricHebbianLearningRule extends SymmetricSTPDLearningRule{
     }
     return 0;
   }
+
+  @Override
+  public String toString() {
+    return "Hebbian" + super.toString();
+  }
   
 }

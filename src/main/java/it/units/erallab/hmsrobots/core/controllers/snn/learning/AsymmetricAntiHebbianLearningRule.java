@@ -12,4 +12,8 @@ public class AsymmetricAntiHebbianLearningRule extends AsymmetricSTDPLearningRul
     return 0;
   }
 
+  @Override
+  public String toString() {
+    return "AntiHebbian" + super.toString();
+  }
 }

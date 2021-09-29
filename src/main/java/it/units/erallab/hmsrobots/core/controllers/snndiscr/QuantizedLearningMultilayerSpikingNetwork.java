@@ -3,8 +3,8 @@ package it.units.erallab.hmsrobots.core.controllers.snndiscr;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
+import it.units.erallab.hmsrobots.core.controllers.snn.learning.AsymmetricHebbianLearningRule;
 import it.units.erallab.hmsrobots.core.controllers.snn.learning.STDPLearningRule;
-import it.units.erallab.hmsrobots.core.controllers.snn.learning.SymmetricAntiHebbianLearningRule;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
 
 import java.util.Arrays;
@@ -110,6 +110,10 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
         }
       }
       outputSpikes[layerIndex] = thisLayersOutputs;
+      currentSpikes[layerIndex] = new int[thisLayersOutputs.length][];
+      for (int i = 0; i < currentSpikes[layerIndex].length; i++) {
+        currentSpikes[layerIndex][i] = Arrays.stream(thisLayersOutputs[i]).toArray();
+      }
       if (layerIndex == neurons.length - 1) {
         break;
       }
@@ -128,7 +132,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
         System.arraycopy(outputSpikes[layerIndex][neuronIndex], 0, previousTimeOutputSpikes[layerIndex][neuronIndex], STDP_LEARNING_WINDOW - 2 * ARRAY_SIZE, ARRAY_SIZE);
       }
     }
-    weightsInTime.put(t,flat(weights,neurons));
+    weightsInTime.put(t, flat(weights, neurons));
     previousApplicationTime = t;
     return thisLayersOutputs;
   }
@@ -174,11 +178,17 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
       for (int startingNeuron = 0; startingNeuron < weights[startingLayer].length; startingNeuron++) {
         learningRules[startingLayer][startingNeuron] = new STDPLearningRule[weights[startingLayer][startingNeuron].length];
         for (int learningRule = 0; learningRule < weights[startingLayer][startingNeuron].length; learningRule++) {
-          learningRules[startingLayer][startingNeuron][learningRule] = new SymmetricAntiHebbianLearningRule();
+          learningRules[startingLayer][startingNeuron][learningRule] = new AsymmetricHebbianLearningRule();
         }
       }
     }
     return learningRules;
   }
 
+  @Override
+  public void reset() {
+    super.reset();
+    // resetting to 0 the weights
+    Arrays.stream(weights).sequential().forEach(weight -> Arrays.stream(weight).sequential().forEach(w -> Arrays.fill(w, 0)));
+  }
 }

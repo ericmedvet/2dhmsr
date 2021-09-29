@@ -17,7 +17,11 @@
 package it.units.erallab.hmsrobots;
 
 import it.units.erallab.hmsrobots.core.controllers.*;
+import it.units.erallab.hmsrobots.core.controllers.snn.learning.AsymmetricHebbianLearningRule;
+import it.units.erallab.hmsrobots.core.controllers.snn.learning.AsymmetricSTDPLearningRule;
+import it.units.erallab.hmsrobots.core.controllers.snn.learning.STDPLearningRule;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedLIFNeuron;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedLearningMultilayerSpikingNetwork;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedMultilayerSpikingNetwork;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedMultilayerSpikingNetworkWithConverters;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
@@ -29,7 +33,6 @@ import it.units.erallab.hmsrobots.core.sensors.Angle;
 import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
-import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.SNNState;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
@@ -51,11 +54,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -140,12 +141,31 @@ public class Starter {
     Random random = new Random();
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    QuantizedMultilayerSpikingNetwork snn = new QuantizedMultilayerSpikingNetwork(
-        centralizedSensing.nOfInputs(),
-        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
-        centralizedSensing.nOfOutputs(),
-        (x, y) -> new QuantizedLIFNeuron()
-    );
+
+    int nOfInputs = centralizedSensing.nOfInputs();
+    int nOfOutputs = centralizedSensing.nOfOutputs();
+    int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
+    int nOfWeights = QuantizedMultilayerSpikingNetwork.countWeights(nOfInputs, innerNeurons, nOfOutputs);
+    List<Double> values = IntStream.range(0,nOfWeights * 4).mapToObj(i -> 2 * Math.random() -1).collect(Collectors.toList());
+    double[] weights = new double[nOfWeights];
+    double[][] rulesGenerator = new double[values.size() / 4][4];
+    int j = 0;
+    for (int i = 0; i < values.size(); i++) {
+      int pos = i % 4;
+      rulesGenerator[j][pos] = values.get(i);
+      if (pos == 3) {
+        j++;
+      }
+    }
+    STDPLearningRule[] learningRules = Arrays.stream(rulesGenerator).map(params -> {
+      STDPLearningRule rule = new AsymmetricHebbianLearningRule();
+      rule.setParams(AsymmetricSTDPLearningRule.scaleParameters(params));
+      return rule;
+    }).toArray(AsymmetricHebbianLearningRule[]::new);
+
+
+    QuantizedLearningMultilayerSpikingNetwork snn = new QuantizedLearningMultilayerSpikingNetwork(nOfInputs, innerNeurons, nOfOutputs, weights, learningRules, (x,y)->new QuantizedLIFNeuron());
+
     QuantizedMultilayerSpikingNetworkWithConverters snnWithConverters = new QuantizedMultilayerSpikingNetworkWithConverters(snn);
     double[] ws = snnWithConverters.getParams();
     IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);

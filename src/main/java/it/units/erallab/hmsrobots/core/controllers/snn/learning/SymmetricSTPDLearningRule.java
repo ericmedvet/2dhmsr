@@ -53,4 +53,11 @@ public abstract class SymmetricSTPDLearningRule extends STDPLearningRule {
     );
     return params;
   }
+
+  @Override
+  public String toString(){
+    return String.format("Symmetric learning rule: " +
+            "aPlus=%.3f aMinus=%.3f sigmaPlus=%.3f sigmaMinus=%.3f",
+        aPlus,aMinus,sigmaPlus,sigmaMinus);
+  }
 }

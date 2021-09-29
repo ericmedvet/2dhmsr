@@ -49,4 +49,11 @@ public abstract class AsymmetricSTDPLearningRule extends STDPLearningRule{
     return params;
   }
 
+  @Override
+  public String toString(){
+    return String.format("Asymmetric learning rule: " +
+        "aPlus=%.3f aMinus=%.3f tauPlus=%.3f tauMinus=%.3f",
+        aPlus,aMinus,tauPlus,tauMinus);
+  }
+
 }
