@@ -18,14 +18,18 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   @JsonProperty
   private final STDPLearningRule[][][] learningRules;           // layer + start neuron + end neuron
 
+  @JsonProperty
+  private final double[][][] initialWeights;
+
   private final int[][][] previousTimeOutputSpikes; // absolute time
 
   @JsonCreator
   public QuantizedLearningMultilayerSpikingNetwork(
       @JsonProperty("neurons") QuantizedSpikingFunction[][] neurons,
-      @JsonProperty("weights") double[][][] weights,
+      @JsonProperty("initialWeights") double[][][] initialWeights,
       @JsonProperty("learningRules") STDPLearningRule[][][] learningRules) {
-    super(neurons, weights);
+    super(neurons, copyWeights(initialWeights));
+    this.initialWeights = initialWeights;
     this.learningRules = learningRules;
     previousTimeOutputSpikes = new int[neurons.length][][];
     for (int i = 0; i < neurons.length; i++) {
@@ -185,10 +189,23 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
     return learningRules;
   }
 
+  private static double[][][] copyWeights(double[][][] initialWeights, double[][][] targetArray) {
+    for (int i = 0; i < targetArray.length; i++) {
+      targetArray[i] = new double[initialWeights[i].length][];
+      for (int j = 0; j < targetArray[i].length; j++) {
+        targetArray[i][j] = Arrays.copyOf(initialWeights[i][j], initialWeights[i][j].length);
+      }
+    }
+    return targetArray;
+  }
+
+  private static double[][][] copyWeights(double[][][] initialWeights) {
+    return copyWeights(initialWeights, new double[initialWeights.length][][]);
+  }
+
   @Override
   public void reset() {
     super.reset();
-    // resetting to 0 the weights
-    Arrays.stream(weights).sequential().forEach(weight -> Arrays.stream(weight).sequential().forEach(w -> Arrays.fill(w, 0)));
+    copyWeights(initialWeights,weights);
   }
 }

@@ -146,8 +146,8 @@ public class Starter {
     int nOfOutputs = centralizedSensing.nOfOutputs();
     int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
     int nOfWeights = QuantizedMultilayerSpikingNetwork.countWeights(nOfInputs, innerNeurons, nOfOutputs);
-    List<Double> values = IntStream.range(0,nOfWeights * 4).mapToObj(i -> 2 * Math.random() -1).collect(Collectors.toList());
-    double[] weights = new double[nOfWeights];
+    List<Double> values = IntStream.range(0, nOfWeights * 4).mapToObj(i -> 2 * Math.random() - 1).collect(Collectors.toList());
+    double[] weights = IntStream.range(0, nOfWeights).mapToDouble(i -> 2 * Math.random() - 1).toArray();
     double[][] rulesGenerator = new double[values.size() / 4][4];
     int j = 0;
     for (int i = 0; i < values.size(); i++) {
@@ -163,8 +163,7 @@ public class Starter {
       return rule;
     }).toArray(AsymmetricHebbianLearningRule[]::new);
 
-
-    QuantizedLearningMultilayerSpikingNetwork snn = new QuantizedLearningMultilayerSpikingNetwork(nOfInputs, innerNeurons, nOfOutputs, weights, learningRules, (x,y)->new QuantizedLIFNeuron());
+    QuantizedLearningMultilayerSpikingNetwork snn = new QuantizedLearningMultilayerSpikingNetwork(nOfInputs, innerNeurons, nOfOutputs, weights, learningRules, (x, y) -> new QuantizedLIFNeuron());
 
     QuantizedMultilayerSpikingNetworkWithConverters snnWithConverters = new QuantizedMultilayerSpikingNetworkWithConverters(snn);
     double[] ws = snnWithConverters.getParams();

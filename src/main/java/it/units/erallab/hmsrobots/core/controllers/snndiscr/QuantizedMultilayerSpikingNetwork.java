@@ -54,7 +54,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     }
     weightsInTime = new HashMap<>();
     weightsInTime.put(previousApplicationTime, flat(weights, neurons));
-    reset();
+    innerReset();
   }
 
   public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
@@ -272,6 +272,10 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   @Override
   public void reset() {
+    innerReset();
+  }
+
+  private void innerReset() {
     previousApplicationTime = 0d;
     for (int i = 0; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i].length; j++) {
