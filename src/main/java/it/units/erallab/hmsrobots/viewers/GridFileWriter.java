@@ -159,4 +159,8 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
     save(task, Grid.create(1, 1, Pair.of("solution", s)), w, h, startTime, frameRate, encoder, file);
   }
 
+  public static <S> void save(Task<S, ?> task, S s, int w, int h, double startTime, double frameRate, VideoUtils.EncoderFacility encoder, File file, Function<String, Drawer> drawerSupplier) throws IOException {
+    save(task, Grid.create(1, 1, Pair.of("solution", s)), w, h, startTime, frameRate, encoder, file, drawerSupplier);
+  }
+
 }
