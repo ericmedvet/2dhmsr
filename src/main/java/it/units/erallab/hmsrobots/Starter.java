@@ -27,6 +27,7 @@ import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
+import it.units.erallab.hmsrobots.tasks.devolocomotion.DevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -51,6 +52,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
 /**
@@ -127,9 +129,30 @@ public class Starter {
     //cShaped();
     //multiped();
     //bipedAndBall();
-    bipedCentralized();
+    //bipedCentralized();
+    devoComb();
   }
 
+  private static void devoComb() {
+    int startingL = 3;
+    double f = 1d;
+    UnaryOperator<Robot<?>> devoFunction = r -> {
+      int l = (r == null) ? startingL : (r.getVoxels().getW() + 1);
+      Grid<? extends SensingVoxel> body = RobotUtils
+          .buildSensorizingFunction("uniform-ax+t+r-0.01")
+          .apply(Grid.create(l, 2, (x, y) -> y > 0 || (x % 2 == 0)));
+      return new Robot<>(
+          new TimeFunctions(Grid.create(
+              body.getW(),
+              body.getH(),
+              (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
+          )),
+          body
+      );
+    };
+    DevoLocomotion devoLocomotion = new DevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
+    GridOnlineViewer.run(devoLocomotion, devoFunction);
+  }
 
   private static void bipeds() {
     Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
