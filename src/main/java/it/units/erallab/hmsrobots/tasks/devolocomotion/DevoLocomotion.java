@@ -93,13 +93,18 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, List<O
     CurrentTarget currentTarget = new CurrentTarget(targetXs);
     targetXs.add(stageX);
     targetXs.add(stageX + stageMinDistance);
+    //modify listener
+    if (listener != null) {
+      final SnapshotListener originalListener = listener;
+      listener = (sT, s) -> {
+        s.getChildren().add(currentTarget.getSnapshot());
+        originalListener.listen(sT, s);
+      };
+    }
     while (t < maxT) {
       t = AbstractTask.updateWorld(
           t, settings.getStepFrequency(), world, worldObjects,
-          (sT, s) -> {
-            s.getChildren().add(currentTarget.getSnapshot());
-            listener.listen(sT, s);
-          }
+          listener
       );
       observations.put(t, new Outcome.Observation(
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
