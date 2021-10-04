@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
 
   private static final double STDP_LEARNING_WINDOW = 0.04;
+  private static final double MAX_WEIGHT_MAGNITUDE = 1.2;
 
   @JsonProperty
   private final STDPLearningRule[][][] learningRules;           // layer + start neuron + end neuron
@@ -25,13 +26,23 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
 
   private final SortedSet<Double>[][] previousTimeOutputSpikes; // absolute time
 
+  @JsonProperty
+  private boolean weightsClipping;
+  @JsonProperty
+  private double maxWeightMagnitude;
+
   @JsonCreator
   @SuppressWarnings("unchecked")
   public LearningMultilayerSpikingNetwork(
       @JsonProperty("neurons") SpikingFunction[][] neurons,
       @JsonProperty("initialWeights") double[][][] initialWeights,
-      @JsonProperty("learningRules") STDPLearningRule[][][] learningRules) {
+      @JsonProperty("learningRules") STDPLearningRule[][][] learningRules,
+      @JsonProperty("clipWeights") boolean weightsClipping,
+      @JsonProperty("maxWeightMagnitude") double maxWeightMagnitude
+  ) {
     super(neurons, copyWeights(initialWeights));
+    this.weightsClipping = weightsClipping;
+    this.maxWeightMagnitude = maxWeightMagnitude;
     this.initialWeights = initialWeights;
     this.learningRules = learningRules;
     previousTimeOutputSpikes = new SortedSet[neurons.length][];
@@ -43,8 +54,16 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     }
   }
 
+  @JsonCreator
+  public LearningMultilayerSpikingNetwork(
+      SpikingFunction[][] neurons,
+      double[][][] initialWeights,
+      STDPLearningRule[][][] learningRules) {
+    this(neurons, initialWeights, learningRules, false, MAX_WEIGHT_MAGNITUDE);
+  }
+
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[][][] weights) {
-    this(neurons, weights,initializeLearningRules(weights));
+    this(neurons, weights, initializeLearningRules(weights));
   }
 
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights) {
@@ -60,7 +79,7 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
   }
 
   public LearningMultilayerSpikingNetwork(SpikingFunction[][] neurons, double[] weights, STDPLearningRule[] learningRules) {
-    this(neurons, unflat(weights, neurons), unflat(learningRules,neurons));
+    this(neurons, unflat(weights, neurons), unflat(learningRules, neurons));
   }
 
   @SuppressWarnings("unchecked")
@@ -101,15 +120,15 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
           for (int previousNeuronIndex = 0; previousNeuronIndex < previousLayersOutputs.length; previousNeuronIndex++) {
             double deltaW = 0;
             SortedSet<Double> previousOutputs = new TreeSet<>(previousTimeOutputSpikes[layerIndex - 1][previousNeuronIndex]);
-            previousOutputs.addAll(absoluteTimeOutputSpikes[layerIndex-1][previousNeuronIndex]);
+            previousOutputs.addAll(absoluteTimeOutputSpikes[layerIndex - 1][previousNeuronIndex]);
             for (double tOut : absoluteTimeOutputSpikes[layerIndex][neuronIndex]) {
               for (double tIn : previousOutputs) {
                 if (Math.abs(tOut - tIn) <= STDP_LEARNING_WINDOW) {
-                  deltaW += learningRules[layerIndex-1][previousNeuronIndex][neuronIndex].computeDeltaW(tOut - tIn);
+                  deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW(tOut - tIn);
                 }
               }
             }
-            weights[layerIndex-1][previousNeuronIndex][neuronIndex] += deltaW;
+            weights[layerIndex - 1][previousNeuronIndex][neuronIndex] += deltaW;
           }
         }
         if (spikesTracker) {
@@ -132,8 +151,34 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     for (int layer = 0; layer < absoluteTimeOutputSpikes.length; layer++) {
       System.arraycopy(absoluteTimeOutputSpikes[layer], 0, previousTimeOutputSpikes[layer], 0, absoluteTimeOutputSpikes[layer].length);
     }
+    if (weightsClipping) {
+      clipWeights();
+    }
     previousApplicationTime = t;
     return thisLayersOutputs;
+  }
+
+  private void clipWeights() {
+    for (int i = 0; i < weights.length; i++) {
+      for (int j = 0; j < weights[i].length; j++) {
+        for (int k = 0; k < weights[i][j].length; k++) {
+          weights[i][j][k] = Math.min(maxWeightMagnitude, Math.max(weights[i][j][k], -maxWeightMagnitude));
+        }
+      }
+    }
+  }
+
+  public void enableWeightsClipping(double maxWeightMagnitude) {
+    weightsClipping = true;
+    this.maxWeightMagnitude = maxWeightMagnitude;
+  }
+
+  public void enableWeightsClipping() {
+    enableWeightsClipping(MAX_WEIGHT_MAGNITUDE);
+  }
+
+  public void disableWeightsClipping() {
+    weightsClipping = false;
   }
 
   // for each layer, for each neuron, list incoming weights in order
@@ -170,13 +215,13 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
     return learningRules;
   }
 
-  private static STDPLearningRule[][][] initializeLearningRules(double[][][] weights){
+  private static STDPLearningRule[][][] initializeLearningRules(double[][][] weights) {
     STDPLearningRule[][][] learningRules = new STDPLearningRule[weights.length][][];
     for (int startingLayer = 0; startingLayer < weights.length; startingLayer++) {
       learningRules[startingLayer] = new STDPLearningRule[weights[startingLayer].length][];
       for (int startingNeuron = 0; startingNeuron < weights[startingLayer].length; startingNeuron++) {
         learningRules[startingLayer][startingNeuron] = new STDPLearningRule[weights[startingLayer][startingNeuron].length];
-        for(int learningRule =0; learningRule<weights[startingLayer][startingNeuron].length; learningRule++){
+        for (int learningRule = 0; learningRule < weights[startingLayer][startingNeuron].length; learningRule++) {
           learningRules[startingLayer][startingNeuron][learningRule] = new SymmetricAntiHebbianLearningRule();
         }
       }
@@ -201,7 +246,7 @@ public class LearningMultilayerSpikingNetwork extends MultilayerSpikingNetwork {
   @Override
   public void reset() {
     super.reset();
-    copyWeights(initialWeights,weights);
+    copyWeights(initialWeights, weights);
   }
 
 }

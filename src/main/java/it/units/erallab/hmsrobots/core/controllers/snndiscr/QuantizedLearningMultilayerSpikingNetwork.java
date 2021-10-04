@@ -14,6 +14,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
 
   private static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
   private static final int STDP_LEARNING_WINDOW = (int) (2.5 * ARRAY_SIZE);
+  private static final double MAX_WEIGHT_MAGNITUDE = 1.2;
 
   @JsonProperty
   private final STDPLearningRule[][][] learningRules;           // layer + start neuron + end neuron
@@ -23,12 +24,22 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
 
   private final int[][][] previousTimeOutputSpikes; // absolute time
 
+  @JsonProperty
+  private boolean weightsClipping;
+  @JsonProperty
+  private double maxWeightMagnitude;
+
   @JsonCreator
   public QuantizedLearningMultilayerSpikingNetwork(
       @JsonProperty("neurons") QuantizedSpikingFunction[][] neurons,
       @JsonProperty("initialWeights") double[][][] initialWeights,
-      @JsonProperty("learningRules") STDPLearningRule[][][] learningRules) {
+      @JsonProperty("learningRules") STDPLearningRule[][][] learningRules,
+      @JsonProperty("clipWeights") boolean weightsClipping,
+      @JsonProperty("maxWeightMagnitude") double maxWeightMagnitude
+  ) {
     super(neurons, copyWeights(initialWeights));
+    this.weightsClipping = weightsClipping;
+    this.maxWeightMagnitude = maxWeightMagnitude;
     this.initialWeights = initialWeights;
     this.learningRules = learningRules;
     previousTimeOutputSpikes = new int[neurons.length][][];
@@ -38,6 +49,10 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
         previousTimeOutputSpikes[i][j] = new int[STDP_LEARNING_WINDOW - ARRAY_SIZE];
       }
     }
+  }
+
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] initialWeights, STDPLearningRule[][][] learningRules) {
+    this(neurons, initialWeights, learningRules, false, MAX_WEIGHT_MAGNITUDE);
   }
 
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] weights) {
@@ -136,9 +151,35 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
         System.arraycopy(outputSpikes[layerIndex][neuronIndex], 0, previousTimeOutputSpikes[layerIndex][neuronIndex], STDP_LEARNING_WINDOW - 2 * ARRAY_SIZE, ARRAY_SIZE);
       }
     }
+    if (weightsClipping) {
+      clipWeights();
+    }
     weightsInTime.put(t, flat(weights, neurons));
     previousApplicationTime = t;
     return thisLayersOutputs;
+  }
+
+  private void clipWeights() {
+    for (int i = 0; i < weights.length; i++) {
+      for (int j = 0; j < weights[i].length; j++) {
+        for (int k = 0; k < weights[i][j].length; k++) {
+          weights[i][j][k] = Math.min(maxWeightMagnitude, Math.max(weights[i][j][k], -maxWeightMagnitude));
+        }
+      }
+    }
+  }
+
+  public void enableWeightsClipping(double maxWeightMagnitude) {
+    weightsClipping = true;
+    this.maxWeightMagnitude = maxWeightMagnitude;
+  }
+
+  public void enableWeightsClipping() {
+    enableWeightsClipping(MAX_WEIGHT_MAGNITUDE);
+  }
+
+  public void disableWeightsClipping() {
+    weightsClipping = false;
   }
 
   // for each layer, for each neuron, list incoming weights in order
@@ -206,6 +247,6 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   @Override
   public void reset() {
     super.reset();
-    copyWeights(initialWeights,weights);
+    copyWeights(initialWeights, weights);
   }
 }

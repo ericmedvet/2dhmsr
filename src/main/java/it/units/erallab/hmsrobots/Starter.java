@@ -164,6 +164,7 @@ public class Starter {
     }).toArray(AsymmetricHebbianLearningRule[]::new);
 
     QuantizedLearningMultilayerSpikingNetwork snn = new QuantizedLearningMultilayerSpikingNetwork(nOfInputs, innerNeurons, nOfOutputs, weights, learningRules, (x, y) -> new QuantizedLIFNeuron());
+    snn.enableWeightsClipping();
 
     QuantizedMultilayerSpikingNetworkWithConverters snnWithConverters = new QuantizedMultilayerSpikingNetworkWithConverters(snn);
     double[] ws = snnWithConverters.getParams();
