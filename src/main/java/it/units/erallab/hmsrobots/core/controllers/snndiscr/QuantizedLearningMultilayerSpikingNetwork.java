@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.controllers.snn.learning.AsymmetricHebbianLearningRule;
 import it.units.erallab.hmsrobots.core.controllers.snn.learning.STDPLearningRule;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedMovingAverageSpikeTrainToValueConverter;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
 
 import java.util.Arrays;
@@ -34,10 +36,11 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
       @JsonProperty("neurons") QuantizedSpikingFunction[][] neurons,
       @JsonProperty("initialWeights") double[][][] initialWeights,
       @JsonProperty("learningRules") STDPLearningRule[][][] learningRules,
+      @JsonProperty("snapshotConverters") QuantizedSpikeTrainToValueConverter[][] snapshotConverters,
       @JsonProperty("clipWeights") boolean weightsClipping,
       @JsonProperty("maxWeightMagnitude") double maxWeightMagnitude
   ) {
-    super(neurons, copyWeights(initialWeights));
+    super(neurons, copyWeights(initialWeights), snapshotConverters);
     this.weightsClipping = weightsClipping;
     this.maxWeightMagnitude = maxWeightMagnitude;
     this.initialWeights = initialWeights;
@@ -51,28 +54,56 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
     }
   }
 
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] initialWeights, STDPLearningRule[][][] learningRules, boolean weightsClipping, double maxWeightMagnitude) {
+    this(neurons, initialWeights, learningRules, createSnapshotConverters(neurons, new QuantizedMovingAverageSpikeTrainToValueConverter()), weightsClipping, maxWeightMagnitude);
+  }
+
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] initialWeights, STDPLearningRule[][][] learningRules) {
     this(neurons, initialWeights, learningRules, false, MAX_WEIGHT_MAGNITUDE);
+  }
+
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] initialWeights, STDPLearningRule[][][] learningRules, QuantizedSpikeTrainToValueConverter converter) {
+    this(neurons, initialWeights, learningRules, createSnapshotConverters(neurons,converter), false, MAX_WEIGHT_MAGNITUDE);
   }
 
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] weights) {
     this(neurons, weights, initializeLearningRules(weights));
   }
 
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] weights, QuantizedSpikeTrainToValueConverter converter) {
+    this(neurons, weights, initializeLearningRules(weights), converter);
+  }
+
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
     this(neurons, unflat(weights, neurons));
+  }
+
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights, QuantizedSpikeTrainToValueConverter converter) {
+    this(neurons, unflat(weights, neurons),converter);
   }
 
   public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights, learningRules);
   }
 
+  public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, QuantizedSpikeTrainToValueConverter converter) {
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights, learningRules, converter);
+  }
+
   public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
   }
 
+  public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, QuantizedSpikeTrainToValueConverter converter) {
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))], converter);
+  }
+
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights, STDPLearningRule[] learningRules) {
     this(neurons, unflat(weights, neurons), unflat(learningRules, neurons));
+  }
+
+  public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights, STDPLearningRule[] learningRules, QuantizedSpikeTrainToValueConverter converter) {
+    this(neurons, unflat(weights, neurons), unflat(learningRules, neurons), converter);
   }
 
   @Override

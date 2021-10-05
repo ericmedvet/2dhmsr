@@ -94,7 +94,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
   }
 
-  private static QuantizedSpikeTrainToValueConverter[][] createSnapshotConverters(QuantizedSpikingFunction[][] neurons, QuantizedSpikeTrainToValueConverter converter) {
+  protected static QuantizedSpikeTrainToValueConverter[][] createSnapshotConverters(QuantizedSpikingFunction[][] neurons, QuantizedSpikeTrainToValueConverter converter) {
     QuantizedSpikeTrainToValueConverter[][] converters = new QuantizedSpikeTrainToValueConverter[neurons.length][];
     IntStream.range(0, converters.length).forEach(layer -> {
       converters[layer] = new QuantizedSpikeTrainToValueConverter[neurons[layer].length];
