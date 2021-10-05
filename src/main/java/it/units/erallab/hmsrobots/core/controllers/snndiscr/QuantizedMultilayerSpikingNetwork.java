@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedMovingAverageSpikeTrainToValueConverter;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.snapshots.SNNState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
@@ -12,6 +14,7 @@ import it.units.erallab.hmsrobots.util.SerializationUtils;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
@@ -22,6 +25,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
   @JsonProperty
   protected final double[][][] weights;           // layer + start neuron + end neuron
   protected double previousApplicationTime = 0d;
+  protected double timeWindowSize;
 
   protected boolean spikesTracker = false;
   protected final List<Double>[][] spikes;
@@ -30,13 +34,18 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
   protected boolean weightsTracker = false;
   protected final Map<Double, double[]> weightsInTime;
 
+  @JsonProperty
+  private final QuantizedSpikeTrainToValueConverter[][] snapshotConverters;
+
   @SuppressWarnings("unchecked")
   @JsonCreator
   public QuantizedMultilayerSpikingNetwork(
       @JsonProperty("neurons") QuantizedSpikingFunction[][] neurons,
-      @JsonProperty("weights") double[][][] weights) {
+      @JsonProperty("weights") double[][][] weights,
+      @JsonProperty("snapshotConverters") QuantizedSpikeTrainToValueConverter[][] snapshotConverters) {
     this.neurons = neurons;
     this.weights = weights;
+    this.snapshotConverters = snapshotConverters;
     if (flat(weights, neurons).length != countWeights(neurons)) {
       throw new IllegalArgumentException(String.format(
           "Wrong number of weights: %d expected, %d found",
@@ -57,6 +66,22 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     innerReset();
   }
 
+  public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[][][] weights) {
+    this(neurons, weights, createSnapshotConverters(neurons, new QuantizedMovingAverageSpikeTrainToValueConverter()));
+  }
+
+  public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights, QuantizedSpikeTrainToValueConverter converter) {
+    this(neurons, unflat(weights, neurons), createSnapshotConverters(neurons, converter));
+  }
+
+  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, QuantizedSpikeTrainToValueConverter converter) {
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), weights, converter);
+  }
+
+  public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder, QuantizedSpikeTrainToValueConverter converter) {
+    this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))], converter);
+  }
+
   public QuantizedMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights) {
     this(neurons, unflat(weights, neurons));
   }
@@ -67,6 +92,19 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   public QuantizedMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
     this(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder), new double[countWeights(createNeurons(MultiLayerPerceptron.countNeurons(nOfInput, innerNeurons, nOfOutput), neuronBuilder))]);
+  }
+
+  private static QuantizedSpikeTrainToValueConverter[][] createSnapshotConverters(QuantizedSpikingFunction[][] neurons, QuantizedSpikeTrainToValueConverter converter) {
+    QuantizedSpikeTrainToValueConverter[][] converters = new QuantizedSpikeTrainToValueConverter[neurons.length][];
+    IntStream.range(0, converters.length).forEach(layer -> {
+      converters[layer] = new QuantizedSpikeTrainToValueConverter[neurons[layer].length];
+      IntStream.range(0, neurons[layer].length).forEach(neuron -> {
+            converters[layer][neuron] = SerializationUtils.clone(converter);
+            converters[layer][neuron].reset();
+          }
+      );
+    });
+    return converters;
   }
 
   protected static QuantizedSpikingFunction[][] createNeurons(int[] neuronsPerLayer, QuantizedSpikingFunction quantizedSpikingFunction) {
@@ -94,7 +132,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
 
   @Override
   public int[][] apply(double t, int[][] inputs) {
-    double deltaT = t - previousApplicationTime;
+    timeWindowSize = t - previousApplicationTime;
     if (inputs.length != neurons[0].length) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
     }
@@ -120,7 +158,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
           int arrayLength = thisLayersOutputs[neuronIndex].length;
           int finalLayerIndex = layerIndex;
           int finalNeuronIndex = neuronIndex;
-          Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * deltaT + previousApplicationTime));
+          Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * timeWindowSize + previousApplicationTime));
         }
       }
       currentSpikes[layerIndex] = new int[thisLayersOutputs.length][];
@@ -261,7 +299,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
   @Override
   public Snapshot getSnapshot() {
     return new Snapshot(
-        new SNNState(getCurrentSpikes(), getWeights()),
+        new SNNState(getCurrentSpikes(), getWeights(), snapshotConverters, timeWindowSize),
         getClass()
     );
   }
@@ -281,6 +319,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
       for (int j = 0; j < neurons[i].length; j++) {
         neurons[i][j].reset();
         spikes[i][j].clear();
+        snapshotConverters[i][j].reset();
       }
     }
   }

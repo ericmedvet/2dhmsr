@@ -77,8 +77,8 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
 
   @Override
   public int[][] apply(double t, int[][] inputs) {
-    double deltaT = t - previousApplicationTime;
-    double deltaTF = deltaT / (double) ARRAY_SIZE;
+    timeWindowSize = t - previousApplicationTime;
+    double deltaTF = timeWindowSize / (double) ARRAY_SIZE;
     if (inputs.length != neurons[0].length) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
     }
@@ -125,7 +125,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
           int arrayLength = thisLayersOutputs[neuronIndex].length;
           int finalLayerIndex = layerIndex;
           int finalNeuronIndex = neuronIndex;
-          Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * deltaT + previousApplicationTime));
+          Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * timeWindowSize + previousApplicationTime));
         }
       }
       outputSpikes[layerIndex] = thisLayersOutputs;

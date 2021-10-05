@@ -17,9 +17,12 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
+import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.util.Domain;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * @author "Eric Medvet" on 2021/09/10 for 2dhmsr
@@ -28,16 +31,19 @@ public class SNNState extends MLPState {
 
   private final int[][][] spikes;
 
-  public SNNState(int[][][] spikes, double[][][] weights) {
-    super(computeFiringRates(spikes), weights, Domain.of(0, Double.POSITIVE_INFINITY));
+  public SNNState(int[][][] spikes, double[][][] weights, QuantizedSpikeTrainToValueConverter[][] converters, double timeWindowSize) {
+    super(computeFiringRates(spikes, converters,timeWindowSize), weights, Domain.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
     this.spikes = copyOf(spikes);
   }
 
-  private static double[][] computeFiringRates(int[][][] spikes) {
+  private static double[][] computeFiringRates(int[][][] spikes, QuantizedSpikeTrainToValueConverter[][] converters, double timeWindowSize) {
     double[][] firingRates = new double[spikes.length][];
-    for (int i = 0; i < firingRates.length; i++) {
-      firingRates[i] = Arrays.stream(spikes[i]).sequential().mapToDouble(s -> Arrays.stream(s).sum() * 1d / s.length).toArray();
-    }
+    IntStream.range(0, spikes.length).forEach(layer -> {
+      firingRates[layer] = new double[spikes[layer].length];
+      IntStream.range(0, spikes[layer].length).forEach(neuron ->
+          firingRates[layer][neuron] = converters[layer][neuron].convert(spikes[layer][neuron],timeWindowSize)
+      );
+    });
     return firingRates;
   }
 

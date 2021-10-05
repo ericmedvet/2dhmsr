@@ -54,7 +54,7 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
   }
 
   @Override
-  public double[] apply(double t, double[] input) {
+  public double[] apply(final double t, double[] input) {
     double deltaT = t - previousApplicationTime;
     int[][] inputSpikes = new int[input.length][];
     IntStream.range(0, input.length).forEach(i ->
