@@ -22,10 +22,13 @@ import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
+import it.units.erallab.hmsrobots.core.snapshots.SNNState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -194,6 +197,44 @@ public class Drawers {
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
             footprintsAndPosture(0, 5, 4, 8)
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer basicWithMiniWorldAndBrainUsage(String string) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld()
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(SNNState.class, null, null), 15d,
+                    EnumSet.allOf(MLPDrawer.Part.class)
+                )
+            )
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer basicWithMiniWorldAndBrain(String string) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld()
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(SNNState.class, null, null), 15d,
+                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS)
+                )
+            )
         ),
         new InfoDrawer(string)
     );
