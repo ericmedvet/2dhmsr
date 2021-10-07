@@ -366,11 +366,11 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         }));
       }
 
-      for (int i = 0; i < valuesToPlot.length; i++) {
-        for (int j = 0; j < valuesToPlot[i].length; j++) {
+      for (double[] doubles : valuesToPlot) {
+        for (double aDouble : doubles) {
           double y = bb.min.y + c / n * bbH;
           c = c + 1;
-          g.setColor(DrawingUtils.linear(minColor, zeroColor, maxColor, (float) min, 0, (float) max, (float) valuesToPlot[i][j]));
+          g.setColor(DrawingUtils.linear(minColor, zeroColor, maxColor, (float) min, 0, (float) max, (float) aDouble));
           g.fill(new Rectangle2D.Double(x - 2 * cellW, y, 2 * cellW, cellH));
         }
       }
@@ -464,7 +464,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   private static double[][] abs(double[][] v) {
     double[][] absV = new double[v.length][];
     IntStream.range(0, v.length).forEach(i ->
-        absV[i] = Arrays.stream(v[i]).map(x -> Math.abs(x)).toArray()
+        absV[i] = Arrays.stream(v[i]).map(Math::abs).toArray()
     );
     return absV;
   }
