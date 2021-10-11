@@ -27,7 +27,6 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
-import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -213,7 +212,7 @@ public class Drawers {
             Drawer.of(
                 Drawer.clear(),
                 new MLPDrawer(SubtreeDrawer.Extractor.matches(SNNState.class, null, null), 15d,
-                    EnumSet.allOf(MLPDrawer.Part.class)
+                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.VARIANCE_AND_WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
         ),
@@ -232,7 +231,7 @@ public class Drawers {
             Drawer.of(
                 Drawer.clear(),
                 new MLPDrawer(SubtreeDrawer.Extractor.matches(SNNState.class, null, null), 15d,
-                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS)
+                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
         ),

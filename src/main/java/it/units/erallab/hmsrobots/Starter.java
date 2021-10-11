@@ -175,7 +175,7 @@ public class Starter {
         Locomotion.createTerrain("steppy-3-10-0"),
         new Settings()
     );
-    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), Drawers::basicWithMiniWorldAndBrain);
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), Drawers::basicWithMiniWorldAndBrainUsage);
 
     /*try {
       GridFileWriter.save(

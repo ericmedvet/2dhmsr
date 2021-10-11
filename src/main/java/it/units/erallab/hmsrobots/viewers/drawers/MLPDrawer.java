@@ -40,7 +40,7 @@ import java.util.stream.IntStream;
  */
 public class MLPDrawer extends MemoryDrawer<MLPState> {
 
-  public enum Part {ACTIVATION_VALUES, WEIGHTS, USAGE, VARIANCE, VARIANCE_AND_WEIGHTS, LEGEND, T_AXIS, STRUCTURE_AXIS}
+  public enum Part {ACTIVATION_VALUES, WEIGHTS, USAGE, VARIANCE, VARIANCE_AND_WEIGHTS, LEGEND, T_AXIS, STRUCTURE_AXIS, HISTOGRAM}
 
   private static final Set<Part> PLOTS = Set.of(Part.ACTIVATION_VALUES, Part.WEIGHTS, Part.USAGE, Part.VARIANCE, Part.VARIANCE_AND_WEIGHTS);
 
@@ -51,6 +51,10 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   private final static double VARIANCE_WINDOW = 2d;
 
   private final static double LEGEND_COLORS = 15;
+
+  private final static int N_OF_BINS = 15;
+  private final static double HISTOGRAM_PLOT_RATIO = 0.1;
+  private final static double HISTOGRAM_BLANK_RATIO = 0.9;
 
   private final Set<Part> parts;
   private final List<Part> plotParts;
@@ -88,11 +92,18 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     double textW = g.getFontMetrics().charWidth('m');
+    double oBBOffset = parts.contains(Part.HISTOGRAM) ? HISTOGRAM_PLOT_RATIO * (g.getClip().getBounds2D().getMaxX() - g.getClip().getBounds2D().getX()) : 0;
     BoundingBox oBB = BoundingBox.of(
-        g.getClip().getBounds2D().getX(),
+        g.getClip().getBounds2D().getX() + oBBOffset,
         g.getClip().getBounds2D().getY(),
         g.getClip().getBounds2D().getMaxX(),
         g.getClip().getBounds2D().getMaxY()
+    );
+    BoundingBox hBB = BoundingBox.of(
+        g.getClip().getBounds2D().getX(),
+        oBB.min.y,
+        oBB.min.x,
+        oBB.max.y
     );
     BoundingBox pBB = BoundingBox.of(
         parts.contains(Part.LEGEND) ? (oBB.min.x + 6 * textW) : oBB.min.x,
@@ -100,7 +111,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         parts.contains(Part.STRUCTURE_AXIS) ? (oBB.max.x - 5 * textW) : oBB.max.x,
         parts.contains(Part.T_AXIS) ? (oBB.max.y - 3 * textH) : oBB.max.y
     );
-
     if (plotParts.size() == 1) {
       boundingBoxes[0] = pBB;
     }
@@ -158,6 +168,16 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             textW, g
         );
       }
+      if (parts.contains(Part.HISTOGRAM)) {
+        drawHistogram(memory, MLPState::getActivationValues, min, max,
+            BoundingBox.of(
+                hBB.min.x,
+                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].min.y + textH,
+                hBB.max.x,
+                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].max.y - textH
+            ),
+            g);
+      }
     }
     if (parts.contains(Part.WEIGHTS)) {
       double min = memory.values().stream()
@@ -186,6 +206,16 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             BoundingBox.of(boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max.x, boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].min.y, oBB.max.x, boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max.y),
             textW, g
         );
+      }
+      if (parts.contains(Part.HISTOGRAM)) {
+        drawHistogram(memory, s -> flat(s.getWeights()), min, max,
+            BoundingBox.of(
+                hBB.min.x,
+                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].min.y + textH,
+                hBB.max.x,
+                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max.y - textH
+            ),
+            g);
       }
     }
     if (parts.contains(Part.USAGE)) {
@@ -217,7 +247,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         );
       }
     }
-
     if (parts.contains(Part.VARIANCE)) {
       double min = memory.values().stream()
           .mapToDouble(s -> min(s.getActivationValues()))
@@ -247,45 +276,67 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         );
       }
     }
-
     if (parts.contains(Part.VARIANCE_AND_WEIGHTS)) {
       double minWeights = 0d;
       double maxWeights = memory.values().stream()
           .mapToDouble(s -> max(abs(flat(s.getWeights()))))
           .max().orElse(0d);
-
       double minVariance = 0;
-      double maxVariance = 5;
+      double maxVariance = 2;
 
-      draw(t, 0d, VARIANCE_WINDOW, memory,
+      drawDoubleChannel(t, 0d, VARIANCE_WINDOW, memory,
           s -> abs(flat(s.getWeights())), minWeights, maxWeights,
           s -> flat(mapActivationValuesToWeights(s.getActivationValues(), s.getWeights())), minVariance, maxVariance,
           boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)], g);
       if (parts.contains(Part.LEGEND)) {
-        drawLegend(
-            minWeights, maxWeights,
+        drawDoubleChannelLegend(minWeights, maxWeights, Color.RED, minVariance, maxVariance, Color.GREEN,
             BoundingBox.of(
                 oBB.min.x,
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min.y + textH,
+                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min.y,
                 boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min.x - textW,
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max.y - textH
+                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max.y
             ),
-            textW, g
-        );
+            textW, textH, g);
       }
       if (parts.contains(Part.STRUCTURE_AXIS)) {
         drawStructure(
             Arrays.stream(flat(current.getWeights())).mapToInt(v -> v.length).toArray(),
-            i -> "n-w" + i + (i + 1),
+            i -> "w-v" + i + (i + 1),
             BoundingBox.of(boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max.x, boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min.y, oBB.max.x, boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max.y),
             textW, g
         );
       }
     }
-
   }
 
-  private void drawLegend(double min, double max, BoundingBox bb, double textW, Graphics2D g) {
+  private void drawDoubleChannelLegend(double min1, double max1, Color channel1,
+                                       double min2, double max2, Color channel2,
+                                       BoundingBox bb, double textW, double textH, Graphics2D g) {
+    Color minColor = Color.BLACK;
+    double legendMiddle = (bb.max.y + bb.min.y) / 2;
+    drawLegend(
+        min1, max1,
+        BoundingBox.of(
+            bb.min.x,
+            bb.min.y + textH / 2,
+            bb.max.x,
+            legendMiddle - textH / 2
+        ),
+        textW, g, minColor, minColor, channel1
+    );
+    drawLegend(
+        min2, max2,
+        BoundingBox.of(
+            bb.min.x,
+            legendMiddle + textH / 2,
+            bb.max.x,
+            bb.max.y - textH / 2
+        ),
+        textW, g, minColor, minColor, channel2
+    );
+  }
+
+  private void drawLegend(double min, double max, BoundingBox bb, double textW, Graphics2D g, Color minColor, Color zeroColor, Color maxColor) {
     double deltaY = (bb.max.y - bb.min.y) / LEGEND_COLORS;
     double deltaV = (max - min) / LEGEND_COLORS;
     double colorX = bb.max.x - textW;
@@ -315,6 +366,10 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             (float) (yMin + deltaY));
       }
     }
+  }
+
+  private void drawLegend(double min, double max, BoundingBox bb, double textW, Graphics2D g) {
+    drawLegend(min, max, bb, textW, g, minColor, zeroColor, maxColor);
   }
 
   private void drawStructure(int[] sizes, IntFunction<String> namer, BoundingBox bb, double textW, Graphics2D g) {
@@ -378,10 +433,10 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
     });
   }
 
-  private void draw(double fT, double vT1, double vT2, SortedMap<Double, MLPState> states,
-                    Function<MLPState, double[][]> f1, double min1, double max1,
-                    Function<MLPState, double[][]> f2, double min2, double max2,
-                    BoundingBox bb, Graphics2D g) {
+  private void drawDoubleChannel(double fT, double vT1, double vT2, SortedMap<Double, MLPState> states,
+                                 Function<MLPState, double[][]> f1, double min1, double max1,
+                                 Function<MLPState, double[][]> f2, double min2, double max2,
+                                 BoundingBox bb, Graphics2D g) {
     Variance variance = new Variance();
     double bbW = bb.max.x - bb.min.x;
     double bbH = bb.max.y - bb.min.y;
@@ -428,6 +483,26 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
       }
 
     });
+  }
+
+  private void drawHistogram(SortedMap<Double, MLPState> states, Function<MLPState, double[][]> f, double min, double max, BoundingBox bb, Graphics2D g) {
+    double[][] values = f.apply(states.get(states.lastKey()));
+    double binSize = (max - min) / N_OF_BINS;
+    int[] nOfValuesPerBin = new int[N_OF_BINS];
+    Arrays.stream(values).flatMapToDouble(Arrays::stream)
+        .map(d -> Math.max(min, Math.min(d, max)) - min)
+        .forEach(d ->
+            nOfValuesPerBin[(int) Math.min(Math.floor(d / binSize), N_OF_BINS - 1)] += 1
+        );
+    int maxAmountPerBin = Arrays.stream(nOfValuesPerBin).max().orElse(10);
+    double[] barSizes = Arrays.stream(nOfValuesPerBin).mapToDouble(i -> i * bb.width() * HISTOGRAM_BLANK_RATIO / maxAmountPerBin).toArray();
+    double barHeight = (bb.max.y - bb.min.y) / N_OF_BINS;
+    for (int i = 0; i < barSizes.length; i++) {
+      double color = min + (0.5 + i) * binSize;
+      Rectangle2D bar = new Rectangle2D.Double(bb.max.x - barSizes[i], bb.min.y + barHeight * i, barSizes[i], barHeight);
+      g.setColor(DrawingUtils.linear(minColor, zeroColor, maxColor, (float) min, 0, (float) max, (float) color));
+      g.fill(bar);
+    }
   }
 
 
