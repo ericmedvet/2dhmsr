@@ -31,6 +31,8 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   @JsonProperty
   private double maxWeightMagnitude;
 
+  private double lastLearningTime = Double.POSITIVE_INFINITY;
+
   @JsonCreator
   public QuantizedLearningMultilayerSpikingNetwork(
       @JsonProperty("neurons") QuantizedSpikingFunction[][] neurons,
@@ -273,6 +275,10 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
 
   private static double[][][] copyWeights(double[][][] initialWeights) {
     return copyWeights(initialWeights, new double[initialWeights.length][][]);
+  }
+
+  public void setLastLearningTime(double lastLearningTime) {
+    this.lastLearningTime = lastLearningTime;
   }
 
   @Override

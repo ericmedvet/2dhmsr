@@ -143,4 +143,8 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
     Arrays.stream(quantizedValueToSpikeTrainConverters).forEach(QuantizedValueToSpikeTrainConverter::reset);
   }
 
+  public N getSNN() {
+    return multilayerSpikingNetwork;
+  }
+
 }
