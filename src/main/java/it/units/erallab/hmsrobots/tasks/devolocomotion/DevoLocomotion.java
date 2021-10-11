@@ -81,7 +81,7 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOu
     world.setSettings(settings);
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
     Robot<?> robot = solution.apply(null);
-    rebuildWorld(ground, robot, world, initialPlacement - robot.boundingBox().min.x);
+    rebuildWorld(ground, robot, world, initialPlacement);
     List<WorldObject> worldObjects = List.of(ground, robot);
     //run
     DevoOutcome devoOutcome = new DevoOutcome();
