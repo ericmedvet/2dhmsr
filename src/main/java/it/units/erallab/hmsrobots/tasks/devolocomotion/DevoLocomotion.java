@@ -39,7 +39,7 @@ import java.util.function.UnaryOperator;
 /**
  * @author "Eric Medvet" on 2021/09/27 for VSREvolution
  */
-public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, List<Outcome>> {
+public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOutcome> {
 
   public static class CurrentTarget implements Snapshottable {
     private final List<Double> targets;
@@ -74,17 +74,17 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, List<O
   }
 
   @Override
-  public List<Outcome> apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener) {
+  public DevoOutcome apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
     world.setSettings(settings);
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
     Robot<?> robot = solution.apply(null);
-    rebuildWorld(ground, robot, world, initialPlacement - robot.boundingBox().min.x);
+    rebuildWorld(ground, robot, world, initialPlacement);
     List<WorldObject> worldObjects = List.of(ground, robot);
     //run
-    List<Outcome> outcomes = new ArrayList<>();
+    DevoOutcome devoOutcome = new DevoOutcome();
     Map<Double, Outcome.Observation> observations = new HashMap<>();
     double t = 0d;
     double stageT = t;
@@ -118,6 +118,10 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, List<O
       //check if develop
       if (robot.boundingBox().min.x - stageX > stageMinDistance) {
         stageT = t;
+        //save outcome
+        DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(robot, new Outcome(observations));
+        devoOutcome.addDevoStageOutcome(devoStageOutcome);
+        observations = new HashMap<>();
         //develop
         double minX = robot.boundingBox().min.x;
         robot = solution.apply(robot);
@@ -127,17 +131,15 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, List<O
         worldObjects = List.of(ground, robot);
         stageX = robot.getCenter().x;
         targetXs.add(stageX + stageMinDistance);
-        //save outcome
-        outcomes.add(new Outcome(observations));
-        observations = new HashMap<>();
       }
     }
     if (!observations.isEmpty()) {
-      outcomes.add(new Outcome(observations));
+      DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(robot, new Outcome(observations));
+      devoOutcome.addDevoStageOutcome(devoStageOutcome);
     }
     stopWatch.stop();
     //prepare outcome
-    return outcomes;
+    return devoOutcome;
   }
 
   private void rebuildWorld(Ground ground, Robot<?> robot, World world, double newMinX) {
