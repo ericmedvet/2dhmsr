@@ -344,6 +344,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
       double vMin = min + deltaV * i;
       double vMax = vMin + deltaV;
       double yMin = bb.min.y + deltaY * i;
+      double numberHeight = g.getFontMetrics().getHeight() / 2d;
       g.setColor(DrawingUtils.linear(minColor, zeroColor, maxColor, (float) min, 0f, (float) max, (float) vMin));
       g.fill(new Rectangle2D.Double(colorX, yMin, textW, deltaY));
       if (i == 0) {
@@ -351,19 +352,19 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         String s = String.format("%.1f", vMin);
         g.drawString(s,
             (float) (colorX - textW - g.getFontMetrics().stringWidth(s)),
-            (float) (yMin + g.getFontMetrics().getHeight()));
+            (float) (yMin + numberHeight / 2d));
       } else if (vMin <= 0 && vMax >= 0) {
         g.setColor(textColor);
         String s = "0";
         g.drawString(s,
             (float) (colorX - textW - g.getFontMetrics().stringWidth(s)),
-            (float) (yMin + deltaY / 2d + g.getFontMetrics().getHeight() / 2d));
+            (float) (yMin + deltaY / 2d + numberHeight / 2d));
       } else if (i >= LEGEND_COLORS - 1) {
         g.setColor(textColor);
         String s = String.format("%.1f", vMax);
         g.drawString(s,
             (float) (colorX - textW - g.getFontMetrics().stringWidth(s)),
-            (float) (yMin + deltaY));
+            (float) (yMin + deltaY + numberHeight / 2d));
       }
     }
   }
