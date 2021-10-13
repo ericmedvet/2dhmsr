@@ -21,12 +21,13 @@ import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.tasks.devolocomotion.DevoLocomotion;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -38,7 +39,6 @@ public class Drawers {
     return Drawer.transform(
         new AllRobotFollower(1.5d, 2),
         Drawer.of(
-            new TargetDrawer(SubtreeDrawer.Extractor.matches(null, DevoLocomotion.CurrentTarget.class, null)),
             new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
             new VoxelDrawer(),
             new SensorReadingsSectorDrawer(),
@@ -201,6 +201,44 @@ public class Drawers {
     );
   }
 
+  public static Drawer basicWithMiniWorldAndBrainUsage(String string) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld()
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d,
+                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.VARIANCE_AND_WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
+                )
+            )
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer basicWithMiniWorldAndBrain(String string) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld()
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d,
+                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
+                )
+            )
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
   public static Drawer basic() {
     return basic("");
   }
@@ -208,6 +246,5 @@ public class Drawers {
   public static Drawer basicWithMiniWorld() {
     return basicWithMiniWorld("");
   }
-
 
 }

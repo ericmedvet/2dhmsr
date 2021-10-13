@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -121,6 +122,7 @@ public class Starter {
   }
 
   public static void main(String[] args) {
+    bipedWithBrain();
     //bipeds();
     //rollingOne();
     //rollingBall();
@@ -130,7 +132,34 @@ public class Starter {
     //multiped();
     //bipedAndBall();
     //bipedCentralized();
-    devoComb();
+    //devoComb();
+  }
+
+  private static void bipedWithBrain() {
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
+    Random random = new Random();
+    //centralized sensing
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
+
+    int nOfInputs = centralizedSensing.nOfInputs();
+    int nOfOutputs = centralizedSensing.nOfOutputs();
+    int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
+    int nOfWeights = MultiLayerPerceptron.countWeights(nOfInputs, innerNeurons, nOfOutputs);
+    double[] weights = IntStream.range(0, nOfWeights).mapToDouble(i -> 2 * Math.random() - 1).toArray();
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
+        nOfInputs,innerNeurons,nOfOutputs,weights);
+    centralizedSensing.setFunction(mlp);
+    Robot<SensingVoxel> centralized = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(body)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("downhill-30"),
+        new Settings()
+    );
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", centralized)), Drawers::basicWithMiniWorldAndBrainUsage);
   }
 
   private static void devoComb() {
