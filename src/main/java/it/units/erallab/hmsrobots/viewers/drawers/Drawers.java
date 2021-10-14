@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.tasks.devolocomotion.DevoLocomotion;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
 import java.util.Set;
@@ -39,6 +40,7 @@ public class Drawers {
     return Drawer.transform(
         new AllRobotFollower(1.5d, 2),
         Drawer.of(
+            new TargetDrawer(SubtreeDrawer.Extractor.matches(null, DevoLocomotion.CurrentTarget.class, null)),
             new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
             new VoxelDrawer(),
             new SensorReadingsSectorDrawer(),
