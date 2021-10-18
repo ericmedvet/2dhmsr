@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 /**
  * @author eric
  */
-public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized, Snapshottable {
+public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized, Snapshottable, StatefulNN {
 
   public enum ActivationFunction implements Function<Double, Double> {
     RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
@@ -207,11 +207,8 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
   }
 
   @Override
-  public Snapshot getSnapshot() {
-    return new Snapshot(
-        new MLPState(getActivationValues(), getWeights(), activationFunction.getDomain()),
-        getClass()
-    );
+  public MLPState getState() {
+    return new MLPState(getActivationValues(), getWeights(), activationFunction.getDomain());
   }
 
   @Override

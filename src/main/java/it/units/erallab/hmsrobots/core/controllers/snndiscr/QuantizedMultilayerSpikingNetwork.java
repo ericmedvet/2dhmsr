@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
+import it.units.erallab.hmsrobots.core.controllers.StatefulNN;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedMovingAverageSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.snapshots.SNNState;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
@@ -18,7 +17,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized, Snapshottable {
+public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateSpikingFunction, Parametrized, StatefulNN {
 
   @JsonProperty
   protected final QuantizedSpikingFunction[][] neurons;    // layer + position in the layer
@@ -297,11 +296,8 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
   }
 
   @Override
-  public Snapshot getSnapshot() {
-    return new Snapshot(
-        new SNNState(getCurrentSpikes(), getWeights(), snapshotConverters, timeWindowSize),
-        getClass()
-    );
+  public SNNState getState() {
+    return new SNNState(getCurrentSpikes(), getWeights(), snapshotConverters, timeWindowSize);
   }
 
   public int[][][] getCurrentSpikes() {

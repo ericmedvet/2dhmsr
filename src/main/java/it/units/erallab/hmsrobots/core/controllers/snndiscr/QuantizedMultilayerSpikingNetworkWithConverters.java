@@ -3,13 +3,14 @@ package it.units.erallab.hmsrobots.core.controllers.snndiscr;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.Resettable;
+import it.units.erallab.hmsrobots.core.controllers.StatefulNN;
 import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedMovingAverageSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedUniformWithMemoryValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable, Snapshottable {
+public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable, StatefulNN {
 
   @JsonProperty
   private final N multilayerSpikingNetwork;
@@ -128,6 +129,11 @@ public class QuantizedMultilayerSpikingNetworkWithConverters<N extends Quantized
 
   public Map<Double, double[]> getWeightsInTime() {
     return multilayerSpikingNetwork.getWeightsInTime();
+  }
+
+  @Override
+  public MLPState getState() {
+    return multilayerSpikingNetwork.getState();
   }
 
   @Override
