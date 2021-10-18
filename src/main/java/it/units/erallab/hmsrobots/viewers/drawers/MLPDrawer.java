@@ -65,7 +65,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts, Color minColor, Color zeroColor, Color maxColor, Color axesColor, Color textColor) {
     super(extractor, s -> (MLPState) s.getContent(), windowT);
     this.parts = parts;
-    this.plotParts = parts.stream().filter(PLOTS::contains).collect(Collectors.toList());
+    this.plotParts = parts.stream().filter(PLOTS::contains).sorted().collect(Collectors.toList());
     this.boundingBoxes = new BoundingBox[plotParts.size()];
     this.minColor = minColor;
     this.zeroColor = zeroColor;
