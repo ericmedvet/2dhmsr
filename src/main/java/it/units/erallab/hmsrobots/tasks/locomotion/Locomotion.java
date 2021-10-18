@@ -16,10 +16,16 @@
  */
 package it.units.erallab.hmsrobots.tasks.locomotion;
 
+import it.units.erallab.hmsrobots.core.controllers.CentralizedSensing;
+import it.units.erallab.hmsrobots.core.controllers.Controller;
+import it.units.erallab.hmsrobots.core.controllers.StatefulNN;
+import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedMultilayerSpikingNetworkWithConverters;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -89,6 +95,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     while (t < finalT) {
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       observations.put(t, new Outcome.Observation(
+          getMLPState(robot),
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
           ground.yAt(robot.getCenter().x),
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
@@ -97,6 +104,19 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     stopWatch.stop();
     //prepare outcome
     return new Outcome(observations);
+  }
+
+  private static MLPState getMLPState(Robot<?> robot) {
+    Controller<?> controller = robot.getController();
+    if (!(controller instanceof CentralizedSensing)) {
+      return null;
+    }
+    TimedRealFunction controllerFunction = ((CentralizedSensing) controller).getFunction();
+    if (!(controllerFunction instanceof StatefulNN)) {
+      return null;
+    }
+    StatefulNN snn = (StatefulNN) controllerFunction;
+    return snn.getState();
   }
 
   private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {

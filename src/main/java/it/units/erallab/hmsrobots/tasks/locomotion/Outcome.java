@@ -20,6 +20,7 @@ package it.units.erallab.hmsrobots.tasks.locomotion;
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.behavior.Footprint;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Domain;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -31,15 +32,22 @@ import java.util.stream.IntStream;
 public class Outcome {
 
   public static class Observation {
+    private final MLPState mlpState;
     private final Grid<VoxelPoly> voxelPolies;
     private final double terrainHeight;
     private final double computationTime;
 
-    public Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
+    public Observation(MLPState mlpState, Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
+      this.mlpState = mlpState;
       this.voxelPolies = voxelPolies;
       this.terrainHeight = terrainHeight;
       this.computationTime = computationTime;
     }
+
+    public Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
+      this(null, voxelPolies, terrainHeight, computationTime);
+    }
+
 
     public Grid<VoxelPoly> getVoxelPolies() {
       return voxelPolies;
@@ -207,4 +215,20 @@ public class Outcome {
         ))
         .collect(Collectors.toList());
   }
+
+  public double getInitialSumOfAbsoluteWeights() {
+    MLPState mlpState = observations.get(observations.firstKey()).mlpState;
+    if (mlpState == null) {
+      return 0d;
+    }
+    double[][][] initialWeights = mlpState.getWeights();
+    double s = 0;
+    for (double[][] initialWeight : initialWeights) {
+      for (double[] doubles : initialWeight) {
+        s += Arrays.stream(doubles).map(Math::abs).sum();
+      }
+    }
+    return s;
+  }
+
 }
