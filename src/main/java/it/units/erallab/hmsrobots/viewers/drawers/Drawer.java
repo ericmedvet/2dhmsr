@@ -44,7 +44,7 @@ public interface Drawer {
   }
 
   static Drawer diagonals() {
-    return diagonals(DrawingUtils.Colors.axes);
+    return diagonals(DrawingUtils.Colors.AXES);
   }
 
   static Drawer diagonals(Color color) {
@@ -61,7 +61,7 @@ public interface Drawer {
   }
 
   static Drawer text(String s, DrawingUtils.Alignment alignment) {
-    return text(s, alignment, DrawingUtils.Colors.text);
+    return text(s, alignment, DrawingUtils.Colors.TEXT);
   }
 
   static Drawer text(String s, DrawingUtils.Alignment alignment, Color color) {

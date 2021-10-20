@@ -44,10 +44,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
 
   private static final Set<Part> PLOTS = Set.of(Part.ACTIVATION_VALUES, Part.WEIGHTS, Part.USAGE, Part.VARIANCE, Part.VARIANCE_AND_WEIGHTS);
 
-  private final static Color MIN_COLOR = Color.RED;
-  private final static Color ZERO_COLOR = Color.BLACK;
-  private final static Color MAX_COLOR = Color.GREEN;
-
   private final static double VARIANCE_WINDOW = 2d;
 
   private final static double LEGEND_COLORS = 15;
@@ -69,7 +65,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts, Color minColor, Color zeroColor, Color maxColor, Color axesColor, Color textColor) {
     super(extractor, s -> (MLPState) s.getContent(), windowT);
     this.parts = parts;
-    this.plotParts = parts.stream().filter(PLOTS::contains).collect(Collectors.toList());
+    this.plotParts = parts.stream().filter(PLOTS::contains).sorted().collect(Collectors.toList());
     this.boundingBoxes = new BoundingBox[plotParts.size()];
     this.minColor = minColor;
     this.zeroColor = zeroColor;
@@ -79,7 +75,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   }
 
   public MLPDrawer(Extractor extractor, double windowT, Set<Part> parts) {
-    this(extractor, windowT, parts, MIN_COLOR, ZERO_COLOR, MAX_COLOR, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
+    this(extractor, windowT, parts, DrawingUtils.Colors.DATA_NEGATIVE, DrawingUtils.Colors.DATA_ZERO, DrawingUtils.Colors.DATA_POSITIVE, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
   }
 
   public MLPDrawer(Extractor extractor, double windowT) {
@@ -125,7 +121,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           maxY
       );
     });
-
     if (parts.contains(Part.T_AXIS)) {
       g.setColor(axesColor);
       g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
@@ -139,7 +134,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max.y + 2 * textH));
       }
     }
-
     if (parts.contains(Part.ACTIVATION_VALUES)) {
       double min = current.getActivationDomain().getMin() > Double.NEGATIVE_INFINITY ? current.getActivationDomain().getMin() : memory.values().stream()
           .mapToDouble(s -> min(s.getActivationValues()))
@@ -283,7 +277,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           .max().orElse(0d);
       double minVariance = 0;
       double maxVariance = 2;
-
       drawDoubleChannel(t, 0d, VARIANCE_WINDOW, memory,
           s -> abs(flat(s.getWeights())), minWeights, maxWeights,
           s -> flat(mapActivationValuesToWeights(s.getActivationValues(), s.getWeights())), minVariance, maxVariance,
@@ -412,7 +405,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
       if (x - 2 * cellW < bb.min.x) {
         return;
       }
-
       double[][] valuesToPlot = f.apply(state);
       if (vT > 0) {
         List<double[][]> valuesList = states.keySet().stream().filter(t1 -> t1 <= t && t1 >= t - vT).map(t1 -> f.apply(states.get(t1))).collect(Collectors.toList());
@@ -421,7 +413,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           valuesToPlot[i][j] = variance.evaluate(valuesList.stream().mapToDouble(array -> array[i][j]).toArray());
         }));
       }
-
       for (double[] doubles : valuesToPlot) {
         for (double aDouble : doubles) {
           double y = bb.min.y + c / n * bbH;
@@ -430,7 +421,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           g.fill(new Rectangle2D.Double(x - 2 * cellW, y, 2 * cellW, cellH));
         }
       }
-
     });
   }
 
@@ -453,7 +443,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
       if (x - 2 * cellW < bb.min.x) {
         return;
       }
-
       double[][] valuesToPlot1 = f1.apply(state);
       if (vT1 > 0) {
         List<double[][]> valuesList = states.keySet().stream().filter(t1 -> t1 <= t && t1 >= t - vT1).map(t1 -> f1.apply(states.get(t1))).collect(Collectors.toList());
@@ -462,7 +451,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           valuesToPlot1[i][j] = variance.evaluate(valuesList.stream().mapToDouble(array -> array[i][j]).toArray());
         }));
       }
-
       double[][] valuesToPlot2 = f2.apply(state);
       if (vT2 > 0) {
         List<double[][]> valuesList = states.keySet().stream().filter(t1 -> t1 <= t && t1 >= t - vT2).map(t1 -> f2.apply(states.get(t1))).collect(Collectors.toList());
@@ -471,7 +459,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           valuesToPlot2[i][j] = variance.evaluate(valuesList.stream().mapToDouble(array -> array[i][j]).toArray());
         }));
       }
-
       for (int i = 0; i < valuesToPlot1.length; i++) {
         for (int j = 0; j < valuesToPlot1[i].length; j++) {
           double y = bb.min.y + c / n * bbH;
@@ -482,7 +469,6 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           g.fill(new Rectangle2D.Double(x - 2 * cellW, y, 2 * cellW, cellH));
         }
       }
-
     });
   }
 
@@ -546,6 +532,14 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   }
 
   private static double[][][] mapActivationValuesToWeights(double[][] activationValues, double[][][] weights) {
+    if (weights[0][0].length > activationValues[0].length) {
+      return mapActivationValuesToWeightsForMLP(activationValues, weights);
+    } else {
+      return mapActivationValuesToWeightsForSNN(activationValues, weights);
+    }
+  }
+
+  private static double[][][] mapActivationValuesToWeightsForSNN(double[][] activationValues, double[][][] weights) {
     double[][][] mapped = new double[weights.length][][];
     for (int startingLayer = 0; startingLayer < weights.length; startingLayer++) {
       mapped[startingLayer] = new double[weights[startingLayer].length][];
@@ -553,6 +547,20 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         mapped[startingLayer][startingNeuron] = new double[weights[startingLayer][startingNeuron].length];
         for (int destinationNeuron = 0; destinationNeuron < weights[startingLayer][startingNeuron].length; destinationNeuron++) {
           mapped[startingLayer][startingNeuron][destinationNeuron] = activationValues[startingLayer + 1][destinationNeuron];
+        }
+      }
+    }
+    return mapped;
+  }
+
+  private static double[][][] mapActivationValuesToWeightsForMLP(double[][] activationValues, double[][][] weights) {
+    double[][][] mapped = new double[weights.length][][];
+    for (int startingLayer = 0; startingLayer < weights.length; startingLayer++) {
+      mapped[startingLayer] = new double[weights[startingLayer].length][];
+      for (int destNeuron = 0; destNeuron < weights[startingLayer].length; destNeuron++) {
+        mapped[startingLayer][destNeuron] = new double[weights[startingLayer][destNeuron].length];
+        for (int startNeuron = 0; startNeuron < weights[startingLayer][destNeuron].length; startNeuron++) {
+          mapped[startingLayer][destNeuron][startNeuron] = activationValues[startingLayer + 1][destNeuron];
         }
       }
     }

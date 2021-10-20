@@ -55,7 +55,7 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
   }
 
   public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins) {
-    this(extractor, function, windowT, minF, maxF, nBins, DrawingUtils.alphaed(DrawingUtils.Colors.data, .5f), DrawingUtils.Colors.data, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
+    this(extractor, function, windowT, minF, maxF, nBins, DrawingUtils.alphaed(DrawingUtils.Colors.DATA, .5f), DrawingUtils.Colors.DATA, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
   }
 
   @Override

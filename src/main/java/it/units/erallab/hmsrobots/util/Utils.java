@@ -18,12 +18,14 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -68,6 +70,30 @@ public class Utils {
     return filtered;
   }
 
+  public static <K> Grid<K> gridConnected(Grid<K> kGrid, Comparator<K> comparator, int n) {
+    Comparator<Grid.Entry<K>> entryComparator = (e1, e2) -> comparator.compare(e1.getValue(), e2.getValue());
+    Predicate<Pair<Grid.Entry<?>, Grid.Entry<?>>> adjacencyPredicate = p -> (Math.abs(p.getLeft().getX() - p.getRight().getX()) <= 1 && p.getLeft().getY() == p.getRight().getY()) || (Math.abs(p.getLeft().getY() - p.getRight().getY()) <= 1 && p.getLeft().getX() == p.getRight().getX());
+    Grid.Entry<K> entryFirst = kGrid.stream()
+        .min(entryComparator)
+        .orElseThrow(() -> new IllegalArgumentException("Grid has no max element"));
+    Set<Grid.Entry<K>> selected = new HashSet<>(n);
+    selected.add(entryFirst);
+    while (selected.size() < n) {
+      Set<Grid.Entry<K>> candidates = kGrid.stream()
+          .filter(e -> e.getValue() != null)
+          .filter(e -> !selected.contains(e))
+          .filter(e -> selected.stream().anyMatch(f -> adjacencyPredicate.test(Pair.of(e, f))))
+          .collect(Collectors.toSet());
+      if (candidates.isEmpty()) {
+        break;
+      }
+      selected.add(candidates.stream().min(entryComparator).orElse(entryFirst));
+    }
+    Grid<K> outGrid = Grid.create(kGrid.getW(), kGrid.getH());
+    selected.forEach(e -> outGrid.set(e.getX(), e.getY(), e.getValue()));
+    return outGrid;
+  }
+  
   private static <K> Grid<Integer> partitionGrid(Grid<K> kGrid, Predicate<K> p) {
     Grid<Integer> iGrid = Grid.create(kGrid);
     for (int x = 0; x < kGrid.getW(); x++) {

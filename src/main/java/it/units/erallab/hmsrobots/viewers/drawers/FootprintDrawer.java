@@ -54,7 +54,7 @@ public class FootprintDrawer extends MemoryDrawer<Footprint> {
   }
 
   public FootprintDrawer(Extractor extractor, double windowT, int n) {
-    this(extractor, windowT, n, DrawingUtils.Colors.data, DrawingUtils.Colors.axes, DrawingUtils.Colors.text);
+    this(extractor, windowT, n, DrawingUtils.Colors.DATA, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
   }
 
   @Override
