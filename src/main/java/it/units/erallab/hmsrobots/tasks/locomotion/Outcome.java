@@ -217,13 +217,27 @@ public class Outcome {
   }
 
   public double getInitialSumOfAbsoluteWeights() {
-    MLPState mlpState = observations.get(observations.firstKey()).mlpState;
+    return computeSumOfAbsoluteWeights(observations.get(observations.firstKey()).mlpState);
+  }
+
+  public double getAverageSumOfAbsoluteWeights() {
+    return observations.values().stream()
+        .map(o -> o.mlpState)
+        .mapToDouble(s -> computeSumOfAbsoluteWeights(s))
+        .average()
+        .orElse(0d);
+  }
+
+  private static double computeSumOfAbsoluteWeights(MLPState mlpState) {
     if (mlpState == null) {
       return 0d;
     }
-    double[][][] initialWeights = mlpState.getWeights();
+    return computeSumOfAbsoluteWeights(mlpState.getWeights());
+  }
+
+  private static double computeSumOfAbsoluteWeights(double[][][] weights) {
     double s = 0;
-    for (double[][] initialWeight : initialWeights) {
+    for (double[][] initialWeight : weights) {
       for (double[] doubles : initialWeight) {
         s += Arrays.stream(doubles).map(Math::abs).sum();
       }
