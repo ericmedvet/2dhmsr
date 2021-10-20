@@ -223,7 +223,7 @@ public class Outcome {
   public double getAverageSumOfAbsoluteWeights() {
     return observations.values().stream()
         .map(o -> o.mlpState)
-        .mapToDouble(s -> computeSumOfAbsoluteWeights(s))
+        .mapToDouble(Outcome::computeSumOfAbsoluteWeights)
         .average()
         .orElse(0d);
   }
