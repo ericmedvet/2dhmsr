@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -38,6 +38,29 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
 
       @Override
       public void reset() {
+      }
+    };
+  }
+
+  static <K extends ControllableVoxel> AbstractController<K> step(AbstractController<K> innerController, double stepT) {
+    return new AbstractController<K>() {
+      double lastT = Double.NEGATIVE_INFINITY;
+      Grid<Double> lastControlSignals = null;
+
+      @Override
+      public Grid<Double> computeControlSignals(double t, Grid<? extends K> voxels) {
+        Grid<Double> controlSignals = innerController.computeControlSignals(t, voxels);
+        if (t - lastT >= stepT || lastControlSignals == null) {
+          lastControlSignals = Grid.create(controlSignals, v -> v);
+          lastT = t;
+        }
+        return lastControlSignals;
+      }
+
+      @Override
+      public void reset() {
+        innerController.reset();
+        lastT = Double.NEGATIVE_INFINITY;
       }
     };
   }

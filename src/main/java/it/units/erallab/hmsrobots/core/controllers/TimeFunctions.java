@@ -32,7 +32,7 @@ import java.util.Objects;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class TimeFunctions implements Controller<ControllableVoxel>, Snapshottable {
+public class TimeFunctions extends AbstractController<ControllableVoxel> implements Snapshottable {
 
   @JsonProperty
   private final Grid<SerializableFunction<Double, Double>> functions;
@@ -47,18 +47,20 @@ public class TimeFunctions implements Controller<ControllableVoxel>, Snapshottab
   }
 
   @Override
-  public void control(double t, Grid<? extends ControllableVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<? extends ControllableVoxel> voxels) {
     outputs = new double[(int) voxels.values().stream().filter(Objects::nonNull).count()];
+    Grid<Double> controlSignals = Grid.create(voxels.getW(), voxels.getH());
     int c = 0;
     for (Grid.Entry<? extends ControllableVoxel> entry : voxels) {
       SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
       if ((entry.getValue() != null) && (function != null)) {
         double v = function.apply(t);
-        entry.getValue().applyForce(v);
+        controlSignals.set(entry.getX(), entry.getY(), v);
         outputs[c] = v;
         c = c + 1;
       }
     }
+    return controlSignals;
   }
 
   @Override
