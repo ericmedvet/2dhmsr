@@ -160,6 +160,84 @@ public class Utils {
     return outGrid;
   }
 
+  public static double shapeElongation(Grid<Boolean> posture) {
+    if (posture.values().stream().noneMatch(e -> e)) {
+      throw new IllegalArgumentException("Grid is empty");
+    }
+    // find largest x-thickness and y-thickness by compacting everything on one axis and on the other
+    int minX = Integer.MAX_VALUE;
+    int maxX = Integer.MIN_VALUE;
+    int minY = Integer.MAX_VALUE;
+    int maxY = Integer.MIN_VALUE;
+    for (Grid.Entry<Boolean> entry : posture) {
+      if (entry.getValue()) {
+        int y = (int) posture.stream().filter(e -> e.getValue() && e.getX() == entry.getX() && e.getY() < entry.getY()).count();//entry.getX();
+        int x = (int) posture.stream().filter(e -> e.getValue() && e.getY() == entry.getY() && e.getX() < entry.getX()).count();//entry.getX();
+        minX = Math.min(x, minX);
+        maxX = Math.max(x, maxX);
+        minY = Math.min(y, minY);
+        maxY = Math.max(y, maxY);
+      }
+    }
+    // compute ratio of the smallest thickness to the largest one
+    int sideX = maxX - minX + 1;
+    int sideY = maxY - minY + 1;
+    double ratio = (double) Math.min(sideX, sideY) / Math.max(sideX, sideY);
+    // take 1 - ratio to have 0.0 for smallest elongation (square or round shape) and 1.0 for largest (stick)
+    return 1.0 - ratio;
+  }
+
+  public static double shapeCompactness(Grid<Boolean> posture) {
+    // approximate convex hull
+    Grid<Boolean> convexHull = Grid.create(posture.getW(), posture.getH(), posture::get);
+    boolean none = false;
+    // loop as long as there are false cells have at least five of the eight Moore neighbors as true
+    while (!none) {
+      none = true;
+      for (Grid.Entry<Boolean> entry : convexHull) {
+        if (convexHull.get(entry.getX(), entry.getY())) {
+          continue;
+        }
+        int currentX = entry.getX();
+        int currentY = entry.getY();
+        int adjacentCount = 0;
+        // count how many of the Moore neighbors are true
+        for (int i : new int[]{1, -1}) {
+          int neighborX = currentX;
+          int neighborY = currentY + i;
+          if (0 <= neighborY && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+          neighborX = currentX + i;
+          neighborY = currentY;
+          if (0 <= neighborX && neighborX < convexHull.getW() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+          neighborX = currentX + i;
+          neighborY = currentY + i;
+          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+          neighborX = currentX + i;
+          neighborY = currentY - i;
+          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+        }
+        // if at least five, fill the cell
+        if (adjacentCount >= 5) {
+          convexHull.set(entry.getX(), entry.getY(), true);
+          none = false;
+        }
+      }
+    }
+    // compute are ratio between convex hull and posture
+    int nVoxels = (int) posture.count(e -> e);
+    int nConvexHull = (int) convexHull.count(e -> e);
+    // -> 0.0 for less compact shapes, -> 1.0 for more compact shapes
+    return (double) nVoxels / nConvexHull;
+  }
+
   @SafeVarargs
   public static <E> List<E> ofNonNull(E... es) {
     List<E> list = new ArrayList<>();
