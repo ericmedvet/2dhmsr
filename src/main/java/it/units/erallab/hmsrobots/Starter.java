@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -122,8 +121,8 @@ public class Starter {
   }
 
   public static void main(String[] args) {
-    bipedWithBrain();
-    //bipeds();
+    //bipedWithBrain();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
@@ -147,7 +146,7 @@ public class Starter {
     int nOfWeights = MultiLayerPerceptron.countWeights(nOfInputs, innerNeurons, nOfOutputs);
     double[] weights = IntStream.range(0, nOfWeights).mapToDouble(i -> 2 * Math.random() - 1).toArray();
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
-        nOfInputs,innerNeurons,nOfOutputs,weights);
+        nOfInputs, innerNeurons, nOfOutputs, weights);
     centralizedSensing.setFunction(mlp);
     Robot<SensingVoxel> centralized = new Robot<>(
         centralizedSensing,
@@ -241,13 +240,19 @@ public class Starter {
         new Settings()
     );
 
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 3);
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 4);
     namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
     namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
-    //GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndSpectra);
+    namedSolutionGrid.set(0, 3, Pair.of("phasesRobot-step-0.5",
+        new Robot<>(
+            Controller.step((AbstractController) phasesRobot.getController(), 0.5),
+            SerializationUtils.clone(phasesRobot.getVoxels())
+        )
+    ));
+    GridOnlineViewer.run(locomotion, namedSolutionGrid);
     //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
-    try {
+    /*try {
       GridFileWriter.save(
           locomotion,
           Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
@@ -258,8 +263,7 @@ public class Starter {
       );
     } catch (IOException e) {
       e.printStackTrace();
-    }
-
+    }*/
   }
 
   private static void bipedAndBall() {
