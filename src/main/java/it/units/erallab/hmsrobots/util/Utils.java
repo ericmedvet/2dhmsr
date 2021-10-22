@@ -160,6 +160,33 @@ public class Utils {
     return outGrid;
   }
 
+  public static double shapeElongation(Grid<Boolean> posture) {
+    if (posture.values().stream().noneMatch(e -> e)) {
+      throw new IllegalArgumentException("Grid is empty");
+    }
+    // find largest x-thickness and y-thickness by compacting everything on one axis and on the other
+    int minX = Integer.MAX_VALUE;
+    int maxX = Integer.MIN_VALUE;
+    int minY = Integer.MAX_VALUE;
+    int maxY = Integer.MIN_VALUE;
+    for (Grid.Entry<Boolean> entry : posture) {
+      if (entry.getValue()) {
+        int y = (int) posture.stream().filter(e -> e.getValue() && e.getX() == entry.getX() && e.getY() < entry.getY()).count();//entry.getX();
+        int x = (int) posture.stream().filter(e -> e.getValue() && e.getY() == entry.getY() && e.getX() < entry.getX()).count();//entry.getX();
+        minX = Math.min(x, minX);
+        maxX = Math.max(x, maxX);
+        minY = Math.min(y, minY);
+        maxY = Math.max(y, maxY);
+      }
+    }
+    // compute ratio of the smallest thickness to the largest one
+    int sideX = maxX - minX + 1;
+    int sideY = maxY - minY + 1;
+    double ratio = (double) Math.min(sideX, sideY) / Math.max(sideX, sideY);
+    // take 1 - ratio to have 0.0 for smallest elongation (square or round shape) and 1.0 for largest (stick)
+    return 1.0 - ratio;
+  }
+
   @SafeVarargs
   public static <E> List<E> ofNonNull(E... es) {
     List<E> list = new ArrayList<>();
