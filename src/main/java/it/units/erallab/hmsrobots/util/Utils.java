@@ -187,6 +187,57 @@ public class Utils {
     return 1.0 - ratio;
   }
 
+  public static double shapeCompactness(Grid<Boolean> posture) {
+    // approximate convex hull
+    Grid<Boolean> convexHull = Grid.create(posture.getW(), posture.getH(), posture::get);
+    boolean none = false;
+    // loop as long as there are false cells have at least five of the eight Moore neighbors as true
+    while (!none) {
+      none = true;
+      for (Grid.Entry<Boolean> entry : convexHull) {
+        if (convexHull.get(entry.getX(), entry.getY())) {
+          continue;
+        }
+        int currentX = entry.getX();
+        int currentY = entry.getY();
+        int adjacentCount = 0;
+        // count how many of the Moore neighbors are true
+        for (int i : new int[]{1, -1}) {
+          int neighborX = currentX;
+          int neighborY = currentY + i;
+          if (0 <= neighborY && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+          neighborX = currentX + i;
+          neighborY = currentY;
+          if (0 <= neighborX && neighborX < convexHull.getW() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+          neighborX = currentX + i;
+          neighborY = currentY + i;
+          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+          neighborX = currentX + i;
+          neighborY = currentY - i;
+          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+            adjacentCount += 1;
+          }
+        }
+        // if at least five, fill the cell
+        if (adjacentCount >= 5) {
+          convexHull.set(entry.getX(), entry.getY(), true);
+          none = false;
+        }
+      }
+    }
+    // compute are ratio between convex hull and posture
+    int nVoxels = (int) posture.count(e -> e);
+    int nConvexHull = (int) convexHull.count(e -> e);
+    // -> 0.0 for less compact shapes, -> 1.0 for more compact shapes
+    return (double) nVoxels / nConvexHull;
+  }
+
   @SafeVarargs
   public static <E> List<E> ofNonNull(E... es) {
     List<E> list = new ArrayList<>();
