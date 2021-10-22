@@ -261,7 +261,7 @@ public class RobotUtils {
     if ((params = params(comb, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
-      return Grid.create(w, h, (x, y) -> (y < 0 || x % 2 == 0));
+      return Grid.create(w, h, (x, y) -> (y >= h / 2 || x % 2 == 0));
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
