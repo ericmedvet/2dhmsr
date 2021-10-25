@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ public class Utils {
     selected.forEach(e -> outGrid.set(e.getX(), e.getY(), e.getValue()));
     return outGrid;
   }
-  
+
   private static <K> Grid<Integer> partitionGrid(Grid<K> kGrid, Predicate<K> p) {
     Grid<Integer> iGrid = Grid.create(kGrid);
     for (int x = 0; x < kGrid.getW(); x++) {
@@ -163,19 +163,23 @@ public class Utils {
   public static double shapeElongation(Grid<Boolean> posture, int n) {
     if (posture.values().stream().noneMatch(e -> e)) {
       throw new IllegalArgumentException("Grid is empty");
-    }
-    else if (n <= 0) {
+    } else if (n <= 0) {
       throw new IllegalArgumentException(String.format("Non-positive number of directions provided: %d", n));
     }
-    List<org.apache.commons.math3.util.Pair<Integer, Integer>> coordinates = posture.stream().filter(Grid.Entry::getValue).map(e -> new org.apache.commons.math3.util.Pair<>(e.getX(), e.getY())).collect(Collectors.toList());
+    List<Pair<Integer, Integer>> coordinates = posture.stream()
+        .filter(Grid.Entry::getValue)
+        .map(e -> Pair.of(e.getX(), e.getY()))
+        .collect(Collectors.toList());
     List<Double> diameters = new ArrayList<>();
     for (int i = 0; i < n; ++i) {
       double theta = (2 * i * Math.PI) / n;
-      List<org.apache.commons.math3.util.Pair<Double, Double>> rotatedCoordinates = coordinates.stream().map(p -> new org.apache.commons.math3.util.Pair<>(p.getFirst() * Math.cos(theta) - p.getSecond() * Math.sin(theta), p.getFirst() * Math.sin(theta) + p.getSecond() * Math.cos(theta))).collect(Collectors.toList());
-      double minX = rotatedCoordinates.stream().min(Comparator.comparingDouble(org.apache.commons.math3.util.Pair::getFirst)).get().getFirst();
-      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(org.apache.commons.math3.util.Pair::getFirst)).get().getFirst();
-      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(org.apache.commons.math3.util.Pair::getSecond)).get().getSecond();
-      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(org.apache.commons.math3.util.Pair::getSecond)).get().getSecond();
+      List<Pair<Double, Double>> rotatedCoordinates = coordinates.stream()
+          .map(p -> Pair.of(p.getLeft() * Math.cos(theta) - p.getRight() * Math.sin(theta), p.getLeft() * Math.sin(theta) + p.getRight() * Math.cos(theta)))
+          .collect(Collectors.toList());
+      double minX = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
+      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
+      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getRight)).get().getRight();
+      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getRight)).get().getRight();
       double sideX = maxX - minX + 1;
       double sideY = maxY - minY + 1;
       diameters.add(Math.min(sideX, sideY) / Math.max(sideX, sideY));
