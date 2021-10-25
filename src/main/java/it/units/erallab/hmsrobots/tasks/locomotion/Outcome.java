@@ -32,13 +32,13 @@ import java.util.stream.IntStream;
 public class Outcome {
 
   public static class Observation {
-    private final MLPState mlpState;
+    private final double absSumOfWeights;
     private final Grid<VoxelPoly> voxelPolies;
     private final double terrainHeight;
     private final double computationTime;
 
     public Observation(MLPState mlpState, Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
-      this.mlpState = mlpState;
+      absSumOfWeights = computeSumOfAbsoluteWeights(mlpState);
       this.voxelPolies = voxelPolies;
       this.terrainHeight = terrainHeight;
       this.computationTime = computationTime;
@@ -217,13 +217,12 @@ public class Outcome {
   }
 
   public double getInitialSumOfAbsoluteWeights() {
-    return computeSumOfAbsoluteWeights(observations.get(observations.firstKey()).mlpState);
+    return observations.get(observations.firstKey()).absSumOfWeights;
   }
 
   public double getAverageSumOfAbsoluteWeights() {
     return observations.values().stream()
-        .map(o -> o.mlpState)
-        .mapToDouble(Outcome::computeSumOfAbsoluteWeights)
+        .mapToDouble(o -> o.absSumOfWeights)
         .average()
         .orElse(0d);
   }
