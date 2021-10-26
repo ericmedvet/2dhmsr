@@ -31,7 +31,7 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
   void control(double t, Grid<? extends V> voxels);
 
   static <K extends ControllableVoxel> Controller<K> empty() {
-    return new Controller<K>() {
+    return new Controller<>() {
       @Override
       public void control(double t, Grid<? extends K> voxels) {
       }
@@ -43,26 +43,7 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
   }
 
   static <K extends ControllableVoxel> AbstractController<K> step(AbstractController<K> innerController, double stepT) {
-    return new AbstractController<K>() {
-      double lastT = Double.NEGATIVE_INFINITY;
-      Grid<Double> lastControlSignals = null;
-
-      @Override
-      public Grid<Double> computeControlSignals(double t, Grid<? extends K> voxels) {
-        Grid<Double> controlSignals = innerController.computeControlSignals(t, voxels);
-        if (t - lastT >= stepT || lastControlSignals == null) {
-          lastControlSignals = Grid.create(controlSignals, v -> v);
-          lastT = t;
-        }
-        return lastControlSignals;
-      }
-
-      @Override
-      public void reset() {
-        innerController.reset();
-        lastT = Double.NEGATIVE_INFINITY;
-      }
-    };
+    return new StepController<>(innerController, stepT);
   }
 
 }
