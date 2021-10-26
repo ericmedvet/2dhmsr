@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ public class Utils {
     selected.forEach(e -> outGrid.set(e.getX(), e.getY(), e.getValue()));
     return outGrid;
   }
-  
+
   private static <K> Grid<Integer> partitionGrid(Grid<K> kGrid, Predicate<K> p) {
     Grid<Integer> iGrid = Grid.create(kGrid);
     for (int x = 0; x < kGrid.getW(); x++) {
@@ -160,31 +160,31 @@ public class Utils {
     return outGrid;
   }
 
-  public static double shapeElongation(Grid<Boolean> posture) {
+  public static double shapeElongation(Grid<Boolean> posture, int n) {
     if (posture.values().stream().noneMatch(e -> e)) {
       throw new IllegalArgumentException("Grid is empty");
+    } else if (n <= 0) {
+      throw new IllegalArgumentException(String.format("Non-positive number of directions provided: %d", n));
     }
-    // find largest x-thickness and y-thickness by compacting everything on one axis and on the other
-    int minX = Integer.MAX_VALUE;
-    int maxX = Integer.MIN_VALUE;
-    int minY = Integer.MAX_VALUE;
-    int maxY = Integer.MIN_VALUE;
-    for (Grid.Entry<Boolean> entry : posture) {
-      if (entry.getValue()) {
-        int y = (int) posture.stream().filter(e -> e.getValue() && e.getX() == entry.getX() && e.getY() < entry.getY()).count();//entry.getX();
-        int x = (int) posture.stream().filter(e -> e.getValue() && e.getY() == entry.getY() && e.getX() < entry.getX()).count();//entry.getX();
-        minX = Math.min(x, minX);
-        maxX = Math.max(x, maxX);
-        minY = Math.min(y, minY);
-        maxY = Math.max(y, maxY);
-      }
+    List<Pair<Integer, Integer>> coordinates = posture.stream()
+        .filter(Grid.Entry::getValue)
+        .map(e -> Pair.of(e.getX(), e.getY()))
+        .collect(Collectors.toList());
+    List<Double> diameters = new ArrayList<>();
+    for (int i = 0; i < n; ++i) {
+      double theta = (2 * i * Math.PI) / n;
+      List<Pair<Double, Double>> rotatedCoordinates = coordinates.stream()
+          .map(p -> Pair.of(p.getLeft() * Math.cos(theta) - p.getRight() * Math.sin(theta), p.getLeft() * Math.sin(theta) + p.getRight() * Math.cos(theta)))
+          .collect(Collectors.toList());
+      double minX = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
+      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
+      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getRight)).get().getRight();
+      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getRight)).get().getRight();
+      double sideX = maxX - minX + 1;
+      double sideY = maxY - minY + 1;
+      diameters.add(Math.min(sideX, sideY) / Math.max(sideX, sideY));
     }
-    // compute ratio of the smallest thickness to the largest one
-    int sideX = maxX - minX + 1;
-    int sideY = maxY - minY + 1;
-    double ratio = (double) Math.min(sideX, sideY) / Math.max(sideX, sideY);
-    // take 1 - ratio to have 0.0 for smallest elongation (square or round shape) and 1.0 for largest (stick)
-    return 1.0 - ratio;
+    return 1.0 - Collections.min(diameters);
   }
 
   public static double shapeCompactness(Grid<Boolean> posture) {
