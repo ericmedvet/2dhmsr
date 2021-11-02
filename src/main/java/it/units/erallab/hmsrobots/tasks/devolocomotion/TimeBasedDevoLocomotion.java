@@ -84,14 +84,6 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
     Map<Double, Outcome.Observation> observations = new HashMap<>();
     double t = 0d;
     double stageFinalT = developmentSchedule.size() > 0 ? developmentSchedule.remove(0) : maxT;
-    //modify listener
-    /*if (listener != null) {
-      final SnapshotListener originalListener = listener;
-      listener = (sT, s) -> {
-        s.getChildren().add(currentTimeTarget.getSnapshot());
-        originalListener.listen(sT, s);
-      };
-    }*/
     while (t < maxT) {
       t = AbstractTask.updateWorld(
           t, settings.getStepFrequency(), world, worldObjects,
