@@ -217,8 +217,7 @@ public class Drawers {
                     Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.VARIANCE_AND_WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
-        ),
-        new InfoDrawer(string)
+        )
     );
   }
 
@@ -236,8 +235,7 @@ public class Drawers {
                     Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
-        ),
-        new InfoDrawer(string)
+        )
     );
   }
 
