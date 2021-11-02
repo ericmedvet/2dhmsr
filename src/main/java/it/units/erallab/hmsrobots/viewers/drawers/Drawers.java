@@ -207,7 +207,7 @@ public class Drawers {
     return Drawer.of(
         Drawer.clip(
             BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld()
+            Drawers.basicWithMiniWorld(string)
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
@@ -217,8 +217,7 @@ public class Drawers {
                     Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.VARIANCE_AND_WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
-        ),
-        new InfoDrawer(string)
+        )
     );
   }
 
@@ -226,7 +225,7 @@ public class Drawers {
     return Drawer.of(
         Drawer.clip(
             BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld()
+            Drawers.basicWithMiniWorld(string)
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
@@ -236,8 +235,7 @@ public class Drawers {
                     Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
-        ),
-        new InfoDrawer(string)
+        )
     );
   }
 
