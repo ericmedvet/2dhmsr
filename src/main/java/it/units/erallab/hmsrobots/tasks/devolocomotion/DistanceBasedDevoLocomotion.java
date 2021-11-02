@@ -39,7 +39,7 @@ import java.util.function.UnaryOperator;
 /**
  * @author "Eric Medvet" on 2021/09/27 for VSREvolution
  */
-public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOutcome> {
+public class DistanceBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOutcome> {
 
   public static class CurrentTarget implements Snapshottable {
     private final List<Double> targets;
@@ -60,7 +60,7 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOu
   private final double[][] groundProfile;
   private final double initialPlacement;
 
-  public DevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
+  public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
     super(settings);
     this.stageMinDistance = stageMinDistance;
     this.stageMaxT = stageMaxT;
@@ -69,7 +69,7 @@ public class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOu
     this.initialPlacement = initialPlacement;
   }
 
-  public DevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, Settings settings) {
+  public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, Settings settings) {
     this(stageMinDistance, stageMaxT, maxT, groundProfile, groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP, settings);
   }
 
