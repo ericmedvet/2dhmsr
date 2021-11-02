@@ -27,7 +27,7 @@ import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
-import it.units.erallab.hmsrobots.tasks.devolocomotion.DistanceBasedDevoLocomotion;
+import it.units.erallab.hmsrobots.tasks.devolocomotion.TimeBasedDevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -122,7 +122,7 @@ public class Starter {
 
   public static void main(String[] args) {
     //bipedWithBrain();
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
@@ -131,7 +131,7 @@ public class Starter {
     //multiped();
     //bipedAndBall();
     //bipedCentralized();
-    //devoComb();
+    devoComb();
   }
 
   private static void bipedWithBrain() {
@@ -178,8 +178,9 @@ public class Starter {
           body
       );
     };
-    DistanceBasedDevoLocomotion distanceBasedDevoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
-    GridOnlineViewer.run(distanceBasedDevoLocomotion, devoFunction);
+    //DistanceBasedDevoLocomotion devoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
+    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(10,40d, Locomotion.createTerrain("downhill-20"), new Settings());
+    GridOnlineViewer.run(devoLocomotion, devoFunction);
   }
 
   private static void bipeds() {
