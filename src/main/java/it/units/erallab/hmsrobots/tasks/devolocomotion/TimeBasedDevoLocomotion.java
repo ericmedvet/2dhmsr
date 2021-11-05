@@ -71,6 +71,7 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
 
   @Override
   public DevoOutcome apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener) {
+    List<Double> copiedDevelopmentSchedule = new LinkedList<>(developmentSchedule);
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
@@ -83,7 +84,7 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
     DevoOutcome devoOutcome = new DevoOutcome();
     Map<Double, Outcome.Observation> observations = new HashMap<>();
     double t = 0d;
-    double stageFinalT = developmentSchedule.size() > 0 ? developmentSchedule.remove(0) : maxT;
+    double stageFinalT = copiedDevelopmentSchedule.size() > 0 ? copiedDevelopmentSchedule.remove(0) : maxT;
     while (t < maxT) {
       t = AbstractTask.updateWorld(
           t, settings.getStepFrequency(), world, worldObjects,
@@ -96,7 +97,7 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
       ));
       //check if develop
       if (t >= stageFinalT) {
-        stageFinalT = developmentSchedule.size() > 0 ? developmentSchedule.remove(0) : maxT;
+        stageFinalT = copiedDevelopmentSchedule.size() > 0 ? copiedDevelopmentSchedule.remove(0) : maxT;
         //save outcome
         DevoStageOutcome devoStageOutcome = new DevoStageOutcome(robot, new Outcome(observations));
         devoOutcome.addDevoStageOutcome(devoStageOutcome);
