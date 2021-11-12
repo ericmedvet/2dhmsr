@@ -397,7 +397,7 @@ public class Starter {
     } catch (IOException e) {
       e.printStackTrace();
     }*/
-    locomotion.apply(robot, new RealTimeSnapshotListener(5, 7, 1d/60d, FramesImageBuilder.Direction.HORIZONTAL, 200, 300, Drawers.basic()));
+    locomotion.apply(robot, new RealTimeSnapshotListener(1d/60d, Drawers.basic()));
   }
 
   private static void breakingWorm() {

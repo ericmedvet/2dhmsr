@@ -16,16 +16,17 @@ public class RealTimeSnapshotListener extends JFrame implements SnapshotListener
 
   private final Canvas canvas;
   private StopWatch stopWatch;
+  private double lastDrawT;
 
-  // FrameT che indica ogni quanti frame vogliamo disegnare, ottimizzazione
-  // last time (lastDrawT + FramedT < realT ) disegna oppure no e aggiorna lastT
+  // Ottimizzazione: FrameT che indica ogni quanti frame vogliamo disegnare
 
+  private final static int FRAME_RATE = 30;
   private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
   private final static int INIT_WIN_WIDTH = 400;
   private final static int INIT_WIN_HEIGHT = 300;
 
 
-  public RealTimeSnapshotListener(double initialT, double finalT, double dT, FramesImageBuilder.Direction direction, int w, int h, Drawer drawer) {
+  public RealTimeSnapshotListener(double dT, Drawer drawer) {
     this.dT = dT;
     this.drawer = drawer;
 
@@ -50,24 +51,28 @@ public class RealTimeSnapshotListener extends JFrame implements SnapshotListener
       stopWatch = StopWatch.createStarted();
     }
 
-    // Draw
-    Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
-    g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
-    drawer.draw(simT, s, g);
-    g.dispose();
-    BufferStrategy strategy = canvas.getBufferStrategy();
-    if (!strategy.contentsLost()) {
-      strategy.show();
-    }
-    Toolkit.getDefaultToolkit().sync();
-
-
-
-
     double realT = stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d;
+    double frameDT = (1.0/FRAME_RATE);
     System.out.println(simT + " " + (realT));
 
+    if (lastDrawT == 0.0d || lastDrawT + frameDT <= realT){
+      lastDrawT = realT;
+      // Draw
+      Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
+      g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
+      drawer.draw(simT, s, g);
+      g.dispose();
+      BufferStrategy strategy = canvas.getBufferStrategy();
+      if (!strategy.contentsLost()) {
+        strategy.show();
+      }
+      Toolkit.getDefaultToolkit().sync();
+    }
+
+
+
     // Wait
+    realT = stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d;
     long waitMillis = Math.max(Math.round((simT + dT - realT)*1000d), 0);
     if (waitMillis > 0) {
       synchronized (this) {
