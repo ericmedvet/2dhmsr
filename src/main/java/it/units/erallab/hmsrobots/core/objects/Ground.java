@@ -19,9 +19,7 @@ package it.units.erallab.hmsrobots.core.objects;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
@@ -33,14 +31,12 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Ground implements WorldObject, Snapshottable {
+public class Ground extends RigidBody {
 
   private static final double MIN_Y_THICKNESS = 50d;
 
   private final double[] xs;
   private final double[] ys;
-  private final List<Body> bodies;
-  private final List<Vector2> polygon;
 
   public Ground(double[] xs, double[] ys) {
     this.xs = xs;
@@ -58,10 +54,10 @@ public class Ground implements WorldObject, Snapshottable {
     }
     //init collections
     bodies = new ArrayList<>(xs.length - 1);
-    polygon = new ArrayList<>(xs.length + 2);
+    List<Vector2> polygonVertices = new ArrayList<>(xs.length + 2);
     //find min y
     double baseY = Arrays.stream(ys).min().getAsDouble() - MIN_Y_THICKNESS;
-    polygon.add(new Vector2(0, baseY));
+    polygonVertices.add(new Vector2(0, baseY));
     //build bodies and polygon
     for (int i = 1; i < xs.length; i++) {
       Polygon bodyPoly = new Polygon(
@@ -77,26 +73,20 @@ public class Ground implements WorldObject, Snapshottable {
       body.setUserData(Ground.class);
       //body.translate(-xs[0], -minY);
       bodies.add(body);
-      polygon.add(new Vector2(xs[i - 1], ys[i - 1]));
+      polygonVertices.add(new Vector2(xs[i - 1], ys[i - 1]));
     }
-    polygon.add(new Vector2(xs[xs.length - 1], ys[xs.length - 1]));
-    polygon.add(new Vector2(xs[xs.length - 1], baseY));
+    polygonVertices.add(new Vector2(xs[xs.length - 1], ys[xs.length - 1]));
+    polygonVertices.add(new Vector2(xs[xs.length - 1], baseY));
+    polygon = new Polygon(polygonVertices.toArray(Vector2[]::new));
   }
 
   @Override
   public Snapshot getSnapshot() {
-    Point2[] vertices = new Point2[polygon.size()];
+    Point2[] vertices = new Point2[polygon.getVertices().length];
     for (int i = 0; i < vertices.length; i++) {
-      vertices[i] = Point2.of(polygon.get(i));
+      vertices[i] = Point2.of(polygon.getVertices()[i]);
     }
     return new Snapshot(Poly.of(vertices), getClass());
-  }
-
-  @Override
-  public void addTo(World world) {
-    for (Body body : bodies) {
-      world.addBody(body);
-    }
   }
 
   public List<Body> getBodies() {
@@ -104,7 +94,6 @@ public class Ground implements WorldObject, Snapshottable {
   }
 
   public double yAt(double x) {
-    double y = Double.NEGATIVE_INFINITY;
     for (int i = 1; i < xs.length; i++) {
       if ((xs[i - 1] <= x) && (x <= xs[i])) {
         return (x - xs[i - 1]) * (ys[i] - ys[i - 1]) / (xs[i] - xs[i - 1]) + ys[i - 1];

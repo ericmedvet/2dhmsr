@@ -3,7 +3,6 @@ package it.units.erallab.hmsrobots.core.objects;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
@@ -16,45 +15,55 @@ import org.dyn4j.geometry.Vector2;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @author Federico Pigozzi <pigozzife@gmail.com>
+ */
+public class Pedestal extends RigidBody {
 
-public class Pedestal implements WorldObject, Snapshottable {
-
-  private final Body platform;
-  private final Body cuspid;
   private final Joint joint;
-  private final List<Vector2> platformVertices;
 
   public Pedestal(double halfPlatformWidth, double platformHeight) {
     Circle cuspidPolygon = new Circle(1);
-    Polygon platformPolygon = new Polygon(new Vector2(- halfPlatformWidth, platformHeight),
+    polygon = new Polygon(new Vector2(- halfPlatformWidth, platformHeight),
             new Vector2(- halfPlatformWidth, 0),
             new Vector2(halfPlatformWidth, 0),
             new Vector2(halfPlatformWidth, platformHeight));
-    platformVertices = Arrays.asList(platformPolygon.getVertices());
-    cuspid = new Body(1);
+    Body cuspid = new Body(1);
     cuspid.addFixture(cuspidPolygon);
     cuspid.setMass(MassType.INFINITE);
     cuspid.setUserData(Pedestal.class);
-    platform = new Body(1);
-    platform.addFixture(platformPolygon);
-    platform.setMass(MassType.NORMAL);
+    Body platform = new Body(1);
+    platform.addFixture(polygon);
+    platform.setMass(MassType.INFINITE);
     platform.setUserData(Pedestal.class);
     joint = new RevoluteJoint(cuspid, platform, new Vector2(0, 0));
+    bodies = List.of(platform, cuspid);
+  }
+
+  public void setMovable() {
+    bodies.get(0).setMass(MassType.NORMAL);
   }
 
   @Override
   public Snapshot getSnapshot() {
-    Point2[] vertices = new Point2[platformVertices.size()];
-    for (int i = 0; i < platformVertices.size(); ++i) {
-      vertices[i] = Point2.of(platformVertices.get(i));
+    Vector2 translation = bodies.get(0).getTransform().getTranslation();
+    double rotation = bodies.get(0).getTransform().getRotationTransform().getRotation();
+    Polygon copyPolygon = new Polygon(polygon.getVertices());
+    copyPolygon.translate(translation);
+    copyPolygon.rotate(rotation);
+    Point2[] vertices = new Point2[polygon.getVertices().length];
+    vertices[0] = Point2.of(copyPolygon.getVertices()[0]);
+    vertices[1] = Point2.of(copyPolygon.getVertices()[1]);
+    for (int i = 2; i < 4; ++i) {
+      vertices[i] = Point2.of(new Vector2((copyPolygon.getVertices()[Math.abs(i - 3)].x + copyPolygon.getVertices()[i].x) / 2,
+              (copyPolygon.getVertices()[Math.abs(i - 3)].y + copyPolygon.getVertices()[i].y) / 2));
     }
-    return new Snapshot(Poly.of(vertices), getClass());
+    return new Snapshot(Poly.of(Arrays.stream(copyPolygon.getVertices()).map(Point2::of).toArray(Point2[]::new)), getClass());
   }
 
   @Override
   public void addTo(World world) {
-    world.addBody(cuspid);
-    world.addBody(platform);
+    super.addTo(world);
     world.addJoint(joint);
   }
 

@@ -13,22 +13,24 @@ import org.dyn4j.geometry.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * @author Federico Pigozzi <pigozzife@gmail.com>
+ */
 public class Balancing extends AbstractTask<Robot<?>, Outcome> {
 
   private final double finalT;
   private final double halfPlatformWidth;
   private final double platformHeight;
-  private final double placementStd;
-  private final Random random;
+  private final double placement;
+  private final double transientT;
 
-  public Balancing(double finalT, double halfPlatformWidth, double platformHeight, double placementStd, Random random, Settings settings) {
+  public Balancing(double finalT, double halfPlatformWidth, double platformHeight, double placement, Settings settings) {
     super(settings);
     this.finalT = finalT;
     this.halfPlatformWidth = halfPlatformWidth;
     this.platformHeight = platformHeight;
-    this.placementStd = placementStd;
-    this.random = random;
+    this.placement = placement;
+    this.transientT = 2.0D;
   }
 
   @Override
@@ -44,9 +46,7 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
     robot.reset();
     //position robot: translate on x
     BoundingBox boundingBox = robot.boundingBox();
-    double initialPlacement = random.nextGaussian() * placementStd;
-    robot.translate(new Vector2(initialPlacement - boundingBox.min.x, 0));
-    robot.translate(new Vector2(0, 20.0));
+    robot.translate(new Vector2(placement - boundingBox.min.x, platformHeight));
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
@@ -60,6 +60,9 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
               0.0d,
               (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
+      if (t >= transientT) {
+        pedestal.setMovable();
+      }
     }
     stopWatch.stop();
     //prepare outcome
