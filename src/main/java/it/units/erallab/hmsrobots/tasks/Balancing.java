@@ -53,7 +53,7 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
     //run
     Map<Double, Outcome.Observation> observations = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
     double t = 0d;
-    while (t < finalT) {
+    while (t < finalT && !stopCondition(robot)) {
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       observations.put(t, new Outcome.Observation(
               Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
@@ -67,6 +67,15 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
     stopWatch.stop();
     //prepare outcome
     return new Outcome(observations);
+  }
+
+  public boolean stopCondition(Robot<?> robot) {
+    for (Grid.Entry<?> voxel : robot.getVoxels()) {
+      if (Math.sqrt(Math.pow(voxel.getX(), 2) + Math.pow(voxel.getY(), 2)) < halfPlatformWidth) {
+        return false;
+      }
+    }
+    return true;
   }
 
 }

@@ -7,10 +7,7 @@ import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
 import org.dyn4j.dynamics.joint.RevoluteJoint;
-import org.dyn4j.geometry.Circle;
-import org.dyn4j.geometry.MassType;
-import org.dyn4j.geometry.Polygon;
-import org.dyn4j.geometry.Vector2;
+import org.dyn4j.geometry.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,13 +48,6 @@ public class Pedestal extends RigidBody {
     Polygon copyPolygon = new Polygon(polygon.getVertices());
     copyPolygon.translate(translation);
     copyPolygon.rotate(rotation);
-    Point2[] vertices = new Point2[polygon.getVertices().length];
-    vertices[0] = Point2.of(copyPolygon.getVertices()[0]);
-    vertices[1] = Point2.of(copyPolygon.getVertices()[1]);
-    for (int i = 2; i < 4; ++i) {
-      vertices[i] = Point2.of(new Vector2((copyPolygon.getVertices()[Math.abs(i - 3)].x + copyPolygon.getVertices()[i].x) / 2,
-              (copyPolygon.getVertices()[Math.abs(i - 3)].y + copyPolygon.getVertices()[i].y) / 2));
-    }
     return new Snapshot(Poly.of(Arrays.stream(copyPolygon.getVertices()).map(Point2::of).toArray(Point2[]::new)), getClass());
   }
 
