@@ -37,6 +37,7 @@ public class Ground extends RigidBody {
 
   private final double[] xs;
   private final double[] ys;
+  private final List<Vector2> polygon;
 
   public Ground(double[] xs, double[] ys) {
     this.xs = xs;
@@ -54,10 +55,10 @@ public class Ground extends RigidBody {
     }
     //init collections
     bodies = new ArrayList<>(xs.length - 1);
-    List<Vector2> polygonVertices = new ArrayList<>(xs.length + 2);
+    polygon = new ArrayList<>(xs.length + 2);
     //find min y
     double baseY = Arrays.stream(ys).min().getAsDouble() - MIN_Y_THICKNESS;
-    polygonVertices.add(new Vector2(0, baseY));
+    polygon.add(new Vector2(0, baseY));
     //build bodies and polygon
     for (int i = 1; i < xs.length; i++) {
       Polygon bodyPoly = new Polygon(
@@ -73,18 +74,17 @@ public class Ground extends RigidBody {
       body.setUserData(Ground.class);
       //body.translate(-xs[0], -minY);
       bodies.add(body);
-      polygonVertices.add(new Vector2(xs[i - 1], ys[i - 1]));
+      polygon.add(new Vector2(xs[i - 1], ys[i - 1]));
     }
-    polygonVertices.add(new Vector2(xs[xs.length - 1], ys[xs.length - 1]));
-    polygonVertices.add(new Vector2(xs[xs.length - 1], baseY));
-    polygon = new Polygon(polygonVertices.toArray(Vector2[]::new));
+    polygon.add(new Vector2(xs[xs.length - 1], ys[xs.length - 1]));
+    polygon.add(new Vector2(xs[xs.length - 1], baseY));
   }
 
   @Override
   public Snapshot getSnapshot() {
-    Point2[] vertices = new Point2[polygon.getVertices().length];
+    Point2[] vertices = new Point2[polygon.size()];
     for (int i = 0; i < vertices.length; i++) {
-      vertices[i] = Point2.of(polygon.getVertices()[i]);
+      vertices[i] = Point2.of(polygon.get(i));
     }
     return new Snapshot(Poly.of(vertices), getClass());
   }

@@ -18,6 +18,7 @@ import java.util.List;
 public class Pedestal extends RigidBody {
 
   private final Joint joint;
+  private final Polygon polygon;
 
   public Pedestal(double halfPlatformWidth, double platformHeight) {
     Circle cuspidPolygon = new Circle(1);
