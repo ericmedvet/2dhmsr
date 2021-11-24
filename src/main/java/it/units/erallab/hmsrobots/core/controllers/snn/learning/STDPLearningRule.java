@@ -37,14 +37,14 @@ public abstract class STDPLearningRule implements Parametrized, Serializable {
     STDPLearningRule stdpLearningRule;
     // first parameter regulates symmetry, second regulates hebbian/antihebbian
     if (parameters[0] > 0) {
-      stdpParams = SymmetricSTPDLearningRule.scaleParameters(stdpParams);
+      SymmetricSTPDLearningRule.scaleParameters(stdpParams);
       if (parameters[1] > 0) {
         stdpLearningRule = new SymmetricHebbianLearningRule();
       } else {
         stdpLearningRule = new SymmetricAntiHebbianLearningRule();
       }
     } else {
-      stdpParams = AsymmetricSTDPLearningRule.scaleParameters(stdpParams);
+      AsymmetricSTDPLearningRule.scaleParameters(stdpParams);
       if (parameters[1] > 0) {
         stdpLearningRule = new AsymmetricHebbianLearningRule();
       } else {
@@ -55,7 +55,7 @@ public abstract class STDPLearningRule implements Parametrized, Serializable {
     return stdpLearningRule;
   }
 
-  private static STDPLearningRule createFromReals(double[] parameters, double[] defaultSymmetricParams, double[] defaultAsymmetricParams){
+  private static STDPLearningRule createFromReals(double[] parameters, double[] defaultSymmetricParams, double[] defaultAsymmetricParams) {
     if (parameters.length != 2) {
       throw new IllegalArgumentException(String.format("Expected 2 parameters, received %d", parameters.length));
     }
@@ -82,18 +82,22 @@ public abstract class STDPLearningRule implements Parametrized, Serializable {
   }
 
   public static STDPLearningRule[] createLearningRules(double[][] params) {
-    return Arrays.stream(params).map(p -> STDPLearningRule.createFromReals(p)).toArray(STDPLearningRule[]::new);
+    return Arrays.stream(params).map(STDPLearningRule::createFromReals).toArray(STDPLearningRule[]::new);
   }
 
   public static STDPLearningRule[] createLearningRules(double[][] params, double[] defaultSymmetricParams, double[] defaultAsymmetricParams) {
-    return Arrays.stream(params).map(p -> STDPLearningRule.createFromReals(p,defaultSymmetricParams,defaultAsymmetricParams)).toArray(STDPLearningRule[]::new);
+    return Arrays.stream(params).map(p -> STDPLearningRule.createFromReals(p, defaultSymmetricParams, defaultAsymmetricParams)).toArray(STDPLearningRule[]::new);
   }
 
   public abstract double computeDeltaW(double deltaT);
 
   // might try using tanh instead of max and min
   protected static double scaleParameter(double param, double min, double max) {
-    return Math.max(Math.min(param, 1), -1) * (max - min) / 2 + min;
+    return (Math.max(Math.min(param, 1), -1) / 2 + 0.5) * (max - min) + min;
+  }
+
+  public static void main(String[] args) {
+    System.out.println(scaleParameter(1, 0.1, 1));
   }
 
 }
