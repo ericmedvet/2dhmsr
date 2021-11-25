@@ -14,6 +14,29 @@ import java.util.function.BiFunction;
 
 public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilayerSpikingNetwork {
 
+  public enum WeightIncrementCriterion {
+    ABSOLUTE(0d, Double::sum, Double::sum),
+    PERCENTAGE(1d, (previous, newDelta) -> previous * (1 + newDelta), (w, deltaW) -> w * deltaW);
+
+    private final double initialValue;
+    private final BiFunction<Double, Double, Double> deltaAdder;
+    private final BiFunction<Double, Double, Double> weightIncrementer;
+
+    WeightIncrementCriterion(double initialValue, BiFunction<Double, Double, Double> deltaAdder, BiFunction<Double, Double, Double> weightIncrementer) {
+      this.initialValue = initialValue;
+      this.deltaAdder = deltaAdder;
+      this.weightIncrementer = weightIncrementer;
+    }
+
+    private double incrementDeltaW(double previousDeltaW, double newDeltaW) {
+      return deltaAdder.apply(previousDeltaW, newDeltaW);
+    }
+
+    private double incrementWeight(double previousWeight, double deltaW) {
+      return weightIncrementer.apply(previousWeight, deltaW);
+    }
+  }
+
   private static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
   private static final int STDP_LEARNING_WINDOW = (int) (2.5 * ARRAY_SIZE);
   private static final double MAX_WEIGHT_MAGNITUDE = 1.2;
@@ -32,6 +55,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   private double maxWeightMagnitude;
 
   private double lastLearningTime = Double.POSITIVE_INFINITY;
+  private WeightIncrementCriterion weightIncrementCriterion = WeightIncrementCriterion.ABSOLUTE;
 
   @JsonCreator
   public QuantizedLearningMultilayerSpikingNetwork(
@@ -81,7 +105,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   }
 
   public QuantizedLearningMultilayerSpikingNetwork(QuantizedSpikingFunction[][] neurons, double[] weights, QuantizedSpikeTrainToValueConverter converter) {
-    this(neurons, unflat(weights, neurons),converter);
+    this(neurons, unflat(weights, neurons), converter);
   }
 
   public QuantizedLearningMultilayerSpikingNetwork(int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, STDPLearningRule[] learningRules, BiFunction<Integer, Integer, QuantizedSpikingFunction> neuronBuilder) {
@@ -111,7 +135,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   @Override
   public int[][] apply(double t, int[][] inputs) {
     timeWindowSize = t - previousApplicationTime;
-    double deltaTF = timeWindowSize / (double) ARRAY_SIZE;
+    double deltaTF = 1000 * timeWindowSize / (double) ARRAY_SIZE;
     if (inputs.length != neurons[0].length) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
     }
@@ -136,22 +160,22 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
         // learning (not on the inputs)
         if (layerIndex > 0) {
           for (int previousNeuronIndex = 0; previousNeuronIndex < neurons[layerIndex - 1].length; previousNeuronIndex++) {
-            double deltaW = 0;
+            double deltaW = weightIncrementCriterion.initialValue;
             for (int tOut : thisLayersOutputs[neuronIndex]) {
               if (tOut > 0) {
                 for (int tIn : outputSpikes[layerIndex - 1][previousNeuronIndex]) {
                   if (tIn > 0) {
-                    deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn) * deltaTF);
+                    deltaW = weightIncrementCriterion.incrementDeltaW(deltaW, learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn) * deltaTF));
                   }
                 }
                 for (int tIn : previousTimeOutputSpikes[layerIndex - 1][previousNeuronIndex]) {
                   if (tIn > 0) {
-                    deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn + ARRAY_SIZE) * deltaTF);
+                    deltaW = weightIncrementCriterion.incrementDeltaW(deltaW, learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn + ARRAY_SIZE) * deltaTF));
                   }
                 }
               }
             }
-            weights[layerIndex - 1][previousNeuronIndex][neuronIndex] += deltaW;
+            weights[layerIndex - 1][previousNeuronIndex][neuronIndex] = weightIncrementCriterion.incrementWeight(weights[layerIndex - 1][previousNeuronIndex][neuronIndex], deltaW);
           }
         }
         if (spikesTracker) {
@@ -279,6 +303,10 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
 
   public void setLastLearningTime(double lastLearningTime) {
     this.lastLearningTime = lastLearningTime;
+  }
+
+  public void setWeightIncrementCriterion(WeightIncrementCriterion criterion) {
+    this.weightIncrementCriterion = criterion;
   }
 
   @Override
