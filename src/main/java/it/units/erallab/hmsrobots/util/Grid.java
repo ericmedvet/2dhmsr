@@ -36,16 +36,13 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   private final static char FULL_CELL_CHAR = '█';
   private final static char EMPTY_CELL_CHAR = '░';
 
-  public static final class Entry<K> implements Serializable {
-
+  public static class Key implements Serializable {
     private final int x;
     private final int y;
-    private final K value;
 
-    public Entry(int x, int y, K value) {
+    public Key(int x, int y) {
       this.x = x;
       this.y = y;
-      this.value = value;
     }
 
     public int getX() {
@@ -56,40 +53,46 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
       return y;
     }
 
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      Key key = (Key) o;
+      return x == key.x && y == key.y;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(x, y);
+    }
+  }
+
+  public static final class Entry<K> extends Key implements Serializable {
+
+    private final K value;
+
+    public Entry(int x, int y, K value) {
+      super(x, y);
+      this.value = value;
+    }
+
     public K getValue() {
       return value;
     }
 
     @Override
-    public int hashCode() {
-      int hash = 7;
-      hash = 53 * hash + this.x;
-      hash = 53 * hash + this.y;
-      hash = 53 * hash + Objects.hashCode(this.value);
-      return hash;
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      if (!super.equals(o)) return false;
+      Entry<?> entry = (Entry<?>) o;
+      return Objects.equals(value, entry.value);
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      final Entry<?> other = (Entry<?>) obj;
-      if (this.x != other.x) {
-        return false;
-      }
-      if (this.y != other.y) {
-        return false;
-      }
-      return Objects.equals(this.value, other.value);
+    public int hashCode() {
+      return Objects.hash(super.hashCode(), value);
     }
-
   }
 
   private static final class GridIterator<K> implements Iterator<Entry<K>> {

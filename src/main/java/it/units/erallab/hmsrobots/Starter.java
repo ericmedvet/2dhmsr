@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.behavior.PoseUtils;
 import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
@@ -131,7 +132,8 @@ public class Starter {
     //multiped();
     //bipedAndBall();
     //bipedCentralized();
-    devoComb();
+    //devoComb();
+    bipedPoses();
   }
 
   private static void bipedWithBrain() {
@@ -179,7 +181,7 @@ public class Starter {
       );
     };
     //DistanceBasedDevoLocomotion devoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
-    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(10,40d, Locomotion.createTerrain("downhill-20"), new Settings());
+    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(10, 40d, Locomotion.createTerrain("downhill-20"), new Settings());
     GridOnlineViewer.run(devoLocomotion, devoFunction);
   }
 
@@ -247,7 +249,7 @@ public class Starter {
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
     namedSolutionGrid.set(0, 3, Pair.of("phasesRobot-step-0.5",
         new Robot<>(
-            Controller.step((AbstractController) phasesRobot.getController(), 0.5),
+            ((AbstractController) phasesRobot.getController()).step(0.5),
             SerializationUtils.clone(phasesRobot.getVoxels())
         )
     ));
@@ -427,16 +429,16 @@ public class Starter {
         //.buildSensorizingFunction("uniform-l5-0")
         .buildSensorizingFunction("uniform-l5+vxy+t-0.01")
         .apply(RobotUtils.buildShape("worm-5x2"));
-    double f = 1d;
+    double f = 0.333d;
     Robot<?> robot = new Robot<>(
         new TimeFunctions(Grid.create(
             body.getW(),
             body.getH(),
-            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
+            /*(final Integer x, final Integer y) -> (Double t) -> Math.sin(
                 -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
-            )
-            //(x, y) -> t -> Math.signum(Math.sin(-2 * Math.PI * (f + (x > body.getW() / 2d ? 1 : 0)) * t))
-        )),
+            )*/
+            (x, y) -> t -> Math.signum(Math.sin(-2 * Math.PI * f * t + ((x <= body.getW() / 2) ? Math.PI / 2d : 0d)))
+        )).smoothed(10),
         SerializationUtils.clone(body)
     );
     robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
@@ -444,6 +446,23 @@ public class Starter {
     Locomotion locomotion = new Locomotion(
         30,
         Locomotion.createTerrain("flatWithStart-2"),
+        new Settings()
+    );
+    //GridOnlineViewer.run(locomotion, robot);
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", robot)), Drawers::basicWithMiniWorldAndSpectra);
+  }
+
+  private static void bipedPoses() {
+    Grid<Boolean> shape = RobotUtils.buildShape("biped-8x4");
+    Grid<? extends SensingVoxel> body = RobotUtils
+        .buildSensorizingFunction("uniform-t-0")
+        .apply(shape);
+    PosesController controller = new PosesController(1d, PoseUtils.computeCardinalPoses(shape));
+    Robot<?> robot = new Robot<>(controller, body);
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("hilly-1-10-0"),
         new Settings()
     );
     GridOnlineViewer.run(locomotion, robot);

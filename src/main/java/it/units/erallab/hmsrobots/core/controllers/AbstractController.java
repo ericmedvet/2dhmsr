@@ -33,4 +33,13 @@ public abstract class AbstractController<V extends ControllableVoxel> implements
   }
 
   public abstract Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels);
+
+  public AbstractController<V> step(double stepT) {
+    return new StepController<>(this, stepT);
+  }
+
+  public AbstractController<V> smoothed(double controlSignalSpeed) {
+    return new SmoothedController<>(this, controlSignalSpeed);
+  }
+
 }
