@@ -1,18 +1,23 @@
 package it.units.erallab.hmsrobots.core.snapshots;
 
+import it.units.erallab.hmsrobots.MyKeyListener;
+import it.units.erallab.hmsrobots.core.controllers.BasicInteractiveController;
 import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import org.apache.commons.lang3.time.StopWatch;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-public class RealTimeSnapshotListener extends JFrame implements SnapshotListener {
+public class InteractiveSnapshotListener extends JFrame implements SnapshotListener, KeyListener {
   private final Drawer drawer;
   private final double dT;
+  private final BasicInteractiveController controller;
 
   private final Canvas canvas;
   private StopWatch stopWatch;
@@ -26,9 +31,10 @@ public class RealTimeSnapshotListener extends JFrame implements SnapshotListener
   private final static int INIT_WIN_HEIGHT = 300;
 
 
-  public RealTimeSnapshotListener(double dT, Drawer drawer) {
+  public InteractiveSnapshotListener(double dT, Drawer drawer, BasicInteractiveController controller) {
     this.dT = dT;
     this.drawer = drawer;
+    this.controller = controller;
 
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     Dimension dimension = new Dimension(INIT_WIN_WIDTH, INIT_WIN_HEIGHT);
@@ -43,17 +49,19 @@ public class RealTimeSnapshotListener extends JFrame implements SnapshotListener
     canvas.setIgnoreRepaint(true);
     canvas.createBufferStrategy(2);
 
+    addKeyListener(this);
   }
 
   @Override
   public void listen(double simT, Snapshot s) {
+
     if (stopWatch == null) {
       stopWatch = StopWatch.createStarted();
     }
 
     double realT = stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d;
     double frameDT = (1.0/FRAME_RATE);
-    System.out.println(simT + " " + (realT));
+    //System.out.println(simT + " " + (realT));
 
     if (lastDrawT == 0.0d || lastDrawT + frameDT <= realT){
       lastDrawT = realT;
@@ -76,7 +84,7 @@ public class RealTimeSnapshotListener extends JFrame implements SnapshotListener
     long waitMillis = Math.max(Math.round((simT + dT - realT)*1000d), 0);
     if (waitMillis > 0) {
       synchronized (this) {
-        System.out.println(waitMillis);
+        //System.out.println(waitMillis);
         try {
           wait(waitMillis);
         } catch (InterruptedException e) {
@@ -84,5 +92,20 @@ public class RealTimeSnapshotListener extends JFrame implements SnapshotListener
         }
       }
     }
+  }
+
+  @Override
+  public void keyTyped(KeyEvent e) {
+
+  }
+
+  @Override
+  public void keyPressed(KeyEvent e) {
+    controller.setKeyPressed(true);
+  }
+
+  @Override
+  public void keyReleased(KeyEvent e) {
+    controller.setKeyPressed(false);
   }
 }

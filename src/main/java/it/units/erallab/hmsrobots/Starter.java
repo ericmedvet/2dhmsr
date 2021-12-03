@@ -27,8 +27,7 @@ import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
-import it.units.erallab.hmsrobots.core.snapshots.RealTimeSnapshotListener;
-import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
+import it.units.erallab.hmsrobots.core.snapshots.InteractiveSnapshotListener;
 import it.units.erallab.hmsrobots.tasks.devolocomotion.TimeBasedDevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
@@ -43,11 +42,9 @@ import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
 import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +52,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
@@ -373,20 +369,15 @@ public class Starter {
 
   private static void multiped() {
     double f = 1d;
-    Grid<Boolean> body = Grid.create(7, 2, (x, y) -> y == 1 || (x % 2 == 0));
+    Grid<Boolean> body = RobotUtils.buildShape("biped-8x4");//Grid.create(7, 2, (x, y) -> y == 1 || (x % 2 == 0));
+    BasicInteractiveController basicInteractiveController = new BasicInteractiveController();
     Robot<?> robot = new Robot<>(
-            new TimeFunctions(Grid.create(
-                    body.getW(),
-                    body.getH(),
-                    (final Integer x, final Integer y) -> (Double t) -> Math.sin(
-                            -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
-                    )
-            )),
+            basicInteractiveController,
             RobotUtils.buildSensorizingFunction("uniform-a-0.01").apply(body)
     );
     Locomotion locomotion = new Locomotion(
-            60,
-            Locomotion.createTerrain("hilly-0.3-1-0"),
+            120,
+            Locomotion.createTerrain("downhill-10"),
             new Settings()
     );
     /*GridOnlineViewer.run(locomotion, robot);
@@ -397,7 +388,7 @@ public class Starter {
     } catch (IOException e) {
       e.printStackTrace();
     }*/
-    locomotion.apply(robot, new RealTimeSnapshotListener(1d/60d, Drawers.basic()));
+    locomotion.apply(robot, new InteractiveSnapshotListener(1d/60d, Drawers.basic(), basicInteractiveController));
   }
 
   private static void breakingWorm() {
