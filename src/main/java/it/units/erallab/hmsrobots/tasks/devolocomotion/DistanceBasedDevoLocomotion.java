@@ -30,16 +30,18 @@ import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Vector2;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
 
 /**
  * @author "Eric Medvet" on 2021/09/27 for VSREvolution
  */
-public class DistanceBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOutcome> {
+public class DistanceBasedDevoLocomotion extends DevoLocomotion {
 
   public static class CurrentTarget implements Snapshottable {
     private final List<Double> targets;
@@ -56,17 +58,11 @@ public class DistanceBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robo
 
   private final double stageMinDistance;
   private final double stageMaxT;
-  private final double maxT;
-  private final double[][] groundProfile;
-  private final double initialPlacement;
 
   public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
-    super(settings);
+    super(maxT, groundProfile, initialPlacement, settings);
     this.stageMinDistance = stageMinDistance;
     this.stageMaxT = stageMaxT;
-    this.maxT = maxT;
-    this.groundProfile = groundProfile;
-    this.initialPlacement = initialPlacement;
   }
 
   public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, Settings settings) {
@@ -140,19 +136,6 @@ public class DistanceBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robo
     stopWatch.stop();
     //prepare outcome
     return devoOutcome;
-  }
-
-  private void rebuildWorld(Ground ground, Robot<?> robot, World world, double newMinX) {
-    ground.addTo(world);
-    robot.addTo(world);
-    //position robot: translate on x
-    robot.translate(new Vector2(newMinX - robot.boundingBox().min.x, 0));
-    //translate on y
-    double minYGap = robot.getVoxels().values().stream()
-        .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min.y - ground.yAt(v.getCenter().x))
-        .min().orElse(0d);
-    robot.translate(new Vector2(0, Locomotion.INITIAL_PLACEMENT_Y_GAP - minYGap));
   }
 
 }
