@@ -19,13 +19,14 @@ public class Pedestal extends RigidBody {
 
   private final Joint joint;
   private final Polygon polygon;
+  public static final double PLATFORM_HEIGHT = 5;
 
   public Pedestal(double halfPlatformWidth, double platformHeight) {
     Circle cuspidPolygon = new Circle(1);
-    polygon = new Polygon(new Vector2(- halfPlatformWidth, platformHeight),
-            new Vector2(- halfPlatformWidth, 0),
-            new Vector2(halfPlatformWidth, 0),
-            new Vector2(halfPlatformWidth, platformHeight));
+    polygon = new Polygon(new Vector2(- halfPlatformWidth, platformHeight + PLATFORM_HEIGHT / 2),
+            new Vector2(- halfPlatformWidth, platformHeight - PLATFORM_HEIGHT / 2),
+            new Vector2(halfPlatformWidth, platformHeight - PLATFORM_HEIGHT / 2),
+            new Vector2(halfPlatformWidth, platformHeight + PLATFORM_HEIGHT / 2));
     Body cuspid = new Body(1);
     cuspid.addFixture(cuspidPolygon);
     cuspid.setMass(MassType.INFINITE);
@@ -34,7 +35,7 @@ public class Pedestal extends RigidBody {
     platform.addFixture(polygon);
     platform.setMass(MassType.INFINITE);
     platform.setUserData(Pedestal.class);
-    joint = new RevoluteJoint(cuspid, platform, new Vector2(0, 0));
+    joint = new RevoluteJoint(cuspid, platform, new Vector2(0, platformHeight));
     bodies = List.of(platform, cuspid);
   }
 
