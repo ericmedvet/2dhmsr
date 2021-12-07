@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import it.units.erallab.hmsrobots.behavior.BinaryPose;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * @author "Eric Medvet" on 2021/12/03 for 2dhmsr
  */
-public class PosesController extends AbstractController<SensingVoxel> {
+public class PosesController extends AbstractController<ControllableVoxel> {
 
   private final double stepT;
   private final List<BinaryPose> poses;
@@ -37,7 +37,7 @@ public class PosesController extends AbstractController<SensingVoxel> {
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<? extends ControllableVoxel> voxels) {
     int poseIndex = (int) Math.round(t / stepT) % poses.size();
     Grid<Double> values = Grid.create(voxels, v -> -1d);
     for (Grid.Key key : poses.get(poseIndex).getContractedVoxels()) {

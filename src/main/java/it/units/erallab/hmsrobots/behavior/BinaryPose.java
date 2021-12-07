@@ -1,5 +1,5 @@
 /*
- * Copyright (c) "Eric Medvet" 2021.
+ * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -33,5 +33,13 @@ public class BinaryPose {
 
   public List<Grid.Key> getContractedVoxels() {
     return contractedVoxels;
+  }
+
+  public Grid<Boolean> toShape() {
+    int maxX = contractedVoxels.stream().mapToInt(Grid.Key::getX).max().orElse(1);
+    int maxY = contractedVoxels.stream().mapToInt(Grid.Key::getY).max().orElse(1);
+    Grid<Boolean> shape = Grid.create(maxX + 1, maxY + 1, (x, y) -> false);
+    contractedVoxels.forEach(k -> shape.set(k.getX(), k.getY(), true));
+    return shape;
   }
 }
