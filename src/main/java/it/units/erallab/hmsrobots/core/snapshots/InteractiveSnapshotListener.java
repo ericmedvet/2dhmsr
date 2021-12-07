@@ -99,13 +99,50 @@ public class InteractiveSnapshotListener extends JFrame implements SnapshotListe
 
   }
 
+  //@Override
+  //public void keyPressed(KeyEvent e) {controller.setKeyPressed(true);}
   @Override
   public void keyPressed(KeyEvent e) {
-    controller.setKeyPressed(true);
+    switch(e.getKeyCode()){
+      case KeyEvent.VK_UP:
+        System.out.println("key pressed: UP arrow");
+        break;
+      case KeyEvent.VK_DOWN:
+        System.out.println("key pressed: DOWN arrow");
+        break;
+      case KeyEvent.VK_LEFT:
+        controller.setKeyPressed(true, 0);
+        break;
+      case KeyEvent.VK_RIGHT:
+        controller.setKeyPressed(true, 1);
+        break;
+      default:
+        System.out.println("key pressed: not an arrow");
+        break;
+    }
   }
+
+  //@Override
+  //public void keyReleased(KeyEvent e) {controller.setKeyPressed(false);}
 
   @Override
   public void keyReleased(KeyEvent e) {
-    controller.setKeyPressed(false);
+    switch(e.getKeyCode()){
+      case KeyEvent.VK_UP:
+        System.out.println("key stop pressed: UP arrow");
+        break;
+      case KeyEvent.VK_DOWN:
+        System.out.println("key stop pressed: DOWN arrow");
+        break;
+      case KeyEvent.VK_LEFT:
+        controller.setKeyPressed(false, 0);
+        break;
+      case KeyEvent.VK_RIGHT:
+        controller.setKeyPressed(false, 1);
+        break;
+      default:
+        System.out.println("key stop pressed: not an arrow");
+        break;
+    }
   }
 }
