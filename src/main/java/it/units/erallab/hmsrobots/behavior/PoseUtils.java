@@ -22,7 +22,6 @@ import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.tasks.FinalPosture;
 import it.units.erallab.hmsrobots.util.Grid;
-import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
@@ -33,7 +32,10 @@ import org.apache.commons.math3.ml.distance.ManhattanDistance;
 import org.apache.commons.math3.random.JDKRandomGenerator;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -158,30 +160,4 @@ public class PoseUtils {
         .collect(Collectors.toSet());
   }
 
-  public static void main(String[] args) {
-    Grid<Boolean> shape = RobotUtils.buildShape("biped-8x4");
-    Collection<Set<Grid.Key>> poses;
-    //poses = computeCardinalPoses(shape);
-    //poses = computeClusteredByPositionPoses(shape, 4);
-    poses = computeClusteredByPosturePoses(
-        shape,
-        computeClusteredByPositionPoses(shape, 8, 1),
-        5, 1, new ControllableVoxel(), 4, 16,
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
-    );
-    System.out.println("Poses");
-    for (Set<Grid.Key> pose : poses) {
-      System.out.println(Grid.toString(shape, (Grid.Entry<Boolean> e) -> {
-        if (!e.getValue()) return '·';
-        return pose.contains(e) ? '█' : '░';
-      }, "\n"));
-      System.out.println();
-    }
-    System.out.println("Postures of poses");
-    for (Set<Grid.Key> pose : poses) {
-      Grid<Boolean> posture = computeDynamicPosture(shape, pose, new ControllableVoxel(), 4, 16);
-      System.out.println(Grid.toString(posture));
-      System.out.println();
-    }
-  }
 }
