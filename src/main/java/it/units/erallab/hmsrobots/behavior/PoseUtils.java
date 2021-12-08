@@ -27,9 +27,14 @@ import it.units.erallab.hmsrobots.util.SerializationUtils;
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
+import org.apache.commons.math3.ml.distance.DistanceMeasure;
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.apache.commons.math3.ml.distance.ManhattanDistance;
+import org.apache.commons.math3.random.JDKRandomGenerator;
 
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -95,7 +100,7 @@ public class PoseUtils {
     return finalPosture.apply(robot);
   }
 
-  public static Set<Set<Grid.Key>> computeClusteredByPosturePoses(Grid<Boolean> shape, Set<Set<Grid.Key>> startingPoses, int n, ControllableVoxel voxelPrototype, double finalT, int gridSize) {
+  public static Set<Set<Grid.Key>> computeClusteredByPosturePoses(Grid<Boolean> shape, Set<Set<Grid.Key>> startingPoses, int n, int seed, ControllableVoxel voxelPrototype, double finalT, int gridSize, ExecutorService executorService) {
     List<Set<Grid.Key>> sPoses = new ArrayList<>(startingPoses);
     List<Set<Grid.Key>> allPoses = new ArrayList<>((int) Math.pow(2, sPoses.size()));
     //build expanded poses (2^|poses.size|)
@@ -110,23 +115,43 @@ public class PoseUtils {
       allPoses.add(combinedPose);
     }
     //compute all postures
-    Collection<ClusterablePosture> points = allPoses.stream()
-        .map(p -> new ClusterablePosture(p, computeDynamicPosture(shape, p, voxelPrototype, finalT, gridSize)))
-        .collect(Collectors.toList());
+    Collection<ClusterablePosture> points = new ArrayList<>(allPoses.size());
+    try {
+      for (Future<ClusterablePosture> clusterablePostureFuture : executorService.invokeAll(allPoses.stream()
+          .map(p -> (Callable<ClusterablePosture>) () -> new ClusterablePosture(p, computeDynamicPosture(shape, p, voxelPrototype, finalT, gridSize)))
+          .collect(Collectors.toList())
+      )) {
+        ClusterablePosture clusterablePosture = clusterablePostureFuture.get();
+        points.add(clusterablePosture);
+      }
+    } catch (InterruptedException | ExecutionException e) {
+      Logger.getLogger(PoseUtils.class.getName()).warning(String.format("Cannot compute postures due to %s", e));
+    }
     //cluster postures in nPoses clusters
-    KMeansPlusPlusClusterer<ClusterablePosture> clusterer = new KMeansPlusPlusClusterer<>(n, -1, new ManhattanDistance());
+    KMeansPlusPlusClusterer<ClusterablePosture> clusterer = new KMeansPlusPlusClusterer<>(
+        n, -1, new ManhattanDistance(), new JDKRandomGenerator(seed)
+    );
     List<CentroidCluster<ClusterablePosture>> clusters = clusterer.cluster(points);
     //find representatives
-    //TODO
-    return Set.of();
+    return clusters.stream()
+        .map(c -> center(c, new ManhattanDistance()).pose)
+        .collect(Collectors.toSet());
   }
 
-  public static Set<Set<Grid.Key>> computeClusteredByPositionPoses(Grid<Boolean> shape, int n) {
+  private static <K extends Clusterable> K center(CentroidCluster<K> cluster, DistanceMeasure d) {
+    return cluster.getPoints().stream()
+        .min(Comparator.comparingDouble(k -> d.compute(k.getPoint(), cluster.getCenter().getPoint())))
+        .orElseThrow();
+  }
+
+  public static Set<Set<Grid.Key>> computeClusteredByPositionPoses(Grid<Boolean> shape, int n, int seed) {
     Collection<ClusterableGridKey> points = shape.stream()
         .filter(Grid.Entry::getValue)
         .map(ClusterableGridKey::new)
         .collect(Collectors.toList());
-    KMeansPlusPlusClusterer<ClusterableGridKey> clusterer = new KMeansPlusPlusClusterer<>(n);
+    KMeansPlusPlusClusterer<ClusterableGridKey> clusterer = new KMeansPlusPlusClusterer<>(
+        n, -1, new EuclideanDistance(), new JDKRandomGenerator(seed)
+    );
     List<CentroidCluster<ClusterableGridKey>> clusters = clusterer.cluster(points);
     return clusters.stream()
         .map(c -> c.getPoints().stream().map(cgk -> cgk.key).collect(Collectors.toSet()))
@@ -136,9 +161,14 @@ public class PoseUtils {
   public static void main(String[] args) {
     Grid<Boolean> shape = RobotUtils.buildShape("biped-8x4");
     Collection<Set<Grid.Key>> poses;
-    poses = computeCardinalPoses(shape);
-    poses = computeClusteredByPositionPoses(shape, 4);
-    poses = computeClusteredByPosturePoses(shape, computeCardinalPoses(shape), 4, new ControllableVoxel(), 4, 16);
+    //poses = computeCardinalPoses(shape);
+    //poses = computeClusteredByPositionPoses(shape, 4);
+    poses = computeClusteredByPosturePoses(
+        shape,
+        computeClusteredByPositionPoses(shape, 8, 1),
+        5, 1, new ControllableVoxel(), 4, 16,
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    );
     System.out.println("Poses");
     for (Set<Grid.Key> pose : poses) {
       System.out.println(Grid.toString(shape, (Grid.Entry<Boolean> e) -> {
@@ -147,12 +177,9 @@ public class PoseUtils {
       }, "\n"));
       System.out.println();
     }
-
-    System.exit(0);
-
     System.out.println("Postures of poses");
     for (Set<Grid.Key> pose : poses) {
-      Grid<Boolean> posture = computeDynamicPosture(shape, pose, new ControllableVoxel(), 8, 16);
+      Grid<Boolean> posture = computeDynamicPosture(shape, pose, new ControllableVoxel(), 4, 16);
       System.out.println(Grid.toString(posture));
       System.out.println();
     }
