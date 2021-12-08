@@ -128,11 +128,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   private final int h;
 
   @JsonCreator
-  public Grid(
-      @JsonProperty("w") int w,
-      @JsonProperty("h") int h,
-      @JsonProperty("items") List<T> ts
-  ) {
+  public Grid(@JsonProperty("w") int w, @JsonProperty("h") int h, @JsonProperty("items") List<T> ts) {
     this.w = w;
     this.h = h;
     this.ts = new ArrayList<>(w * h);
@@ -157,10 +153,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
   public void set(int x, int y, T t) {
     if (x < 0 || x >= w || y < 0 || y >= h) {
-      throw new IllegalArgumentException(String.format(
-          "Cannot set element at %d,%d on a %dx%d grid",
-          x, y, w, h
-      ));
+      throw new IllegalArgumentException(String.format("Cannot set element at %d,%d on a %dx%d grid", x, y, w, h));
     }
     ts.set((y * w) + x, t);
   }
@@ -275,23 +268,27 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return sb.toString();
   }
 
+  public static String toString(Grid<Boolean> grid) {
+    return toString(grid, (Predicate<Boolean>) b -> b);
+  }
+
   public static <K> String toString(Grid<K> grid, Predicate<K> p) {
     return toString(grid, p, "\n");
   }
 
   public static <K> String toString(Grid<K> grid, Predicate<K> p, String separator) {
-    return toString(grid, (Function<K, Character>) k -> p.test(k) ? FULL_CELL_CHAR : EMPTY_CELL_CHAR, separator);
+    return toString(grid, (Grid.Entry<K> e) -> p.test(e.getValue()) ? FULL_CELL_CHAR : EMPTY_CELL_CHAR, separator);
   }
 
   public static <K> String toString(Grid<K> grid, Function<K, Character> function) {
-    return toString(grid, function, "\n");
+    return toString(grid, (Grid.Entry<K> e) -> function.apply(e.getValue()), "\n");
   }
 
-  public static <K> String toString(Grid<K> grid, Function<K, Character> function, String separator) {
+  public static <K> String toString(Grid<K> grid, Function<Grid.Entry<K>, Character> function, String separator) {
     StringBuilder sb = new StringBuilder();
     for (int y = 0; y < grid.getH(); y++) {
       for (int x = 0; x < grid.getW(); x++) {
-        sb.append(function.apply(grid.get(x, y)));
+        sb.append(function.apply(new Grid.Entry<>(x, y, grid.get(x, y))));
       }
       if (y < grid.getH() - 1) {
         sb.append(separator);

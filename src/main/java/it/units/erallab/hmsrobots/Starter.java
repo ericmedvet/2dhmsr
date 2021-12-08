@@ -49,10 +49,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
@@ -457,7 +454,7 @@ public class Starter {
     Grid<? extends SensingVoxel> body = RobotUtils
         .buildSensorizingFunction("uniform-t-0")
         .apply(shape);
-    PosesController controller = new PosesController(1d, PoseUtils.computeCardinalPoses(shape));
+    PosesController controller = new PosesController(1d, new ArrayList<>(PoseUtils.computeCardinalPoses(shape)));
     Robot<?> robot = new Robot<>(controller, body);
     //episode
     Locomotion locomotion = new Locomotion(
