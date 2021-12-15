@@ -34,7 +34,7 @@ import java.util.Objects;
 /**
  * @author eric
  */
-public class CentralizedSensing implements Controller<SensingVoxel>, Snapshottable {
+public class CentralizedSensing extends AbstractController<SensingVoxel> implements Snapshottable {
 
   @JsonProperty
   private final int nOfInputs;
@@ -108,7 +108,7 @@ public class CentralizedSensing implements Controller<SensingVoxel>, Snapshottab
   }
 
   @Override
-  public void control(double t, Grid<? extends SensingVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
     //collect inputs
     inputs = voxels.values().stream()
         .filter(Objects::nonNull)
@@ -125,15 +125,17 @@ public class CentralizedSensing implements Controller<SensingVoxel>, Snapshottab
     //compute outputs
     outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
     //apply inputs
+    Grid<Double> controlSignals = Grid.create(voxels.getW(), voxels.getH());
     int c = 0;
-    for (SensingVoxel voxel : voxels.values()) {
-      if (voxel != null) {
+    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
+      if (entry.getValue() != null) {
         if (c < outputs.length) {
-          voxel.applyForce(outputs[c]);
+          controlSignals.set(entry.getX(), entry.getY(), outputs[c]);
           c = c + 1;
         }
       }
     }
+    return controlSignals;
   }
 
   @Override
