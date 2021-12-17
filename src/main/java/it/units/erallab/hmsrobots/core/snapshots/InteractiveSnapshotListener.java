@@ -105,10 +105,10 @@ public class InteractiveSnapshotListener extends JFrame implements SnapshotListe
   public void keyPressed(KeyEvent e) {
     switch(e.getKeyCode()){
       case KeyEvent.VK_UP:
-        System.out.println("key pressed: UP arrow");
+        controller.setKeyPressed(true, 2);
         break;
       case KeyEvent.VK_DOWN:
-        System.out.println("key pressed: DOWN arrow");
+        controller.setKeyPressed(true, 3);
         break;
       case KeyEvent.VK_LEFT:
         controller.setKeyPressed(true, 0);
@@ -129,10 +129,10 @@ public class InteractiveSnapshotListener extends JFrame implements SnapshotListe
   public void keyReleased(KeyEvent e) {
     switch(e.getKeyCode()){
       case KeyEvent.VK_UP:
-        System.out.println("key stop pressed: UP arrow");
+        controller.setKeyPressed(false, 2);
         break;
       case KeyEvent.VK_DOWN:
-        System.out.println("key stop pressed: DOWN arrow");
+        controller.setKeyPressed(false, 3);
         break;
       case KeyEvent.VK_LEFT:
         controller.setKeyPressed(false, 0);
@@ -141,7 +141,7 @@ public class InteractiveSnapshotListener extends JFrame implements SnapshotListe
         controller.setKeyPressed(false, 1);
         break;
       default:
-        System.out.println("key stop pressed: not an arrow");
+        System.out.println("key released: not an arrow");
         break;
     }
   }

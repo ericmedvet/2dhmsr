@@ -16,6 +16,7 @@
  */
 package it.units.erallab.hmsrobots;
 
+import it.units.erallab.hmsrobots.behavior.PoseUtils;
 import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
@@ -48,10 +49,7 @@ import org.dyn4j.dynamics.Settings;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
@@ -132,6 +130,7 @@ public class Starter {
     //bipedAndBall();
     //bipedCentralized();
     //devoComb();
+    //bipedPoses();
   }
 
   private static void bipedWithBrain() {
@@ -248,7 +247,7 @@ public class Starter {
     namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
     namedSolutionGrid.set(0, 3, Pair.of("phasesRobot-step-0.5",
             new Robot<>(
-                    Controller.step((AbstractController) phasesRobot.getController(), 0.5),
+                    ((AbstractController) phasesRobot.getController()).step(0.5),
                     SerializationUtils.clone(phasesRobot.getVoxels())
             )
     ));
@@ -389,6 +388,22 @@ public class Starter {
       e.printStackTrace();
     }*/
     locomotion.apply(robot, new InteractiveSnapshotListener(1d/60d, Drawers.basic(), basicInteractiveController));
+  }
+
+  private static void bipedPoses() {
+    Grid<Boolean> shape = RobotUtils.buildShape("biped-8x4");
+    Grid<? extends SensingVoxel> body = RobotUtils
+            .buildSensorizingFunction("uniform-t-0")
+            .apply(shape);
+    PosesController controller = new PosesController(1d, new ArrayList<>(PoseUtils.computeCardinalPoses(shape)));
+    Robot<?> robot = new Robot<>(controller, body);
+    //episode
+    Locomotion locomotion = new Locomotion(
+            30,
+            Locomotion.createTerrain("hilly-1-10-0"),
+            new Settings()
+    );
+    GridOnlineViewer.run(locomotion, robot);
   }
 
   private static void breakingWorm() {
