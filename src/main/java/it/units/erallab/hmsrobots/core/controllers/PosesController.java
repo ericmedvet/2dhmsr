@@ -20,26 +20,36 @@ package it.units.erallab.hmsrobots.core.controllers;
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public abstract class AbstractController<V extends ControllableVoxel> implements Controller<V> {
+import java.util.List;
+import java.util.Set;
+
+/**
+ * @author "Eric Medvet" on 2021/12/03 for 2dhmsr
+ */
+public class PosesController extends AbstractController<ControllableVoxel> {
+
+  private final double stepT;
+  private final List<Set<Grid.Key>> poses;
+
+  public PosesController(double stepT, List<Set<Grid.Key>> poses) {
+    this.stepT = stepT;
+    this.poses = poses;
+  }
 
   @Override
-  public void control(double t, Grid<? extends V> voxels) {
-    Grid<Double> controlSignals = computeControlSignals(t, voxels);
-    voxels.forEach(e -> {
-      if (e.getValue() != null) {
-        e.getValue().applyForce(controlSignals.get(e.getX(), e.getY()));
+  public Grid<Double> computeControlSignals(double t, Grid<? extends ControllableVoxel> voxels) {
+    int poseIndex = (int) Math.round(t / stepT) % poses.size();
+    Grid<Double> values = Grid.create(voxels, v -> -1d);
+    for (Grid.Key key : poses.get(poseIndex)) {
+      if (key.getX() >= 0 && key.getX() < values.getW() && key.getY() >= 0 && key.getY() < values.getH()) {
+        values.set(key.getX(), key.getY(), 1d);
       }
-    });
+    }
+    return values;
   }
 
-  public abstract Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels);
+  @Override
+  public void reset() {
 
-  public AbstractController<V> step(double stepT) {
-    return new StepController<>(this, stepT);
   }
-
-  public AbstractController<V> smoothed(double controlSignalSpeed) {
-    return new SmoothedController<>(this, controlSignalSpeed);
-  }
-
 }

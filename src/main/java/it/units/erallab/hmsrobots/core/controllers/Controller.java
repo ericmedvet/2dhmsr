@@ -41,9 +41,5 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
       }
     };
   }
-
-  static <K extends ControllableVoxel> AbstractController<K> step(AbstractController<K> innerController, double stepT) {
-    return new StepController<>(innerController, stepT);
-  }
-
+  
 }
