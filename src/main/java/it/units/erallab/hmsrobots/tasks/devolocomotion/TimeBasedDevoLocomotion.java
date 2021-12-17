@@ -29,9 +29,11 @@ import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
 import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Vector2;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -40,12 +42,9 @@ import java.util.stream.DoubleStream;
 /**
  * @author "Giorgia Nadizar" on 2021/11/02 for VSREvolution
  */
-public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOutcome> {
+public class TimeBasedDevoLocomotion extends DevoLocomotion {
 
   private final List<Double> developmentSchedule;
-  private final double maxT;
-  private final double[][] groundProfile;
-  private final double initialPlacement;
 
   public static TimeBasedDevoLocomotion uniformlyDistributedTimeBasedDevoLocomotion(int nStages, double maxT, double[][] groundProfile, Settings settings) {
     return fixedIntervalTimeBasedDevoLocomotion(maxT / nStages, maxT, groundProfile, settings);
@@ -58,11 +57,8 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
   }
 
   public TimeBasedDevoLocomotion(List<Double> developmentSchedule, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
-    super(settings);
+    super(maxT, groundProfile, initialPlacement, settings);
     this.developmentSchedule = new LinkedList<>(developmentSchedule);
-    this.maxT = maxT;
-    this.groundProfile = groundProfile;
-    this.initialPlacement = initialPlacement;
   }
 
   public TimeBasedDevoLocomotion(List<Double> developmentSchedule, double maxT, double[][] groundProfile, Settings settings) {
@@ -71,6 +67,7 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
 
   @Override
   public DevoOutcome apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener) {
+    List<Double> copiedDevelopmentSchedule = new LinkedList<>(developmentSchedule);
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
@@ -83,7 +80,7 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
     DevoOutcome devoOutcome = new DevoOutcome();
     Map<Double, Outcome.Observation> observations = new HashMap<>();
     double t = 0d;
-    double stageFinalT = developmentSchedule.size() > 0 ? developmentSchedule.remove(0) : maxT;
+    double stageFinalT = copiedDevelopmentSchedule.size() > 0 ? copiedDevelopmentSchedule.remove(0) : maxT;
     while (t < maxT) {
       t = AbstractTask.updateWorld(
           t, settings.getStepFrequency(), world, worldObjects,
@@ -96,7 +93,7 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
       ));
       //check if develop
       if (t >= stageFinalT) {
-        stageFinalT = developmentSchedule.size() > 0 ? developmentSchedule.remove(0) : maxT;
+        stageFinalT = copiedDevelopmentSchedule.size() > 0 ? copiedDevelopmentSchedule.remove(0) : maxT;
         //save outcome
         DevoStageOutcome devoStageOutcome = new DevoStageOutcome(robot, new Outcome(observations));
         devoOutcome.addDevoStageOutcome(devoStageOutcome);
@@ -117,19 +114,6 @@ public class TimeBasedDevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
     stopWatch.stop();
     //prepare outcome
     return devoOutcome;
-  }
-
-  private void rebuildWorld(Ground ground, Robot<?> robot, World world, double newMinX) {
-    ground.addTo(world);
-    robot.addTo(world);
-    //position robot: translate on x
-    robot.translate(new Vector2(newMinX - robot.boundingBox().min.x, 0));
-    //translate on y
-    double minYGap = robot.getVoxels().values().stream()
-        .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min.y - ground.yAt(v.getCenter().x))
-        .min().orElse(0d);
-    robot.translate(new Vector2(0, Locomotion.INITIAL_PLACEMENT_Y_GAP - minYGap));
   }
 
 }
