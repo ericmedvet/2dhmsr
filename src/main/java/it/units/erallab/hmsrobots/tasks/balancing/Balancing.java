@@ -1,8 +1,9 @@
-package it.units.erallab.hmsrobots.tasks;
+package it.units.erallab.hmsrobots.tasks.balancing;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.*;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
+import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
@@ -22,17 +23,19 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
   private final double finalT;
   private final double angle;
   private final double halfPlatformWidth;
+  private final double platformHeight;
   private final double placement;
-  private final double transientT;
-  private static final double GROUND_HALF_LENGTH = 100;
+  private final double impulse;
+  private static final double GROUND_HALF_LENGTH = 100.0D;
 
-  public Balancing(double finalT, double angle, double halfPlatformWidth, double placement, Settings settings) {
+  public Balancing(double finalT, double angle, double halfPlatformWidth, double placement, double impulse, Settings settings) {
     super(settings);
     this.finalT = finalT;
     this.angle = angle;
     this.halfPlatformWidth = halfPlatformWidth;
+    platformHeight = Math.sin(angle * Math.PI / 180.0D) * halfPlatformWidth;
     this.placement = placement;
-    this.transientT = 2.0D;
+    this.impulse = impulse;
   }
 
   @Override
@@ -45,34 +48,50 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
     Ground ground = new Ground(new double[]{-GROUND_HALF_LENGTH, GROUND_HALF_LENGTH}, new double[]{0, 0});
     ground.addTo(world);
     worldObjects.add(ground);
-    double platformHeight = Math.sin(angle * Math.PI / 180.0D) * halfPlatformWidth;
-    Pedestal pedestal = new Pedestal(halfPlatformWidth, platformHeight);
-    pedestal.addTo(world);
-    worldObjects.add(pedestal);
+    Swing swing = new Swing(halfPlatformWidth, platformHeight, impulse);
+    swing.addTo(world);
+    worldObjects.add(swing);
     robot.reset();
     //position robot: translate on x
     BoundingBox boundingBox = robot.boundingBox();
-    robot.translate(new Vector2(placement - boundingBox.min.x, platformHeight + Pedestal.PLATFORM_HEIGHT / 2));
+    robot.translate(new Vector2(placement - boundingBox.min.x, 0));
+    double targetHeight = platformHeight + Swing.PLATFORM_HEIGHT;
+    robot.translate(new Vector2(0, Math.abs(boundingBox.min.y - targetHeight)));
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
     //run
     Map<Double, Outcome.Observation> observations = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
     double t = 0d;
-    while (t < finalT && !stopCondition(robot)) {
+    Map<Double, Double> angles = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
+    boolean stopped = false;
+    while (t < finalT) {
+      if (stopCondition(robot)) {
+        stopped = true;
+        break;
+      }
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       observations.put(t, new Outcome.Observation(
               Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-              0.0d,
+              platformHeight,
               (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
-      if (t >= transientT) {
-        pedestal.setMovable();
+      angles.put(t, swing.getAngle());
+    }
+    if (stopped) {
+      while (t < finalT) {
+        observations.put(t, new Outcome.Observation(
+                Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
+                platformHeight,
+                (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+        ));
+        angles.put(t, angle);
+        t = t + settings.getStepFrequency();
       }
     }
     stopWatch.stop();
     //prepare outcome
-    return new Outcome(observations);
+    return new Outcome(observations, angles);
   }
 
   public boolean stopCondition(Robot<?> robot) {
