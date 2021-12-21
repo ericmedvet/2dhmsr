@@ -235,6 +235,7 @@ public class RobotUtils {
     String tripod = "tripod-(?<w>\\d+)x(?<h>\\d+)";
     String ball = "ball-(?<d>\\d+)";
     String comb = "comb-(?<w>\\d+)x(?<h>\\d+)";
+    String t = "t-(?<w>\\d+)x(?<h>\\d+)";
     Map<String, String> params;
     if ((params = params(box, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
@@ -262,6 +263,12 @@ public class RobotUtils {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
       return Grid.create(w, h, (x, y) -> (y >= h / 2 || x % 2 == 0));
+    }
+    if ((params = params(t, name)) != null) {
+      int w = Integer.parseInt(params.get("w"));
+      int h = Integer.parseInt(params.get("h"));
+      int pad = (int) Math.floor((Math.floor((double) w / 2) / 2));
+      return Grid.create(w, h, (x, y) -> (y == 0 || (x >= pad && x < h - pad - 1)));
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
