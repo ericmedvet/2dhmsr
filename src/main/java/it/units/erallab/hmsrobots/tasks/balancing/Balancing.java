@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Federico Pigozzi <pigozzife@gmail.com>
  */
-public class Balancing extends AbstractTask<Robot<?>, Outcome> {
+public class Balancing extends AbstractTask<Robot<?>, BalanceOutcome> {
 
   private final double finalT;
   private final double angle;
@@ -44,8 +44,6 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
     //init world
     World world = new World();
     world.setSettings(settings);
-    //double robotMass = getRobotMass(robot);
-    //System.out.println(robotMass);
     List<WorldObject> worldObjects = new ArrayList<>();
     Ground ground = new Ground(new double[]{-GROUND_HALF_LENGTH, GROUND_HALF_LENGTH}, new double[]{0, 0});
     ground.addTo(world);
@@ -87,7 +85,7 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
                 platformHeight,
                 (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
         ));
-        angles.put(t, 2.0);
+        angles.put(t, 1.0);
         t = t + settings.getStepFrequency();
       }
     }

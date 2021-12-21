@@ -39,7 +39,6 @@ public class Swing extends RigidBody {
     joint = new RevoluteJoint(pivot, platform, new Vector2(0, platformHeight));
     bodies = List.of(platform, pivot);
     platform.applyImpulse(impulse);
-    //System.out.println(platform.getMass().getMass());
   }
 
   private Polygon getRotatedPlatform() {
