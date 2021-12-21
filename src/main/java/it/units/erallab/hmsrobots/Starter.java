@@ -28,6 +28,8 @@ import it.units.erallab.hmsrobots.core.sensors.Lidar;
 import it.units.erallab.hmsrobots.core.sensors.Trend;
 import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
+import it.units.erallab.hmsrobots.tasks.Task;
+import it.units.erallab.hmsrobots.tasks.balancing.Balancing;
 import it.units.erallab.hmsrobots.tasks.devolocomotion.TimeBasedDevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
@@ -120,7 +122,7 @@ public class Starter {
 
   public static void main(String[] args) {
     //bipedWithBrain();
-    //bipeds();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
@@ -130,7 +132,7 @@ public class Starter {
     //bipedAndBall();
     //bipedCentralized();
     //devoComb();
-    bipedPoses();
+    //bipedPoses();
   }
 
   private static void bipedWithBrain() {
@@ -183,7 +185,7 @@ public class Starter {
   }
 
   private static void bipeds() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("biped-7x4"));
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape("t-4x5"));
     //simple
     double f = 1d;
     Robot<ControllableVoxel> phasesRobot = new Robot<>(
@@ -234,9 +236,12 @@ public class Starter {
         SerializationUtils.clone(body)
     );
     //episode
-    Locomotion locomotion = new Locomotion(
+    Task<Robot<?>, Outcome> locomotion = new Balancing(
+        30,
         10,
-        Locomotion.createTerrain("downhill-30"),
+            body.getW() * 3 * 0.75,
+        - body.getW() * 1.5,
+        10,
         new Settings()
     );
 
@@ -250,8 +255,8 @@ public class Starter {
             SerializationUtils.clone(phasesRobot.getVoxels())
         )
     ));
-    GridOnlineViewer.run(locomotion, namedSolutionGrid);
-    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basic);
     /*try {
       GridFileWriter.save(
           locomotion,

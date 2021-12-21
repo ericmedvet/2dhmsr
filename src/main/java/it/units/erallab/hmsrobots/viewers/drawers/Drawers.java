@@ -19,12 +19,13 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.RigidBody;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.tasks.devolocomotion.DevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.devolocomotion.DistanceBasedDevoLocomotion;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
@@ -41,7 +42,7 @@ public class Drawers {
         new AllRobotFollower(1.5d, 2),
         Drawer.of(
             new TargetDrawer(SubtreeDrawer.Extractor.matches(null, DistanceBasedDevoLocomotion.CurrentTarget.class, null)),
-            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, RigidBody.class, null)),
             new VoxelDrawer(),
             new SensorReadingsSectorDrawer(),
             new LidarDrawer()
@@ -53,7 +54,7 @@ public class Drawers {
     return Drawer.transform(
         new AllRobotFollower(5, 4),
         Drawer.of(
-            new PolyDrawer(SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+            new PolyDrawer(SubtreeDrawer.Extractor.matches(null, RigidBody.class, null)),
             new VoxelDrawer()
         )
     );
@@ -217,7 +218,8 @@ public class Drawers {
                     Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.VARIANCE_AND_WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
-        )
+        ),
+        new InfoDrawer(string)
     );
   }
 
@@ -235,7 +237,8 @@ public class Drawers {
                     Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
                 )
             )
-        )
+        ),
+        new InfoDrawer(string)
     );
   }
 

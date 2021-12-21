@@ -19,9 +19,7 @@ package it.units.erallab.hmsrobots.core.objects;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
@@ -33,13 +31,12 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Ground implements WorldObject, Snapshottable {
+public class Ground extends RigidBody {
 
   private static final double MIN_Y_THICKNESS = 50d;
 
   private final double[] xs;
   private final double[] ys;
-  private final List<Body> bodies;
   private final List<Vector2> polygon;
 
   public Ground(double[] xs, double[] ys) {
@@ -92,19 +89,11 @@ public class Ground implements WorldObject, Snapshottable {
     return new Snapshot(Poly.of(vertices), getClass());
   }
 
-  @Override
-  public void addTo(World world) {
-    for (Body body : bodies) {
-      world.addBody(body);
-    }
-  }
-
   public List<Body> getBodies() {
     return bodies;
   }
 
   public double yAt(double x) {
-    double y = Double.NEGATIVE_INFINITY;
     for (int i = 1; i < xs.length; i++) {
       if ((xs[i - 1] <= x) && (x <= xs[i])) {
         return (x - xs[i - 1]) * (ys[i] - ys[i - 1]) / (xs[i] - xs[i - 1]) + ys[i - 1];
