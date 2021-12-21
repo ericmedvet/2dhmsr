@@ -39,11 +39,13 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
   }
 
   @Override
-  public Outcome apply(Robot<?> robot, SnapshotListener listener) {
+  public BalanceOutcome apply(Robot<?> robot, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
     world.setSettings(settings);
+    //double robotMass = getRobotMass(robot);
+    //System.out.println(robotMass);
     List<WorldObject> worldObjects = new ArrayList<>();
     Ground ground = new Ground(new double[]{-GROUND_HALF_LENGTH, GROUND_HALF_LENGTH}, new double[]{0, 0});
     ground.addTo(world);
@@ -76,7 +78,7 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
               platformHeight,
               (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
-      angles.put(t, swing.getAngle());
+      angles.put(t, Math.abs(swing.getAngle()) / angle);
     }
     if (stopped) {
       while (t < finalT) {
@@ -85,13 +87,13 @@ public class Balancing extends AbstractTask<Robot<?>, Outcome> {
                 platformHeight,
                 (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
         ));
-        angles.put(t, angle);
+        angles.put(t, 2.0);
         t = t + settings.getStepFrequency();
       }
     }
     stopWatch.stop();
     //prepare outcome
-    return new Outcome(observations, angles);
+    return new BalanceOutcome(observations, angles);
   }
 
   public boolean stopCondition(Robot<?> robot) {

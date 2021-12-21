@@ -55,24 +55,9 @@ public class Outcome {
   }
 
   protected final SortedMap<Double, Observation> observations;
-  private final SortedMap<Double, Double> angles;
 
   public Outcome(Map<Double, Observation> observations) {
     this.observations = Collections.unmodifiableSortedMap(new TreeMap<>(observations));
-    this.angles = Collections.unmodifiableSortedMap(new TreeMap<>());
-  }
-
-  public Outcome(Map<Double, Observation> observations, Map<Double, Double> angles) {
-    this.observations = Collections.unmodifiableSortedMap(new TreeMap<>(observations));
-    this.angles = Collections.unmodifiableSortedMap(new TreeMap<>(angles));
-  }
-
-  public double getMeanRelativeAngle() {
-    return angles.values().stream().mapToDouble(d -> d).sum() / angles.size();
-  }
-
-  public double getMaxRelativeAngle() {
-    return angles.values().stream().mapToDouble(d -> d).max().getAsDouble();
   }
 
   public double getComputationTime() {
@@ -125,8 +110,6 @@ public class Outcome {
     return observations;
   }
 
-  public SortedMap<Double, Double> getAngles() { return angles; }
-
   @Override
   public String toString() {
     return String.format("Outcome{computationTime=%.2fs, distance=%.2f, time=%.1fs, controlPower=%.1f, areaRatioPower=%.1f}",
@@ -142,7 +125,7 @@ public class Outcome {
   }
 
   public Outcome subOutcome(double startT, double endT) {
-    return new Outcome(observations.subMap(startT, endT), angles.subMap(startT, endT));
+    return new Outcome(observations.subMap(startT, endT));
   }
 
   public SortedMap<Domain, Double> getCenterXPositionSpectrum(double minF, double maxF, int nBins) {

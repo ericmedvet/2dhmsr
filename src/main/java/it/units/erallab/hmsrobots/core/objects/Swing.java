@@ -19,7 +19,7 @@ public class Swing extends RigidBody {
 
   private final Joint joint;
   private final Polygon polygon;
-  public static final double PLATFORM_HEIGHT = 2.5D;
+  public static final double PLATFORM_HEIGHT = 2.0D;
 
   public Swing(double halfPlatformWidth, double platformHeight, double impulse) {
     Circle pivotPolygon = new Circle(0.000000001);
@@ -39,6 +39,7 @@ public class Swing extends RigidBody {
     joint = new RevoluteJoint(pivot, platform, new Vector2(0, platformHeight));
     bodies = List.of(platform, pivot);
     platform.applyImpulse(impulse);
+    //System.out.println(platform.getMass().getMass());
   }
 
   private Polygon getRotatedPlatform() {
