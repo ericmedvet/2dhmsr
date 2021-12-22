@@ -77,7 +77,7 @@ public class PoseUtils {
     double midCenterY = center.stream().mapToDouble(Grid.Key::getY).average().orElse(0d);
     Set<Grid.Key> top = center.stream().filter(e -> e.getY() <= midCenterY).collect(Collectors.toSet());
     Set<Grid.Key> bottom = center.stream().filter(e -> e.getY() > midCenterY).collect(Collectors.toSet());
-    return Set.of(left, top, bottom, right);
+    return new LinkedHashSet<>(List.of(left, top, bottom, right));
   }
 
   public static Grid<Boolean> computeDynamicPosture(Grid<Boolean> shape, Set<Grid.Key> pose, ControllableVoxel voxelPrototype, double finalT, int gridSize) {
