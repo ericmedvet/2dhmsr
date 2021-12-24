@@ -22,23 +22,21 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.Domain;
+import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class Lidar extends AbstractSensor {
   public enum Side {
 
-    N(Math.PI * 1d / 4d, Math.PI * 3d / 4d),
+    N(Math.PI / 4d, Math.PI * 3d / 4d),
 
-    E(Math.PI * -1d / 4d, Math.PI * 1d / 4d),
+    E(Math.PI * -1d / 4d, Math.PI / 4d),
 
     S(Math.PI * 5d / 4d, Math.PI * 7d / 4d),
 
@@ -66,11 +64,8 @@ public class Lidar extends AbstractSensor {
 
     @Override
     public boolean isAllowed(Filter f) {
-      // make sure the given filter is not null
       if (f == null) return true;
-      // check the type
       return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
-      // if its not of right type always return true
     }
 
   }
@@ -90,68 +85,30 @@ public class Lidar extends AbstractSensor {
     this.rayDirections = rayDirections;
   }
 
-  public static void main(String[] args) {
-    IntStream.range(1, 11).forEach(i ->
-        System.out.println(
-            Arrays.toString(new Lidar(10, Map.of(Side.E, i)).rayDirections))
-    );
-  }
-
   public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
     this(
         rayLength,
-        // uncomment following lines and delete the rest
-        //Arrays.stream(raysPerSide.entrySet().stream()
-        //    .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
-        //    .reduce(new double[]{}, (first, second) -> ArrayUtils.addAll(first, second))).distinct().toArray()
-        raysPerSide.entrySet().stream()
-            .map(e -> DoubleStream.iterate(
-                    e.getKey().getStartAngle() + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue()) / 2d,
-                    d -> d + (e.getKey().getEndAngle() - e.getKey().getStartAngle()) / ((double) e.getValue())
-                )
-                .limit(e.getValue())
-                .boxed()
-                .collect(Collectors.toList()))
-            .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
-            .orElse(List.of(0d))
-            .stream()
-            .mapToDouble(d -> d)
-            .toArray()
+        Arrays.stream(raysPerSide.entrySet().stream()
+            .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
+            .reduce(new double[]{}, ArrayUtils::addAll)).distinct().toArray()
     );
   }
 
-  public Lidar(double rayLength, double startAngle, double endAngle, int numberOfRays) {
-    this(rayLength, sampleRangeWithRays(numberOfRays, startAngle, endAngle));
-  }
-
   private static double[] sampleRangeWithRays(int numberOfRays, double startAngle, double endAngle) {
-    if (numberOfRays == 1) {
-      return new double[]{(endAngle - startAngle) / 2};
-    }
-    return DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1)).limit(numberOfRays).toArray();
+    return numberOfRays == 1 ?
+        new double[]{(endAngle - startAngle) / 2} :
+        DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1)).limit(numberOfRays).toArray();
   }
 
   @Override
   public double[] sense(double t) {
-    double[] rayHits = new double[rayDirections.length];
-    // List of objects the ray intersects with
     List<RaycastResult> results = new ArrayList<>();
-    for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {
-      double direction = rayDirections[rayIdx];
-      // take into account rotation angle
-      direction += voxel.getAngle();
-      // Create a ray from the given start point towards the given direction
-      Ray ray = new Ray(voxel.getCenter(), direction);
+    return Arrays.stream(rayDirections).map(rayDirection -> {
+      Ray ray = new Ray(voxel.getCenter(), rayDirection + voxel.getAngle());
       results.clear();
-      // if the all flag is false, the results list will contain the closest result (if any)
       voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
-      if (results.isEmpty()) {
-        rayHits[rayIdx] = rayLength;
-      } else {
-        rayHits[rayIdx] = results.get(0).getRaycast().getDistance();
-      }
-    }
-    return rayHits;
+      return results.isEmpty() ? rayLength : results.get(0).getRaycast().getDistance();
+    }).toArray();
   }
 
   @Override
