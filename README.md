@@ -4,8 +4,7 @@
 
 If you use this software, please cite one or both of the following papers:
 
-- Medvet, Bartoli, De Lorenzo, Seriani. "[2D-VSR-Sim: a Simulation Tool for the Optimization of 2-D Voxel-based Soft Robots](https://doi.org/10.1016/j.softx.2020.100573)"
-  , SoftwareX, 12:100573, 2020
+- Medvet, Bartoli, De Lorenzo, Seriani; [2D-VSR-Sim: a Simulation Tool for the Optimization of 2-D Voxel-based Soft Robots](https://doi.org/10.1016/j.softx.2020.100573); SoftwareX, 12:100573, 2020
 
 ```bibtex
 @article{medvet20202d,
@@ -18,8 +17,7 @@ If you use this software, please cite one or both of the following papers:
 }
 ```
 
-- Medvet, Bartoli, De Lorenzo, Seriani. "[Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617)"
-  , arXiv cs.RO: 2001.08617, 2020
+- Medvet, Bartoli, De Lorenzo, Seriani; [Design, Validation, and Case Studies of 2D-VSR-Sim, an Optimization-friendly Simulator of 2-D Voxel-based Soft Robots](https://arxiv.org/abs/2001.08617); arXiv cs.RO: 2001.08617, 2020
 
 ```bibtex
 @article{medvet2020design,
@@ -36,8 +34,7 @@ VSRs are composed of many simple soft blocks (called *voxels*) that can change t
 
 ## VSR model in brief
 
-All the details of the model can be found in [2,3]. In brief, a voxel is a soft 2-D block, i.e., a deformable square modeled with four rigid bodies (square masses), a number of spring-damper systems that constitute a scaffolding, and a number of ropes. A VSR is modeled as a collection of voxels organized in a 2-D grid, each voxel in the grid being rigidly connected with the voxel above, below, on the left, and on the right. The way a VSR behaves is determined by a *
-controller* that may exploit the readings of a number of *sensors* that each voxel may be equipped with. Most of the properties of the VSR model are **configurable by the user**. 2D-VSR-Sim exploits an existing physics engine, [dyn4j](http://www.dyn4j.org/), for solving the mechanical model defined by a VSR subjected to the forces caused by the actuation determined by its controller and by the interaction with other bodies (typically, the ground).
+All the details of the model can be found in [2,3]. In brief, a voxel is a soft 2-D block, i.e., a deformable square modeled with four rigid bodies (square masses), a number of spring-damper systems that constitute a scaffolding, and a number of ropes. A VSR is modeled as a collection of voxels organized in a 2-D grid, each voxel in the grid being rigidly connected with the voxel above, below, on the left, and on the right. The way a VSR behaves is determined by a *controller* that may exploit the readings of a number of *sensors* that each voxel may be equipped with. Most of the properties of the VSR model are **configurable by the user**. 2D-VSR-Sim exploits an existing physics engine, [dyn4j](http://www.dyn4j.org/), for solving the mechanical model defined by a VSR subjected to the forces caused by the actuation determined by its controller and by the interaction with other bodies (typically, the ground).
 
 A graphical representation of a moving VSR:
 ![A graphical representation of a moving VSR](/assets/frames.png)
@@ -59,66 +56,34 @@ On top of the GUI, a set of UI controls allows the user to customize the visuali
 
 ### Sample code
 
-A brief fragment of code using for setting up a VSR, testing it in the task of locomotion and saving an image with a few frames of the resulting behavior. This VSR is composed of voxel of two different materials that are actuated with a periodic sinusoidal signal whose phase changes along the x-direction of the robot.
+A brief fragment of code using for setting up a VSR, testing it in the task of locomotion and saving an image with a few frames of the resulting behavior. This VSR is controlled with a periodic sinusoidal signal whose phase changes along the x-direction of the robot.
 
 ```java
-final Locomotion locomotion=new Locomotion(
-    20,
-    Locomotion.createTerrain("flat"),
-    new Settings()
+public class Starter {
+
+  private static void main(String[] args) {
+    final Locomotion locomotion = new Locomotion(
+        20,
+        Locomotion.createTerrain("flat"),
+        new Settings()
     );
-final ControllableVoxel hardMaterialVoxel=new ControllableVoxel(
-    Voxel.SIDE_LENGTH,
-    Voxel.MASS_SIDE_LENGTH_RATIO,
-    50d,
-    Voxel.SPRING_D,
-    Voxel.MASS_LINEAR_DAMPING,
-    Voxel.MASS_ANGULAR_DAMPING,
-    Voxel.FRICTION,
-    Voxel.RESTITUTION,
-    Voxel.MASS,
-    Voxel.LIMIT_CONTRACTION_FLAG,
-    Voxel.MASS_COLLISION_FLAG,
-    Voxel.AREA_RATIO_MAX_DELTA,
-    Voxel.SPRING_SCAFFOLDINGS,
-    ControllableVoxel.MAX_FORCE,
-    ControllableVoxel.ForceMethod.DISTANCE
+    Grid<Boolean> shape = RobotUtils.buildShape("worm-5x2");
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
+    Robot<ControllableVoxel> robot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            body.getW(), body.getH(),
+            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) body.getW()))
+        )),
+        body
     );
-final ControllableVoxel softMaterialVoxel=new ControllableVoxel(
-    Voxel.SIDE_LENGTH,
-    Voxel.MASS_SIDE_LENGTH_RATIO,
-    5d,
-    Voxel.SPRING_D,
-    Voxel.MASS_LINEAR_DAMPING,
-    Voxel.MASS_ANGULAR_DAMPING,
-    Voxel.FRICTION,
-    Voxel.RESTITUTION,
-    Voxel.MASS,
-    Voxel.LIMIT_CONTRACTION_FLAG,
-    Voxel.MASS_COLLISION_FLAG,
-    Voxel.AREA_RATIO_MAX_DELTA,
-    EnumSet.of(Voxel.SpringScaffolding.SIDE_EXTERNAL,Voxel.SpringScaffolding.CENTRAL_CROSS),
-    ControllableVoxel.MAX_FORCE,
-    ControllableVoxel.ForceMethod.DISTANCE
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
+        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
     );
-    int w=20;
-    int h=5;
-    Robot robot=new Robot(
-    new TimeFunctions(Grid.create(
-    w,h,
-    (x,y)->(Double t)->Math.sin(-2*Math.PI*t+Math.PI*((double)x/(double)w))
-    )),
-    Grid.create(
-    w,h,
-    (x,y)->(y==0)?SerializationUtils.clone(hardMaterialVoxel):SerializationUtils.clone(softMaterialVoxel)
-    )
-    );
-    FramesImageBuilder framesImageBuilder=new FramesImageBuilder(
-    5,5.5,0.1,300,200,FramesImageBuilder.Direction.HORIZONTAL
-    );
-    Outcome result=locomotion.apply(robot,framesImageBuilder);
-    BufferedImage image=framesImageBuilder.getImage();
-    System.out.println("Outcome: "+result);
+    Outcome result = locomotion.apply(robot, framesImageBuilder);
+    BufferedImage image = framesImageBuilder.getImage();
+    System.out.println("Outcome: " + result);
+  }
+}
 ```
 
 #### Optimization examples: optimize phases
@@ -126,88 +91,92 @@ final ControllableVoxel softMaterialVoxel=new ControllableVoxel(
 This piece of code shows a method for assessing a VSR whose voxels are actuated with a sinusoidal signal with different phases given the vector of phases. This method might be the one being called by an external optimization software. In this example, the VSR is a 10x4 worm that is assessed on locomotion on a flat terrain: the single objective is the traveled distance.
 
 ```java
-public static double assessOnLocomotion(double[]phases){
+public class Example {
+  public static double assessOnLocomotion(double[] phases) {
     // set robot shape and sensors
-    Grid<ControllableVoxel> voxels=Grid.create(10,4,(x,y)->new ControllableVoxel());
+    Grid<ControllableVoxel> voxels = Grid.create(10, 4, (x, y) -> new ControllableVoxel());
     // set controller
-    double f=1d;
-    Controller<ControllableVoxel> controller=new TimeFunctions(Grid.create(
-    voxels.getW(),
-    voxels.getH(),
-    (x,y)->(t)->Math.sin(-2*Math.PI*f*t+Math.PI*phases[(x+(int)Math.floor(y/voxels.getH()))]))
+    double f = 1d;
+    Controller<ControllableVoxel> controller = new TimeFunctions(Grid.create(
+        voxels.getW(),
+        voxels.getH(),
+        (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / voxels.getH()))])
     ));
-    Robot<ControllableVoxel> robot=new Robot<>(controller,voxels);
+    Robot<ControllableVoxel> robot = new Robot<>(controller, voxels);
     // set task
-    Settings settings=new Settings();
-    settings.setStepFrequency(1d/30d);
-    Locomotion locomotion=new Locomotion(
-    60,
-    Locomotion.createTerrain("flat"),
-    settings
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        settings
     );
     // do task
-    Outcome outcome=locomotion.apply(robot);
+    Outcome outcome = locomotion.apply(robot);
     return outcome.getVelocity();
-    }
+  }
+}
 ``` 
 
 #### Optimization examples: optimize neural network weights
 
-This example is similar to the one above, but here the controller of the robot is a *neural network* whose wights are subjected to optimization. Here the robot is a 7x4 biped with a 7x2 trunk and two 2x2 legs. The voxels have different sensors dependin on their position:
+This example is similar to the one above, but here the controller of the robot is a *neural network* whose wights are subjected to optimization. Here the robot is a 7x4 biped with a 7x2 trunk and two 2x2 legs. The voxels have different sensors depending on their position:
 
 - "feet" have touch sensors (whose signal is averaged in a 1 second time window)
 - "spine", i.e., the top-row of trunk have velocity (along the 2-axes) and average velocity sensors
 - the remaining voxels have an area ratio sensor
 
 ```java
-public static double assessOnLocomotion(double[]weights){
-// set robot shape and sensors
-final Grid<Boolean> structure=Grid.create(7,4,(x,y)->(x< 2)||(x>=5)||(y>0));
-    Grid<SensingVoxel> voxels=Grid.create(structure.getW(),structure.getH(),(x,y)->{
-    if(structure.get(x,y)){
-    if(y>2){
-    return new SensingVoxel(Arrays.asList(
-    new Velocity(true,3d,Velocity.Axis.X,Velocity.Axis.Y),
-    new Average(new Velocity(true,3d,Velocity.Axis.X,Velocity.Axis.Y),1d)
-    ));
-    }
-    if(y==0){
-    return new SensingVoxel(Arrays.asList(
-    new Average(new Touch(),1d)
-    ));
-    }
-    return new SensingVoxel(Arrays.asList(
-    new AreaRatio()
-    ));
-    }
-    return null;
+public class Example {
+  public static double assessOnLocomotion(double[] weights) {
+    // set robot shape and sensors
+    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
+    Grid<SensingVoxel> voxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
+      if (structure.get(x, y)) {
+        if (y > 2) {
+          return new SensingVoxel(Arrays.asList(
+              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
+              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
+          ));
+        }
+        if (y == 0) {
+          return new SensingVoxel(Arrays.asList(
+              new Average(new Touch(), 1d)
+          ));
+        }
+        return new SensingVoxel(Arrays.asList(
+            new AreaRatio()
+        ));
+      }
+      return null;
     });
     // set controller
-    CentralizedSensing<SensingVoxel> controller=new CentralizedSensing<>(SerializationUtils.clone(voxels));
-    MultiLayerPerceptron mlp=new MultiLayerPerceptron(
-    MultiLayerPerceptron.ActivationFunction.TANH,
-    centralizedSensing.nOfInputs(),
-    new int[0],
-    centralizedSensing.nOfOutputs()
+    CentralizedSensing<SensingVoxel> controller = new CentralizedSensing<>(SerializationUtils.clone(voxels));
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[0],
+        centralizedSensing.nOfOutputs()
     );
-    double[]ws=mlp.getParams();
-    IntStream.range(0,ws.length).forEach(i->ws[i]=random.nextGaussian());
+    double[] ws = mlp.getParams();
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
     mlp.setParams(ws);
     centralizedSensing.setFunction(mlp);
     // build robot
-    Robot<SensingVoxel> robot=new Robot(controller,voxels);
+    Robot<SensingVoxel> robot = new Robot(controller, voxels);
     // set task
-    Settings settings=new Settings();
-    settings.setStepFrequency(1d/30d);
-    Locomotion locomotion=new Locomotion(
-    60,
-    Locomotion.createTerrain("flat"),
-    settings
+    Settings settings = new Settings();
+    settings.setStepFrequency(1d / 30d);
+    Locomotion locomotion = new Locomotion(
+        60,
+        Locomotion.createTerrain("flat"),
+        settings
     );
     // do task
-    Outcome outcome=locomotion.apply(robot);
+    Outcome outcome = locomotion.apply(robot);
     return outcome.getVelocity();
-    }
+  }
+}
 ```
 
 ## References
