@@ -2,7 +2,7 @@ package it.units.erallab.hmsrobots.core.controllers.snn;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.controllers.Controller;
+import it.units.erallab.hmsrobots.core.controllers.AbstractController;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
@@ -16,7 +16,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.IntStream;
 
-public class DistributedSpikingSensing implements Controller<SensingVoxel> {
+public class DistributedSpikingSensing extends AbstractController<SensingVoxel> {
 
   private enum Dir {
 
@@ -134,7 +134,8 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public void control(double t, Grid<? extends SensingVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
+    Grid<Double> controlSignals = Grid.create(voxels);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
@@ -148,13 +149,14 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
       SortedSet<Double>[] outputs = function != null ? function.apply(t, inputs) : new SortedSet[1 + signals * Dir.values().length];
       //apply outputs
       double force = outputConverters.get(entry.getX(), entry.getY()).convert(outputs[0], t - previousTime);
-      entry.getValue().applyForce(force);
+      controlSignals.set(entry.getX(), entry.getY(), force);
       System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
     }
     previousTime = t;
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       System.arraycopy(currentSignalsGrid.get(entry.getX(), entry.getY()), 0, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
     }
+    return controlSignals;
   }
 
   @SuppressWarnings("unchecked")
