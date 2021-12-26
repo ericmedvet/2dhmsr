@@ -119,23 +119,27 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
 
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
+    Grid<int[][]> currentSignalsGrid = Grid.create(lastSignalsGrid);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
       }
       //get inputs
-      int[][] signals = getLastSignals(entry.getX(), entry.getY());
+      int[][] lastSignals = getLastSignals(entry.getX(), entry.getY());
       int[][] sensorValues = convertSensorReadings(entry.getValue().getSensorReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
-      int[][] inputs = ArrayUtils.addAll(signals, sensorValues);
+      int[][] inputs = ArrayUtils.addAll(lastSignals, sensorValues);
       //compute outputs
       QuantizedMultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
-      int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + this.signals * Dir.values().length][ARRAY_SIZE];
+      int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + signals * Dir.values().length][ARRAY_SIZE];
       //apply outputs
       double force = outputConverters.get(entry.getX(), entry.getY()).convert(outputs[0], t - previousTime);
       entry.getValue().applyForce(force);
-      System.arraycopy(outputs, 1, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, this.signals * Dir.values().length);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
     }
     previousTime = t;
+    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
+      System.arraycopy(currentSignalsGrid.get(entry.getX(), entry.getY()), 0, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
+    }
   }
 
   private int[][] getLastSignals(int x, int y) {

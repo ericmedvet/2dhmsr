@@ -7,14 +7,11 @@ import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snn.converters.vts.ValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
-import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.IntStream;
@@ -130,23 +127,27 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
   @SuppressWarnings("unchecked")
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
+    Grid<SortedSet<Double>[]> currentSignalsGrid = Grid.create(lastSignalsGrid);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
       }
       //get inputs
-      SortedSet<Double>[] signals = getLastSignals(entry.getX(), entry.getY());
+      SortedSet<Double>[] lastSignals = getLastSignals(entry.getX(), entry.getY());
       SortedSet<Double>[] sensorValues = convertSensorReadings(entry.getValue().getSensorReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
-      SortedSet<Double>[] inputs = ArrayUtils.addAll(signals, sensorValues);
+      SortedSet<Double>[] inputs = ArrayUtils.addAll(lastSignals, sensorValues);
       //compute outputs
       MultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
-      SortedSet<Double>[] outputs = function != null ? function.apply(t, inputs) : new SortedSet[1 + this.signals * Dir.values().length];
+      SortedSet<Double>[] outputs = function != null ? function.apply(t, inputs) : new SortedSet[1 + signals * Dir.values().length];
       //apply outputs
       double force = outputConverters.get(entry.getX(), entry.getY()).convert(outputs[0], t - previousTime);
       entry.getValue().applyForce(force);
-      System.arraycopy(outputs, 1, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, this.signals * Dir.values().length);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
     }
     previousTime = t;
+    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
+      System.arraycopy(currentSignalsGrid.get(entry.getX(), entry.getY()), 0, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
+    }
   }
 
   @SuppressWarnings("unchecked")
