@@ -60,6 +60,7 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
 
   private double previousTime = 0;
   private final Grid<SortedSet<Double>[]> lastSignalsGrid;
+  private final Grid<SortedSet<Double>[]> currentSignalsGrid;
 
   @SuppressWarnings("unchecked")
   @JsonCreator
@@ -79,6 +80,12 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
     this.inputConverters = inputConverters;
     lastSignalsGrid = Grid.create(functions, f -> new SortedSet[signals * Dir.values().length]);
     lastSignalsGrid.forEach(entry -> {
+      for (int i = 0; i < entry.getValue().length; i++) {
+        entry.getValue()[i] = new TreeSet<>();
+      }
+    });
+    currentSignalsGrid = Grid.create(functions, f -> new SortedSet[signals * Dir.values().length]);
+    currentSignalsGrid.forEach(entry -> {
       for (int i = 0; i < entry.getValue().length; i++) {
         entry.getValue()[i] = new TreeSet<>();
       }
@@ -111,6 +118,7 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
     for (int x = 0; x < lastSignalsGrid.getW(); x++) {
       for (int y = 0; y < lastSignalsGrid.getH(); y++) {
         lastSignalsGrid.set(x, y, new SortedSet[signals * Dir.values().length]);
+        currentSignalsGrid.set(x, y, new SortedSet[signals * Dir.values().length]);
         if (outputConverters.get(x, y) != null) {
           outputConverters.get(x, y).reset();
         }
@@ -127,7 +135,6 @@ public class DistributedSpikingSensing implements Controller<SensingVoxel> {
   @SuppressWarnings("unchecked")
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
-    Grid<SortedSet<Double>[]> currentSignalsGrid = Grid.create(lastSignalsGrid);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;

@@ -60,6 +60,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
 
   private double previousTime = 0;
   private final Grid<int[][]> lastSignalsGrid;
+  private final Grid<int[][]> currentSignalsGrid;
 
   @JsonCreator
   public QuantizedDistributedSpikingSensing(
@@ -77,6 +78,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
     this.outputConverters = outputConverters;
     this.inputConverters = inputConverters;
     lastSignalsGrid = Grid.create(functions, f -> new int[signals * Dir.values().length][ARRAY_SIZE]);
+    currentSignalsGrid = Grid.create(functions, f -> new int[signals * Dir.values().length][ARRAY_SIZE]);
     reset();
   }
 
@@ -104,6 +106,7 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
     for (int x = 0; x < lastSignalsGrid.getW(); x++) {
       for (int y = 0; y < lastSignalsGrid.getH(); y++) {
         lastSignalsGrid.set(x, y, new int[signals * Dir.values().length][ARRAY_SIZE]);
+        currentSignalsGrid.set(x, y, new int[signals * Dir.values().length][ARRAY_SIZE]);
         if (outputConverters.get(x, y) != null) {
           outputConverters.get(x, y).reset();
         }
@@ -119,7 +122,6 @@ public class QuantizedDistributedSpikingSensing implements Controller<SensingVox
 
   @Override
   public void control(double t, Grid<? extends SensingVoxel> voxels) {
-    Grid<int[][]> currentSignalsGrid = Grid.create(lastSignalsGrid);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
