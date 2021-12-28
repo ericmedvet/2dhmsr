@@ -22,4 +22,5 @@ public interface Shape extends Serializable {
   BoundingBox boundingBox();
 
   Point2 center();
+
 }

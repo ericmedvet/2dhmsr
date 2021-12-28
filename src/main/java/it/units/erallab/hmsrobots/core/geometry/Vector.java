@@ -16,15 +16,8 @@
  */
 package it.units.erallab.hmsrobots.core.geometry;
 
-public class Vector implements Shape {
-
-  private final Point2 start;
-  private final Point2 end;
-
-  private Vector(Point2 start, Point2 end) {
-    this.start = start;
-    this.end = end;
-  }
+public record Vector(Point2 start,
+                     Point2 end) implements Shape {
 
   public static Vector of(Point2 start, Point2 end) {
     return new Vector(start, end);
@@ -40,11 +33,4 @@ public class Vector implements Shape {
     return Point2.average(start, end);
   }
 
-  public Point2 getEnd() {
-    return end;
-  }
-
-  public Point2 getStart() {
-    return start;
-  }
 }
