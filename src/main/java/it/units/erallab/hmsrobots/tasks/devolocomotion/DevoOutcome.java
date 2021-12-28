@@ -65,7 +65,7 @@ public class DevoOutcome {
   }
 
   public List<Double> getDistances() {
-    return outcomeList.stream().map(d -> d.distance).collect(Collectors.toList());
+    return outcomeList.stream().map(d -> d.distance).toList();
   }
 
   public List<Robot<?>> getRobots() {
@@ -73,11 +73,11 @@ public class DevoOutcome {
   }
 
   public List<Double> getTimes() {
-    return outcomeList.stream().map(d -> d.time).collect(Collectors.toList());
+    return outcomeList.stream().map(d -> d.time).toList();
   }
 
   public List<Double> getVelocities() {
-    return outcomeList.stream().map(d -> d.velocity).collect(Collectors.toList());
+    return outcomeList.stream().map(d -> d.velocity).toList();
   }
 
 }

@@ -100,7 +100,7 @@ public class PoseUtils {
     Collection<ClusterableGridKey> points = shape.stream()
         .filter(Grid.Entry::getValue)
         .map(ClusterableGridKey::new)
-        .collect(Collectors.toList());
+        .toList();
     KMeansPlusPlusClusterer<ClusterableGridKey> clusterer = new KMeansPlusPlusClusterer<>(
         n,
         -1,
@@ -138,7 +138,7 @@ public class PoseUtils {
     //compute all postures
     Collection<ClusterablePosture> points = allPoses.stream()
         .map(p -> new ClusterablePosture(p, computeDynamicPosture(shape, p, voxelPrototype, finalT, gridSize)))
-        .collect(Collectors.toList());
+        .toList();
     //cluster postures in nPoses clusters
     KMeansPlusPlusClusterer<ClusterablePosture> clusterer = new KMeansPlusPlusClusterer<>(
         n,

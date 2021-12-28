@@ -27,7 +27,6 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author "Eric Medvet" on 2021/08/27 for 2dhmsr
@@ -81,7 +80,7 @@ public class InfoDrawer implements Drawer {
                   .map(c -> Point2.average(((VoxelPoly) c.getContent()).getVertexes()))
                   .toArray(Point2[]::new))
           )
-          .collect(Collectors.toList());
+          .toList();
       //add to maps
       for (int i = 0; i < currentCenterPositions.size(); i++) {
         if (centerPositions.size() <= i) {

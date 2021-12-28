@@ -271,7 +271,7 @@ public class Utils {
     List<Pair<Integer, Integer>> coordinates = posture.stream()
         .filter(Grid.Entry::getValue)
         .map(e -> Pair.of(e.getX(), e.getY()))
-        .collect(Collectors.toList());
+        .toList();
     List<Double> diameters = new ArrayList<>();
     for (int i = 0; i < n; ++i) {
       double theta = (2 * i * Math.PI) / n;
@@ -280,7 +280,7 @@ public class Utils {
               p.getLeft() * Math.cos(theta) - p.getRight() * Math.sin(theta),
               p.getLeft() * Math.sin(theta) + p.getRight() * Math.cos(theta)
           ))
-          .collect(Collectors.toList());
+          .toList();
       double minX = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
       double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
       double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getRight)).get().getRight();

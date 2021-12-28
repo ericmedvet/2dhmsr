@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable {
 
@@ -176,7 +175,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     } else if (context.equals(Context.LAYER)) {
       for (int i = 1; i < neurons.length; i++) {
         final int localI = i;
-        prune(pairs.stream().filter(p -> p.getKey()[0] == localI).collect(Collectors.toList()));
+        prune(pairs.stream().filter(p -> p.getKey()[0] == localI).toList());
       }
     } else if (context.equals(Context.NEURON)) {
       for (int i = 1; i < neurons.length; i++) {
@@ -185,7 +184,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
           final int localJ = j;
           prune(pairs.stream()
               .filter(p -> p.getKey()[0] == localI && p.getKey()[1] == localJ)
-              .collect(Collectors.toList()));
+              .toList());
         }
       }
     }

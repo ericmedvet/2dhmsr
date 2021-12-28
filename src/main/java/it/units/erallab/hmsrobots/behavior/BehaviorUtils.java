@@ -72,7 +72,7 @@ public class BehaviorUtils {
   public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
     Collection<BoundingBox> boxes = polies.stream()
         .filter(VoxelPoly::isTouchingGround)
-        .map(s -> BoundingBox.of(s.getVertexes())).collect(Collectors.toList());
+        .map(s -> BoundingBox.of(s.getVertexes())).toList();
     double robotMinX = boxes.stream()
         .mapToDouble(b -> b.min().x())
         .min()
@@ -83,7 +83,7 @@ public class BehaviorUtils {
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     List<DoubleRange> contacts = boxes.stream()
         .map(b -> DoubleRange.of(b.min().x(), b.max().x()))
-        .collect(Collectors.toList());
+        .toList();
     boolean[] mask = new boolean[n];
     for (DoubleRange contact : contacts) {
       int minIndex = (int) Math.round((contact.min() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
@@ -106,7 +106,7 @@ public class BehaviorUtils {
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
     List<Range<Double>> ranges = footprints.keySet().stream()
         .map(d -> Range.closedOpen(d, d + interval))
-        .collect(Collectors.toList()); // list of range of each footprint
+        .toList(); // list of range of each footprint
     for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
       for (int i = l; i <= footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
@@ -126,9 +126,9 @@ public class BehaviorUtils {
     List<Double> allIntervals = sequences.values().stream()
         .map(l -> IntStream.range(0, l.size() - 1)
             .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())
-            .collect(Collectors.toList())
+            .toList()
         ) // stream of List<Double>, each being a list of the intervals of that subsequence
-        .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
+        .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).toList())
         .orElse(List.of());
     if (allIntervals.isEmpty()) {
       return List.of();
@@ -140,12 +140,12 @@ public class BehaviorUtils {
         .map(e -> {
               List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
                   .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
-                  .collect(Collectors.toList());
+                  .toList();
               List<Double> coverages = IntStream.range(0, intervals.size())
                   .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue()
                       .get(i)
                       .lowerEndpoint()) / intervals.get(i))
-                  .collect(Collectors.toList());
+                  .toList();
               double localModeInterval = mode(intervals);
               return new Gait(
                   e.getKey(),
@@ -157,7 +157,7 @@ public class BehaviorUtils {
             }
         )
         .filter(g -> g.getModeInterval() == modeInterval)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   public static Gait computeMainGait(
@@ -180,7 +180,7 @@ public class BehaviorUtils {
   }
 
   public static Grid<Boolean> computePosture(Collection<? extends Shape> shapes, int n) {
-    Collection<BoundingBox> boxes = shapes.stream().map(Shape::boundingBox).collect(Collectors.toList());
+    Collection<BoundingBox> boxes = shapes.stream().map(Shape::boundingBox).toList();
     double robotMinX = boxes.stream()
         .mapToDouble(b -> b.min().x())
         .min()
@@ -231,7 +231,7 @@ public class BehaviorUtils {
     for (double t = polies.firstKey(); t <= polies.lastKey(); t = t + interval) {
       List<Footprint> local = polies.subMap(t, t + interval).values().stream()
           .map(voxelPolies -> computeFootprint(voxelPolies, n))
-          .collect(Collectors.toList());
+          .toList();
       double[] counts = new double[n];
       double tot = local.size();
       for (int x = 0; x < n; x++) {
@@ -299,7 +299,7 @@ public class BehaviorUtils {
     FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
     List<Double> f = Stream.of(fft.transform(signal, TransformType.FORWARD))
         .map(Complex::abs)
-        .collect(Collectors.toList())
+        .toList()
         .subList(0, paddedSize / 2 + 1);
     SortedMap<Double, Double> spectrum = new TreeMap<>();
     for (int i = 0; i < f.size(); i++) {

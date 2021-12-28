@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -73,7 +72,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   ) {
     super(extractor, s -> (MLPState) s.getContent(), windowT);
     this.parts = parts;
-    this.plotParts = parts.stream().filter(PLOTS::contains).sorted().collect(Collectors.toList());
+    this.plotParts = parts.stream().filter(PLOTS::contains).sorted().toList();
     this.boundingBoxes = new BoundingBox[plotParts.size()];
     this.minColor = minColor;
     this.zeroColor = zeroColor;
@@ -209,7 +208,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             .stream()
             .filter(t1 -> t1 <= t && t1 >= t - vT)
             .map(t1 -> f.apply(states.get(t1)))
-            .collect(Collectors.toList());
+            .toList();
         IntStream.range(0, valuesToPlot.length).forEach(i -> IntStream.range(0, valuesToPlot[i].length).forEach(j -> {
           variance.clear();
           valuesToPlot[i][j] = variance.evaluate(valuesList.stream().mapToDouble(array -> array[i][j]).toArray());
@@ -261,7 +260,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             .stream()
             .filter(t1 -> t1 <= t && t1 >= t - vT1)
             .map(t1 -> f1.apply(states.get(t1)))
-            .collect(Collectors.toList());
+            .toList();
         IntStream.range(0, valuesToPlot1.length).forEach(i -> IntStream.range(0, valuesToPlot1[i].length).forEach(j -> {
           variance.clear();
           valuesToPlot1[i][j] = variance.evaluate(valuesList.stream().mapToDouble(array -> array[i][j]).toArray());
@@ -273,7 +272,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             .stream()
             .filter(t1 -> t1 <= t && t1 >= t - vT2)
             .map(t1 -> f2.apply(states.get(t1)))
-            .collect(Collectors.toList());
+            .toList();
         IntStream.range(0, valuesToPlot1.length).forEach(i -> IntStream.range(0, valuesToPlot2[i].length).forEach(j -> {
           variance.clear();
           valuesToPlot2[i][j] = variance.evaluate(valuesList.stream().mapToDouble(array -> array[i][j]).toArray());

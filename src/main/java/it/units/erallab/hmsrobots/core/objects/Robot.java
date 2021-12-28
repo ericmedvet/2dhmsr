@@ -39,7 +39,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -164,7 +163,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
       snapshot.getChildren().add(((Snapshottable) controller).getSnapshot());
     }
     snapshot.getChildren()
-        .addAll(voxelSnapshots.values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        .addAll(voxelSnapshots.values().stream().filter(Objects::nonNull).toList());
     return snapshot;
   }
 

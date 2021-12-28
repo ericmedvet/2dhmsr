@@ -91,8 +91,8 @@ public class Outcome {
             .stream()
             .filter(Objects::nonNull)
             .map(v -> Poly.of(v.getVertexes()))
-            .collect(Collectors.toList()), n))
-        .collect(Collectors.toList()));
+            .toList(), n))
+        .toList());
   }
 
   public SortedMap<DoubleRange, Double> getCenterAngleSpectrum(double minF, double maxF, int nBins) {
@@ -183,14 +183,14 @@ public class Outcome {
         .stream()
         .filter(Objects::nonNull)
         .map(v -> Poly.of(v.getVertexes()))
-        .collect(Collectors.toList()));
+        .toList());
     Point2 finalCenter = BehaviorUtils.center(observations.get(observations.lastKey())
         .getVoxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
         .map(v -> Poly.of(v.getVertexes()))
-        .collect(Collectors.toList()));
+        .toList());
     return finalCenter.x() - initialCenter.x();
   }
 
@@ -205,7 +205,7 @@ public class Outcome {
                     .values()
                     .stream()
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList()),
+                    .toList(),
                 n
             )
         )));
@@ -218,7 +218,7 @@ public class Outcome {
             maxF,
             nBins
         ))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   public SortedMap<Double, Observation> getObservations() {

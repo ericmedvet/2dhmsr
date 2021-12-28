@@ -25,7 +25,6 @@ import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -56,7 +55,7 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
               objects.stream()
                   .filter(o -> o instanceof Snapshottable)
                   .map(o -> ((Snapshottable) o).getSnapshot())
-                  .collect(Collectors.toList())
+                  .toList()
           )
       );
     }

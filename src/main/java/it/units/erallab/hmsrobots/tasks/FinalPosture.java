@@ -30,7 +30,6 @@ import org.dyn4j.geometry.Vector2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class FinalPosture extends AbstractTask<Robot<?>, Grid<Boolean>> {
 
@@ -64,7 +63,7 @@ public class FinalPosture extends AbstractTask<Robot<?>, Grid<Boolean>> {
         robot.getVoxels().values().stream()
             .filter(Objects::nonNull)
             .map(v -> Poly.of(v.getVoxelPoly().getVertexes()))
-            .collect(Collectors.toList()),
+            .toList(),
         gridSize
     );
   }

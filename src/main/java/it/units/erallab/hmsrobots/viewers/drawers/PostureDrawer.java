@@ -28,7 +28,6 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 import java.util.SortedMap;
-import java.util.stream.Collectors;
 
 /**
  * @author "Eric Medvet" on 2021/09/22 for 2dhmsr
@@ -50,7 +49,7 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
                 .stream()
                 .filter(Objects::nonNull)
                 .map(v -> Poly.of(v.getVertexes()))
-                .collect(Collectors.toList()), n)),
+                .toList(), n)),
         windowT
     );
     this.n = n;

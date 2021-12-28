@@ -28,7 +28,6 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 import java.util.SortedMap;
-import java.util.stream.Collectors;
 
 /**
  * @author "Eric Medvet" on 2021/09/22 for 2dhmsr
@@ -54,7 +53,7 @@ public class FootprintDrawer extends MemoryDrawer<Footprint> {
             .andThen(g -> BehaviorUtils.computeFootprint(g.values()
                 .stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()), n)),
+                .toList(), n)),
         windowT
     );
     this.n = n;

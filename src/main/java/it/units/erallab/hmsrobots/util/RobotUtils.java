@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import static it.units.erallab.hmsrobots.util.Utils.params;
 
@@ -171,7 +170,7 @@ public class RobotUtils {
                         )
                     ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
-                    .collect(Collectors.toList())
+                    .toList()
             );
           }
       );
@@ -200,7 +199,7 @@ public class RobotUtils {
                         sensor("l5", x, y, body, x == body.getW() - 1)
                     ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
-                    .collect(Collectors.toList())
+                    .toList()
             );
           }
       );
@@ -212,7 +211,7 @@ public class RobotUtils {
           Arrays.stream(pars.get("sensors").split("\\+"))
               .map(n -> sensor(n, x, y, body))
               .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
-              .collect(Collectors.toList())
+              .toList()
       ));
     }
     if ((params = params(uniformAll, name)) != null) {
@@ -222,7 +221,7 @@ public class RobotUtils {
           PREDEFINED_SENSORS.keySet().stream()
               .map(n -> sensor(n, x, y, body))
               .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
-              .collect(Collectors.toList())
+              .toList()
       ));
     }
     if ((params = params(empty, name)) != null) {

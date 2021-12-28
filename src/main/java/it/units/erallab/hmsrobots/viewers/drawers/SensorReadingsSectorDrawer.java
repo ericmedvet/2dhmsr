@@ -28,7 +28,6 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import java.awt.*;
 import java.awt.geom.Path2D;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class SensorReadingsSectorDrawer extends SubtreeDrawer {
@@ -69,7 +68,7 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
     List<ScopedReadings> readings = snapshot.getChildren().stream()
         .filter(s -> s.getContent() instanceof ScopedReadings)
         .map(s -> (ScopedReadings) s.getContent())
-        .collect(Collectors.toList());
+        .toList();
     if (readings.isEmpty()) {
       return;
     }
