@@ -37,24 +37,17 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   private final static char EMPTY_CELL_CHAR = '░';
   @JsonProperty("items")
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-  private final List<T> ts;
+  private final Object[] ts;
   @JsonProperty
   private final int w;
   @JsonProperty
   private final int h;
 
   @JsonCreator
-  private Grid(@JsonProperty("w") int w, @JsonProperty("h") int h, @JsonProperty("items") List<T> ts) {
+  private Grid(@JsonProperty("w") int w, @JsonProperty("h") int h) {
     this.w = w;
     this.h = h;
-    this.ts = new ArrayList<>(w * h);
-    for (int i = 0; i < w * h; i++) {
-      if ((ts != null) && (i < ts.size())) {
-        this.ts.add(ts.get(i));
-      } else {
-        this.ts.add(null);
-      }
-    }
+    this.ts = new Object[w * h];
   }
 
   public record Entry<K>(Key key, K value) implements Serializable {}
@@ -108,7 +101,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   public static <K> Grid<K> create(int w, int h, BiFunction<Integer, Integer, K> fillerFunction) {
-    Grid<K> grid = new Grid<>(w, h, null);
+    Grid<K> grid = new Grid<>(w, h);
     for (int x = 0; x < grid.getW(); x++) {
       for (int y = 0; y < grid.getH(); y++) {
         grid.set(x, y, fillerFunction.apply(x, y));
@@ -183,6 +176,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return values().stream().filter(predicate).count();
   }
 
+  @SuppressWarnings("unchecked")
   public T get(int x, int y) {
     if ((x < 0) || (x >= w)) {
       return null;
@@ -190,7 +184,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     if ((y < 0) || (y >= h)) {
       return null;
     }
-    return ts.get((y * w) + x);
+    return (T) ts[(y * w) + x];
   }
 
   public int getH() {
@@ -202,18 +196,20 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(ts, w, h);
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
     Grid<?> grid = (Grid<?>) o;
-    return w == grid.w && h == grid.h && ts.equals(grid.ts);
+    return w == grid.w && h == grid.h && Arrays.equals(ts, grid.ts);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(w, h);
+    result = 31 * result + Arrays.hashCode(ts);
+    return result;
   }
 
   @Override
@@ -253,7 +249,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     if (x < 0 || x >= w || y < 0 || y >= h) {
       throw new IllegalArgumentException(String.format("Cannot set element at %d,%d on a %dx%d grid", x, y, w, h));
     }
-    ts.set((y * w) + x, t);
+    ts[(y * w) + x] = t;
   }
 
   public Stream<Entry<T>> stream() {
@@ -268,8 +264,9 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return b;
   }
 
+  @SuppressWarnings("unchecked")
   public Collection<T> values() {
-    return Collections.unmodifiableList(ts);
+    return Arrays.stream(ts).map(o -> (T) o).toList();
   }
 
 }
