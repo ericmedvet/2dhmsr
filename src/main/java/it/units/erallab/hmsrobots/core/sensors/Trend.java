@@ -32,8 +32,8 @@ public class Trend extends AggregatorSensor {
     super(
         Arrays.stream(sensor.getDomains())
             .map(d -> Domain.of(
-                -Math.abs(d.getMax() - d.getMin()) / interval,
-                Math.abs(d.getMax() - d.getMin()) / interval
+                -Math.abs(d.max() - d.min()) / interval,
+                Math.abs(d.max() - d.min()) / interval
             )).toArray(Domain[]::new),
         sensor,
         interval

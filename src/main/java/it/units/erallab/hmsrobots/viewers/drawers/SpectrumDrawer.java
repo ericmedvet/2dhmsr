@@ -128,7 +128,7 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
       g.setColor(axesColor);
       g.draw(new Line2D.Double(x, pBB.max().y(), x, pBB.max().y() + textH));
       g.setColor(textColor);
-      String s = String.format("%.1f", (i < nBins) ? domains[i].getMin() : domains[i - 1].getMax());
+      String s = String.format("%.1f", (i < nBins) ? domains[i].min() : domains[i - 1].max());
       g.drawString(s, (float) x - g.getFontMetrics().stringWidth(s) / 2f, (float) (pBB.max().y() + 2 * textH));
     }
     //draw y-axis

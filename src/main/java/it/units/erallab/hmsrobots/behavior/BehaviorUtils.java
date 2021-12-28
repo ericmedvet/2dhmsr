@@ -86,8 +86,8 @@ public class BehaviorUtils {
         .collect(Collectors.toList());
     boolean[] mask = new boolean[n];
     for (Domain contact : contacts) {
-      int minIndex = (int) Math.round((contact.getMin() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      int maxIndex = (int) Math.round((contact.getMax() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int minIndex = (int) Math.round((contact.min() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int maxIndex = (int) Math.round((contact.max() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
       for (int x = minIndex; x <= Math.min(maxIndex, n - 1); x++) {
         mask[x] = true;
       }
@@ -256,7 +256,7 @@ public class BehaviorUtils {
       int nBins
   ) {
     SortedMap<Double, Double> spectrum = computeSpectrum(signal);
-    SortedMap<Domain, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(Domain::getMin));
+    SortedMap<Domain, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(Domain::min));
     double binSpan = (maxF - minF) / (double) nBins;
     for (int i = 0; i < nBins; i++) {
       double binMinF = minF + binSpan * (double) i;

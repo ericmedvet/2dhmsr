@@ -41,7 +41,7 @@ public class SoftNormalization extends CompositeSensor {
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
       Domain d = sensor.getDomains()[i];
-      double v = (innerValues[i] - d.getMin()) / (d.getMax() - d.getMin());
+      double v = (innerValues[i] - d.min()) / (d.max() - d.min());
       //tanh(((x*2)-1)*2)/2+1/2
       values[i] = Math.tanh(((v * 2d) - 1d) * 2d) / 2d + 0.5d;
     }

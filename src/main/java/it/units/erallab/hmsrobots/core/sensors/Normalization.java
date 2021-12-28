@@ -40,7 +40,7 @@ public class Normalization extends CompositeSensor {
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
       Domain d = sensor.getDomains()[i];
-      values[i] = Math.min(Math.max((innerValues[i] - d.getMin()) / (d.getMax() - d.getMin()), 0d), 1d);
+      values[i] = Math.min(Math.max((innerValues[i] - d.min()) / (d.max() - d.min()), 0d), 1d);
     }
     return values;
   }

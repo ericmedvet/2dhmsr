@@ -265,7 +265,7 @@ public class BreakableVoxel extends SensingVoxel {
   private double[] random(Domain[] domains) {
     double[] values = new double[domains.length];
     for (int i = 0; i < domains.length; i++) {
-      values[i] = random.nextDouble() * (domains[i].getMax() - domains[i].getMin()) + domains[i].getMin();
+      values[i] = random.nextDouble() * (domains[i].max() - domains[i].min()) + domains[i].min();
     }
     return values;
   }

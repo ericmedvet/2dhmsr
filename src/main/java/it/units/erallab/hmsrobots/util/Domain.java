@@ -20,14 +20,7 @@ package it.units.erallab.hmsrobots.util;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public class Domain implements Serializable {
-  private final double min;
-  private final double max;
-
-  private Domain(double min, double max) {
-    this.min = min;
-    this.max = max;
-  }
+public record Domain(double min, double max) implements Serializable {
 
   public static Domain of(double min, double max) {
     return new Domain(min, max);
@@ -39,16 +32,4 @@ public class Domain implements Serializable {
     return domains;
   }
 
-  public double getMax() {
-    return max;
-  }
-
-  public double getMin() {
-    return min;
-  }
-
-  @Override
-  public String toString() {
-    return String.format("[%.1f;%.1f]", min, max);
-  }
 }

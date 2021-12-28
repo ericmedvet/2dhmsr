@@ -57,7 +57,7 @@ public class LidarDrawer extends SubtreeDrawer {
     for (Snapshot lidarSnapshot : lidarSnapshots) {
       LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
       double angle = lidarReadings.getVoxelAngle();
-      double rayLength = lidarReadings.getDomains()[0].getMax();
+      double rayLength = lidarReadings.getDomains()[0].max();
       double[] rayDirections = lidarReadings.getRayDirections();
       double[] rayHits = lidarReadings.getReadings();
       for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {

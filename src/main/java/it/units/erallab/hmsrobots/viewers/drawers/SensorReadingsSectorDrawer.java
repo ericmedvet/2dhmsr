@@ -97,7 +97,7 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
       for (int j = 0; j < readings.get(i).getReadings().length; j++) {
         double value = readings.get(i).getReadings()[j];
         Domain d = readings.get(i).getDomains()[j];
-        double normalizedRadius = radius * Math.min(1d, Math.max(0d, (value - d.getMin()) / (d.getMax() - d.getMin())));
+        double normalizedRadius = radius * Math.min(1d, Math.max(0d, (value - d.min()) / (d.max() - d.min())));
         double valueStartingAngle = sensorStartingAngle + (double) j * valueSliceAngle;
         double valueEndingAngle = valueStartingAngle + valueSliceAngle;
         Path2D sector = getSector(center, normalizedRadius, valueStartingAngle, valueEndingAngle);

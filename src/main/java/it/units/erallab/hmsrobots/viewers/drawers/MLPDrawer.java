@@ -481,10 +481,10 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
       }
     }
     if (parts.contains(Part.ACTIVATION_VALUES)) {
-      double min = current.getActivationDomain().getMin() > Double.NEGATIVE_INFINITY ? current.getActivationDomain()
-          .getMin() : memory.values().stream().mapToDouble(s -> min(s.getActivationValues())).min().orElse(0d);
-      double max = current.getActivationDomain().getMax() < Double.POSITIVE_INFINITY ? current.getActivationDomain()
-          .getMax() : memory.values().stream().mapToDouble(s -> max(s.getActivationValues())).max().orElse(0d);
+      double min = current.getActivationDomain().min() > Double.NEGATIVE_INFINITY ? current.getActivationDomain()
+          .min() : memory.values().stream().mapToDouble(s -> min(s.getActivationValues())).min().orElse(0d);
+      double max = current.getActivationDomain().max() < Double.POSITIVE_INFINITY ? current.getActivationDomain()
+          .max() : memory.values().stream().mapToDouble(s -> max(s.getActivationValues())).max().orElse(0d);
       int j = plotParts.indexOf(Part.ACTIVATION_VALUES);
       draw(t, memory, MLPState::getActivationValues, min, max, boundingBoxes[j], g);
       if (parts.contains(Part.LEGEND)) {

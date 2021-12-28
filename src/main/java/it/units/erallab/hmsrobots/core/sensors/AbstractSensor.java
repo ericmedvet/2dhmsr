@@ -62,7 +62,7 @@ public abstract class AbstractSensor implements Sensor {
     return new Snapshot(
         new ScopedReadings(
             Arrays.copyOf(readings, readings.length),
-            Arrays.stream(domains).map(d -> Domain.of(d.getMin(), d.getMax())).toArray(Domain[]::new)
+            Arrays.stream(domains).map(d -> Domain.of(d.min(), d.max())).toArray(Domain[]::new)
         ),
         getClass()
     );
