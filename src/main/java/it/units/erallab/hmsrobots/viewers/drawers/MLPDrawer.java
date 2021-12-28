@@ -104,9 +104,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
 
   private static double[][] abs(double[][] v) {
     double[][] absV = new double[v.length][];
-    IntStream.range(0, v.length).forEach(i ->
-        absV[i] = Arrays.stream(v[i]).map(Math::abs).toArray()
-    );
+    IntStream.range(0, v.length).forEach(i -> absV[i] = Arrays.stream(v[i]).map(Math::abs).toArray());
     return absV;
   }
 
@@ -153,27 +151,19 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   }
 
   private static double max(double[][][] v) {
-    return Arrays.stream(v)
-        .mapToDouble(MLPDrawer::max)
-        .max().orElse(0d);
+    return Arrays.stream(v).mapToDouble(MLPDrawer::max).max().orElse(0d);
   }
 
   private static double max(double[][] v) {
-    return Arrays.stream(v)
-        .mapToDouble(w -> DoubleStream.of(w).max().orElse(0d))
-        .max().orElse(0d);
+    return Arrays.stream(v).mapToDouble(w -> DoubleStream.of(w).max().orElse(0d)).max().orElse(0d);
   }
 
   private static double min(double[][][] v) {
-    return Arrays.stream(v)
-        .mapToDouble(MLPDrawer::min)
-        .min().orElse(0d);
+    return Arrays.stream(v).mapToDouble(MLPDrawer::min).min().orElse(0d);
   }
 
   private static double min(double[][] v) {
-    return Arrays.stream(v)
-        .mapToDouble(w -> DoubleStream.of(w).min().orElse(0d))
-        .min().orElse(0d);
+    return Arrays.stream(v).mapToDouble(w -> DoubleStream.of(w).min().orElse(0d)).min().orElse(0d);
   }
 
   private void draw(
@@ -237,10 +227,18 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   }
 
   private void drawDoubleChannel(
-      double fT, double vT1, double vT2, SortedMap<Double, MLPState> states,
-      Function<MLPState, double[][]> f1, double min1, double max1,
-      Function<MLPState, double[][]> f2, double min2, double max2,
-      BoundingBox bb, Graphics2D g
+      double fT,
+      double vT1,
+      double vT2,
+      SortedMap<Double, MLPState> states,
+      Function<MLPState, double[][]> f1,
+      double min1,
+      double max1,
+      Function<MLPState, double[][]> f2,
+      double min2,
+      double max2,
+      BoundingBox bb,
+      Graphics2D g
   ) {
     Variance variance = new Variance();
     double bbW = bb.max().x() - bb.min().x();
@@ -295,31 +293,38 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   }
 
   private void drawDoubleChannelLegend(
-      double min1, double max1, Color channel1,
-      double min2, double max2, Color channel2,
-      BoundingBox bb, double textW, double textH, Graphics2D g
+      double min1,
+      double max1,
+      Color channel1,
+      double min2,
+      double max2,
+      Color channel2,
+      BoundingBox bb,
+      double textW,
+      double textH,
+      Graphics2D g
   ) {
     Color minColor = Color.BLACK;
     double legendMiddle = (bb.max().y() + bb.min().y()) / 2;
     drawLegend(
-        min1, max1,
-        BoundingBox.of(
-            bb.min().x(),
-            bb.min().y() + textH / 2,
-            bb.max().x(),
-            legendMiddle - textH / 2
-        ),
-        textW, g, minColor, minColor, channel1
+        min1,
+        max1,
+        BoundingBox.of(bb.min().x(), bb.min().y() + textH / 2, bb.max().x(), legendMiddle - textH / 2),
+        textW,
+        g,
+        minColor,
+        minColor,
+        channel1
     );
     drawLegend(
-        min2, max2,
-        BoundingBox.of(
-            bb.min().x(),
-            legendMiddle + textH / 2,
-            bb.max().x(),
-            bb.max().y() - textH / 2
-        ),
-        textW, g, minColor, minColor, channel2
+        min2,
+        max2,
+        BoundingBox.of(bb.min().x(), legendMiddle + textH / 2, bb.max().x(), bb.max().y() - textH / 2),
+        textW,
+        g,
+        minColor,
+        minColor,
+        channel2
     );
   }
 
@@ -334,11 +339,10 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
     double[][] values = f.apply(states.get(states.lastKey()));
     double binSize = (max - min) / N_OF_BINS;
     int[] nOfValuesPerBin = new int[N_OF_BINS];
-    Arrays.stream(values).flatMapToDouble(Arrays::stream)
+    Arrays.stream(values)
+        .flatMapToDouble(Arrays::stream)
         .map(d -> Math.max(min, Math.min(d, max)) - min)
-        .forEach(d ->
-            nOfValuesPerBin[(int) Math.min(Math.floor(d / binSize), N_OF_BINS - 1)] += 1
-        );
+        .forEach(d -> nOfValuesPerBin[(int) Math.min(Math.floor(d / binSize), N_OF_BINS - 1)] += 1);
     int maxAmountPerBin = Arrays.stream(nOfValuesPerBin).max().orElse(10);
     double[] barSizes = Arrays.stream(nOfValuesPerBin)
         .mapToDouble(i -> i * bb.width() * HISTOGRAM_BLANK_RATIO / maxAmountPerBin)
@@ -447,12 +451,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
         g.getClip().getBounds2D().getMaxX(),
         g.getClip().getBounds2D().getMaxY()
     );
-    BoundingBox hBB = BoundingBox.of(
-        g.getClip().getBounds2D().getX(),
-        oBB.min().y(),
-        oBB.min().x(),
-        oBB.max().y()
-    );
+    BoundingBox hBB = BoundingBox.of(g.getClip().getBounds2D().getX(), oBB.min().y(), oBB.min().x(), oBB.max().y());
     BoundingBox pBB = BoundingBox.of(
         parts.contains(Part.LEGEND) ? (oBB.min().x() + 6 * textW) : oBB.min().x(),
         oBB.min().y(),
@@ -466,12 +465,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
     IntStream.range(0, boundingBoxes.length).forEach(i -> {
       double minY = i == 0 ? pBB.min().y() : boundingBoxes[i - 1].max().y() + textH / 2d;
       double maxY = (i == boundingBoxes.length - 1) ? pBB.max().y() : minY + size;
-      boundingBoxes[i] = BoundingBox.of(
-          pBB.min().x(),
-          minY,
-          pBB.max().x(),
-          maxY
-      );
+      boundingBoxes[i] = BoundingBox.of(pBB.min().x(), minY, pBB.max().x(), maxY);
     });
     if (parts.contains(Part.T_AXIS)) {
       g.setColor(axesColor);
@@ -488,153 +482,132 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
     }
     if (parts.contains(Part.ACTIVATION_VALUES)) {
       double min = current.getActivationDomain().getMin() > Double.NEGATIVE_INFINITY ? current.getActivationDomain()
-          .getMin() : memory.values().stream()
-          .mapToDouble(s -> min(s.getActivationValues()))
-          .min().orElse(0d);
+          .getMin() : memory.values().stream().mapToDouble(s -> min(s.getActivationValues())).min().orElse(0d);
       double max = current.getActivationDomain().getMax() < Double.POSITIVE_INFINITY ? current.getActivationDomain()
-          .getMax() : memory.values().stream()
-          .mapToDouble(s -> max(s.getActivationValues()))
-          .max().orElse(0d);
-      draw(
-          t,
-          memory,
-          MLPState::getActivationValues,
-          min,
-          max,
-          boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)],
-          g
-      );
+          .getMax() : memory.values().stream().mapToDouble(s -> max(s.getActivationValues())).max().orElse(0d);
+      int j = plotParts.indexOf(Part.ACTIVATION_VALUES);
+      draw(t, memory, MLPState::getActivationValues, min, max, boundingBoxes[j], g);
       if (parts.contains(Part.LEGEND)) {
-        drawLegend(
-            min, max,
-            BoundingBox.of(
-                oBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].min().y() + textH,
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].min().x() - textW,
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].max().y() - textH
-            ),
-            textW, g
-        );
+        drawLegend(min, max, BoundingBox.of(
+            oBB.min().x(),
+            boundingBoxes[j].min().y() + textH,
+            boundingBoxes[j].min().x() - textW,
+            boundingBoxes[j].max().y() - textH
+        ), textW, g);
       }
       if (parts.contains(Part.STRUCTURE_AXIS)) {
         drawStructure(
             Arrays.stream(current.getActivationValues()).mapToInt(v -> v.length).toArray(),
             i -> "l" + i,
             BoundingBox.of(
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].max().x(),
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].min().y(),
+                boundingBoxes[j].max().x(),
+                boundingBoxes[j].min().y(),
                 oBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].max().y()
+                boundingBoxes[j].max().y()
             ),
-            textW, g
+            textW,
+            g
         );
       }
       if (parts.contains(Part.HISTOGRAM)) {
-        drawHistogram(memory, MLPState::getActivationValues, min, max,
+        drawHistogram(
+            memory,
+            MLPState::getActivationValues,
+            min,
+            max,
             BoundingBox.of(
                 hBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].min().y() + textH,
+                boundingBoxes[j].min().y() + textH,
                 hBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.ACTIVATION_VALUES)].max().y() - textH
+                boundingBoxes[j].max().y() - textH
             ),
             g
         );
       }
     }
     if (parts.contains(Part.WEIGHTS)) {
-      double min = memory.values().stream()
-          .mapToDouble(s -> min(s.getWeights()))
-          .min().orElse(0d);
-      double max = memory.values().stream()
-          .mapToDouble(s -> max(s.getWeights()))
-          .max().orElse(0d);
-      draw(t, memory, s -> flat(s.getWeights()), min, max, boundingBoxes[plotParts.indexOf(Part.WEIGHTS)], g);
+      double min = memory.values().stream().mapToDouble(s -> min(s.getWeights())).min().orElse(0d);
+      double max = memory.values().stream().mapToDouble(s -> max(s.getWeights())).max().orElse(0d);
+      int j = plotParts.indexOf(Part.WEIGHTS);
+      draw(t, memory, s -> flat(s.getWeights()), min, max, boundingBoxes[j], g);
       if (parts.contains(Part.LEGEND)) {
-        drawLegend(
-            min, max,
-            BoundingBox.of(
-                oBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].min().y() + textH,
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].min().x() - textW,
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max().y() - textH
-            ),
-            textW, g
-        );
+        drawLegend(min, max, BoundingBox.of(
+            oBB.min().x(),
+            boundingBoxes[j].min().y() + textH,
+            boundingBoxes[j].min().x() - textW,
+            boundingBoxes[j].max().y() - textH
+        ), textW, g);
       }
       if (parts.contains(Part.STRUCTURE_AXIS)) {
         drawStructure(
             Arrays.stream(flat(current.getWeights())).mapToInt(v -> v.length).toArray(),
             i -> "w" + i + (i + 1),
             BoundingBox.of(
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max().x(),
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].min().y(),
+                boundingBoxes[j].max().x(),
+                boundingBoxes[j].min().y(),
                 oBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max().y()
+                boundingBoxes[j].max().y()
             ),
-            textW, g
+            textW,
+            g
         );
       }
       if (parts.contains(Part.HISTOGRAM)) {
-        drawHistogram(memory, s -> flat(s.getWeights()), min, max,
+        drawHistogram(
+            memory,
+            s -> flat(s.getWeights()),
+            min,
+            max,
             BoundingBox.of(
                 hBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].min().y() + textH,
+                boundingBoxes[j].min().y() + textH,
                 hBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.WEIGHTS)].max().y() - textH
+                boundingBoxes[j].max().y() - textH
             ),
             g
         );
       }
     }
     if (parts.contains(Part.USAGE)) {
-      double min = memory.values().stream()
-          .mapToDouble(s -> min(s.getActivationValues()))
-          .min().orElse(0d);
-      double max = memory.values().stream()
-          .mapToDouble(s -> max(s.getActivationValues()))
-          .max().orElse(0d);
+      double min = memory.values().stream().mapToDouble(s -> min(s.getActivationValues())).min().orElse(0d);
+      double max = memory.values().stream().mapToDouble(s -> max(s.getActivationValues())).max().orElse(0d);
+      int j = plotParts.indexOf(Part.USAGE);
       draw(
           t,
           memory,
           s -> flat(mapActivationValuesToWeights(s.getActivationValues(), s.getWeights())),
           min,
           max,
-          boundingBoxes[plotParts.indexOf(Part.USAGE)],
+          boundingBoxes[j],
           g
       );
       if (parts.contains(Part.LEGEND)) {
-        drawLegend(
-            min, max,
-            BoundingBox.of(
-                oBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.USAGE)].min().y() + textH,
-                boundingBoxes[plotParts.indexOf(Part.USAGE)].min().x() - textW,
-                boundingBoxes[plotParts.indexOf(Part.USAGE)].max().y() - textH
-            ),
-            textW, g
-        );
+        drawLegend(min, max, BoundingBox.of(
+            oBB.min().x(),
+            boundingBoxes[j].min().y() + textH,
+            boundingBoxes[j].min().x() - textW,
+            boundingBoxes[j].max().y() - textH
+        ), textW, g);
       }
       if (parts.contains(Part.STRUCTURE_AXIS)) {
         drawStructure(
             Arrays.stream(flat(current.getWeights())).mapToInt(v -> v.length).toArray(),
             i -> "n-w" + i + (i + 1),
             BoundingBox.of(
-                boundingBoxes[plotParts.indexOf(Part.USAGE)].max().x(),
-                boundingBoxes[plotParts.indexOf(Part.USAGE)].min().y(),
+                boundingBoxes[j].max().x(),
+                boundingBoxes[j].min().y(),
                 oBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.USAGE)].max().y()
+                boundingBoxes[j].max().y()
             ),
-            textW, g
+            textW,
+            g
         );
       }
     }
     if (parts.contains(Part.VARIANCE)) {
-      double min = memory.values().stream()
-          .mapToDouble(s -> min(s.getActivationValues()))
-          .min().orElse(0d);
-      double max = memory.values().stream()
-          .mapToDouble(s -> max(s.getActivationValues()))
-          .max().orElse(0d);
+      double min = memory.values().stream().mapToDouble(s -> min(s.getActivationValues())).min().orElse(0d);
+      double max = memory.values().stream().mapToDouble(s -> max(s.getActivationValues())).max().orElse(0d);
+      int j = plotParts.indexOf(Part.VARIANCE);
       draw(
           t,
           VARIANCE_WINDOW,
@@ -642,56 +615,69 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
           s -> flat(mapActivationValuesToWeights(s.getActivationValues(), s.getWeights())),
           min,
           max,
-          boundingBoxes[plotParts.indexOf(Part.VARIANCE)],
+          boundingBoxes[j],
           g
       );
       if (parts.contains(Part.LEGEND)) {
-        drawLegend(
-            min, max,
-            BoundingBox.of(
-                oBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE)].min().y() + textH,
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE)].min().x() - textW,
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE)].max().y() - textH
-            ),
-            textW, g
-        );
+        drawLegend(min, max, BoundingBox.of(
+            oBB.min().x(),
+            boundingBoxes[j].min().y() + textH,
+            boundingBoxes[j].min().x() - textW,
+            boundingBoxes[j].max().y() - textH
+        ), textW, g);
       }
       if (parts.contains(Part.STRUCTURE_AXIS)) {
         drawStructure(
             Arrays.stream(flat(current.getWeights())).mapToInt(v -> v.length).toArray(),
             i -> "n-w" + i + (i + 1),
             BoundingBox.of(
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE)].max().x(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE)].min().y(),
+                boundingBoxes[j].max().x(),
+                boundingBoxes[j].min().y(),
                 oBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE)].max().y()
+                boundingBoxes[j].max().y()
             ),
-            textW, g
+            textW,
+            g
         );
       }
     }
     if (parts.contains(Part.VARIANCE_AND_WEIGHTS)) {
       double minWeights = 0d;
-      double maxWeights = memory.values().stream()
-          .mapToDouble(s -> max(abs(flat(s.getWeights()))))
-          .max().orElse(0d);
+      double maxWeights = memory.values().stream().mapToDouble(s -> max(abs(flat(s.getWeights())))).max().orElse(0d);
       double minVariance = 0;
       double maxVariance = 2;
-      drawDoubleChannel(t, 0d, VARIANCE_WINDOW, memory,
-          s -> abs(flat(s.getWeights())), minWeights, maxWeights,
-          s -> flat(mapActivationValuesToWeights(s.getActivationValues(), s.getWeights())), minVariance, maxVariance,
-          boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)], g
+      int j = plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS);
+      drawDoubleChannel(
+          t,
+          0d,
+          VARIANCE_WINDOW,
+          memory,
+          s -> abs(flat(s.getWeights())),
+          minWeights,
+          maxWeights,
+          s -> flat(mapActivationValuesToWeights(s.getActivationValues(), s.getWeights())),
+          minVariance,
+          maxVariance,
+          boundingBoxes[j],
+          g
       );
       if (parts.contains(Part.LEGEND)) {
-        drawDoubleChannelLegend(minWeights, maxWeights, Color.RED, minVariance, maxVariance, Color.GREEN,
+        drawDoubleChannelLegend(
+            minWeights,
+            maxWeights,
+            Color.RED,
+            minVariance,
+            maxVariance,
+            Color.GREEN,
             BoundingBox.of(
                 oBB.min().x(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min().y(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min().x() - textW,
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max().y()
+                boundingBoxes[j].min().y(),
+                boundingBoxes[j].min().x() - textW,
+                boundingBoxes[j].max().y()
             ),
-            textW, textH, g
+            textW,
+            textH,
+            g
         );
       }
       if (parts.contains(Part.STRUCTURE_AXIS)) {
@@ -699,12 +685,13 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
             Arrays.stream(flat(current.getWeights())).mapToInt(v -> v.length).toArray(),
             i -> "w-v" + i + (i + 1),
             BoundingBox.of(
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max().x(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].min().y(),
+                boundingBoxes[j].max().x(),
+                boundingBoxes[j].min().y(),
                 oBB.max().x(),
-                boundingBoxes[plotParts.indexOf(Part.VARIANCE_AND_WEIGHTS)].max().y()
+                boundingBoxes[j].max().y()
             ),
-            textW, g
+            textW,
+            g
         );
       }
     }
