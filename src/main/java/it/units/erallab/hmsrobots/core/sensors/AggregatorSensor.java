@@ -18,7 +18,7 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.TreeMap;
 
@@ -30,7 +30,7 @@ public abstract class AggregatorSensor extends CompositeSensor {
   protected final double interval;
   protected final TreeMap<Double, double[]> readings;
 
-  public AggregatorSensor(Domain[] domains, Sensor sensor, double interval) {
+  public AggregatorSensor(DoubleRange[] domains, Sensor sensor, double interval) {
     super(domains, sensor);
     this.interval = interval;
     readings = new TreeMap<>();

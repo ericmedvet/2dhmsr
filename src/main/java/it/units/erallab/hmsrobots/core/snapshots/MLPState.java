@@ -17,7 +17,7 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Arrays;
 
@@ -27,9 +27,9 @@ import java.util.Arrays;
 public class MLPState {
   private final double[][] activationValues;
   private final double[][][] weights;
-  private final Domain activationDomain;
+  private final DoubleRange activationDomain;
 
-  public MLPState(double[][] activationValues, double[][][] weights, Domain activationDomain) {
+  public MLPState(double[][] activationValues, double[][][] weights, DoubleRange activationDomain) {
     this.activationValues = copyOf(activationValues);
     this.weights = copyOf(weights);
     this.activationDomain = activationDomain;
@@ -51,7 +51,7 @@ public class MLPState {
     return c;
   }
 
-  public Domain getActivationDomain() {
+  public DoubleRange getActivationDomain() {
     return activationDomain;
   }
 

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
@@ -87,17 +87,17 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
   }
 
   public enum ActivationFunction implements Function<Double, Double> {
-    RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
-    SIGMOID(x -> 1d / (1d + Math.exp(-x)), Domain.of(0d, 1d)),
-    SIN(Math::sin, Domain.of(-1d, 1d)),
-    TANH(Math::tanh, Domain.of(-1d, 1d)),
-    SIGN(Math::signum, Domain.of(-1d, 1d)),
-    IDENTITY(x -> x, Domain.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+    RELU(x -> (x < 0) ? 0d : x, DoubleRange.of(0d, Double.POSITIVE_INFINITY)),
+    SIGMOID(x -> 1d / (1d + Math.exp(-x)), DoubleRange.of(0d, 1d)),
+    SIN(Math::sin, DoubleRange.of(-1d, 1d)),
+    TANH(Math::tanh, DoubleRange.of(-1d, 1d)),
+    SIGN(Math::signum, DoubleRange.of(-1d, 1d)),
+    IDENTITY(x -> x, DoubleRange.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
 
     private final Function<Double, Double> f;
-    private final Domain domain;
+    private final DoubleRange domain;
 
-    ActivationFunction(Function<Double, Double> f, Domain domain) {
+    ActivationFunction(Function<Double, Double> f, DoubleRange domain) {
       this.f = f;
       this.domain = domain;
     }
@@ -106,7 +106,7 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
       return f.apply(x);
     }
 
-    public Domain getDomain() {
+    public DoubleRange getDomain() {
       return domain;
     }
 

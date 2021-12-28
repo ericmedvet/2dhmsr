@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 public class ControlPower extends AbstractSensor {
 
@@ -30,8 +30,8 @@ public class ControlPower extends AbstractSensor {
   public ControlPower(
       @JsonProperty("controlInterval") double controlInterval
   ) {
-    super(new Domain[]{
-        Domain.of(0, 1d / controlInterval)
+    super(new DoubleRange[]{
+        DoubleRange.of(0, 1d / controlInterval)
     });
     this.controlInterval = controlInterval;
   }

@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Arrays;
 
@@ -37,14 +37,14 @@ public class Constant extends AbstractSensor {
     this.values = values;
   }
 
-  private static Domain[] computeDomains(double... values) {
+  private static DoubleRange[] computeDomains(double... values) {
     double max = Arrays.stream(values).max().orElse(1d);
     double min = Arrays.stream(values).min().orElse(0d);
     max = Math.max(1d, max);
     min = Math.min(0d, min);
-    Domain[] domains = new Domain[values.length];
+    DoubleRange[] domains = new DoubleRange[values.length];
     for (int i = 0; i < values.length; i++) {
-      domains[i] = Domain.of(min, max);
+      domains[i] = DoubleRange.of(min, max);
     }
     return domains;
   }

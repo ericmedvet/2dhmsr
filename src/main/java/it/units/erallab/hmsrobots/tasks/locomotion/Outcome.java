@@ -22,7 +22,7 @@ import it.units.erallab.hmsrobots.behavior.Footprint;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Grid;
 
 import java.util.*;
@@ -95,7 +95,7 @@ public class Outcome {
         .collect(Collectors.toList()));
   }
 
-  public SortedMap<Domain, Double> getCenterAngleSpectrum(double minF, double maxF, int nBins) {
+  public SortedMap<DoubleRange, Double> getCenterAngleSpectrum(double minF, double maxF, int nBins) {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(
@@ -105,7 +105,7 @@ public class Outcome {
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
 
-  public SortedMap<Domain, Double> getCenterXPositionSpectrum(double minF, double maxF, int nBins) {
+  public SortedMap<DoubleRange, Double> getCenterXPositionSpectrum(double minF, double maxF, int nBins) {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(
@@ -115,7 +115,7 @@ public class Outcome {
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
 
-  public SortedMap<Domain, Double> getCenterXVelocitySpectrum(double minF, double maxF, int nBins) {
+  public SortedMap<DoubleRange, Double> getCenterXVelocitySpectrum(double minF, double maxF, int nBins) {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(
@@ -125,7 +125,7 @@ public class Outcome {
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
 
-  public SortedMap<Domain, Double> getCenterYPositionSpectrum(double minF, double maxF, int nBins) {
+  public SortedMap<DoubleRange, Double> getCenterYPositionSpectrum(double minF, double maxF, int nBins) {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(
@@ -135,7 +135,7 @@ public class Outcome {
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
 
-  public SortedMap<Domain, Double> getCenterYVelocitySpectrum(double minF, double maxF, int nBins) {
+  public SortedMap<DoubleRange, Double> getCenterYVelocitySpectrum(double minF, double maxF, int nBins) {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(
@@ -194,7 +194,7 @@ public class Outcome {
     return finalCenter.x() - initialCenter.x();
   }
 
-  public List<SortedMap<Domain, Double>> getFootprintsSpectra(int n, double minF, double maxF, int nBins) {
+  public List<SortedMap<DoubleRange, Double>> getFootprintsSpectra(int n, double minF, double maxF, int nBins) {
     SortedMap<Double, Footprint> footprints = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(

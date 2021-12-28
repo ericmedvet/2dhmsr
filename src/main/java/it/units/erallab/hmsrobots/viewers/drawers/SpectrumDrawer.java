@@ -20,7 +20,7 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
@@ -90,9 +90,9 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
   @Override
   protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, Double> memory, Graphics2D g) {
     //compute spectrum
-    SortedMap<Domain, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(memory, minF, maxF, nBins);
+    SortedMap<DoubleRange, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(memory, minF, maxF, nBins);
     double maxValue = spectrum.values().stream().mapToDouble(d -> d).max().orElse(0d);
-    Domain[] domains = spectrum.keySet().toArray(Domain[]::new);
+    DoubleRange[] domains = spectrum.keySet().toArray(DoubleRange[]::new);
     double[] values = spectrum.values().stream().mapToDouble(d -> d).toArray();
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();

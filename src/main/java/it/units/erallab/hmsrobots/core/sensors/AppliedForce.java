@@ -17,11 +17,11 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 public class AppliedForce extends AbstractSensor {
-  private final static Domain[] DOMAINS = new Domain[]{
-      Domain.of(-1d, 1d)
+  private final static DoubleRange[] DOMAINS = new DoubleRange[]{
+      DoubleRange.of(-1d, 1d)
   };
 
   public AppliedForce() {

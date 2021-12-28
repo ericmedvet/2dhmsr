@@ -18,14 +18,14 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.dyn4j.dynamics.Body;
 
 import java.util.List;
 
 public class Touch extends AbstractSensor {
-  private final static Domain[] DOMAINS = new Domain[]{
-      Domain.of(0d, 1d)
+  private final static DoubleRange[] DOMAINS = new DoubleRange[]{
+      DoubleRange.of(0d, 1d)
   };
 
   public Touch() {

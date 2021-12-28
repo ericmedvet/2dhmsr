@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
@@ -262,10 +262,10 @@ public class BreakableVoxel extends SensingVoxel {
         || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
   }
 
-  private double[] random(Domain[] domains) {
+  private double[] random(DoubleRange[] domains) {
     double[] values = new double[domains.length];
     for (int i = 0; i < domains.length; i++) {
-      values[i] = random.nextDouble() * (domains[i].max() - domains[i].min()) + domains[i].min();
+      values[i] = random.nextDouble() * domains[i].extent() + domains[i].min();
     }
     return values;
   }

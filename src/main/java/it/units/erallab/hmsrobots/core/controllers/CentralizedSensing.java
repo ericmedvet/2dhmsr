@@ -24,7 +24,7 @@ import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -40,13 +40,13 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
   private final int nOfInputs;
   @JsonProperty
   private final int nOfOutputs;
-  private final Domain[] outputDomains;
+  private final DoubleRange[] outputDomains;
   @JsonProperty
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private TimedRealFunction function;
   private double[] inputs;
   private double[] outputs;
-  private Domain[] inputDomains;
+  private DoubleRange[] inputDomains;
 
   public CentralizedSensing(
       @JsonProperty("nOfInputs") int nOfInputs,
@@ -55,7 +55,7 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
   ) {
     this.nOfInputs = nOfInputs;
     this.nOfOutputs = nOfOutputs;
-    outputDomains = Domain.of(-1d, 1d, nOfOutputs);
+    outputDomains = DoubleRange.of(-1d, 1d, nOfOutputs);
     setFunction(function);
   }
 
@@ -96,7 +96,7 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
         .flatMap(Collection::stream)
         .map(Sensor::getDomains)
         .reduce(ArrayUtils::addAll)
-        .orElse(Domain.of(-1d, 1d, nOfInputs));
+        .orElse(DoubleRange.of(-1d, 1d, nOfInputs));
     //compute outputs
     outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs];
     //apply inputs

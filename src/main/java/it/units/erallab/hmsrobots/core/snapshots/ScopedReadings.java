@@ -17,21 +17,21 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
 public class ScopedReadings {
   private final double[] readings;
-  private final Domain[] domains;
+  private final DoubleRange[] domains;
 
-  public ScopedReadings(double[] readings, Domain[] domains) {
+  public ScopedReadings(double[] readings, DoubleRange[] domains) {
     this.readings = readings;
     this.domains = domains;
   }
 
-  public Domain[] getDomains() {
+  public DoubleRange[] getDomains() {
     return domains;
   }
 

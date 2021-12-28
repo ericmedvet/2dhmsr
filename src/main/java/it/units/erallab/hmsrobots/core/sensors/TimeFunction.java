@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
 public class TimeFunction extends AbstractSensor {
@@ -36,7 +36,7 @@ public class TimeFunction extends AbstractSensor {
       @JsonProperty("min") double min,
       @JsonProperty("max") double max
   ) {
-    super(new Domain[]{Domain.of(min, max)});
+    super(new DoubleRange[]{DoubleRange.of(min, max)});
     this.min = min;
     this.max = max;
     this.function = function;

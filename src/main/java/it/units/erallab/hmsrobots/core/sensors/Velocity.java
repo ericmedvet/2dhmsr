@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.EnumSet;
@@ -46,7 +46,7 @@ public class Velocity extends AbstractSensor {
       @JsonProperty("maxVelocityNorm") double maxVelocityNorm,
       @JsonProperty("axes") EnumSet<Axis> axes
   ) {
-    super(axes.stream().map(a -> Domain.of(-maxVelocityNorm, maxVelocityNorm)).toArray(Domain[]::new));
+    super(axes.stream().map(a -> DoubleRange.of(-maxVelocityNorm, maxVelocityNorm)).toArray(DoubleRange[]::new));
     this.rotated = rotated;
     this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;

@@ -16,13 +16,13 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 public class AreaRatio extends AbstractSensor {
   private final static double RATIO_DELTA = 0.5d;
 
-  private final static Domain[] DOMAINS = new Domain[]{
-      Domain.of(1d - RATIO_DELTA, 1d + RATIO_DELTA)
+  private final static DoubleRange[] DOMAINS = new DoubleRange[]{
+      DoubleRange.of(1d - RATIO_DELTA, 1d + RATIO_DELTA)
   };
 
   public AreaRatio() {

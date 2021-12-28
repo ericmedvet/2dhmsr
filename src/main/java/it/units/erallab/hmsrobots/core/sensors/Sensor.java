@@ -20,14 +20,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public interface Sensor extends Serializable, Actionable, Snapshottable {
 
-  Domain[] getDomains();
+  DoubleRange[] getDomains();
 
   double[] getReadings();
 

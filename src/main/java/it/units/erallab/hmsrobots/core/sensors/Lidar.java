@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
@@ -42,7 +42,7 @@ public class Lidar extends AbstractSensor {
       @JsonProperty("rayLength") double rayLength,
       @JsonProperty("rayDirections") double... rayDirections
   ) {
-    super(Collections.nCopies(rayDirections.length, Domain.of(0, rayLength)).toArray(Domain[]::new));
+    super(Collections.nCopies(rayDirections.length, DoubleRange.of(0, rayLength)).toArray(DoubleRange[]::new));
     this.rayLength = rayLength;
     this.rayDirections = rayDirections;
   }
@@ -108,7 +108,7 @@ public class Lidar extends AbstractSensor {
     return new Snapshot(
         new LidarReadings(
             Arrays.copyOf(readings, readings.length),
-            Arrays.stream(domains).map(d -> Domain.of(d.min(), d.max())).toArray(Domain[]::new),
+            Arrays.copyOf(domains, domains.length),
             voxel.getAngle(),
             Arrays.copyOf(rayDirections, rayDirections.length)
         ),

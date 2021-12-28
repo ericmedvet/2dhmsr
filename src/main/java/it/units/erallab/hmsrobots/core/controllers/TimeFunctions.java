@@ -23,7 +23,7 @@ import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.StackedScopedReadings;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializableFunction;
 
@@ -70,7 +70,7 @@ public class TimeFunctions extends AbstractController<ControllableVoxel> impleme
   @Override
   public Snapshot getSnapshot() {
     return new Snapshot(
-        new StackedScopedReadings(new ScopedReadings(outputs, Domain.of(-1d, 1d, outputs.length))),
+        new StackedScopedReadings(new ScopedReadings(outputs, DoubleRange.of(-1d, 1d, outputs.length))),
         getClass()
     );
   }

@@ -20,7 +20,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Arrays;
 
@@ -28,11 +28,11 @@ import java.util.Arrays;
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
 public abstract class AbstractSensor implements Sensor {
-  protected final Domain[] domains;
+  protected final DoubleRange[] domains;
   protected SensingVoxel voxel;
   protected double[] readings;
 
-  public AbstractSensor(Domain[] domains) {
+  public AbstractSensor(DoubleRange[] domains) {
     this.domains = domains;
   }
 
@@ -48,7 +48,7 @@ public abstract class AbstractSensor implements Sensor {
   }
 
   @Override
-  public Domain[] getDomains() {
+  public DoubleRange[] getDomains() {
     return domains;
   }
 
@@ -59,13 +59,9 @@ public abstract class AbstractSensor implements Sensor {
 
   @Override
   public Snapshot getSnapshot() {
-    return new Snapshot(
-        new ScopedReadings(
-            Arrays.copyOf(readings, readings.length),
-            Arrays.stream(domains).map(d -> Domain.of(d.min(), d.max())).toArray(Domain[]::new)
-        ),
-        getClass()
-    );
+    return new Snapshot(new ScopedReadings(Arrays.copyOf(readings, readings.length),
+        Arrays.copyOf(domains, domains.length)
+    ), getClass());
   }
 
   public SensingVoxel getVoxel() {

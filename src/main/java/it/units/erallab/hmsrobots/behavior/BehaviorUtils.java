@@ -24,7 +24,7 @@ import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -81,11 +81,11 @@ public class BehaviorUtils {
         .mapToDouble(b -> b.max().x())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    List<Domain> contacts = boxes.stream()
-        .map(b -> Domain.of(b.min().x(), b.max().x()))
+    List<DoubleRange> contacts = boxes.stream()
+        .map(b -> DoubleRange.of(b.min().x(), b.max().x()))
         .collect(Collectors.toList());
     boolean[] mask = new boolean[n];
-    for (Domain contact : contacts) {
+    for (DoubleRange contact : contacts) {
       int minIndex = (int) Math.round((contact.min() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
       int maxIndex = (int) Math.round((contact.max() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
       for (int x = minIndex; x <= Math.min(maxIndex, n - 1); x++) {
@@ -249,20 +249,20 @@ public class BehaviorUtils {
     return quantized;
   }
 
-  public static SortedMap<Domain, Double> computeQuantizedSpectrum(
+  public static SortedMap<DoubleRange, Double> computeQuantizedSpectrum(
       SortedMap<Double, Double> signal,
       double minF,
       double maxF,
       int nBins
   ) {
     SortedMap<Double, Double> spectrum = computeSpectrum(signal);
-    SortedMap<Domain, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(Domain::min));
+    SortedMap<DoubleRange, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(DoubleRange::min));
     double binSpan = (maxF - minF) / (double) nBins;
     for (int i = 0; i < nBins; i++) {
       double binMinF = minF + binSpan * (double) i;
       double binMaxF = minF + binSpan * ((double) i + 1d);
       qSpectrum.put(
-          Domain.of(binMinF, binMaxF),
+          DoubleRange.of(binMinF, binMaxF),
           spectrum.subMap(binMinF, binMaxF).values().stream()
               .mapToDouble(d -> d)
               .average()

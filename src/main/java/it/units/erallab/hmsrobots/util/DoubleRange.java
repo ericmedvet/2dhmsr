@@ -20,16 +20,37 @@ package it.units.erallab.hmsrobots.util;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public record Domain(double min, double max) implements Serializable {
+public record DoubleRange(double min, double max) implements Serializable {
 
-  public static Domain of(double min, double max) {
-    return new Domain(min, max);
+  public DoubleRange {
+    if (max < min) {
+      throw new IllegalArgumentException(String.format("Max has to be lower or equal than min; %f is not than %f.",
+          max,
+          min
+      ));
+    }
   }
 
-  public static Domain[] of(double min, double max, int n) {
-    Domain[] domains = new Domain[n];
-    Arrays.fill(domains, Domain.of(min, max));
+  public static DoubleRange of(double min, double max) {
+    return new DoubleRange(min, max);
+  }
+
+  public static DoubleRange[] of(double min, double max, int n) {
+    DoubleRange[] domains = new DoubleRange[n];
+    Arrays.fill(domains, DoubleRange.of(min, max));
     return domains;
+  }
+
+  public double clip(double value) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  public double normalize(double value) {
+    return (clip(value) - min) / (max - min);
+  }
+
+  public double extent() {
+    return max - min;
   }
 
 }
