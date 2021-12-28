@@ -41,8 +41,8 @@ public class PosesController extends AbstractController<ControllableVoxel> {
     int poseIndex = (int) Math.round(t / stepT) % poses.size();
     Grid<Double> values = Grid.create(voxels, v -> -1d);
     for (Grid.Key key : poses.get(poseIndex)) {
-      if (key.getX() >= 0 && key.getX() < values.getW() && key.getY() >= 0 && key.getY() < values.getH()) {
-        values.set(key.getX(), key.getY(), 1d);
+      if (key.x() >= 0 && key.x() < values.getW() && key.y() >= 0 && key.y() < values.getH()) {
+        values.set(key.x(), key.y(), 1d);
       }
     }
     return values;

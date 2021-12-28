@@ -229,14 +229,14 @@ public class Starter {
     for (Grid.Entry<? extends SensingVoxel> entry : body) {
       MultiLayerPerceptron mlp = new MultiLayerPerceptron(
           MultiLayerPerceptron.ActivationFunction.TANH,
-          distributedSensing.nOfInputs(entry.getX(), entry.getY()),
+          distributedSensing.nOfInputs(entry.key().x(), entry.key().y()),
           new int[]{2},
-          distributedSensing.nOfOutputs(entry.getX(), entry.getY())
+          distributedSensing.nOfOutputs(entry.key().x(), entry.key().y())
       );
       double[] ws = mlp.getParams();
       IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
       mlp.setParams(ws);
-      distributedSensing.getFunctions().set(entry.getX(), entry.getY(), mlp);
+      distributedSensing.getFunctions().set(entry.key().x(), entry.key().y(), mlp);
     }
     Robot<SensingVoxel> distHetero = new Robot<>(
         distributedSensing,

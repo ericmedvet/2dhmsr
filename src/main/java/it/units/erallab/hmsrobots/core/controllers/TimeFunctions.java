@@ -52,10 +52,10 @@ public class TimeFunctions extends AbstractController<ControllableVoxel> impleme
     Grid<Double> controlSignals = Grid.create(voxels.getW(), voxels.getH());
     int c = 0;
     for (Grid.Entry<? extends ControllableVoxel> entry : voxels) {
-      SerializableFunction<Double, Double> function = functions.get(entry.getX(), entry.getY());
-      if ((entry.getValue() != null) && (function != null)) {
+      SerializableFunction<Double, Double> function = functions.get(entry.key().x(), entry.key().y());
+      if ((entry.value() != null) && (function != null)) {
         double v = function.apply(t);
-        controlSignals.set(entry.getX(), entry.getY(), v);
+        controlSignals.set(entry.key().x(), entry.key().y(), v);
         outputs[c] = v;
         c = c + 1;
       }

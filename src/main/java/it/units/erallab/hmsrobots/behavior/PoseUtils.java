@@ -51,7 +51,7 @@ public class PoseUtils {
 
     @Override
     public double[] getPoint() {
-      return new double[]{key.getX(), key.getY()};
+      return new double[]{key.x(), key.y()};
     }
   }
 
@@ -79,27 +79,30 @@ public class PoseUtils {
 
   public static Set<Set<Grid.Key>> computeCardinalPoses(Grid<Boolean> shape) {
     Set<Grid.Key> left = shape.stream()
-        .filter(e -> e.getX() < shape.getW() / 4d)
-        .filter(Grid.Entry::getValue)
+        .filter(e -> e.key().x() < shape.getW() / 4d)
+        .filter(Grid.Entry::value)
+        .map(Grid.Entry::key)
         .collect(Collectors.toSet());
     Set<Grid.Key> right = shape.stream()
-        .filter(e -> e.getX() >= shape.getW() * 3d / 4d)
-        .filter(Grid.Entry::getValue)
+        .filter(e -> e.key().x() >= shape.getW() * 3d / 4d)
+        .filter(Grid.Entry::value)
+        .map(Grid.Entry::key)
         .collect(Collectors.toSet());
     Set<Grid.Key> center = shape.stream()
-        .filter(e -> e.getX() >= shape.getW() / 4d && e.getX() < shape.getW() * 3d / 4d)
-        .filter(Grid.Entry::getValue)
+        .filter(e -> e.key().x() >= shape.getW() / 4d && e.key().x() < shape.getW() * 3d / 4d)
+        .filter(Grid.Entry::value)
+        .map(Grid.Entry::key)
         .collect(Collectors.toSet());
-    double midCenterY = center.stream().mapToDouble(Grid.Key::getY).average().orElse(0d);
-    Set<Grid.Key> top = center.stream().filter(e -> e.getY() <= midCenterY).collect(Collectors.toSet());
-    Set<Grid.Key> bottom = center.stream().filter(e -> e.getY() > midCenterY).collect(Collectors.toSet());
+    double midCenterY = center.stream().mapToDouble(Grid.Key::x).average().orElse(0d);
+    Set<Grid.Key> top = center.stream().filter(k -> k.y() <= midCenterY).collect(Collectors.toSet());
+    Set<Grid.Key> bottom = center.stream().filter(k -> k.y() > midCenterY).collect(Collectors.toSet());
     return new LinkedHashSet<>(List.of(left, top, bottom, right));
   }
 
   public static Set<Set<Grid.Key>> computeClusteredByPositionPoses(Grid<Boolean> shape, int n, int seed) {
     Collection<ClusterableGridKey> points = shape.stream()
-        .filter(Grid.Entry::getValue)
-        .map(ClusterableGridKey::new)
+        .filter(Grid.Entry::value)
+        .map(e -> new ClusterableGridKey(e.key()))
         .toList();
     KMeansPlusPlusClusterer<ClusterableGridKey> clusterer = new KMeansPlusPlusClusterer<>(
         n,

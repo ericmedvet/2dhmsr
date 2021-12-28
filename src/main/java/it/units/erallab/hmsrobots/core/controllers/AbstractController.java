@@ -28,8 +28,8 @@ public abstract class AbstractController<V extends ControllableVoxel> implements
   public void control(double t, Grid<? extends V> voxels) {
     Grid<Double> controlSignals = computeControlSignals(t, voxels);
     voxels.forEach(e -> {
-      if (e.getValue() != null) {
-        e.getValue().applyForce(controlSignals.get(e.getX(), e.getY()));
+      if (e.value() != null) {
+        e.value().applyForce(controlSignals.get(e.key().x(), e.key().y()));
       }
     });
   }

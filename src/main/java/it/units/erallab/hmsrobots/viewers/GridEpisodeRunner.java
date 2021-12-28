@@ -42,9 +42,7 @@ public class GridEpisodeRunner<S> implements Runnable {
     try {
       LogManager.getLogManager()
           .readConfiguration(GridEpisodeRunner.class.getClassLoader().getResourceAsStream("logging.properties"));
-    } catch (IOException ex) {
-      //ignore
-    } catch (SecurityException ex) {
+    } catch (IOException | SecurityException ex) {
       //ignore
     }
   }
@@ -71,24 +69,24 @@ public class GridEpisodeRunner<S> implements Runnable {
     //start episodes
     List<Future<?>> results = new ArrayList<>();
     namedSolutionGrid.stream()
-        .filter(p -> p.getValue() != null && p.getValue().getRight() != null)
+        .filter(p -> p.value() != null && p.value().getRight() != null)
         .forEach(entry -> {
           results.add(executor.submit(() -> {
             L.fine(String.format(
                 "Starting %s in position (%d,%d)",
                 episode.getClass().getSimpleName(),
-                entry.getX(),
-                entry.getY()
+                entry.key().x(),
+                entry.key().y()
             ));
             Object outcome = episode.apply(
-                entry.getValue().getRight(),
-                gridSnapshotListener.listener(entry.getX(), entry.getY())
+                entry.value().getRight(),
+                gridSnapshotListener.listener(entry.key().x(), entry.key().y())
             );
             L.fine(String.format(
                 "Ended %s in position (%d,%d) with outcome %s",
                 episode.getClass().getSimpleName(),
-                entry.getX(),
-                entry.getY(),
+                entry.key().x(),
+                entry.key().y(),
                 outcome
             ));
           }));

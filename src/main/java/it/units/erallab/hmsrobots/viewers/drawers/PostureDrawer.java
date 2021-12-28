@@ -93,10 +93,10 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
     //draw data
     double l = pBB.width() / (double) n;
     average.forEach(e -> {
-      if (!isBoolean || e.getValue() > 0.5d) {
-        double minX = pBB.min().x() + (double) e.getX() / (double) n * pBB.width();
-        double minY = pBB.min().y() + (n - (double) e.getY() - 1) / (double) n * pBB.width();
-        g.setColor(isBoolean ? dataColor : DrawingUtils.alphaed(dataColor, e.getValue().floatValue()));
+      if (!isBoolean || e.value() > 0.5d) {
+        double minX = pBB.min().x() + (double) e.key().x() / (double) n * pBB.width();
+        double minY = pBB.min().y() + (n - (double) e.key().y() - 1) / (double) n * pBB.width();
+        g.setColor(isBoolean ? dataColor : DrawingUtils.alphaed(dataColor, e.value().floatValue()));
         g.fill(new Rectangle2D.Double(minX, minY, l, l));
       }
     });

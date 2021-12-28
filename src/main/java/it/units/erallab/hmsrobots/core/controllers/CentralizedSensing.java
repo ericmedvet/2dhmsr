@@ -103,9 +103,9 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
     Grid<Double> controlSignals = Grid.create(voxels.getW(), voxels.getH());
     int c = 0;
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
-      if (entry.getValue() != null) {
+      if (entry.value() != null) {
         if (c < outputs.length) {
-          controlSignals.set(entry.getX(), entry.getY(), outputs[c]);
+          controlSignals.set(entry.key().x(), entry.key().y(), outputs[c]);
           c = c + 1;
         }
       }

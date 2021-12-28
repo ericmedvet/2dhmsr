@@ -103,21 +103,21 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
             synchronized (queueGrid) {
               for (Grid.Entry<Queue<TimedSnapshot>> entry : queueGrid) {
                 TimedSnapshot snapshot;
-                while ((snapshot = entry.getValue().peek()) != null) {
+                while ((snapshot = entry.value().peek()) != null) {
                   if (snapshot.t < t) {
-                    entry.getValue().poll();
+                    entry.value().poll();
                   } else {
                     break;
                   }
                 }
-                snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
+                snapshotGrid.set(entry.key().x(), entry.key().y(), snapshot);
               }
             }
             boolean ready = true;
             for (Grid.Entry<Queue<TimedSnapshot>> entry : queueGrid) {
-              ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(
-                  entry.getX(),
-                  entry.getY()
+              ready = ready && ((namesGrid.get(entry.key().x(), entry.key().y()) == null) || (snapshotGrid.get(
+                  entry.key().x(),
+                  entry.key().y()
               ) != null));
             }
             if (ready) {
@@ -142,7 +142,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     );
   }
 
-  private static class TimedSnapshot {
+  private static class TimedSnapshot { // TODO to record
     private final double t;
     private final Snapshot snapshot;
 
@@ -208,8 +208,8 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
     //iterate over snapshot grid
     for (Grid.Entry<TimedSnapshot> entry : localSnapshotGrid) {
-      if (entry.getValue() != null) {
-        drawersGrid.get(entry.getX(), entry.getY()).draw(entry.getValue().t, entry.getValue().snapshot, g);
+      if (entry.value() != null) {
+        drawersGrid.get(entry.key().x(), entry.key().y()).draw(entry.value().t, entry.value().snapshot, g);
       }
     }
     //dispose and encode

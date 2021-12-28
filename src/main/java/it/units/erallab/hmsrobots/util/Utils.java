@@ -44,11 +44,11 @@ public class Utils {
     int minY = inGrid.getH();
     int maxY = 0;
     for (Grid.Entry<K> entry : inGrid) {
-      if (p.test(entry.getValue())) {
-        minX = Math.min(minX, entry.getX());
-        maxX = Math.max(maxX, entry.getX());
-        minY = Math.min(minY, entry.getY());
-        maxY = Math.max(maxY, entry.getY());
+      if (p.test(entry.value())) {
+        minX = Math.min(minX, entry.key().x());
+        maxX = Math.max(maxX, entry.key().x());
+        minY = Math.min(minY, entry.key().y());
+        maxY = Math.max(maxY, entry.key().y());
       }
     }
     //build new grid
@@ -63,10 +63,14 @@ public class Utils {
   }
 
   public static <K> Grid<K> gridConnected(Grid<K> kGrid, Comparator<K> comparator, int n) {
-    Comparator<Grid.Entry<K>> entryComparator = (e1, e2) -> comparator.compare(e1.getValue(), e2.getValue());
-    Predicate<Pair<Grid.Entry<?>, Grid.Entry<?>>> adjacencyPredicate = p -> (Math.abs(p.getLeft().getX() - p.getRight()
-        .getX()) <= 1 && p.getLeft().getY() == p.getRight().getY()) || (Math.abs(p.getLeft().getY() - p.getRight()
-        .getY()) <= 1 && p.getLeft().getX() == p.getRight().getX());
+    Comparator<Grid.Entry<K>> entryComparator = (e1, e2) -> comparator.compare(e1.value(), e2.value());
+    Predicate<Pair<Grid.Entry<?>, Grid.Entry<?>>> adjacencyPredicate = p -> (Math.abs(p.getLeft()
+        .key()
+        .x() - p.getRight()
+        .key().x()) <= 1 && p.getLeft().key().y() == p.getRight().key().y()) || (Math.abs(p.getLeft()
+        .key()
+        .y() - p.getRight()
+        .key().y()) <= 1 && p.getLeft().key().x() == p.getRight().key().x());
     Grid.Entry<K> entryFirst = kGrid.stream()
         .min(entryComparator)
         .orElseThrow(() -> new IllegalArgumentException("Grid has no max element"));
@@ -74,7 +78,7 @@ public class Utils {
     selected.add(entryFirst);
     while (selected.size() < n) {
       Set<Grid.Entry<K>> candidates = kGrid.stream()
-          .filter(e -> e.getValue() != null)
+          .filter(e -> e.value() != null)
           .filter(e -> !selected.contains(e))
           .filter(e -> selected.stream().anyMatch(f -> adjacencyPredicate.test(Pair.of(e, f))))
           .collect(Collectors.toSet());
@@ -84,7 +88,7 @@ public class Utils {
       selected.add(candidates.stream().min(entryComparator).orElse(entryFirst));
     }
     Grid<K> outGrid = Grid.create(kGrid.getW(), kGrid.getH());
-    selected.forEach(e -> outGrid.set(e.getX(), e.getY(), e.getValue()));
+    selected.forEach(e -> outGrid.set(e.key().x(), e.key().y(), e.value()));
     return outGrid;
   }
 
@@ -114,8 +118,8 @@ public class Utils {
     //filter map
     Grid<K> filtered = Grid.create(kGrid);
     for (Grid.Entry<Integer> iEntry : iGrid) {
-      if (iEntry.getValue() != null && iEntry.getValue().equals(maxIndex)) {
-        filtered.set(iEntry.getX(), iEntry.getY(), kGrid.get(iEntry.getX(), iEntry.getY()));
+      if (iEntry.value() != null && iEntry.value().equals(maxIndex)) {
+        filtered.set(iEntry.key().x(), iEntry.key().y(), kGrid.get(iEntry.key().x(), iEntry.key().y()));
       }
     }
     return filtered;
@@ -213,11 +217,11 @@ public class Utils {
     while (!none) {
       none = true;
       for (Grid.Entry<Boolean> entry : convexHull) {
-        if (convexHull.get(entry.getX(), entry.getY())) {
+        if (convexHull.get(entry.key().x(), entry.key().y())) {
           continue;
         }
-        int currentX = entry.getX();
-        int currentY = entry.getY();
+        int currentX = entry.key().x();
+        int currentY = entry.key().y();
         int adjacentCount = 0;
         // count how many of the Moore neighbors are true
         for (int i : new int[]{1, -1}) {
@@ -250,7 +254,7 @@ public class Utils {
         }
         // if at least five, fill the cell
         if (adjacentCount >= 5) {
-          convexHull.set(entry.getX(), entry.getY(), true);
+          convexHull.set(entry.key().x(), entry.key().y(), true);
           none = false;
         }
       }
@@ -269,8 +273,8 @@ public class Utils {
       throw new IllegalArgumentException(String.format("Non-positive number of directions provided: %d", n));
     }
     List<Pair<Integer, Integer>> coordinates = posture.stream()
-        .filter(Grid.Entry::getValue)
-        .map(e -> Pair.of(e.getX(), e.getY()))
+        .filter(Grid.Entry::value)
+        .map(e -> Pair.of(e.key().x(), e.key().y()))
         .toList();
     List<Double> diameters = new ArrayList<>();
     for (int i = 0; i < n; ++i) {

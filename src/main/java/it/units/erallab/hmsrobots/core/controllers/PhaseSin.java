@@ -54,11 +54,11 @@ public class PhaseSin extends TimeFunctions {
   ) {
     Grid<SerializableFunction<Double, Double>> functions = Grid.create(phases);
     for (Grid.Entry<Double> entry : phases) {
-      if (entry.getValue() != null) {
+      if (entry.value() != null) {
         functions.set(
-            entry.getX(),
-            entry.getY(),
-            t -> Math.sin(2d * Math.PI * frequency * t + entry.getValue()) * amplitude
+            entry.key().x(),
+            entry.key().y(),
+            t -> Math.sin(2d * Math.PI * frequency * t + entry.value()) * amplitude
         );
       }
     }

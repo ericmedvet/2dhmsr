@@ -44,7 +44,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   private final int h;
 
   @JsonCreator
-  public Grid(@JsonProperty("w") int w, @JsonProperty("h") int h, @JsonProperty("items") List<T> ts) {
+  private Grid(@JsonProperty("w") int w, @JsonProperty("h") int h, @JsonProperty("items") List<T> ts) {
     this.w = w;
     this.h = h;
     this.ts = new ArrayList<>(w * h);
@@ -57,36 +57,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     }
   }
 
-  public static final class Entry<K> extends Key implements Serializable {
-
-    private final K value;
-
-    public Entry(int x, int y, K value) {
-      super(x, y);
-      this.value = value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
-      if (!super.equals(o))
-        return false;
-      Entry<?> entry = (Entry<?>) o;
-      return Objects.equals(value, entry.value);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(super.hashCode(), value);
-    }
-
-    public K getValue() {
-      return value;
-    }
-  }
+  public record Entry<K>(Key key, K value) implements Serializable {}
 
   private static final class GridIterator<K> implements Iterator<Entry<K>> {
 
@@ -107,43 +78,12 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
       int y = Math.floorDiv(c, grid.w);
       int x = c % grid.w;
       c = c + 1;
-      return new Entry<>(x, y, grid.get(x, y));
+      return new Entry<>(new Key(x, y), grid.get(x, y));
     }
 
   }
 
-  public static class Key implements Serializable {
-    private final int x;
-    private final int y;
-
-    public Key(int x, int y) {
-      this.x = x;
-      this.y = y;
-    }
-
-    public int getX() {
-      return x;
-    }
-
-    public int getY() {
-      return y;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(x, y);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
-      Key key = (Key) o;
-      return x == key.x && y == key.y;
-    }
-  }
+  public record Key(int x, int y) implements Serializable {}
 
   public static <K> Grid<K> copy(Grid<K> other) {
     Grid<K> grid = Grid.create(other);
@@ -158,7 +98,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   public static <S, T> Grid<T> create(Grid<S> source, Function<S, T> transformerFunction) {
     Grid<T> target = Grid.create(source);
     for (Grid.Entry<S> entry : source) {
-      target.set(entry.getX(), entry.getY(), transformerFunction.apply(entry.getValue()));
+      target.set(entry.key().x(), entry.key().y(), transformerFunction.apply(entry.value()));
     }
     return target;
   }
@@ -207,18 +147,18 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   public static <K> String toString(Grid<K> grid, Predicate<K> p, String separator) {
-    return toString(grid, (Grid.Entry<K> e) -> p.test(e.getValue()) ? FULL_CELL_CHAR : EMPTY_CELL_CHAR, separator);
+    return toString(grid, (Grid.Entry<K> e) -> p.test(e.value()) ? FULL_CELL_CHAR : EMPTY_CELL_CHAR, separator);
   }
 
   public static <K> String toString(Grid<K> grid, Function<K, Character> function) {
-    return toString(grid, (Grid.Entry<K> e) -> function.apply(e.getValue()), "\n");
+    return toString(grid, (Grid.Entry<K> e) -> function.apply(e.value()), "\n");
   }
 
   public static <K> String toString(Grid<K> grid, Function<Grid.Entry<K>, Character> function, String separator) {
     StringBuilder sb = new StringBuilder();
     for (int y = 0; y < grid.getH(); y++) {
       for (int x = 0; x < grid.getW(); x++) {
-        sb.append(function.apply(new Grid.Entry<>(x, y, grid.get(x, y))));
+        sb.append(function.apply(new Grid.Entry<>(new Key(x, y), grid.get(x, y))));
       }
       if (y < grid.getH() - 1) {
         sb.append(separator);
@@ -323,7 +263,7 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   public boolean[][] toArray(Predicate<T> p) {
     boolean[][] b = new boolean[w][h];
     for (Grid.Entry<T> entry : this) {
-      b[entry.getX()][entry.getY()] = p.test(entry.getValue());
+      b[entry.key().x()][entry.key().y()] = p.test(entry.value);
     }
     return b;
   }

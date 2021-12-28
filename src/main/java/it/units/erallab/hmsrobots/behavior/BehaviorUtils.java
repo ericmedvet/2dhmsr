@@ -58,7 +58,8 @@ public class BehaviorUtils {
   public static Grid<Boolean> computeAveragePosture(Collection<Grid<Boolean>> postures) {
     int w = postures.iterator().next().getW();
     int h = postures.iterator().next().getH();
-    return Grid.create(w,
+    return Grid.create(
+        w,
         h,
         (x, y) -> postures.stream().mapToDouble(p -> p.get(x, y) ? 1d : 0d).average().orElse(0d) > 0.5d
     );
@@ -135,7 +136,8 @@ public class BehaviorUtils {
               .mapToObj(i -> (e.getValue().get(i).max() - e.getValue().get(i).min()) / intervals.get(i))
               .toList();
           double localModeInterval = mode(intervals);
-          return new Gait(e.getKey(),
+          return new Gait(
+              e.getKey(),
               localModeInterval,
               coverages.stream().mapToDouble(d -> d).average().orElse(0d),
               e.getValue().stream().mapToDouble(DoubleRange::extent).sum(),
@@ -147,7 +149,8 @@ public class BehaviorUtils {
   public static Gait computeMainGait(
       double interval, double longestInterval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n
   ) {
-    List<Gait> gaits = computeGaits(computeQuantizedFootprints(interval, polies, n),
+    List<Gait> gaits = computeGaits(
+        computeQuantizedFootprints(interval, polies, n),
         2,
         (int) Math.round(longestInterval / interval),
         interval
@@ -238,7 +241,8 @@ public class BehaviorUtils {
     for (int i = 0; i < nBins; i++) {
       double binMinF = minF + binSpan * (double) i;
       double binMaxF = minF + binSpan * ((double) i + 1d);
-      qSpectrum.put(DoubleRange.of(binMinF, binMaxF),
+      qSpectrum.put(
+          DoubleRange.of(binMinF, binMaxF),
           spectrum.subMap(binMinF, binMaxF).values().stream().mapToDouble(d -> d).average().orElse(0d)
       );
     }
@@ -254,7 +258,8 @@ public class BehaviorUtils {
       }
       previousT = t;
     }
-    return computeSpectrum(signal.values().stream().mapToDouble(d -> d).toArray(),
+    return computeSpectrum(
+        signal.values().stream().mapToDouble(d -> d).toArray(),
         intervals.stream().mapToDouble(d -> d).average().orElse(0d)
     );
   }
@@ -284,8 +289,8 @@ public class BehaviorUtils {
     if (grid.values().stream().noneMatch(Objects::nonNull)) {
       throw new IllegalArgumentException("Cannot get central element of an empty grid");
     }
-    double mX = grid.stream().filter(e -> e.getValue() != null).mapToInt(Grid.Entry::getX).average().orElse(0d);
-    double mY = grid.stream().filter(e -> e.getValue() != null).mapToInt(Grid.Entry::getY).average().orElse(0d);
+    double mX = grid.stream().filter(e -> e.value() != null).mapToInt(e -> e.key().x()).average().orElse(0d);
+    double mY = grid.stream().filter(e -> e.value() != null).mapToInt(e -> e.key().y()).average().orElse(0d);
     double minD = Double.MAX_VALUE;
     int closestX = 0;
     int closestY = 0;
