@@ -17,7 +17,6 @@
 
 package it.units.erallab.hmsrobots.behavior;
 
-import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Shape;
@@ -59,20 +58,17 @@ public class BehaviorUtils {
   public static Grid<Boolean> computeAveragePosture(Collection<Grid<Boolean>> postures) {
     int w = postures.iterator().next().getW();
     int h = postures.iterator().next().getH();
-    return Grid.create(
-        w,
+    return Grid.create(w,
         h,
-        (x, y) -> postures.stream()
-            .mapToDouble(p -> p.get(x, y) ? 1d : 0d)
-            .average()
-            .orElse(0d) > 0.5d
+        (x, y) -> postures.stream().mapToDouble(p -> p.get(x, y) ? 1d : 0d).average().orElse(0d) > 0.5d
     );
   }
 
   public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
     Collection<BoundingBox> boxes = polies.stream()
         .filter(VoxelPoly::isTouchingGround)
-        .map(s -> BoundingBox.of(s.getVertexes())).toList();
+        .map(s -> BoundingBox.of(s.getVertexes()))
+        .toList();
     double robotMinX = boxes.stream()
         .mapToDouble(b -> b.min().x())
         .min()
@@ -81,9 +77,7 @@ public class BehaviorUtils {
         .mapToDouble(b -> b.max().x())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    List<DoubleRange> contacts = boxes.stream()
-        .map(b -> DoubleRange.of(b.min().x(), b.max().x()))
-        .toList();
+    List<DoubleRange> contacts = boxes.stream().map(b -> DoubleRange.of(b.min().x(), b.max().x())).toList();
     boolean[] mask = new boolean[n];
     for (DoubleRange contact : contacts) {
       int minIndex = (int) Math.round((contact.min() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
@@ -96,38 +90,35 @@ public class BehaviorUtils {
   }
 
   public static List<Gait> computeGaits(
-      SortedMap<Double, Footprint> footprints,
-      int minSequenceLength,
-      int maxSequenceLength,
-      double interval
+      SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval
   ) {
     // compute subsequences
-    Map<List<Footprint>, List<Range<Double>>> sequences = new HashMap<>();
+    Map<List<Footprint>, List<DoubleRange>> sequences = new HashMap<>();
     List<Footprint> footprintList = new ArrayList<>(footprints.values());
-    List<Range<Double>> ranges = footprints.keySet().stream()
-        .map(d -> Range.closedOpen(d, d + interval))
+    List<DoubleRange> ranges = footprints.keySet()
+        .stream()
+        .map(d -> DoubleRange.of(d, d + interval))
         .toList(); // list of range of each footprint
     for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
       for (int i = l; i <= footprintList.size(); i++) {
         List<Footprint> sequence = footprintList.subList(i - l, i);
-        List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
+        List<DoubleRange> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
         // make sure there's no overlap
-        if (localRanges.size() == 0 || localRanges.get(localRanges.size() - 1).upperEndpoint() <= ranges.get(i - l)
-            .lowerEndpoint()) {
-          localRanges.add(Range.openClosed(
-              ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
-              ranges.get(i - 1).upperEndpoint() // last t of the last footprint
+        if (localRanges.size() == 0 || localRanges.get(localRanges.size() - 1).max() <= ranges.get(i - l).min()) {
+          localRanges.add(DoubleRange.of(
+              ranges.get(i - l).min(), // first t of the first footprint
+              ranges.get(i - 1).max() // last t of the last footprint
           ));
         }
         sequences.put(sequence, localRanges);
       }
     }
     // compute median interval
-    List<Double> allIntervals = sequences.values().stream()
+    List<Double> allIntervals = sequences.values()
+        .stream()
         .map(l -> IntStream.range(0, l.size() - 1)
-            .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())
-            .toList()
-        ) // stream of List<Double>, each being a list of the intervals of that subsequence
+            .mapToObj(i -> l.get(i + 1).min() - l.get(i).max())
+            .toList()) // stream of List<Double>, each being a list of the intervals of that subsequence
         .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).toList())
         .orElse(List.of());
     if (allIntervals.isEmpty()) {
@@ -135,39 +126,28 @@ public class BehaviorUtils {
     }
     double modeInterval = mode(allIntervals);
     // compute gaits
-    return sequences.entrySet().stream()
-        .filter(e -> e.getValue().size() > 1) // discard subsequences observed only once
+    return sequences.entrySet().stream().filter(e -> e.getValue().size() > 1) // discard subsequences observed only once
         .map(e -> {
-              List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
-                  .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
-                  .toList();
-              List<Double> coverages = IntStream.range(0, intervals.size())
-                  .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue()
-                      .get(i)
-                      .lowerEndpoint()) / intervals.get(i))
-                  .toList();
-              double localModeInterval = mode(intervals);
-              return new Gait(
-                  e.getKey(),
-                  localModeInterval,
-                  coverages.stream().mapToDouble(d -> d).average().orElse(0d),
-                  e.getValue().stream().mapToDouble(r -> r.upperEndpoint() - r.lowerEndpoint()).sum(),
-                  (double) intervals.stream().filter(d -> d == localModeInterval).count() / (double) e.getValue().size()
-              );
-            }
-        )
-        .filter(g -> g.getModeInterval() == modeInterval)
-        .toList();
+          List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
+              .mapToObj(i -> e.getValue().get(i + 1).min() - e.getValue().get(i).max())
+              .toList();
+          List<Double> coverages = IntStream.range(0, intervals.size())
+              .mapToObj(i -> (e.getValue().get(i).max() - e.getValue().get(i).min()) / intervals.get(i))
+              .toList();
+          double localModeInterval = mode(intervals);
+          return new Gait(e.getKey(),
+              localModeInterval,
+              coverages.stream().mapToDouble(d -> d).average().orElse(0d),
+              e.getValue().stream().mapToDouble(DoubleRange::extent).sum(),
+              (double) intervals.stream().filter(d -> d == localModeInterval).count() / (double) e.getValue().size()
+          );
+        }).filter(g -> g.getModeInterval() == modeInterval).toList();
   }
 
   public static Gait computeMainGait(
-      double interval,
-      double longestInterval,
-      SortedMap<Double, Collection<? extends VoxelPoly>> polies,
-      int n
+      double interval, double longestInterval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n
   ) {
-    List<Gait> gaits = computeGaits(
-        computeQuantizedFootprints(interval, polies, n),
+    List<Gait> gaits = computeGaits(computeQuantizedFootprints(interval, polies, n),
         2,
         (int) Math.round(longestInterval / interval),
         interval
@@ -223,13 +203,13 @@ public class BehaviorUtils {
   }
 
   public static SortedMap<Double, Footprint> computeQuantizedFootprints(
-      double interval,
-      SortedMap<Double, Collection<? extends VoxelPoly>> polies,
-      int n
+      double interval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n
   ) {
     SortedMap<Double, Footprint> quantized = new TreeMap<>();
     for (double t = polies.firstKey(); t <= polies.lastKey(); t = t + interval) {
-      List<Footprint> local = polies.subMap(t, t + interval).values().stream()
+      List<Footprint> local = polies.subMap(t, t + interval)
+          .values()
+          .stream()
           .map(voxelPolies -> computeFootprint(voxelPolies, n))
           .toList();
       double[] counts = new double[n];
@@ -250,10 +230,7 @@ public class BehaviorUtils {
   }
 
   public static SortedMap<DoubleRange, Double> computeQuantizedSpectrum(
-      SortedMap<Double, Double> signal,
-      double minF,
-      double maxF,
-      int nBins
+      SortedMap<Double, Double> signal, double minF, double maxF, int nBins
   ) {
     SortedMap<Double, Double> spectrum = computeSpectrum(signal);
     SortedMap<DoubleRange, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(DoubleRange::min));
@@ -261,12 +238,8 @@ public class BehaviorUtils {
     for (int i = 0; i < nBins; i++) {
       double binMinF = minF + binSpan * (double) i;
       double binMaxF = minF + binSpan * ((double) i + 1d);
-      qSpectrum.put(
-          DoubleRange.of(binMinF, binMaxF),
-          spectrum.subMap(binMinF, binMaxF).values().stream()
-              .mapToDouble(d -> d)
-              .average()
-              .orElse(0d)
+      qSpectrum.put(DoubleRange.of(binMinF, binMaxF),
+          spectrum.subMap(binMinF, binMaxF).values().stream().mapToDouble(d -> d).average().orElse(0d)
       );
     }
     return qSpectrum;
@@ -281,8 +254,7 @@ public class BehaviorUtils {
       }
       previousT = t;
     }
-    return computeSpectrum(
-        signal.values().stream().mapToDouble(d -> d).toArray(),
+    return computeSpectrum(signal.values().stream().mapToDouble(d -> d).toArray(),
         intervals.stream().mapToDouble(d -> d).average().orElse(0d)
     );
   }
@@ -303,10 +275,7 @@ public class BehaviorUtils {
         .subList(0, paddedSize / 2 + 1);
     SortedMap<Double, Double> spectrum = new TreeMap<>();
     for (int i = 0; i < f.size(); i++) {
-      spectrum.put(
-          1d / dT / 2d * (double) i / (double) f.size(),
-          f.get(i)
-      );
+      spectrum.put(1d / dT / 2d * (double) i / (double) f.size(), f.get(i));
     }
     return spectrum;
   }
