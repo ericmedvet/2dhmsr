@@ -18,8 +18,7 @@ package it.units.erallab.hmsrobots.core.geometry;
 
 import java.io.Serializable;
 
-public record BoundingBox(Point2 min,
-                          Point2 max) implements Shape, Serializable {
+public record BoundingBox(Point2 min, Point2 max) implements Shape, Serializable {
 
   public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
     return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
@@ -39,17 +38,11 @@ public record BoundingBox(Point2 min,
       minY = Math.min(minY, point.y());
       maxY = Math.max(maxY, point.y());
     }
-    return new BoundingBox(
-        Point2.of(minX, minY),
-        Point2.of(maxX, maxY)
-    );
+    return new BoundingBox(Point2.of(minX, minY), Point2.of(maxX, maxY));
   }
 
   public static BoundingBox of(double minX, double minY, double maxX, double maxY) {
-    return of(
-        Point2.of(minX, minY),
-        Point2.of(maxX, maxY)
-    );
+    return of(Point2.of(minX, minY), Point2.of(maxX, maxY));
   }
 
   @Override
@@ -60,6 +53,11 @@ public record BoundingBox(Point2 min,
   @Override
   public Point2 center() {
     return Point2.of((min.x() + max.x()) / 2d, (min.y() + max.x()) / 2d);
+  }
+
+  @Override
+  public double area() {
+    return width() * height();
   }
 
   public double height() {

@@ -44,6 +44,7 @@ public class RobotShape implements Shape {
     return boundingBox.center();
   }
 
+
   public Grid<? extends VoxelPoly> getPolies() {
     return polies;
   }

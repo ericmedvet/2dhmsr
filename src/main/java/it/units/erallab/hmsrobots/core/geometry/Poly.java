@@ -25,6 +25,7 @@ public record Poly(Point2[] vertexes) implements Shape {
     return new Poly(vertexes);
   }
 
+  @Override
   public double area() {
     double a = 0d;
     int l = vertexes.length;
