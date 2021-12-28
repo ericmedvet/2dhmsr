@@ -68,15 +68,15 @@ public class LidarDrawer extends SubtreeDrawer {
         g.draw(DrawingUtils.toPath(
             center,
             Point2.of(
-                center.x + rayLength * Math.cos(direction),
-                center.y + rayLength * Math.sin(direction)
+                center.x() + rayLength * Math.cos(direction),
+                center.y() + rayLength * Math.sin(direction)
             )
         ));
         // draw only hits
         if (rayHits[rayIdx] < rayLength) {
           g.draw(new Ellipse2D.Double(
-              center.x + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
-              center.y + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
+              center.x() + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
+              center.y() + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
               CIRCLE_SIZE,
               CIRCLE_SIZE
           ));

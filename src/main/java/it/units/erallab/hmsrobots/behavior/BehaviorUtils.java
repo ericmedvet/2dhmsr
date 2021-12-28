@@ -50,8 +50,8 @@ public class BehaviorUtils {
     double y = 0d;
     for (Shape shape : shapes) {
       Point2 center = shape.center();
-      x = x + center.x;
-      y = y + center.y;
+      x = x + center.x();
+      y = y + center.y();
     }
     return Point2.of(x / (double) shapes.size(), y / (double) shapes.size());
   }
@@ -72,16 +72,16 @@ public class BehaviorUtils {
   public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
     Collection<BoundingBox> boxes = polies.stream().map(Shape::boundingBox).collect(Collectors.toList());
     double robotMinX = boxes.stream()
-        .mapToDouble(b -> b.min.x)
+        .mapToDouble(b -> b.min().x())
         .min()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     double robotMaxX = boxes.stream()
-        .mapToDouble(b -> b.max.x)
+        .mapToDouble(b -> b.max().x())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     List<Domain> contacts = polies.stream()
         .filter(VoxelPoly::isTouchingGround)
-        .map(s -> Domain.of(s.boundingBox().min.x, s.boundingBox().max.x))
+        .map(s -> Domain.of(s.boundingBox().min().x(), s.boundingBox().max().x()))
         .collect(Collectors.toList());
     boolean[] mask = new boolean[n];
     for (Domain contact : contacts) {
@@ -181,19 +181,19 @@ public class BehaviorUtils {
   public static Grid<Boolean> computePosture(Collection<? extends Shape> shapes, int n) {
     Collection<BoundingBox> boxes = shapes.stream().map(Shape::boundingBox).collect(Collectors.toList());
     double robotMinX = boxes.stream()
-        .mapToDouble(b -> b.min.x)
+        .mapToDouble(b -> b.min().x())
         .min()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     double robotMaxX = boxes.stream()
-        .mapToDouble(b -> b.max.x)
+        .mapToDouble(b -> b.max().x())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     double robotMinY = boxes.stream()
-        .mapToDouble(b -> b.min.y)
+        .mapToDouble(b -> b.min().y())
         .min()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     double robotMaxY = boxes.stream()
-        .mapToDouble(b -> b.max.y)
+        .mapToDouble(b -> b.max().y())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     //adjust box to make it squared
@@ -208,10 +208,10 @@ public class BehaviorUtils {
     }
     Grid<Boolean> mask = Grid.create(n, n, false);
     for (BoundingBox b : boxes) {
-      int minXIndex = (int) Math.round((b.min.x - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      int maxXIndex = (int) Math.round((b.max.x - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      int minYIndex = (int) Math.round((b.min.y - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
-      int maxYIndex = (int) Math.round((b.max.y - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
+      int minXIndex = (int) Math.round((b.min().x() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int maxXIndex = (int) Math.round((b.max().x() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int minYIndex = (int) Math.round((b.min().y() - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
+      int maxYIndex = (int) Math.round((b.max().y() - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
       for (int x = minXIndex; x <= maxXIndex; x++) {
         for (int y = minYIndex; y <= maxYIndex; y++) {
           mask.set(x, y, true);

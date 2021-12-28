@@ -44,7 +44,7 @@ public class Poly implements Shape {
     double a = 0d;
     int l = vertexes.length;
     for (int i = 0; i < l; i++) {
-      a = a + vertexes[i].x * (vertexes[(l + i + 1) % l].y - vertexes[(l + i - 1) % l].y);
+      a = a + vertexes[i].x() * (vertexes[(l + i + 1) % l].y() - vertexes[(l + i - 1) % l].y());
     }
     a = 0.5d * Math.abs(a);
     return a;

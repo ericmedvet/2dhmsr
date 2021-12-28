@@ -18,15 +18,8 @@ package it.units.erallab.hmsrobots.core.geometry;
 
 import java.io.Serializable;
 
-public class BoundingBox implements Shape, Serializable {
-
-  public final Point2 min;
-  public final Point2 max;
-
-  private BoundingBox(Point2 min, Point2 max) {
-    this.min = min;
-    this.max = max;
-  }
+public record BoundingBox(Point2 min,
+                          Point2 max) implements Shape, Serializable {
 
   public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
     return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
@@ -41,10 +34,10 @@ public class BoundingBox implements Shape, Serializable {
     double minY = Double.POSITIVE_INFINITY;
     double maxY = Double.NEGATIVE_INFINITY;
     for (Point2 point : points) {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
+      minX = Math.min(minX, point.x());
+      maxX = Math.max(maxX, point.x());
+      minY = Math.min(minY, point.y());
+      maxY = Math.max(maxY, point.y());
     }
     return new BoundingBox(
         Point2.of(minX, minY),
@@ -66,22 +59,14 @@ public class BoundingBox implements Shape, Serializable {
 
   @Override
   public Point2 center() {
-    return Point2.of((min.x + max.x) / 2d, (min.y + max.x) / 2d);
+    return Point2.of((min.x() + max.x()) / 2d, (min.y() + max.x()) / 2d);
   }
 
   public double height() {
-    return max.y - min.y;
-  }
-
-  @Override
-  public String toString() {
-    return "BoundingBox{" +
-        "min=" + min +
-        ", max=" + max +
-        '}';
+    return max.y() - min.y();
   }
 
   public double width() {
-    return max.x - min.x;
+    return max.x() - min.x();
   }
 }

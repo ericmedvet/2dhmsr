@@ -54,8 +54,8 @@ public interface Drawer {
       double clipW = shape.getBounds2D().getWidth();
       double clipH = shape.getBounds2D().getHeight();
       g.clip(new Rectangle2D.Double(
-          clipX + boundingBox.min.x * clipW,
-          clipY + boundingBox.min.y * clipH,
+          clipX + boundingBox.min().x() * clipW,
+          clipY + boundingBox.min().y() * clipH,
           clipW * boundingBox.width(),
           clipH * boundingBox.height()
       ));
@@ -127,9 +127,9 @@ public interface Drawer {
       double yRatio = graphicsFrame.height() / worldFrame.height();
       double ratio = Math.min(xRatio, yRatio);
       AffineTransform at = new AffineTransform();
-      at.translate(graphicsFrame.min.x, graphicsFrame.min.y);
+      at.translate(graphicsFrame.min().x(), graphicsFrame.min().y());
       at.scale(ratio, -ratio);
-      at.translate(-worldFrame.min.x, -worldFrame.max.y);
+      at.translate(-worldFrame.min().x(), -worldFrame.max().y());
       //apply transform and stroke
       g.setTransform(at);
       g.setStroke(DrawingUtils.getScaleIndependentStroke(1, (float) ratio));

@@ -53,11 +53,11 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
 
   private static Path2D getSector(Point2 c, double r, double a1, double a2) {
     Path2D sector = new Path2D.Double();
-    sector.moveTo(c.x, c.y);
+    sector.moveTo(c.x(), c.y());
     for (double a = a1; a < a2; a = a + ANGLE_RESOLUTION) {
-      sector.lineTo(c.x + r * Math.cos(a), c.y + r * Math.sin(a));
+      sector.lineTo(c.x() + r * Math.cos(a), c.y() + r * Math.sin(a));
     }
-    sector.lineTo(c.x + r * Math.cos(a2), c.y + r * Math.sin(a2));
+    sector.lineTo(c.x() + r * Math.cos(a2), c.y() + r * Math.sin(a2));
     sector.closePath();
     return sector;
   }
@@ -75,12 +75,12 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
     double voxelAngle = Math.atan2(
-        (voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y),
-        (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)
+        (voxelPoly.getVertexes()[1].y() - voxelPoly.getVertexes()[0].y()),
+        (voxelPoly.getVertexes()[1].x() - voxelPoly.getVertexes()[0].x())
     ) / 2d +
         Math.atan2(
-            (voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y),
-            (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)
+            (voxelPoly.getVertexes()[2].y() - voxelPoly.getVertexes()[3].y()),
+            (voxelPoly.getVertexes()[2].x() - voxelPoly.getVertexes()[3].x())
         ) / 2d;
     double angle = ROTATED ? voxelAngle : 0d;
     double sensorSliceAngle = SPAN_ANGLE / (double) readings.size();

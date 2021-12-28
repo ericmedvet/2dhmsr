@@ -103,16 +103,16 @@ public class InfoDrawer implements Drawer {
         if (robotInfos.contains(RobotInfo.CENTER_POSITION)) {
           sb.append(String.format(
               " pos=(%5.1f,%5.1f)",
-              currentPos.x,
-              currentPos.y
+              currentPos.x(),
+              currentPos.y()
           ));
         }
         if (robotInfos.contains(RobotInfo.CENTER_VELOCITY)) {
           sb.append(String.format(
               " vel[%.0f]=(%+5.1f,%+5.1f)%n",
               windowT,
-              (currentPos.x - oldestPos.x) / windowT,
-              (currentPos.y - oldestPos.y) / windowT
+              (currentPos.x() - oldestPos.x()) / windowT,
+              (currentPos.y() - oldestPos.y()) / windowT
           ));
         }
       }

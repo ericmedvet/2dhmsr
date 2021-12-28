@@ -169,11 +169,11 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     robot.reset();
     //position robot: translate on x
     BoundingBox boundingBox = robot.boundingBox();
-    robot.translate(new Vector2(initialPlacement - boundingBox.min.x, 0));
+    robot.translate(new Vector2(initialPlacement - boundingBox.min().x(), 0));
     //translate on y
     double minYGap = robot.getVoxels().values().stream()
         .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min.y - ground.yAt(v.getCenter().x))
+        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.getCenter().x))
         .min().orElse(0d);
     robot.translate(new Vector2(0, INITIAL_PLACEMENT_Y_GAP - minYGap));
     //get initial x

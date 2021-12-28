@@ -21,15 +21,7 @@ import org.dyn4j.geometry.Vector2;
 /**
  * @author eric
  */
-public class Point2 implements Shape {
-
-  public final double x;
-  public final double y;
-
-  private Point2(double x, double y) {
-    this.x = x;
-    this.y = y;
-  }
+public record Point2(double x, double y) implements Shape {
 
   public static Point2 average(Point2... points) {
     double cx = 0;

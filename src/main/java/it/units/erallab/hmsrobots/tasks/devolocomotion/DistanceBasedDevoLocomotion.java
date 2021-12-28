@@ -104,7 +104,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
     Map<Double, Outcome.Observation> observations = new HashMap<>();
     double t = 0d;
     double stageT = t;
-    double stageX = robot.boundingBox().min.x;
+    double stageX = robot.boundingBox().min().x();
     List<Double> targetXs = new ArrayList<>();
     CurrentTarget currentTarget = new CurrentTarget(targetXs);
     targetXs.add(stageX);
@@ -132,7 +132,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
         break;
       }
       //check if develop
-      if (robot.boundingBox().min.x - stageX > stageMinDistance) {
+      if (robot.boundingBox().min().x() - stageX > stageMinDistance) {
         stageT = t;
         //save outcome
         DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(
@@ -142,7 +142,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
         devoOutcome.addDevoStageOutcome(devoStageOutcome);
         observations = new HashMap<>();
         //develop
-        double minX = robot.boundingBox().min.x;
+        double minX = robot.boundingBox().min().x();
         robot = solution.apply(robot);
         //place
         world.removeAllBodies();

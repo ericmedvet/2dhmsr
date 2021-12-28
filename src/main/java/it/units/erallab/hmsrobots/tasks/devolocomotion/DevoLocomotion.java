@@ -52,11 +52,11 @@ public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
     ground.addTo(world);
     robot.addTo(world);
     //position robot: translate on x
-    robot.translate(new Vector2(newMinX - robot.boundingBox().min.x, 0));
+    robot.translate(new Vector2(newMinX - robot.boundingBox().min().x(), 0));
     //translate on y
     double minYGap = robot.getVoxels().values().stream()
         .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min.y - ground.yAt(v.getCenter().x))
+        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.getCenter().x))
         .min().orElse(0d);
     robot.translate(new Vector2(0, Locomotion.INITIAL_PLACEMENT_Y_GAP - minYGap));
   }

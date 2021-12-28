@@ -83,28 +83,28 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
         g.getClip().getBounds2D().getMaxY()
     );
     BoundingBox pBB = (oBB.width() > oBB.height()) ? BoundingBox.of(
-        oBB.min.x + (oBB.width() - oBB.height()) / 2d + textH,
-        oBB.min.y + textH,
-        oBB.max.x - (oBB.width() - oBB.height()) / 2d - textH,
-        oBB.max.y - textH
+        oBB.min().x() + (oBB.width() - oBB.height()) / 2d + textH,
+        oBB.min().y() + textH,
+        oBB.max().x() - (oBB.width() - oBB.height()) / 2d - textH,
+        oBB.max().y() - textH
     ) : BoundingBox.of(
-        oBB.min.x + textH,
-        oBB.min.y + (oBB.height() - oBB.width()) / 2d + textH,
-        oBB.max.x - textH,
-        oBB.max.y - (oBB.height() - oBB.width()) / 2d - textH
+        oBB.min().x() + textH,
+        oBB.min().y() + (oBB.height() - oBB.width()) / 2d + textH,
+        oBB.max().x() - textH,
+        oBB.max().y() - (oBB.height() - oBB.width()) / 2d - textH
     );
     //draw data
     double l = pBB.width() / (double) n;
     average.forEach(e -> {
       if (!isBoolean || e.getValue() > 0.5d) {
-        double minX = pBB.min.x + (double) e.getX() / (double) n * pBB.width();
-        double minY = pBB.min.y + (n - (double) e.getY() - 1) / (double) n * pBB.width();
+        double minX = pBB.min().x() + (double) e.getX() / (double) n * pBB.width();
+        double minY = pBB.min().y() + (n - (double) e.getY() - 1) / (double) n * pBB.width();
         g.setColor(isBoolean ? dataColor : DrawingUtils.alphaed(dataColor, e.getValue().floatValue()));
         g.fill(new Rectangle2D.Double(minX, minY, l, l));
       }
     });
     //draw box
     g.setColor(axesColor);
-    g.draw(new Rectangle2D.Double(pBB.min.x, pBB.min.y, pBB.width(), pBB.height()));
+    g.draw(new Rectangle2D.Double(pBB.min().x(), pBB.min().y(), pBB.width(), pBB.height()));
   }
 }

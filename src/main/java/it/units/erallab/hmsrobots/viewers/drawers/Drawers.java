@@ -233,7 +233,7 @@ public class Drawers {
                 robotIndex, windowT, minF, maxF, nBins, "vx",
                 () -> BehaviorUtils.voxelPolyGrid()
                     .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(p -> p.getLinearVelocity().x)
+                    .andThen(p -> p.getLinearVelocity().x())
             )
         ),
         Drawer.clip(
@@ -242,7 +242,7 @@ public class Drawers {
                 robotIndex, windowT, minF, maxF, nBins, "vy",
                 () -> BehaviorUtils.voxelPolyGrid()
                     .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(p -> p.getLinearVelocity().y)
+                    .andThen(p -> p.getLinearVelocity().y())
             )
         ),
         Drawer.clip(

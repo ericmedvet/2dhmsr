@@ -120,7 +120,7 @@ public class TimeBasedDevoLocomotion extends DevoLocomotion {
         devoOutcome.addDevoStageOutcome(devoStageOutcome);
         observations = new HashMap<>();
         //develop
-        double minX = robot.boundingBox().min.x;
+        double minX = robot.boundingBox().min().x();
         robot = solution.apply(robot);
         //place
         world.removeAllBodies();

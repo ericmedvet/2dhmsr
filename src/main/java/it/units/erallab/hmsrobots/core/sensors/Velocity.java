@@ -68,7 +68,7 @@ public class Velocity extends AbstractSensor {
     double[] values = new double[domains.length];
     int c = 0;
     Point2 linearVelocity = voxel.getLinearVelocity();
-    Vector2 velocity = new Vector2(linearVelocity.x, linearVelocity.y);
+    Vector2 velocity = new Vector2(linearVelocity.x(), linearVelocity.y());
     double angle = voxel.getAngle();
     if (axes.contains(Axis.X)) {
       if (!rotated) {

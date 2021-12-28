@@ -90,9 +90,9 @@ public class DrawingUtils {
 
   public static Path2D toPath(Point2... points) {
     Path2D path = new Path2D.Double();
-    path.moveTo(points[0].x, points[0].y);
+    path.moveTo(points[0].x(), points[0].y());
     for (int i = 1; i < points.length; i++) {
-      path.lineTo(points[i].x, points[i].y);
+      path.lineTo(points[i].x(), points[i].y());
     }
     return path;
   }

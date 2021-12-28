@@ -102,7 +102,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(
         observations.entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().x
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().x()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -111,7 +111,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(
         observations.entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().x
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().x()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -120,7 +120,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(
         observations.entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().y
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().y()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -129,7 +129,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(
         observations.entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().y
+            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().y()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -172,7 +172,7 @@ public class Outcome {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList()));
-    return finalCenter.x - initialCenter.x;
+    return finalCenter.x() - initialCenter.x();
   }
 
   public List<SortedMap<Domain, Double>> getFootprintsSpectra(int n, double minF, double maxF, int nBins) {

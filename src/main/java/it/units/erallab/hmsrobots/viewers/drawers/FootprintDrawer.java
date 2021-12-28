@@ -78,10 +78,10 @@ public class FootprintDrawer extends MemoryDrawer<Footprint> {
         g.getClip().getBounds2D().getMaxY()
     );
     BoundingBox pBB = BoundingBox.of(
-        oBB.min.x,
-        oBB.min.y + textH,
-        oBB.max.x,
-        oBB.max.y - 3 * textH
+        oBB.min().x(),
+        oBB.min().y() + textH,
+        oBB.max().x(),
+        oBB.max().y() - 3 * textH
     );
     //draw data
     g.setColor(touchColor);
@@ -89,27 +89,27 @@ public class FootprintDrawer extends MemoryDrawer<Footprint> {
     Footprint[] footprints = memory.values().toArray(Footprint[]::new);
     double h = pBB.height() / (double) n;
     for (int i = 1; i < ts.length; i++) {
-      double x1 = pBB.max.x - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
-      double x2 = pBB.max.x - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
+      double x1 = pBB.max().x() - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
+      double x2 = pBB.max().x() - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
       boolean[] mask = footprints[i].getMask();
       for (int j = 0; j < n; j++) {
         if (mask[j]) {
-          double y1 = pBB.min.y + (double) j / (double) n * pBB.height();
+          double y1 = pBB.min().y() + (double) j / (double) n * pBB.height();
           g.fill(new Rectangle2D.Double(x1, y1, x2 - x1, h));
         }
       }
     }
     //draw x-axis
     g.setColor(axesColor);
-    g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
+    g.draw(new Line2D.Double(pBB.min().x(), pBB.max().y(), pBB.max().x(), pBB.max().y()));
     double maxT = memory.lastKey();
     for (double tickT = Math.ceil(maxT - windowT); tickT < maxT; tickT++) {
       g.setColor(axesColor);
-      double x = (tickT - maxT + windowT) / windowT * (pBB.max.x - pBB.min.x) + pBB.min.x;
-      g.draw(new Line2D.Double(x, pBB.max.y, x, pBB.max.y + textH));
+      double x = (tickT - maxT + windowT) / windowT * (pBB.max().x() - pBB.min().x()) + pBB.min().x();
+      g.draw(new Line2D.Double(x, pBB.max().y(), x, pBB.max().y() + textH));
       g.setColor(textColor);
       String s = String.format("%.0f", tickT);
-      g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max.y + 2 * textH));
+      g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max().y() + 2 * textH));
     }
 
   }
