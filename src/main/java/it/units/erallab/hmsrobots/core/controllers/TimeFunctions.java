@@ -63,10 +63,6 @@ public class TimeFunctions extends AbstractController<ControllableVoxel> impleme
     return controlSignals;
   }
 
-  @Override
-  public void reset() {
-  }
-
   public Grid<SerializableFunction<Double, Double>> getFunctions() {
     return functions;
   }
@@ -77,6 +73,10 @@ public class TimeFunctions extends AbstractController<ControllableVoxel> impleme
         new StackedScopedReadings(new ScopedReadings(outputs, Domain.of(-1d, 1d, outputs.length))),
         getClass()
     );
+  }
+
+  @Override
+  public void reset() {
   }
 
   @Override

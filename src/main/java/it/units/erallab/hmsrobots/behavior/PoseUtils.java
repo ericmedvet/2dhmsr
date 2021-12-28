@@ -39,6 +39,9 @@ import java.util.stream.Collectors;
  */
 public class PoseUtils {
 
+  private PoseUtils() {
+  }
+
   private static class ClusterableGridKey implements Clusterable {
     private final Grid.Key key;
 
@@ -67,28 +70,58 @@ public class PoseUtils {
     }
   }
 
-  private PoseUtils() {
+  private static <K extends Clusterable> K center(CentroidCluster<K> cluster, DistanceMeasure d) {
+    return cluster.getPoints()
+        .stream()
+        .min(Comparator.comparingDouble(k -> d.compute(k.getPoint(), cluster.getCenter().getPoint())))
+        .orElseThrow();
   }
 
   public static Set<Set<Grid.Key>> computeCardinalPoses(Grid<Boolean> shape) {
-    Set<Grid.Key> left = shape.stream().filter(e -> e.getX() < shape.getW() / 4d).filter(Grid.Entry::getValue).collect(Collectors.toSet());
-    Set<Grid.Key> right = shape.stream().filter(e -> e.getX() >= shape.getW() * 3d / 4d).filter(Grid.Entry::getValue).collect(Collectors.toSet());
-    Set<Grid.Key> center = shape.stream().filter(e -> e.getX() >= shape.getW() / 4d && e.getX() < shape.getW() * 3d / 4d).filter(Grid.Entry::getValue).collect(Collectors.toSet());
+    Set<Grid.Key> left = shape.stream()
+        .filter(e -> e.getX() < shape.getW() / 4d)
+        .filter(Grid.Entry::getValue)
+        .collect(Collectors.toSet());
+    Set<Grid.Key> right = shape.stream()
+        .filter(e -> e.getX() >= shape.getW() * 3d / 4d)
+        .filter(Grid.Entry::getValue)
+        .collect(Collectors.toSet());
+    Set<Grid.Key> center = shape.stream()
+        .filter(e -> e.getX() >= shape.getW() / 4d && e.getX() < shape.getW() * 3d / 4d)
+        .filter(Grid.Entry::getValue)
+        .collect(Collectors.toSet());
     double midCenterY = center.stream().mapToDouble(Grid.Key::getY).average().orElse(0d);
     Set<Grid.Key> top = center.stream().filter(e -> e.getY() <= midCenterY).collect(Collectors.toSet());
     Set<Grid.Key> bottom = center.stream().filter(e -> e.getY() > midCenterY).collect(Collectors.toSet());
     return new LinkedHashSet<>(List.of(left, top, bottom, right));
   }
 
-  public static Grid<Boolean> computeDynamicPosture(Grid<Boolean> shape, Set<Grid.Key> pose, ControllableVoxel voxelPrototype, double finalT, int gridSize) {
-    Grid<ControllableVoxel> body = Grid.create(shape, b -> b ? SerializationUtils.clone(voxelPrototype) : null);
-    PosesController controller = new PosesController(0.5d, List.of(pose));
-    Robot<ControllableVoxel> robot = new Robot<>(controller, body);
-    FinalPosture finalPosture = new FinalPosture(gridSize, finalT);
-    return finalPosture.apply(robot);
+  public static Set<Set<Grid.Key>> computeClusteredByPositionPoses(Grid<Boolean> shape, int n, int seed) {
+    Collection<ClusterableGridKey> points = shape.stream()
+        .filter(Grid.Entry::getValue)
+        .map(ClusterableGridKey::new)
+        .collect(Collectors.toList());
+    KMeansPlusPlusClusterer<ClusterableGridKey> clusterer = new KMeansPlusPlusClusterer<>(
+        n,
+        -1,
+        new EuclideanDistance(),
+        new JDKRandomGenerator(seed)
+    );
+    List<CentroidCluster<ClusterableGridKey>> clusters = clusterer.cluster(points);
+    return clusters.stream()
+        .map(c -> c.getPoints().stream().map(cgk -> cgk.key).collect(Collectors.toSet()))
+        .collect(Collectors.toSet());
   }
 
-  public static Set<Set<Grid.Key>> computeClusteredByPosturePoses(Grid<Boolean> shape, Set<Set<Grid.Key>> startingPoses, int n, int seed, ControllableVoxel voxelPrototype, double finalT, int gridSize) {
+  public static Set<Set<Grid.Key>> computeClusteredByPosturePoses(
+      Grid<Boolean> shape,
+      Set<Set<Grid.Key>> startingPoses,
+      int n,
+      int seed,
+      ControllableVoxel voxelPrototype,
+      double finalT,
+      int gridSize
+  ) {
     List<Set<Grid.Key>> sPoses = new ArrayList<>(startingPoses);
     List<Set<Grid.Key>> allPoses = new ArrayList<>((int) Math.pow(2, sPoses.size()));
     //build expanded poses (2^|poses.size|)
@@ -103,23 +136,33 @@ public class PoseUtils {
       allPoses.add(combinedPose);
     }
     //compute all postures
-    Collection<ClusterablePosture> points = allPoses.stream().map(p -> new ClusterablePosture(p, computeDynamicPosture(shape, p, voxelPrototype, finalT, gridSize))).collect(Collectors.toList());
+    Collection<ClusterablePosture> points = allPoses.stream()
+        .map(p -> new ClusterablePosture(p, computeDynamicPosture(shape, p, voxelPrototype, finalT, gridSize)))
+        .collect(Collectors.toList());
     //cluster postures in nPoses clusters
-    KMeansPlusPlusClusterer<ClusterablePosture> clusterer = new KMeansPlusPlusClusterer<>(n, -1, new ManhattanDistance(), new JDKRandomGenerator(seed));
+    KMeansPlusPlusClusterer<ClusterablePosture> clusterer = new KMeansPlusPlusClusterer<>(
+        n,
+        -1,
+        new ManhattanDistance(),
+        new JDKRandomGenerator(seed)
+    );
     List<CentroidCluster<ClusterablePosture>> clusters = clusterer.cluster(points);
     //find representatives
     return clusters.stream().map(c -> center(c, new ManhattanDistance()).pose).collect(Collectors.toSet());
   }
 
-  private static <K extends Clusterable> K center(CentroidCluster<K> cluster, DistanceMeasure d) {
-    return cluster.getPoints().stream().min(Comparator.comparingDouble(k -> d.compute(k.getPoint(), cluster.getCenter().getPoint()))).orElseThrow();
-  }
-
-  public static Set<Set<Grid.Key>> computeClusteredByPositionPoses(Grid<Boolean> shape, int n, int seed) {
-    Collection<ClusterableGridKey> points = shape.stream().filter(Grid.Entry::getValue).map(ClusterableGridKey::new).collect(Collectors.toList());
-    KMeansPlusPlusClusterer<ClusterableGridKey> clusterer = new KMeansPlusPlusClusterer<>(n, -1, new EuclideanDistance(), new JDKRandomGenerator(seed));
-    List<CentroidCluster<ClusterableGridKey>> clusters = clusterer.cluster(points);
-    return clusters.stream().map(c -> c.getPoints().stream().map(cgk -> cgk.key).collect(Collectors.toSet())).collect(Collectors.toSet());
+  public static Grid<Boolean> computeDynamicPosture(
+      Grid<Boolean> shape,
+      Set<Grid.Key> pose,
+      ControllableVoxel voxelPrototype,
+      double finalT,
+      int gridSize
+  ) {
+    Grid<ControllableVoxel> body = Grid.create(shape, b -> b ? SerializationUtils.clone(voxelPrototype) : null);
+    PosesController controller = new PosesController(0.5d, List.of(pose));
+    Robot<ControllableVoxel> robot = new Robot<>(controller, body);
+    FinalPosture finalPosture = new FinalPosture(gridSize, finalT);
+    return finalPosture.apply(robot);
   }
 
 }

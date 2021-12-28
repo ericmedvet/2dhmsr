@@ -60,186 +60,6 @@ import java.util.stream.IntStream;
  */
 public class Starter {
 
-  private static void sampleExecution() {
-    final Locomotion locomotion = new Locomotion(
-        20,
-        Locomotion.createTerrain("flat"),
-        new Settings()
-    );
-    Grid<Boolean> shape = RobotUtils.buildShape("worm-5x2");
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
-    Robot<ControllableVoxel> robot = new Robot<>(
-        new TimeFunctions(Grid.create(
-            body.getW(), body.getH(),
-            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) body.getW()))
-        )),
-        body
-    );
-    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
-    );
-    Outcome result = locomotion.apply(robot, framesImageBuilder);
-    BufferedImage image = framesImageBuilder.getImage();
-    System.out.println("Outcome: " + result);
-  }
-
-  public static void main(String[] args) {
-    //bipedWithBrain();
-    //bipeds();
-    //rollingOne();
-    //rollingBall();
-    //breakingWorm();
-    //plainWorm();
-    //cShaped();
-    //multiped();
-    //bipedAndBall();
-    //bipedCentralized();
-    //devoComb();
-    //bipedPoses();
-    sampleExecution();
-  }
-
-  private static void bipedWithBrain() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
-        .apply(RobotUtils.buildShape("biped-7x4"));
-    Random random = new Random();
-    //centralized sensing
-    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-
-    int nOfInputs = centralizedSensing.nOfInputs();
-    int nOfOutputs = centralizedSensing.nOfOutputs();
-    int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
-    int nOfWeights = MultiLayerPerceptron.countWeights(nOfInputs, innerNeurons, nOfOutputs);
-    double[] weights = IntStream.range(0, nOfWeights).mapToDouble(i -> 2 * Math.random() - 1).toArray();
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
-        nOfInputs, innerNeurons, nOfOutputs, weights
-    );
-    centralizedSensing.setFunction(mlp);
-    Robot<SensingVoxel> centralized = new Robot<>(
-        centralizedSensing,
-        SerializationUtils.clone(body)
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        30,
-        Locomotion.createTerrain("downhill-30"),
-        new Settings()
-    );
-    GridOnlineViewer.run(
-        locomotion, Grid.create(1, 1, Pair.of("", centralized)), Drawers::basicWithMiniWorldAndBrainUsage);
-  }
-
-  private static void devoComb() {
-    int startingL = 3;
-    double f = 1d;
-    UnaryOperator<Robot<?>> devoFunction = r -> {
-      int l = (r == null) ? startingL : (r.getVoxels().getW() + 1);
-      Grid<? extends SensingVoxel> body = RobotUtils
-          .buildSensorizingFunction("uniform-ax+t+r-0.01")
-          .apply(Grid.create(l, 2, (x, y) -> y > 0 || (x % 2 == 0)));
-      return new Robot<>(
-          new TimeFunctions(Grid.create(
-              body.getW(),
-              body.getH(),
-              (final Integer x, final Integer y) -> (Double t) -> Math.sin(
-                  -2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
-          )),
-          body
-      );
-    };
-    //DistanceBasedDevoLocomotion devoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
-    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(
-        10, 40d, Locomotion.createTerrain("downhill-20"), new Settings());
-    GridOnlineViewer.run(devoLocomotion, devoFunction);
-  }
-
-  private static void bipeds() {
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
-        .apply(RobotUtils.buildShape("biped-7x4"));
-    //simple
-    double f = 1d;
-    Robot<ControllableVoxel> phasesRobot = new Robot<>(
-        new TimeFunctions(Grid.create(
-            body.getW(),
-            body.getH(),
-            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
-                -2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
-        )),
-        SerializationUtils.clone(body)
-    );
-    //distribute sensing
-    Random random = new Random();
-    DistributedSensing distributedSensing = new DistributedSensing(body, 1);
-    for (Grid.Entry<? extends SensingVoxel> entry : body) {
-      MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-          MultiLayerPerceptron.ActivationFunction.TANH,
-          distributedSensing.nOfInputs(entry.getX(), entry.getY()),
-          new int[]{2},
-          distributedSensing.nOfOutputs(entry.getX(), entry.getY())
-      );
-      double[] ws = mlp.getParams();
-      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
-      mlp.setParams(ws);
-      distributedSensing.getFunctions().set(entry.getX(), entry.getY(), mlp);
-    }
-    Robot<SensingVoxel> distHetero = new Robot<>(
-        distributedSensing,
-        SerializationUtils.clone(body)
-    );
-    //centralized sensing
-    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
-        centralizedSensing.nOfInputs(),
-        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
-        centralizedSensing.nOfOutputs(),
-        10d,
-        PruningMultiLayerPerceptron.Context.NETWORK,
-        PruningMultiLayerPerceptron.Criterion.ABS_SIGNAL_MEAN,
-        0.95
-    );
-    double[] ws = mlp.getParams();
-    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
-    mlp.setParams(ws);
-    centralizedSensing.setFunction(mlp);
-    Robot<SensingVoxel> centralized = new Robot<>(
-        centralizedSensing,
-        SerializationUtils.clone(body)
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        10,
-        Locomotion.createTerrain("downhill-30"),
-        new Settings()
-    );
-
-    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 4);
-    namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
-    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
-    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
-    namedSolutionGrid.set(0, 3, Pair.of(
-        "phasesRobot-step-0.5",
-        new Robot<>(
-            ((AbstractController) phasesRobot.getController()).step(0.5),
-            SerializationUtils.clone(phasesRobot.getVoxels())
-        )
-    ));
-    GridOnlineViewer.run(locomotion, namedSolutionGrid);
-    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
-    /*try {
-      GridFileWriter.save(
-          locomotion,
-          Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
-          600, 600, 1, 24,
-          VideoUtils.EncoderFacility.FFMPEG_SMALL,
-          new File("/home/eric/biped-spectra.mp4"),
-          Drawers::basicWithMiniWorldAndSpectra
-      );
-    } catch (IOException e) {
-      e.printStackTrace();
-    }*/
-  }
-
   private static void bipedAndBall() {
     //simple biped
     Grid<? extends SensingVoxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
@@ -343,33 +163,137 @@ public class Starter {
     );
   }
 
-  private static void multiped() {
+  private static void bipedPoses() {
+    Grid<Boolean> shape = RobotUtils.buildShape("biped-8x4");
+    Grid<? extends SensingVoxel> body = RobotUtils
+        .buildSensorizingFunction("uniform-t-0")
+        .apply(shape);
+    PosesController controller = new PosesController(1d, new ArrayList<>(PoseUtils.computeCardinalPoses(shape)));
+    Robot<?> robot = new Robot<>(controller, body);
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("hilly-1-10-0"),
+        new Settings()
+    );
+    GridOnlineViewer.run(locomotion, robot);
+  }
+
+  private static void bipedWithBrain() {
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
+        .apply(RobotUtils.buildShape("biped-7x4"));
+    Random random = new Random();
+    //centralized sensing
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
+
+    int nOfInputs = centralizedSensing.nOfInputs();
+    int nOfOutputs = centralizedSensing.nOfOutputs();
+    int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
+    int nOfWeights = MultiLayerPerceptron.countWeights(nOfInputs, innerNeurons, nOfOutputs);
+    double[] weights = IntStream.range(0, nOfWeights).mapToDouble(i -> 2 * Math.random() - 1).toArray();
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
+        nOfInputs, innerNeurons, nOfOutputs, weights
+    );
+    centralizedSensing.setFunction(mlp);
+    Robot<SensingVoxel> centralized = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(body)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        30,
+        Locomotion.createTerrain("downhill-30"),
+        new Settings()
+    );
+    GridOnlineViewer.run(
+        locomotion, Grid.create(1, 1, Pair.of("", centralized)), Drawers::basicWithMiniWorldAndBrainUsage);
+  }
+
+  private static void bipeds() {
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
+        .apply(RobotUtils.buildShape("biped-7x4"));
+    //simple
     double f = 1d;
-    Grid<Boolean> body = Grid.create(7, 2, (x, y) -> y == 1 || (x % 2 == 0));
-    Robot<?> robot = new Robot<>(
+    Robot<ControllableVoxel> phasesRobot = new Robot<>(
         new TimeFunctions(Grid.create(
             body.getW(),
             body.getH(),
             (final Integer x, final Integer y) -> (Double t) -> Math.sin(
-                -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
-            )
+                -2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
         )),
-        RobotUtils.buildSensorizingFunction("uniform-a-0.01").apply(body)
+        SerializationUtils.clone(body)
     );
+    //distribute sensing
+    Random random = new Random();
+    DistributedSensing distributedSensing = new DistributedSensing(body, 1);
+    for (Grid.Entry<? extends SensingVoxel> entry : body) {
+      MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+          MultiLayerPerceptron.ActivationFunction.TANH,
+          distributedSensing.nOfInputs(entry.getX(), entry.getY()),
+          new int[]{2},
+          distributedSensing.nOfOutputs(entry.getX(), entry.getY())
+      );
+      double[] ws = mlp.getParams();
+      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
+      mlp.setParams(ws);
+      distributedSensing.getFunctions().set(entry.getX(), entry.getY(), mlp);
+    }
+    Robot<SensingVoxel> distHetero = new Robot<>(
+        distributedSensing,
+        SerializationUtils.clone(body)
+    );
+    //centralized sensing
+    CentralizedSensing centralizedSensing = new CentralizedSensing(body);
+    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(
+        MultiLayerPerceptron.ActivationFunction.TANH,
+        centralizedSensing.nOfInputs(),
+        new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
+        centralizedSensing.nOfOutputs(),
+        10d,
+        PruningMultiLayerPerceptron.Context.NETWORK,
+        PruningMultiLayerPerceptron.Criterion.ABS_SIGNAL_MEAN,
+        0.95
+    );
+    double[] ws = mlp.getParams();
+    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
+    mlp.setParams(ws);
+    centralizedSensing.setFunction(mlp);
+    Robot<SensingVoxel> centralized = new Robot<>(
+        centralizedSensing,
+        SerializationUtils.clone(body)
+    );
+    //episode
     Locomotion locomotion = new Locomotion(
         10,
-        Locomotion.createTerrain("hilly-0.3-1-0"),
+        Locomotion.createTerrain("downhill-30"),
         new Settings()
     );
-    GridOnlineViewer.run(locomotion, robot);
-    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5, 7, .75, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic());
-    locomotion.apply(robot, framesImageBuilder);
-    try {
-      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
+
+    Grid<Pair<String, Robot<?>>> namedSolutionGrid = Grid.create(1, 4);
+    namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
+    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
+    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
+    namedSolutionGrid.set(0, 3, Pair.of(
+        "phasesRobot-step-0.5",
+        new Robot<>(
+            ((AbstractController) phasesRobot.getController()).step(0.5),
+            SerializationUtils.clone(phasesRobot.getVoxels())
+        )
+    ));
+    GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
+    /*try {
+      GridFileWriter.save(
+          locomotion,
+          Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
+          600, 600, 1, 24,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL,
+          new File("/home/eric/biped-spectra.mp4"),
+          Drawers::basicWithMiniWorldAndSpectra
+      );
     } catch (IOException e) {
       e.printStackTrace();
-    }
+    }*/
   }
 
   private static void breakingWorm() {
@@ -401,6 +325,100 @@ public class Starter {
     GridOnlineViewer.run(locomotion, namedSolutionGrid);
   }
 
+  private static void cShaped() {
+    Grid<Boolean> shape = Grid.create(8, 8, (x, y) -> x < 2 || y < 2 || y >= 6);
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+vxy-0.05").apply(shape);
+    Robot<?> robot = new Robot<>(
+        new CentralizedSensing(body),
+        SerializationUtils.clone(body)
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        20,
+        Locomotion.createTerrain("flatWithStart-2"),
+        new Settings()
+    );
+    //GridOnlineViewer.run(locomotion, robot);
+    try {
+      GridFileWriter.save(
+          locomotion, robot, 600, 400, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL,
+          new File("/home/eric/cshaped.mp4")
+      );
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    GridOnlineViewer.run(locomotion, robot);
+  }
+
+  private static void devoComb() {
+    int startingL = 3;
+    double f = 1d;
+    UnaryOperator<Robot<?>> devoFunction = r -> {
+      int l = (r == null) ? startingL : (r.getVoxels().getW() + 1);
+      Grid<? extends SensingVoxel> body = RobotUtils
+          .buildSensorizingFunction("uniform-ax+t+r-0.01")
+          .apply(Grid.create(l, 2, (x, y) -> y > 0 || (x % 2 == 0)));
+      return new Robot<>(
+          new TimeFunctions(Grid.create(
+              body.getW(),
+              body.getH(),
+              (final Integer x, final Integer y) -> (Double t) -> Math.sin(
+                  -2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
+          )),
+          body
+      );
+    };
+    //DistanceBasedDevoLocomotion devoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
+    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(
+        10, 40d, Locomotion.createTerrain("downhill-20"), new Settings());
+    GridOnlineViewer.run(devoLocomotion, devoFunction);
+  }
+
+  public static void main(String[] args) {
+    //bipedWithBrain();
+    //bipeds();
+    //rollingOne();
+    //rollingBall();
+    //breakingWorm();
+    //plainWorm();
+    //cShaped();
+    //multiped();
+    //bipedAndBall();
+    //bipedCentralized();
+    //devoComb();
+    //bipedPoses();
+    sampleExecution();
+  }
+
+  private static void multiped() {
+    double f = 1d;
+    Grid<Boolean> body = Grid.create(7, 2, (x, y) -> y == 1 || (x % 2 == 0));
+    Robot<?> robot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            body.getW(),
+            body.getH(),
+            (final Integer x, final Integer y) -> (Double t) -> Math.sin(
+                -2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH())
+            )
+        )),
+        RobotUtils.buildSensorizingFunction("uniform-a-0.01").apply(body)
+    );
+    Locomotion locomotion = new Locomotion(
+        10,
+        Locomotion.createTerrain("hilly-0.3-1-0"),
+        new Settings()
+    );
+    GridOnlineViewer.run(locomotion, robot);
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
+        5, 7, .75, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic());
+    locomotion.apply(robot, framesImageBuilder);
+    try {
+      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/frames-multiped.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   private static void plainWorm() {
     Grid<? extends SensingVoxel> body = RobotUtils
         //.buildSensorizingFunction("uniform-l1-0.01")
@@ -429,68 +447,6 @@ public class Starter {
     //GridOnlineViewer.run(locomotion, robot);
     GridOnlineViewer.run(
         locomotion, Grid.create(1, 1, Pair.of("phasesRobot", robot)), Drawers::basicWithMiniWorldAndSpectra);
-  }
-
-  private static void bipedPoses() {
-    Grid<Boolean> shape = RobotUtils.buildShape("biped-8x4");
-    Grid<? extends SensingVoxel> body = RobotUtils
-        .buildSensorizingFunction("uniform-t-0")
-        .apply(shape);
-    PosesController controller = new PosesController(1d, new ArrayList<>(PoseUtils.computeCardinalPoses(shape)));
-    Robot<?> robot = new Robot<>(controller, body);
-    //episode
-    Locomotion locomotion = new Locomotion(
-        30,
-        Locomotion.createTerrain("hilly-1-10-0"),
-        new Settings()
-    );
-    GridOnlineViewer.run(locomotion, robot);
-  }
-
-  private static void cShaped() {
-    Grid<Boolean> shape = Grid.create(8, 8, (x, y) -> x < 2 || y < 2 || y >= 6);
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-t+vxy-0.05").apply(shape);
-    Robot<?> robot = new Robot<>(
-        new CentralizedSensing(body),
-        SerializationUtils.clone(body)
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        20,
-        Locomotion.createTerrain("flatWithStart-2"),
-        new Settings()
-    );
-    //GridOnlineViewer.run(locomotion, robot);
-    try {
-      GridFileWriter.save(
-          locomotion, robot, 600, 400, 0, 25, VideoUtils.EncoderFacility.FFMPEG_SMALL,
-          new File("/home/eric/cshaped.mp4")
-      );
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    GridOnlineViewer.run(locomotion, robot);
-  }
-
-  private static void rollingOne() {
-    //one voxel robot
-    Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
-        new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
-        new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.25),
-        new Angle(),
-        new Lidar(10, Map.of(Lidar.Side.E, 4))
-    )));
-    Robot<SensingVoxel> robot = new Robot<>(
-        new CentralizedSensing(oneBody, RealFunction.build(in -> new double[]{0d}, 1, 1)),
-        oneBody
-    );
-    //episode
-    Locomotion locomotion = new Locomotion(
-        60,
-        new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
-        new Settings()
-    );
-    GridOnlineViewer.run(locomotion, robot);
   }
 
   private static void rollingBall() {
@@ -539,6 +495,50 @@ public class Starter {
       e.printStackTrace();
     }
      */
+  }
+
+  private static void rollingOne() {
+    //one voxel robot
+    Grid<SensingVoxel> oneBody = Grid.create(1, 1, new SensingVoxel(List.of(
+        new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
+        new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.25),
+        new Angle(),
+        new Lidar(10, Map.of(Lidar.Side.E, 4))
+    )));
+    Robot<SensingVoxel> robot = new Robot<>(
+        new CentralizedSensing(oneBody, RealFunction.build(in -> new double[]{0d}, 1, 1)),
+        oneBody
+    );
+    //episode
+    Locomotion locomotion = new Locomotion(
+        60,
+        new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
+        new Settings()
+    );
+    GridOnlineViewer.run(locomotion, robot);
+  }
+
+  private static void sampleExecution() {
+    final Locomotion locomotion = new Locomotion(
+        20,
+        Locomotion.createTerrain("flat"),
+        new Settings()
+    );
+    Grid<Boolean> shape = RobotUtils.buildShape("worm-5x2");
+    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
+    Robot<ControllableVoxel> robot = new Robot<>(
+        new TimeFunctions(Grid.create(
+            body.getW(), body.getH(),
+            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) body.getW()))
+        )),
+        body
+    );
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
+        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
+    );
+    Outcome result = locomotion.apply(robot, framesImageBuilder);
+    BufferedImage image = framesImageBuilder.getImage();
+    System.out.println("Outcome: " + result);
   }
 
 }

@@ -40,15 +40,6 @@ public class Poly implements Shape {
     return new Poly(vertexes);
   }
 
-  @Override
-  public BoundingBox boundingBox() {
-    return BoundingBox.of(vertexes);
-  }
-
-  public Point2[] getVertexes() {
-    return vertexes;
-  }
-
   public double area() {
     double a = 0d;
     int l = vertexes.length;
@@ -60,8 +51,17 @@ public class Poly implements Shape {
   }
 
   @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.of(vertexes);
+  }
+
+  @Override
   public Point2 center() {
     return Point2.average(vertexes);
+  }
+
+  public Point2[] getVertexes() {
+    return vertexes;
   }
 
 }

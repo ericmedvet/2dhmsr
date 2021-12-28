@@ -49,7 +49,23 @@ public class SensingVoxel extends ControllableVoxel {
       @JsonProperty("forceMethod") ForceMethod forceMethod,
       @JsonProperty("sensors") List<Sensor> sensors
   ) {
-    super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings, maxForce, forceMethod);
+    super(
+        sideLength,
+        massSideLengthRatio,
+        springF,
+        springD,
+        massLinearDamping,
+        massAngularDamping,
+        friction,
+        restitution,
+        mass,
+        limitContractionFlag,
+        massCollisionFlag,
+        areaRatioMaxDelta,
+        springScaffoldings,
+        maxForce,
+        forceMethod
+    );
     this.sensors = sensors;
   }
 
@@ -63,18 +79,12 @@ public class SensingVoxel extends ControllableVoxel {
   }
 
   @Override
-  public void act(double t) {
-    super.act(t);
-    sensors.forEach(s -> s.act(t));
-  }
-
-  @Override
-  public void reset() {
-    super.reset();
-    sensors.forEach(s -> {
-      s.setVoxel(this);
-      s.reset();
-    });
+  protected void fillSnapshot(Snapshot snapshot) {
+    super.fillSnapshot(snapshot);
+    //add sensors
+    for (Sensor sensor : sensors) {
+      snapshot.getChildren().add(sensor.getSnapshot());
+    }
   }
 
   public double[] getSensorReadings() {
@@ -89,12 +99,18 @@ public class SensingVoxel extends ControllableVoxel {
   }
 
   @Override
-  protected void fillSnapshot(Snapshot snapshot) {
-    super.fillSnapshot(snapshot);
-    //add sensors
-    for (Sensor sensor : sensors) {
-      snapshot.getChildren().add(sensor.getSnapshot());
-    }
+  public void reset() {
+    super.reset();
+    sensors.forEach(s -> {
+      s.setVoxel(this);
+      s.reset();
+    });
+  }
+
+  @Override
+  public void act(double t) {
+    super.act(t);
+    sensors.forEach(s -> s.act(t));
   }
 
   @Override

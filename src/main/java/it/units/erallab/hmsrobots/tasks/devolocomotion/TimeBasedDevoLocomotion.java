@@ -46,23 +46,44 @@ public class TimeBasedDevoLocomotion extends DevoLocomotion {
 
   private final List<Double> developmentSchedule;
 
-  public static TimeBasedDevoLocomotion uniformlyDistributedTimeBasedDevoLocomotion(int nStages, double maxT, double[][] groundProfile, Settings settings) {
-    return fixedIntervalTimeBasedDevoLocomotion(maxT / nStages, maxT, groundProfile, settings);
+  public TimeBasedDevoLocomotion(
+      List<Double> developmentSchedule,
+      double maxT,
+      double[][] groundProfile,
+      double initialPlacement,
+      Settings settings
+  ) {
+    super(maxT, groundProfile, initialPlacement, settings);
+    this.developmentSchedule = new LinkedList<>(developmentSchedule);
   }
 
-  public static TimeBasedDevoLocomotion fixedIntervalTimeBasedDevoLocomotion(double interval, double maxT, double[][] groundProfile, Settings settings) {
+  public TimeBasedDevoLocomotion(
+      List<Double> developmentSchedule,
+      double maxT,
+      double[][] groundProfile,
+      Settings settings
+  ) {
+    this(developmentSchedule, maxT, groundProfile, groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP, settings);
+  }
+
+  public static TimeBasedDevoLocomotion fixedIntervalTimeBasedDevoLocomotion(
+      double interval,
+      double maxT,
+      double[][] groundProfile,
+      Settings settings
+  ) {
     List<Double> developmentSchedule = DoubleStream.iterate(interval, d -> d + interval)
         .limit((long) Math.floor(maxT / interval)).sorted().boxed().collect(Collectors.toList());
     return new TimeBasedDevoLocomotion(developmentSchedule, maxT, groundProfile, settings);
   }
 
-  public TimeBasedDevoLocomotion(List<Double> developmentSchedule, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
-    super(maxT, groundProfile, initialPlacement, settings);
-    this.developmentSchedule = new LinkedList<>(developmentSchedule);
-  }
-
-  public TimeBasedDevoLocomotion(List<Double> developmentSchedule, double maxT, double[][] groundProfile, Settings settings) {
-    this(developmentSchedule, maxT, groundProfile, groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP, settings);
+  public static TimeBasedDevoLocomotion uniformlyDistributedTimeBasedDevoLocomotion(
+      int nStages,
+      double maxT,
+      double[][] groundProfile,
+      Settings settings
+  ) {
+    return fixedIntervalTimeBasedDevoLocomotion(maxT / nStages, maxT, groundProfile, settings);
   }
 
   @Override

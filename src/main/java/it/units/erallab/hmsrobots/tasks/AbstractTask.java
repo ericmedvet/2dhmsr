@@ -38,11 +38,13 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
     this.settings = settings;
   }
 
-  public Settings getSettings() {
-    return settings;
-  }
-
-  protected static double updateWorld(final double t, final double dT, final World world, final List<WorldObject> objects, final SnapshotListener listener) {
+  protected static double updateWorld(
+      final double t,
+      final double dT,
+      final World world,
+      final List<WorldObject> objects,
+      final SnapshotListener listener
+  ) {
     double newT = t + dT;
     world.step(1);
     objects.stream().filter(o -> o instanceof Actionable).forEach(o -> ((Actionable) o).act(newT));
@@ -59,6 +61,10 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
       );
     }
     return newT;
+  }
+
+  public Settings getSettings() {
+    return settings;
   }
 
 }

@@ -25,15 +25,12 @@ import org.dyn4j.geometry.Vector2;
 import java.util.EnumSet;
 
 public class Velocity extends AbstractSensor {
-  public enum Axis {X, Y}
-
   @JsonProperty
   private final boolean rotated;
   @JsonProperty
   private final EnumSet<Axis> axes;
   @JsonProperty
   private final double maxVelocityNorm;
-
   public Velocity(boolean rotated, double maxVelocityNorm, Axis... axes) {
     this(
         rotated,
@@ -52,6 +49,17 @@ public class Velocity extends AbstractSensor {
     this.rotated = rotated;
     this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;
+  }
+
+  public enum Axis {X, Y}
+
+  @Override
+  public String toString() {
+    return "Velocity{" +
+        "rotated=" + rotated +
+        ", axes=" + axes +
+        ", maxVelocityNorm=" + maxVelocityNorm +
+        '}';
   }
 
   @Override
@@ -77,14 +85,5 @@ public class Velocity extends AbstractSensor {
       }
     }
     return values;
-  }
-
-  @Override
-  public String toString() {
-    return "Velocity{" +
-        "rotated=" + rotated +
-        ", axes=" + axes +
-        ", maxVelocityNorm=" + maxVelocityNorm +
-        '}';
   }
 }

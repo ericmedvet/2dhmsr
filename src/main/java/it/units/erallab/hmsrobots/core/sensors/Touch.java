@@ -32,11 +32,6 @@ public class Touch extends AbstractSensor {
     super(DOMAINS);
   }
 
-  @Override
-  public double[] sense(double t) {
-    return isTouching(voxel) ? new double[]{1d} : new double[]{0d};
-  }
-
   public static boolean isTouching(Voxel voxel) {
     for (Body vertexBody : voxel.getVertexBodies()) {
       List<Body> inContactBodies = vertexBody.getInContactBodies(false);
@@ -62,5 +57,10 @@ public class Touch extends AbstractSensor {
       }
     }
     return false;
+  }
+
+  @Override
+  public double[] sense(double t) {
+    return isTouching(voxel) ? new double[]{1d} : new double[]{0d};
   }
 }

@@ -29,17 +29,17 @@ public class Snapshot {
   private final Class<? extends Snapshottable> snapshottableClass;
   private final List<Snapshot> children;
 
+  public Snapshot(Object content, Class<? extends Snapshottable> snapshottableClass) {
+    this.content = content;
+    this.snapshottableClass = snapshottableClass;
+    this.children = new ArrayList<>();
+  }
+
   public static Snapshot world(List<Snapshot> snapshots) {
     Snapshottable snapshottable = () -> world(List.of());
     Snapshot snapshot = new Snapshot(new Object(), snapshottable.getClass());
     snapshot.getChildren().addAll(snapshots);
     return snapshot;
-  }
-
-  public Snapshot(Object content, Class<? extends Snapshottable> snapshottableClass) {
-    this.content = content;
-    this.snapshottableClass = snapshottableClass;
-    this.children = new ArrayList<>();
   }
 
   public List<Snapshot> getChildren() {

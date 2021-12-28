@@ -23,11 +23,13 @@ public class BoundingBox implements Shape, Serializable {
   public final Point2 min;
   public final Point2 max;
 
-  public static BoundingBox of(double minX, double minY, double maxX, double maxY) {
-    return of(
-        Point2.of(minX, minY),
-        Point2.of(maxX, maxY)
-    );
+  private BoundingBox(Point2 min, Point2 max) {
+    this.min = min;
+    this.max = max;
+  }
+
+  public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
+    return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
   }
 
   public static BoundingBox of(Point2... points) {
@@ -50,9 +52,25 @@ public class BoundingBox implements Shape, Serializable {
     );
   }
 
-  private BoundingBox(Point2 min, Point2 max) {
-    this.min = min;
-    this.max = max;
+  public static BoundingBox of(double minX, double minY, double maxX, double maxY) {
+    return of(
+        Point2.of(minX, minY),
+        Point2.of(maxX, maxY)
+    );
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return this;
+  }
+
+  @Override
+  public Point2 center() {
+    return Point2.of((min.x + max.x) / 2d, (min.y + max.x) / 2d);
+  }
+
+  public double height() {
+    return max.y - min.y;
   }
 
   @Override
@@ -63,25 +81,7 @@ public class BoundingBox implements Shape, Serializable {
         '}';
   }
 
-  public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
-    return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
-  }
-
-  @Override
-  public Point2 center() {
-    return Point2.of((min.x + max.x) / 2d, (min.y + max.x) / 2d);
-  }
-
-  @Override
-  public BoundingBox boundingBox() {
-    return this;
-  }
-
   public double width() {
     return max.x - min.x;
-  }
-
-  public double height() {
-    return max.y - min.y;
   }
 }

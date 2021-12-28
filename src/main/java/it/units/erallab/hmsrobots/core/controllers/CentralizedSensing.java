@@ -40,15 +40,13 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
   private final int nOfInputs;
   @JsonProperty
   private final int nOfOutputs;
-
+  private final Domain[] outputDomains;
   @JsonProperty
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private TimedRealFunction function;
-
   private double[] inputs;
   private double[] outputs;
   private Domain[] inputDomains;
-  private final Domain[] outputDomains;
 
   public CentralizedSensing(
       @JsonProperty("nOfInputs") int nOfInputs,
@@ -84,29 +82,6 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
         .count();
   }
 
-  public int nOfInputs() {
-    return nOfInputs;
-  }
-
-  public int nOfOutputs() {
-    return nOfOutputs;
-  }
-
-  public TimedRealFunction getFunction() {
-    return function;
-  }
-
-  public void setFunction(TimedRealFunction function) {
-    if (function.getInputDimension() != nOfInputs || function.getOutputDimension() != nOfOutputs) {
-      throw new IllegalArgumentException(String.format(
-          "Wrong dimension of input or output in provided function: R^%d->R^%d expected, R^%d->R^%d found",
-          nOfInputs, nOfOutputs,
-          function.getInputDimension(), function.getOutputDimension()
-      ));
-    }
-    this.function = function;
-  }
-
   @Override
   public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
     //collect inputs
@@ -138,18 +113,19 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
     return controlSignals;
   }
 
-  @Override
-  public void reset() {
-    if (function instanceof Resettable) {
-      ((Resettable) function).reset();
-    }
+  public TimedRealFunction getFunction() {
+    return function;
   }
 
-  @Override
-  public String toString() {
-    return "CentralizedSensing{" +
-        "function=" + function +
-        '}';
+  public void setFunction(TimedRealFunction function) {
+    if (function.getInputDimension() != nOfInputs || function.getOutputDimension() != nOfOutputs) {
+      throw new IllegalArgumentException(String.format(
+          "Wrong dimension of input or output in provided function: R^%d->R^%d expected, R^%d->R^%d found",
+          nOfInputs, nOfOutputs,
+          function.getInputDimension(), function.getOutputDimension()
+      ));
+    }
+    this.function = function;
   }
 
   @Override
@@ -165,6 +141,28 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
       snapshot.getChildren().add(((Snapshottable) function).getSnapshot());
     }
     return snapshot;
+  }
+
+  public int nOfInputs() {
+    return nOfInputs;
+  }
+
+  public int nOfOutputs() {
+    return nOfOutputs;
+  }
+
+  @Override
+  public void reset() {
+    if (function instanceof Resettable) {
+      ((Resettable) function).reset();
+    }
+  }
+
+  @Override
+  public String toString() {
+    return "CentralizedSensing{" +
+        "function=" + function +
+        '}';
   }
 
 }

@@ -43,8 +43,9 @@ public class Box implements WorldObject, Snapshottable {
     body.rotate(angle);
   }
 
-  public void translate(Vector2 v) {
-    body.translate(new Vector2(v.x, v.y));
+  @Override
+  public void addTo(World world) {
+    world.addBody(body);
   }
 
   @Override
@@ -61,9 +62,8 @@ public class Box implements WorldObject, Snapshottable {
     );
   }
 
-  @Override
-  public void addTo(World world) {
-    world.addBody(body);
+  public void translate(Vector2 v) {
+    body.translate(new Vector2(v.x, v.y));
   }
 
 }

@@ -31,11 +31,11 @@ public class ScopedReadings {
     this.domains = domains;
   }
 
-  public double[] getReadings() {
-    return readings;
-  }
-
   public Domain[] getDomains() {
     return domains;
+  }
+
+  public double[] getReadings() {
+    return readings;
   }
 }

@@ -41,5 +41,5 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
       }
     };
   }
-  
+
 }

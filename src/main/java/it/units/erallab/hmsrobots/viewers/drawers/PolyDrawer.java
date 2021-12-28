@@ -55,6 +55,18 @@ public class PolyDrawer extends SubtreeDrawer {
     useTexture = true;
   }
 
+  private static TexturePaint createTexturePaint() {
+    BufferedImage texture = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
+    Graphics2D g = texture.createGraphics();
+    g.setColor(DrawingUtils.alphaed(TEXTURE_COLOR, 0.5f));
+    g.fillRect(0, 0, 2, 2);
+    g.setColor(DrawingUtils.alphaed(TEXTURE_COLOR, 0.75f));
+    g.fillRect(1, 0, 1, 1);
+    g.fillRect(0, 1, 1, 1);
+    g.dispose();
+    return new TexturePaint(texture, new Rectangle(0, 0, TEXTURE_SIZE, TEXTURE_SIZE));
+  }
+
   @Override
   protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     if (!(snapshot.getContent() instanceof Poly)) {
@@ -74,17 +86,5 @@ public class PolyDrawer extends SubtreeDrawer {
       g.setColor(strokeColor);
       g.draw(path);
     }
-  }
-
-  private static TexturePaint createTexturePaint() {
-    BufferedImage texture = new BufferedImage(2, 2, BufferedImage.TYPE_4BYTE_ABGR);
-    Graphics2D g = texture.createGraphics();
-    g.setColor(DrawingUtils.alphaed(TEXTURE_COLOR, 0.5f));
-    g.fillRect(0, 0, 2, 2);
-    g.setColor(DrawingUtils.alphaed(TEXTURE_COLOR, 0.75f));
-    g.fillRect(1, 0, 1, 1);
-    g.fillRect(0, 1, 1, 1);
-    g.dispose();
-    return new TexturePaint(texture, new Rectangle(0, 0, TEXTURE_SIZE, TEXTURE_SIZE));
   }
 }

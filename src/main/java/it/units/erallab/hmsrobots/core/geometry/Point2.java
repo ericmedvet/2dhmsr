@@ -31,14 +31,6 @@ public class Point2 implements Shape {
     this.y = y;
   }
 
-  public static Point2 of(double x, double y) {
-    return new Point2(x, y);
-  }
-
-  public static Point2 of(Vector2 v) {
-    return new Point2(v.x, v.y);
-  }
-
   public static Point2 average(Point2... points) {
     double cx = 0;
     double cy = 0;
@@ -49,6 +41,14 @@ public class Point2 implements Shape {
       n = n + 1;
     }
     return Point2.of(cx / n, cy / n);
+  }
+
+  public static Point2 of(Vector2 v) {
+    return new Point2(v.x, v.y);
+  }
+
+  public static Point2 of(double x, double y) {
+    return new Point2(x, y);
   }
 
   @Override

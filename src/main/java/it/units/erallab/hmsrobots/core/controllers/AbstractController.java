@@ -22,6 +22,8 @@ import it.units.erallab.hmsrobots.util.Grid;
 
 public abstract class AbstractController<V extends ControllableVoxel> implements Controller<V> {
 
+  public abstract Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels);
+
   @Override
   public void control(double t, Grid<? extends V> voxels) {
     Grid<Double> controlSignals = computeControlSignals(t, voxels);
@@ -32,14 +34,12 @@ public abstract class AbstractController<V extends ControllableVoxel> implements
     });
   }
 
-  public abstract Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels);
+  public AbstractController<V> smoothed(double controlSignalSpeed) {
+    return new SmoothedController<>(this, controlSignalSpeed);
+  }
 
   public AbstractController<V> step(double stepT) {
     return new StepController<>(this, stepT);
-  }
-
-  public AbstractController<V> smoothed(double controlSignalSpeed) {
-    return new SmoothedController<>(this, controlSignalSpeed);
   }
 
 }

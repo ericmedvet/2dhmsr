@@ -28,21 +28,14 @@ import java.util.EnumSet;
 
 public class ControllableVoxel extends Voxel {
 
-  public enum ForceMethod {
-    DISTANCE, FORCE
-  }
-
   public static final double MAX_FORCE = 100d;
   public static final ForceMethod FORCE_METHOD = ForceMethod.DISTANCE;
-
   @JsonProperty
   private final double maxForce; //not used in distance forceMethod
   @JsonProperty
   private final ForceMethod forceMethod;
-
   private transient double controlEnergy;
   private transient double lastAppliedForce;
-
   @JsonCreator
   public ControllableVoxel(
       @JsonProperty("sideLength") double sideLength,
@@ -61,7 +54,21 @@ public class ControllableVoxel extends Voxel {
       @JsonProperty("maxForce") double maxForce,
       @JsonProperty("forceMethod") ForceMethod forceMethod
   ) {
-    super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings);
+    super(
+        sideLength,
+        massSideLengthRatio,
+        springF,
+        springD,
+        massLinearDamping,
+        massAngularDamping,
+        friction,
+        restitution,
+        mass,
+        limitContractionFlag,
+        massCollisionFlag,
+        areaRatioMaxDelta,
+        springScaffoldings
+    );
     this.maxForce = maxForce;
     this.forceMethod = forceMethod;
   }
@@ -73,6 +80,48 @@ public class ControllableVoxel extends Voxel {
 
   public ControllableVoxel() {
     this(MAX_FORCE, FORCE_METHOD);
+  }
+
+  public enum ForceMethod {
+    DISTANCE, FORCE
+  }
+
+  @Override
+  public void act(double t) {
+    super.act(t);
+    //compute energy
+    controlEnergy = controlEnergy + lastAppliedForce * lastAppliedForce;
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    applyForce(0d);
+    controlEnergy = 0d;
+    lastAppliedForce = 0d;
+  }
+
+  @Override
+  public VoxelPoly getVoxelPoly() {
+    return new VoxelPoly(
+        getVertices(),
+        getAngle(),
+        getLinearVelocity(),
+        Touch.isTouchingGround(this),
+        getAreaRatio(),
+        getAreaRatioEnergy(),
+        getLastAppliedForce(),
+        getControlEnergy()
+    );
+  }
+
+  @Override
+  public String toString() {
+    return "ControllableVoxel{" +
+        "maxForce=" + maxForce +
+        ", forceMethod=" + forceMethod +
+        ", controlEnergy=" + controlEnergy +
+        '}';
   }
 
   public void applyForce(double f) {
@@ -105,49 +154,11 @@ public class ControllableVoxel extends Voxel {
     }
   }
 
-  public double getLastAppliedForce() {
-    return lastAppliedForce;
-  }
-
   public double getControlEnergy() {
     return controlEnergy;
   }
 
-  @Override
-  public VoxelPoly getVoxelPoly() {
-    return new VoxelPoly(
-        getVertices(),
-        getAngle(),
-        getLinearVelocity(),
-        Touch.isTouchingGround(this),
-        getAreaRatio(),
-        getAreaRatioEnergy(),
-        getLastAppliedForce(),
-        getControlEnergy()
-    );
-  }
-
-  @Override
-  public void reset() {
-    super.reset();
-    applyForce(0d);
-    controlEnergy = 0d;
-    lastAppliedForce = 0d;
-  }
-
-  @Override
-  public void act(double t) {
-    super.act(t);
-    //compute energy
-    controlEnergy = controlEnergy + lastAppliedForce * lastAppliedForce;
-  }
-
-  @Override
-  public String toString() {
-    return "ControllableVoxel{" +
-        "maxForce=" + maxForce +
-        ", forceMethod=" + forceMethod +
-        ", controlEnergy=" + controlEnergy +
-        '}';
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
   }
 }

@@ -74,8 +74,14 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
     }
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
-    double voxelAngle = Math.atan2((voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y), (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)) / 2d +
-        Math.atan2((voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y), (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)) / 2d;
+    double voxelAngle = Math.atan2(
+        (voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y),
+        (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)
+    ) / 2d +
+        Math.atan2(
+            (voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y),
+            (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)
+        ) / 2d;
     double angle = ROTATED ? voxelAngle : 0d;
     double sensorSliceAngle = SPAN_ANGLE / (double) readings.size();
     for (int i = 0; i < readings.size(); i++) {

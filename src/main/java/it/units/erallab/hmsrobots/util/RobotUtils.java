@@ -41,10 +41,16 @@ public class RobotUtils {
       Map.entry("r", (x, y) -> new SoftNormalization(new Angle())),
       Map.entry("vx", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X), 0.5))),
       Map.entry("vy", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.Y), 0.5))),
-      Map.entry("vxy", (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))),
+      Map.entry(
+          "vxy",
+          (x, y) -> new SoftNormalization(new Average(new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))
+      ),
       Map.entry("ax", (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.X), 0.5))),
       Map.entry("ay", (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.Y), 0.5))),
-      Map.entry("axy", (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))),
+      Map.entry(
+          "axy",
+          (x, y) -> new SoftNormalization(new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.5))
+      ),
       Map.entry("px", (x, y) -> new Constant(x)),
       Map.entry("py", (x, y) -> new Constant(y)),
       Map.entry("m", (x, y) -> new Malfunction()),
@@ -52,20 +58,6 @@ public class RobotUtils {
       Map.entry("l5", (x, y) -> new Normalization(new Lidar(10d, Map.of(lidarSide(x, y), 5)))),
       Map.entry("l1", (x, y) -> new Normalization(new Lidar(10d, Map.of(lidarSide(x, y), 1))))
   ));
-
-  private static Lidar.Side lidarSide(double x, double y) {
-    if (y > x && y > (1 - x)) {
-      return Lidar.Side.N;
-    }
-    if (y >= x && y <= (1 - x)) {
-      return Lidar.Side.W;
-    }
-    if (y < x && y < (1 - x)) {
-      return Lidar.Side.S;
-    }
-    return Lidar.Side.E;
-  }
-
 
   private RobotUtils() {
   }
@@ -96,18 +88,21 @@ public class RobotUtils {
         public Robot<?> apply(Robot<?> robot) {
           return new Robot<>(
               ((Robot<SensingVoxel>) robot).getController(),
-              Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : new BreakableVoxel(
-                  v.getSensors(),
-                  random.nextInt(),
-                  Map.of(
-                      BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
-                  ),
-                  Map.of(
-                      BreakableVoxel.MalfunctionTrigger.valueOf(type.toUpperCase()),
-                      random.nextGaussian() * thresholdStDev + thresholdMean
-                  ),
-                  random.nextGaussian() * restoreTimeStDev + restoreTimeMean
-              ))
+              Grid.create(
+                  SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()),
+                  v -> v == null ? null : new BreakableVoxel(
+                      v.getSensors(),
+                      random.nextInt(),
+                      Map.of(
+                          BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)
+                      ),
+                      Map.of(
+                          BreakableVoxel.MalfunctionTrigger.valueOf(type.toUpperCase()),
+                          random.nextGaussian() * thresholdStDev + thresholdMean
+                      ),
+                      random.nextGaussian() * restoreTimeStDev + restoreTimeMean
+                  )
+              )
           );
         }
       };
@@ -126,13 +121,16 @@ public class RobotUtils {
         public Robot<?> apply(Robot<?> robot) {
           return new Robot<>(
               ((Robot<SensingVoxel>) robot).getController(),
-              Grid.create(SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()), v -> v == null ? null : random.nextDouble() > ratio ? v : new BreakableVoxel(
-                  v.getSensors(),
-                  random.nextInt(),
-                  Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)),
-                  Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 0d),
-                  Double.POSITIVE_INFINITY
-              ))
+              Grid.create(
+                  SerializationUtils.clone((Grid<SensingVoxel>) robot.getVoxels()),
+                  v -> v == null ? null : random.nextDouble() > ratio ? v : new BreakableVoxel(
+                      v.getSensors(),
+                      random.nextInt(),
+                      Map.of(BreakableVoxel.ComponentType.ACTUATOR, Set.of(BreakableVoxel.MalfunctionType.FROZEN)),
+                      Map.of(BreakableVoxel.MalfunctionTrigger.TIME, 0d),
+                      Double.POSITIVE_INFINITY
+                  )
+              )
           );
         }
       };
@@ -143,7 +141,10 @@ public class RobotUtils {
   public static Function<Grid<Boolean>, Grid<? extends SensingVoxel>> buildSensorizingFunction(String name) {
     String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
-    String uniform = "uniform-(?<sensors>(" + String.join("|", PREDEFINED_SENSORS.keySet()) + ")(\\+(" + String.join("|", PREDEFINED_SENSORS.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
+    String uniform = "uniform-(?<sensors>(" + String.join(
+        "|",
+        PREDEFINED_SENSORS.keySet()
+    ) + ")(\\+(" + String.join("|", PREDEFINED_SENSORS.keySet()) + "))*)-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
     Map<String, String> params;
@@ -161,7 +162,13 @@ public class RobotUtils {
                         sensor("m", x, y, body, pars.get("malfunction").equals("t")),
                         sensor("t", x, y, body, y == 0),
                         sensor("vxy", x, y, body, y == body.getH() - 1),
-                        sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t"))
+                        sensor(
+                            "cpg",
+                            x,
+                            y,
+                            body,
+                            x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")
+                        )
                     ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
                     .collect(Collectors.toList())
@@ -183,7 +190,13 @@ public class RobotUtils {
                         sensor("m", x, y, body, pars.get("malfunction").equals("t")),
                         sensor("t", x, y, body, y == 0),
                         sensor("vxy", x, y, body, y == body.getH() - 1),
-                        sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
+                        sensor(
+                            "cpg",
+                            x,
+                            y,
+                            body,
+                            x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")
+                        ),
                         sensor("l5", x, y, body, x == body.getW() - 1)
                     ).stream()
                     .map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0))
@@ -213,20 +226,13 @@ public class RobotUtils {
       ));
     }
     if ((params = params(empty, name)) != null) {
-      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> !body.get(x, y) ? null : new SensingVoxel(List.of()));
+      return body -> Grid.create(
+          body.getW(),
+          body.getH(),
+          (x, y) -> !body.get(x, y) ? null : new SensingVoxel(List.of())
+      );
     }
     throw new IllegalArgumentException(String.format("Unknown sensorizing function name: %s", name));
-  }
-
-  public static Sensor sensor(String name, int x, int y, Grid<Boolean> body) {
-    return sensor(name, x, y, body, true);
-  }
-
-  public static Sensor sensor(String name, int x, int y, Grid<Boolean> body, boolean condition) {
-    if (!condition) {
-      return null;
-    }
-    return PREDEFINED_SENSORS.get(name).apply((double) x / ((double) body.getW() - 1d), (double) y / ((double) body.getH() - 1d));
   }
 
   public static Grid<Boolean> buildShape(String name) {
@@ -255,7 +261,8 @@ public class RobotUtils {
       int d = Integer.parseInt(params.get("d"));
       return Grid.create(
           d, d,
-          (x, y) -> Math.round(Math.sqrt((x - (d - 1) / 2d) * (x - (d - 1) / 2d) + (y - (d - 1) / 2d) * (y - (d - 1) / 2d))) <= (int) Math.floor(d / 2d)
+          (x, y) -> Math.round(Math.sqrt((x - (d - 1) / 2d) * (x - (d - 1) / 2d) + (y - (d - 1) / 2d) * (y - (d - 1) / 2d))) <= (int) Math.floor(
+              d / 2d)
       );
     }
     if ((params = params(comb, name)) != null) {
@@ -264,6 +271,31 @@ public class RobotUtils {
       return Grid.create(w, h, (x, y) -> (y >= h / 2 || x % 2 == 0));
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
+  }
+
+  private static Lidar.Side lidarSide(double x, double y) {
+    if (y > x && y > (1 - x)) {
+      return Lidar.Side.N;
+    }
+    if (y >= x && y <= (1 - x)) {
+      return Lidar.Side.W;
+    }
+    if (y < x && y < (1 - x)) {
+      return Lidar.Side.S;
+    }
+    return Lidar.Side.E;
+  }
+
+  public static Sensor sensor(String name, int x, int y, Grid<Boolean> body, boolean condition) {
+    if (!condition) {
+      return null;
+    }
+    return PREDEFINED_SENSORS.get(name)
+        .apply((double) x / ((double) body.getW() - 1d), (double) y / ((double) body.getH() - 1d));
+  }
+
+  public static Sensor sensor(String name, int x, int y, Grid<Boolean> body) {
+    return sensor(name, x, y, body, true);
   }
 
 }

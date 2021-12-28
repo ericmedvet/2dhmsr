@@ -40,11 +40,21 @@ public class FootprintDrawer extends MemoryDrawer<Footprint> {
   private final Color axesColor;
   private final Color textColor;
 
-  public FootprintDrawer(Extractor extractor, double windowT, int n, Color touchColor, Color axesColor, Color textColor) {
+  public FootprintDrawer(
+      Extractor extractor,
+      double windowT,
+      int n,
+      Color touchColor,
+      Color axesColor,
+      Color textColor
+  ) {
     super(
         extractor,
         BehaviorUtils.voxelPolyGrid()
-            .andThen(g -> BehaviorUtils.computeFootprint(g.values().stream().filter(Objects::nonNull).collect(Collectors.toList()), n)),
+            .andThen(g -> BehaviorUtils.computeFootprint(g.values()
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()), n)),
         windowT
     );
     this.n = n;

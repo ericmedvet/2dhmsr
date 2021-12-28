@@ -39,11 +39,21 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
   private final Color dataColor;
   private final Color axesColor;
 
-  public PostureDrawer(Extractor extractor, double windowT, int n, boolean isBoolean, Color dataColor, Color axesColor) {
+  public PostureDrawer(
+      Extractor extractor,
+      double windowT,
+      int n,
+      boolean isBoolean,
+      Color dataColor,
+      Color axesColor
+  ) {
     super(
         extractor,
         BehaviorUtils.voxelPolyGrid()
-            .andThen(g -> BehaviorUtils.computePosture(g.values().stream().filter(Objects::nonNull).collect(Collectors.toList()), n)),
+            .andThen(g -> BehaviorUtils.computePosture(g.values()
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()), n)),
         windowT
     );
     this.n = n;
@@ -59,7 +69,11 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
   @Override
   protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, Grid<Boolean>> memory, Graphics2D g) {
     //compute aggregate
-    Grid<Double> average = Grid.create(n, n, (x, y) -> memory.values().stream().mapToDouble(grid -> grid.get(x, y) ? 1d : 0d).average().orElse(0d));
+    Grid<Double> average = Grid.create(
+        n,
+        n,
+        (x, y) -> memory.values().stream().mapToDouble(grid -> grid.get(x, y) ? 1d : 0d).average().orElse(0d)
+    );
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     BoundingBox oBB = BoundingBox.of(

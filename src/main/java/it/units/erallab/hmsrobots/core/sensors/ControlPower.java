@@ -22,9 +22,9 @@ import it.units.erallab.hmsrobots.util.Domain;
 
 public class ControlPower extends AbstractSensor {
 
-  private double lastT;
   @JsonProperty
   private final double controlInterval;
+  private double lastT;
 
   @JsonCreator
   public ControlPower(
@@ -36,11 +36,8 @@ public class ControlPower extends AbstractSensor {
     this.controlInterval = controlInterval;
   }
 
-  @Override
-  public double[] sense(double t) {
-    double power = voxel.getControlEnergy() / (t - lastT);
-    lastT = t;
-    return new double[]{power};
+  public double getControlInterval() {
+    return controlInterval;
   }
 
   @Override
@@ -49,14 +46,17 @@ public class ControlPower extends AbstractSensor {
     lastT = 0;
   }
 
-  public double getControlInterval() {
-    return controlInterval;
-  }
-
   @Override
   public String toString() {
     return "ControlPower{" +
         "controlInterval=" + controlInterval +
         '}';
+  }
+
+  @Override
+  public double[] sense(double t) {
+    double power = voxel.getControlEnergy() / (t - lastT);
+    lastT = t;
+    return new double[]{power};
   }
 }

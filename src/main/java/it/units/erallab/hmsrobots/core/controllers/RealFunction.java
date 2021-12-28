@@ -8,12 +8,11 @@ import it.units.erallab.hmsrobots.util.SerializableFunction;
 public interface RealFunction extends TimedRealFunction {
   double[] apply(double[] input);
 
-  @Override
-  default double[] apply(double t, double[] input) {
-    return apply(input);
-  }
-
-  static RealFunction build(SerializableFunction<double[], double[]> function, int inputDimension, int outputDimension) {
+  static RealFunction build(
+      SerializableFunction<double[], double[]> function,
+      int inputDimension,
+      int outputDimension
+  ) {
     return new RealFunction() {
       @Override
       public double[] apply(double[] input) {
@@ -30,6 +29,11 @@ public interface RealFunction extends TimedRealFunction {
         return outputDimension;
       }
     };
+  }
+
+  @Override
+  default double[] apply(double t, double[] input) {
+    return apply(input);
   }
 
 }

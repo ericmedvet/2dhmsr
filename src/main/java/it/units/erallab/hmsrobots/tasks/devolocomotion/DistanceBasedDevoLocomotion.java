@@ -43,6 +43,38 @@ import java.util.function.UnaryOperator;
  */
 public class DistanceBasedDevoLocomotion extends DevoLocomotion {
 
+  private final double stageMinDistance;
+  private final double stageMaxT;
+  public DistanceBasedDevoLocomotion(
+      double stageMinDistance,
+      double stageMaxT,
+      double maxT,
+      double[][] groundProfile,
+      double initialPlacement,
+      Settings settings
+  ) {
+    super(maxT, groundProfile, initialPlacement, settings);
+    this.stageMinDistance = stageMinDistance;
+    this.stageMaxT = stageMaxT;
+  }
+
+  public DistanceBasedDevoLocomotion(
+      double stageMinDistance,
+      double stageMaxT,
+      double maxT,
+      double[][] groundProfile,
+      Settings settings
+  ) {
+    this(
+        stageMinDistance,
+        stageMaxT,
+        maxT,
+        groundProfile,
+        groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP,
+        settings
+    );
+  }
+
   public static class CurrentTarget implements Snapshottable {
     private final List<Double> targets;
 
@@ -54,19 +86,6 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
     public Snapshot getSnapshot() {
       return new Snapshot(targets, getClass());
     }
-  }
-
-  private final double stageMinDistance;
-  private final double stageMaxT;
-
-  public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
-    super(maxT, groundProfile, initialPlacement, settings);
-    this.stageMinDistance = stageMinDistance;
-    this.stageMaxT = stageMaxT;
-  }
-
-  public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, Settings settings) {
-    this(stageMinDistance, stageMaxT, maxT, groundProfile, groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP, settings);
   }
 
   @Override
@@ -115,7 +134,10 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
       if (robot.boundingBox().min.x - stageX > stageMinDistance) {
         stageT = t;
         //save outcome
-        DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(robot, new Outcome(observations));
+        DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(
+            robot,
+            new Outcome(observations)
+        );
         devoOutcome.addDevoStageOutcome(devoStageOutcome);
         observations = new HashMap<>();
         //develop
@@ -130,7 +152,10 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
       }
     }
     if (!observations.isEmpty()) {
-      DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(robot, new Outcome(observations));
+      DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(
+          robot,
+          new Outcome(observations)
+      );
       devoOutcome.addDevoStageOutcome(devoStageOutcome);
     }
     stopWatch.stop();

@@ -36,24 +36,7 @@ public abstract class AbstractSensor implements Sensor {
     this.domains = domains;
   }
 
-  @Override
-  public Domain[] getDomains() {
-    return domains;
-  }
-
-  public SensingVoxel getVoxel() {
-    return voxel;
-  }
-
-  @Override
-  public void setVoxel(SensingVoxel voxel) {
-    this.voxel = voxel;
-  }
-
-  @Override
-  public double[] getReadings() {
-    return readings;
-  }
+  protected abstract double[] sense(double t);
 
   @Override
   public void act(double t) {
@@ -62,6 +45,16 @@ public abstract class AbstractSensor implements Sensor {
 
   @Override
   public void reset() {
+  }
+
+  @Override
+  public Domain[] getDomains() {
+    return domains;
+  }
+
+  @Override
+  public double[] getReadings() {
+    return readings;
   }
 
   @Override
@@ -75,11 +68,18 @@ public abstract class AbstractSensor implements Sensor {
     );
   }
 
+  public SensingVoxel getVoxel() {
+    return voxel;
+  }
+
+  @Override
+  public void setVoxel(SensingVoxel voxel) {
+    this.voxel = voxel;
+  }
+
   @Override
   public String toString() {
     return getClass().getSimpleName();
   }
-
-  protected abstract double[] sense(double t);
 
 }

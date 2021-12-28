@@ -37,10 +37,20 @@ public abstract class AggregatorSensor extends CompositeSensor {
     reset();
   }
 
+  protected abstract double[] aggregate(double t);
+
   @Override
   public void reset() {
     super.reset();
     readings.clear();
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "{" +
+        "sensor=" + sensor +
+        ", interval=" + interval +
+        '}';
   }
 
   @Override
@@ -53,16 +63,6 @@ public abstract class AggregatorSensor extends CompositeSensor {
       t0 = readings.firstKey();
     }
     return aggregate(t);
-  }
-
-  protected abstract double[] aggregate(double t);
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "{" +
-        "sensor=" + sensor +
-        ", interval=" + interval +
-        '}';
   }
 
 }

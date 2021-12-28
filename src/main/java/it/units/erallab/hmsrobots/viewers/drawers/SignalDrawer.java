@@ -36,7 +36,14 @@ public class SignalDrawer extends MemoryDrawer<Double> {
   private final Color axesColor;
   private final Color textColor;
 
-  public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, Color signalColor, Color axesColor, Color textColor) {
+  public SignalDrawer(
+      Extractor extractor,
+      Function<Snapshot, Double> function,
+      double windowT,
+      Color signalColor,
+      Color axesColor,
+      Color textColor
+  ) {
     super(extractor, function, windowT);
     this.signalColor = signalColor;
     this.axesColor = axesColor;
@@ -102,8 +109,16 @@ public class SignalDrawer extends MemoryDrawer<Double> {
     g.draw(new Line2D.Double(pBB.min.x - textW, pBB.min.y, pBB.min.x, pBB.min.y));
     g.setColor(textColor);
     String s = String.format("%.1f", maxV);
-    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.min.y + textH / 2d));
+    g.drawString(
+        s,
+        (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)),
+        (float) (pBB.min.y + textH / 2d)
+    );
     s = String.format("%.1f", minV);
-    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.max.y + textH / 2d));
+    g.drawString(
+        s,
+        (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)),
+        (float) (pBB.max.y + textH / 2d)
+    );
   }
 }

@@ -40,11 +40,11 @@ public class Vector implements Shape {
     return Point2.average(start, end);
   }
 
-  public Point2 getStart() {
-    return start;
-  }
-
   public Point2 getEnd() {
     return end;
+  }
+
+  public Point2 getStart() {
+    return start;
   }
 }

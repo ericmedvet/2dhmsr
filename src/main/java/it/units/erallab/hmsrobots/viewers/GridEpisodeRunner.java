@@ -36,9 +36,12 @@ import java.util.logging.Logger;
  */
 public class GridEpisodeRunner<S> implements Runnable {
 
+  private static final Logger L = Logger.getLogger(GridEpisodeRunner.class.getName());
+
   static {
     try {
-      LogManager.getLogManager().readConfiguration(GridEpisodeRunner.class.getClassLoader().getResourceAsStream("logging.properties"));
+      LogManager.getLogManager()
+          .readConfiguration(GridEpisodeRunner.class.getClassLoader().getResourceAsStream("logging.properties"));
     } catch (IOException ex) {
       //ignore
     } catch (SecurityException ex) {
@@ -48,13 +51,15 @@ public class GridEpisodeRunner<S> implements Runnable {
 
   private final Grid<Pair<String, S>> namedSolutionGrid;
   private final Task<S, ?> episode;
-
   private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
-  private static final Logger L = Logger.getLogger(GridEpisodeRunner.class.getName());
-
-  public GridEpisodeRunner(Grid<Pair<String, S>> namedSolutionGrid, Task<S, ?> episode, GridSnapshotListener gridSnapshotListener, ExecutorService executor) {
+  public GridEpisodeRunner(
+      Grid<Pair<String, S>> namedSolutionGrid,
+      Task<S, ?> episode,
+      GridSnapshotListener gridSnapshotListener,
+      ExecutorService executor
+  ) {
     this.namedSolutionGrid = namedSolutionGrid;
     this.episode = episode;
     this.executor = executor;
@@ -69,9 +74,23 @@ public class GridEpisodeRunner<S> implements Runnable {
         .filter(p -> p.getValue() != null && p.getValue().getRight() != null)
         .forEach(entry -> {
           results.add(executor.submit(() -> {
-            L.fine(String.format("Starting %s in position (%d,%d)", episode.getClass().getSimpleName(), entry.getX(), entry.getY()));
-            Object outcome = episode.apply(entry.getValue().getRight(), gridSnapshotListener.listener(entry.getX(), entry.getY()));
-            L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", episode.getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
+            L.fine(String.format(
+                "Starting %s in position (%d,%d)",
+                episode.getClass().getSimpleName(),
+                entry.getX(),
+                entry.getY()
+            ));
+            Object outcome = episode.apply(
+                entry.getValue().getRight(),
+                gridSnapshotListener.listener(entry.getX(), entry.getY())
+            );
+            L.fine(String.format(
+                "Ended %s in position (%d,%d) with outcome %s",
+                episode.getClass().getSimpleName(),
+                entry.getX(),
+                entry.getY(),
+                outcome
+            ));
           }));
         });
     //wait for results

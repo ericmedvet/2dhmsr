@@ -35,49 +35,6 @@ public interface Drawer {
 
   void draw(double t, Snapshot snapshot, Graphics2D g);
 
-  static Drawer of(Drawer... drawers) {
-    return of(List.of(drawers));
-  }
-
-  static Drawer of(List<Drawer> drawers) {
-    return (t, snapshot, g) -> drawers.forEach(d -> d.draw(t, snapshot, g));
-  }
-
-  static Drawer diagonals() {
-    return diagonals(DrawingUtils.Colors.AXES);
-  }
-
-  static Drawer diagonals(Color color) {
-    return (t, snapshot, g) -> {
-      Rectangle2D r = (Rectangle2D) g.getClip();
-      g.setColor(color);
-      g.draw(new Line2D.Double(r.getX(), r.getY(), r.getMaxX(), r.getMaxY()));
-      g.draw(new Line2D.Double(r.getX(), r.getMaxY(), r.getMaxX(), r.getY()));
-    };
-  }
-
-  static Drawer text(String s) {
-    return text(s, DrawingUtils.Alignment.CENTER);
-  }
-
-  static Drawer text(String s, DrawingUtils.Alignment alignment) {
-    return text(s, alignment, DrawingUtils.Colors.TEXT);
-  }
-
-  static Drawer text(String s, DrawingUtils.Alignment alignment, Color color) {
-    return (t, snapshot, g) -> {
-      g.setColor(color);
-      g.drawString(
-          s,
-          switch (alignment) {
-            case LEFT -> g.getClipBounds().x + 1;
-            case CENTER -> g.getClipBounds().x + g.getClipBounds().width / 2 - g.getFontMetrics().stringWidth(s) / 2;
-            case RIGHT -> g.getClipBounds().x + g.getClipBounds().width - 1 - g.getFontMetrics().stringWidth(s);
-          },
-          g.getClipBounds().y + 1 + g.getFontMetrics().getMaxAscent());
-    };
-  }
-
   static Drawer clear() {
     return clear(Color.WHITE);
   }
@@ -106,6 +63,50 @@ public interface Drawer {
       drawer.draw(t, snapshot, g);
       //restore clip and transform
       g.setClip(shape);
+    };
+  }
+
+  static Drawer diagonals() {
+    return diagonals(DrawingUtils.Colors.AXES);
+  }
+
+  static Drawer diagonals(Color color) {
+    return (t, snapshot, g) -> {
+      Rectangle2D r = (Rectangle2D) g.getClip();
+      g.setColor(color);
+      g.draw(new Line2D.Double(r.getX(), r.getY(), r.getMaxX(), r.getMaxY()));
+      g.draw(new Line2D.Double(r.getX(), r.getMaxY(), r.getMaxX(), r.getY()));
+    };
+  }
+
+  static Drawer of(Drawer... drawers) {
+    return of(List.of(drawers));
+  }
+
+  static Drawer of(List<Drawer> drawers) {
+    return (t, snapshot, g) -> drawers.forEach(d -> d.draw(t, snapshot, g));
+  }
+
+  static Drawer text(String s) {
+    return text(s, DrawingUtils.Alignment.CENTER);
+  }
+
+  static Drawer text(String s, DrawingUtils.Alignment alignment) {
+    return text(s, alignment, DrawingUtils.Colors.TEXT);
+  }
+
+  static Drawer text(String s, DrawingUtils.Alignment alignment, Color color) {
+    return (t, snapshot, g) -> {
+      g.setColor(color);
+      g.drawString(
+          s,
+          switch (alignment) {
+            case LEFT -> g.getClipBounds().x + 1;
+            case CENTER -> g.getClipBounds().x + g.getClipBounds().width / 2 - g.getFontMetrics().stringWidth(s) / 2;
+            case RIGHT -> g.getClipBounds().x + g.getClipBounds().width - 1 - g.getFontMetrics().stringWidth(s);
+          },
+          g.getClipBounds().y + 1 + g.getFontMetrics().getMaxAscent()
+      );
     };
   }
 

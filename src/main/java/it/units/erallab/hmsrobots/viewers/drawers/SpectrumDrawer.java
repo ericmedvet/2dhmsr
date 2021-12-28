@@ -43,7 +43,18 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
   private final Color axesColor;
   private final Color textColor;
 
-  public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins, Color barFillColor, Color barLineColor, Color axesColor, Color textColor) {
+  public SpectrumDrawer(
+      Extractor extractor,
+      Function<Snapshot, Double> function,
+      double windowT,
+      double minF,
+      double maxF,
+      int nBins,
+      Color barFillColor,
+      Color barLineColor,
+      Color axesColor,
+      Color textColor
+  ) {
     super(extractor, function, windowT);
     this.minF = minF;
     this.maxF = maxF;
@@ -54,8 +65,26 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
     this.textColor = textColor;
   }
 
-  public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins) {
-    this(extractor, function, windowT, minF, maxF, nBins, DrawingUtils.alphaed(DrawingUtils.Colors.DATA, .5f), DrawingUtils.Colors.DATA, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
+  public SpectrumDrawer(
+      Extractor extractor,
+      Function<Snapshot, Double> function,
+      double windowT,
+      double minF,
+      double maxF,
+      int nBins
+  ) {
+    this(
+        extractor,
+        function,
+        windowT,
+        minF,
+        maxF,
+        nBins,
+        DrawingUtils.alphaed(DrawingUtils.Colors.DATA, .5f),
+        DrawingUtils.Colors.DATA,
+        DrawingUtils.Colors.AXES,
+        DrawingUtils.Colors.TEXT
+    );
   }
 
   @Override
@@ -109,7 +138,15 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
     g.draw(new Line2D.Double(pBB.min.x - textW, pBB.min.y, pBB.min.x, pBB.min.y));
     g.setColor(textColor);
     String s = String.format("%.1f", maxValue);
-    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.min.y + textH / 2d));
-    g.drawString("0", (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth("0")), (float) (pBB.max.y + textH / 2d));
+    g.drawString(
+        s,
+        (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)),
+        (float) (pBB.min.y + textH / 2d)
+    );
+    g.drawString(
+        "0",
+        (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth("0")),
+        (float) (pBB.max.y + textH / 2d)
+    );
   }
 }

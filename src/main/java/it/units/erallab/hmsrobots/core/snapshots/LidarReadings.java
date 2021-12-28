@@ -32,11 +32,11 @@ public class LidarReadings extends ScopedReadings {
     this.rayDirections = rayDirections;
   }
 
-  public double getVoxelAngle() {
-    return voxelAngle;
-  }
-
   public double[] getRayDirections() {
     return rayDirections;
+  }
+
+  public double getVoxelAngle() {
+    return voxelAngle;
   }
 }

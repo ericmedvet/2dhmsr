@@ -33,7 +33,10 @@ public class SmoothedController<V extends ControllableVoxel> extends AbstractCon
   Grid<Double> currentControlSignals = null;
 
   @JsonCreator
-  public SmoothedController(@JsonProperty("innerController") AbstractController<V> innerController, @JsonProperty("stepT") double controlSignalSpeed) {
+  public SmoothedController(
+      @JsonProperty("innerController") AbstractController<V> innerController,
+      @JsonProperty("stepT") double controlSignalSpeed
+  ) {
     this.innerController = innerController;
     this.controlSignalSpeed = controlSignalSpeed;
   }

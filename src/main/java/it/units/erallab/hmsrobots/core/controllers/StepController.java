@@ -35,7 +35,8 @@ public class StepController<V extends ControllableVoxel> extends AbstractControl
   @JsonCreator
   public StepController(
       @JsonProperty("innerController") AbstractController<V> innerController,
-      @JsonProperty("stepT") double stepT) {
+      @JsonProperty("stepT") double stepT
+  ) {
     this.innerController = innerController;
     this.stepT = stepT;
   }

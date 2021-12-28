@@ -29,8 +29,8 @@ public interface Sensor extends Serializable, Actionable, Snapshottable {
 
   Domain[] getDomains();
 
-  void setVoxel(SensingVoxel sensingVoxel);
-
   double[] getReadings();
+
+  void setVoxel(SensingVoxel sensingVoxel);
 
 }

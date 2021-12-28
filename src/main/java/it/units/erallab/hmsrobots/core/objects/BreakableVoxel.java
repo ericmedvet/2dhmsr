@@ -29,18 +29,6 @@ import java.util.*;
 
 public class BreakableVoxel extends SensingVoxel {
 
-  public enum ComponentType {
-    ACTUATOR, SENSORS, STRUCTURE
-  }
-
-  public enum MalfunctionType {
-    NONE, ZERO, FROZEN, RANDOM
-  }
-
-  public enum MalfunctionTrigger {
-    CONTROL, AREA, TIME
-  }
-
   @JsonProperty
   private final Map<ComponentType, Set<MalfunctionType>> malfunctions;
   @JsonProperty
@@ -49,17 +37,14 @@ public class BreakableVoxel extends SensingVoxel {
   private final double restoreTime;
   @JsonProperty
   private final long randomSeed;
-
   private final EnumMap<MalfunctionTrigger, Double> triggerCounters;
   private final EnumMap<ComponentType, MalfunctionType> state;
-
   private transient double lastT;
   private transient double lastBreakT;
   private transient double lastControlEnergy;
   private transient double lastAreaRatioEnergy;
   private transient double[] sensorReadings;
   private transient Random random;
-
   @JsonCreator
   public BreakableVoxel(
       @JsonProperty("sideLength") double sideLength,
@@ -83,7 +68,24 @@ public class BreakableVoxel extends SensingVoxel {
       @JsonProperty("triggerThresholds") Map<MalfunctionTrigger, Double> triggerThresholds,
       @JsonProperty("restoreTime") double restoreTime
   ) {
-    super(sideLength, massSideLengthRatio, springF, springD, massLinearDamping, massAngularDamping, friction, restitution, mass, limitContractionFlag, massCollisionFlag, areaRatioMaxDelta, springScaffoldings, maxForce, forceMethod, sensors);
+    super(
+        sideLength,
+        massSideLengthRatio,
+        springF,
+        springD,
+        massLinearDamping,
+        massAngularDamping,
+        friction,
+        restitution,
+        mass,
+        limitContractionFlag,
+        massCollisionFlag,
+        areaRatioMaxDelta,
+        springScaffoldings,
+        maxForce,
+        forceMethod,
+        sensors
+    );
     this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
     this.triggerThresholds = triggerThresholds;
@@ -92,8 +94,15 @@ public class BreakableVoxel extends SensingVoxel {
     state = new EnumMap<>(ComponentType.class);
     reset();
   }
-
-  public BreakableVoxel(double maxForce, ForceMethod forceMethod, List<Sensor> sensors, long randomSeed, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
+  public BreakableVoxel(
+      double maxForce,
+      ForceMethod forceMethod,
+      List<Sensor> sensors,
+      long randomSeed,
+      Map<ComponentType, Set<MalfunctionType>> malfunctions,
+      Map<MalfunctionTrigger, Double> triggerThresholds,
+      double restoreTime
+  ) {
     super(maxForce, forceMethod, sensors);
     this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
@@ -103,8 +112,13 @@ public class BreakableVoxel extends SensingVoxel {
     state = new EnumMap<>(ComponentType.class);
     reset();
   }
-
-  public BreakableVoxel(List<Sensor> sensors, long randomSeed, Map<ComponentType, Set<MalfunctionType>> malfunctions, Map<MalfunctionTrigger, Double> triggerThresholds, double restoreTime) {
+  public BreakableVoxel(
+      List<Sensor> sensors,
+      long randomSeed,
+      Map<ComponentType, Set<MalfunctionType>> malfunctions,
+      Map<MalfunctionTrigger, Double> triggerThresholds,
+      double restoreTime
+  ) {
     super(sensors);
     this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
@@ -114,6 +128,18 @@ public class BreakableVoxel extends SensingVoxel {
     state = new EnumMap<>(ComponentType.class);
     Arrays.stream(ComponentType.values()).sequential().forEach(component -> state.put(component, MalfunctionType.NONE));
     reset();
+  }
+
+  public enum ComponentType {
+    ACTUATOR, SENSORS, STRUCTURE
+  }
+
+  public enum MalfunctionTrigger {
+    CONTROL, AREA, TIME
+  }
+
+  public enum MalfunctionType {
+    NONE, ZERO, FROZEN, RANDOM
   }
 
   @Override
@@ -127,35 +153,6 @@ public class BreakableVoxel extends SensingVoxel {
       f = random.nextDouble() * 2d - 1d;
     }
     super.applyForce(f);
-  }
-
-  private void updateStructureMalfunctionType() {
-    if (state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE)) {
-      for (DistanceJoint springJoint : springJoints) {
-        springJoint.setFrequency(springF);
-      }
-    } else if (state.get(ComponentType.STRUCTURE).equals(MalfunctionType.FROZEN)) {
-      for (DistanceJoint springJoint : springJoints) {
-        springJoint.setFrequency(0d);
-        springJoint.setDampingRatio(0d);
-      }
-    } else {
-      throw new IllegalArgumentException("Unsupported structure malfunction type.");
-    }
-  }
-
-  public boolean isBroken() {
-    return !state.get(ComponentType.ACTUATOR).equals(MalfunctionType.NONE)
-        || !state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE)
-        || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
-  }
-
-  private double[] random(Domain[] domains) {
-    double[] values = new double[domains.length];
-    for (int i = 0; i < domains.length; i++) {
-      values[i] = random.nextDouble() * (domains[i].getMax() - domains[i].getMin()) + domains[i].getMin();
-    }
-    return values;
   }
 
   @Override
@@ -174,6 +171,18 @@ public class BreakableVoxel extends SensingVoxel {
   }
 
   @Override
+  public double[] getSensorReadings() {
+    return switch (state.get(ComponentType.SENSORS)) {
+      case NONE, FROZEN -> sensorReadings;
+      case ZERO -> new double[sensorReadings.length];
+      case RANDOM -> getSensors().stream()
+          .map(s -> random(s.getDomains()))
+          .reduce(ArrayUtils::addAll)
+          .orElse(new double[sensorReadings.length]);
+    };
+  }
+
+  @Override
   public void reset() {
     super.reset();
     lastT = 0d;
@@ -188,18 +197,6 @@ public class BreakableVoxel extends SensingVoxel {
   }
 
   @Override
-  public double[] getSensorReadings() {
-    return switch (state.get(ComponentType.SENSORS)) {
-      case NONE, FROZEN -> sensorReadings;
-      case ZERO -> new double[sensorReadings.length];
-      case RANDOM -> getSensors().stream()
-          .map(s -> random(s.getDomains()))
-          .reduce(ArrayUtils::addAll)
-          .orElse(new double[sensorReadings.length]);
-    };
-  }
-
-  @Override
   public void act(double t) {
     super.act(t);
     if (state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE) || sensorReadings == null) {
@@ -207,8 +204,14 @@ public class BreakableVoxel extends SensingVoxel {
     }
     //update counters
     triggerCounters.put(MalfunctionTrigger.TIME, triggerCounters.get(MalfunctionTrigger.TIME) + t - lastT);
-    triggerCounters.put(MalfunctionTrigger.CONTROL, triggerCounters.get(MalfunctionTrigger.CONTROL) + (getControlEnergy() - lastControlEnergy));
-    triggerCounters.put(MalfunctionTrigger.AREA, triggerCounters.get(MalfunctionTrigger.AREA) + (getAreaRatioEnergy() - lastAreaRatioEnergy));
+    triggerCounters.put(
+        MalfunctionTrigger.CONTROL,
+        triggerCounters.get(MalfunctionTrigger.CONTROL) + (getControlEnergy() - lastControlEnergy)
+    );
+    triggerCounters.put(
+        MalfunctionTrigger.AREA,
+        triggerCounters.get(MalfunctionTrigger.AREA) + (getAreaRatioEnergy() - lastAreaRatioEnergy)
+    );
     lastT = t;
     lastControlEnergy = getControlEnergy();
     lastAreaRatioEnergy = getAreaRatioEnergy();
@@ -248,5 +251,34 @@ public class BreakableVoxel extends SensingVoxel {
         ", triggerThresholds=" + triggerThresholds +
         ", restoreTime=" + restoreTime +
         '}';
+  }
+
+  public boolean isBroken() {
+    return !state.get(ComponentType.ACTUATOR).equals(MalfunctionType.NONE)
+        || !state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE)
+        || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
+  }
+
+  private double[] random(Domain[] domains) {
+    double[] values = new double[domains.length];
+    for (int i = 0; i < domains.length; i++) {
+      values[i] = random.nextDouble() * (domains[i].getMax() - domains[i].getMin()) + domains[i].getMin();
+    }
+    return values;
+  }
+
+  private void updateStructureMalfunctionType() {
+    if (state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE)) {
+      for (DistanceJoint springJoint : springJoints) {
+        springJoint.setFrequency(springF);
+      }
+    } else if (state.get(ComponentType.STRUCTURE).equals(MalfunctionType.FROZEN)) {
+      for (DistanceJoint springJoint : springJoints) {
+        springJoint.setFrequency(0d);
+        springJoint.setDampingRatio(0d);
+      }
+    } else {
+      throw new IllegalArgumentException("Unsupported structure malfunction type.");
+    }
   }
 }

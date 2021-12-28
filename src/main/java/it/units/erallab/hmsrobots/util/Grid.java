@@ -35,90 +35,6 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
   private final static char FULL_CELL_CHAR = '█';
   private final static char EMPTY_CELL_CHAR = '░';
-
-  public static class Key implements Serializable {
-    private final int x;
-    private final int y;
-
-    public Key(int x, int y) {
-      this.x = x;
-      this.y = y;
-    }
-
-    public int getX() {
-      return x;
-    }
-
-    public int getY() {
-      return y;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Key key = (Key) o;
-      return x == key.x && y == key.y;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(x, y);
-    }
-  }
-
-  public static final class Entry<K> extends Key implements Serializable {
-
-    private final K value;
-
-    public Entry(int x, int y, K value) {
-      super(x, y);
-      this.value = value;
-    }
-
-    public K getValue() {
-      return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      if (!super.equals(o)) return false;
-      Entry<?> entry = (Entry<?>) o;
-      return Objects.equals(value, entry.value);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(super.hashCode(), value);
-    }
-  }
-
-  private static final class GridIterator<K> implements Iterator<Entry<K>> {
-
-    private int c = 0;
-    private final Grid<K> grid;
-
-    public GridIterator(Grid<K> grid) {
-      this.grid = grid;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return c < grid.w * grid.h;
-    }
-
-    @Override
-    public Entry<K> next() {
-      int y = Math.floorDiv(c, grid.w);
-      int x = c % grid.w;
-      c = c + 1;
-      return new Entry<>(x, y, grid.get(x, y));
-    }
-
-  }
-
   @JsonProperty("items")
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   private final List<T> ts;
@@ -141,29 +57,102 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     }
   }
 
-  public T get(int x, int y) {
-    if ((x < 0) || (x >= w)) {
-      return null;
+  public static final class Entry<K> extends Key implements Serializable {
+
+    private final K value;
+
+    public Entry(int x, int y, K value) {
+      super(x, y);
+      this.value = value;
     }
-    if ((y < 0) || (y >= h)) {
-      return null;
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      if (!super.equals(o))
+        return false;
+      Entry<?> entry = (Entry<?>) o;
+      return Objects.equals(value, entry.value);
     }
-    return ts.get((y * w) + x);
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(super.hashCode(), value);
+    }
+
+    public K getValue() {
+      return value;
+    }
   }
 
-  public void set(int x, int y, T t) {
-    if (x < 0 || x >= w || y < 0 || y >= h) {
-      throw new IllegalArgumentException(String.format("Cannot set element at %d,%d on a %dx%d grid", x, y, w, h));
+  private static final class GridIterator<K> implements Iterator<Entry<K>> {
+
+    private final Grid<K> grid;
+    private int c = 0;
+
+    public GridIterator(Grid<K> grid) {
+      this.grid = grid;
     }
-    ts.set((y * w) + x, t);
+
+    @Override
+    public boolean hasNext() {
+      return c < grid.w * grid.h;
+    }
+
+    @Override
+    public Entry<K> next() {
+      int y = Math.floorDiv(c, grid.w);
+      int x = c % grid.w;
+      c = c + 1;
+      return new Entry<>(x, y, grid.get(x, y));
+    }
+
   }
 
-  public int getW() {
-    return w;
+  public static class Key implements Serializable {
+    private final int x;
+    private final int y;
+
+    public Key(int x, int y) {
+      this.x = x;
+      this.y = y;
+    }
+
+    public int getX() {
+      return x;
+    }
+
+    public int getY() {
+      return y;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(x, y);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      Key key = (Key) o;
+      return x == key.x && y == key.y;
+    }
   }
 
-  public int getH() {
-    return h;
+  public static <K> Grid<K> copy(Grid<K> other) {
+    Grid<K> grid = Grid.create(other);
+    for (int x = 0; x < grid.w; x++) {
+      for (int y = 0; y < grid.h; y++) {
+        grid.set(x, y, other.get(x, y));
+      }
+    }
+    return grid;
   }
 
   public static <S, T> Grid<T> create(Grid<S> source, Function<S, T> transformerFunction) {
@@ -194,65 +183,6 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
 
   public static <K> Grid<K> create(Grid<?> other) {
     return create(other.getW(), other.getH());
-  }
-
-  public static <K> Grid<K> copy(Grid<K> other) {
-    Grid<K> grid = Grid.create(other);
-    for (int x = 0; x < grid.w; x++) {
-      for (int y = 0; y < grid.h; y++) {
-        grid.set(x, y, other.get(x, y));
-      }
-    }
-    return grid;
-  }
-
-  @Override
-  public Iterator<Entry<T>> iterator() {
-    return new GridIterator<>(this);
-  }
-
-  public Stream<Entry<T>> stream() {
-    return StreamSupport.stream(spliterator(), false);
-  }
-
-  public Collection<T> values() {
-    return Collections.unmodifiableList(ts);
-  }
-
-  public long count(Predicate<T> predicate) {
-    return values().stream().filter(predicate).count();
-  }
-
-  public List<List<T>> rows() {
-    List<List<T>> rows = new ArrayList<>();
-    for (int y = 0; y < h; y++) {
-      List<T> row = new ArrayList<>();
-      for (int x = 0; x < w; x++) {
-        row.add(get(x, y));
-      }
-      rows.add(row);
-    }
-    return rows;
-  }
-
-  public List<List<T>> columns() {
-    List<List<T>> columns = new ArrayList<>();
-    for (int x = 0; x < w; x++) {
-      List<T> column = new ArrayList<>();
-      for (int y = 0; y < h; y++) {
-        column.add(get(x, y));
-      }
-      columns.add(column);
-    }
-    return columns;
-  }
-
-  public boolean[][] toArray(Predicate<T> p) {
-    boolean[][] b = new boolean[w][h];
-    for (Grid.Entry<T> entry : this) {
-      b[entry.getX()][entry.getY()] = p.test(entry.getValue());
-    }
-    return b;
   }
 
   public static <K> String toString(Grid<K> grid, String format) {
@@ -297,17 +227,53 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     return sb.toString();
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Grid<?> grid = (Grid<?>) o;
-    return w == grid.w && h == grid.h && ts.equals(grid.ts);
+  public List<List<T>> columns() {
+    List<List<T>> columns = new ArrayList<>();
+    for (int x = 0; x < w; x++) {
+      List<T> column = new ArrayList<>();
+      for (int y = 0; y < h; y++) {
+        column.add(get(x, y));
+      }
+      columns.add(column);
+    }
+    return columns;
+  }
+
+  public long count(Predicate<T> predicate) {
+    return values().stream().filter(predicate).count();
+  }
+
+  public T get(int x, int y) {
+    if ((x < 0) || (x >= w)) {
+      return null;
+    }
+    if ((y < 0) || (y >= h)) {
+      return null;
+    }
+    return ts.get((y * w) + x);
+  }
+
+  public int getH() {
+    return h;
+  }
+
+  public int getW() {
+    return w;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(ts, w, h);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    Grid<?> grid = (Grid<?>) o;
+    return w == grid.w && h == grid.h && ts.equals(grid.ts);
   }
 
   @Override
@@ -324,6 +290,46 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
     }
     sb.append("]");
     return sb.toString();
+  }
+
+  @Override
+  public Iterator<Entry<T>> iterator() {
+    return new GridIterator<>(this);
+  }
+
+  public List<List<T>> rows() {
+    List<List<T>> rows = new ArrayList<>();
+    for (int y = 0; y < h; y++) {
+      List<T> row = new ArrayList<>();
+      for (int x = 0; x < w; x++) {
+        row.add(get(x, y));
+      }
+      rows.add(row);
+    }
+    return rows;
+  }
+
+  public void set(int x, int y, T t) {
+    if (x < 0 || x >= w || y < 0 || y >= h) {
+      throw new IllegalArgumentException(String.format("Cannot set element at %d,%d on a %dx%d grid", x, y, w, h));
+    }
+    ts.set((y * w) + x, t);
+  }
+
+  public Stream<Entry<T>> stream() {
+    return StreamSupport.stream(spliterator(), false);
+  }
+
+  public boolean[][] toArray(Predicate<T> p) {
+    boolean[][] b = new boolean[w][h];
+    for (Grid.Entry<T> entry : this) {
+      b[entry.getX()][entry.getY()] = p.test(entry.getValue());
+    }
+    return b;
+  }
+
+  public Collection<T> values() {
+    return Collections.unmodifiableList(ts);
   }
 
 }

@@ -38,15 +38,51 @@ public class VoxelPoly extends Poly {
   private final double controlEnergy;
   private final Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions;
 
-  public VoxelPoly(List<Point2> vertexes, double angle, Point2 linearVelocity, boolean isTouchingGround, double areaRatio, double areaRatioEnergy) {
+  public VoxelPoly(
+      List<Point2> vertexes,
+      double angle,
+      Point2 linearVelocity,
+      boolean isTouchingGround,
+      double areaRatio,
+      double areaRatioEnergy
+  ) {
     this(vertexes, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, 0d, 0d);
   }
 
-  public VoxelPoly(List<Point2> vertexes, double angle, Point2 linearVelocity, boolean isTouchingGround, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy) {
-    this(vertexes, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, lastAppliedForce, controlEnergy, Map.of());
+  public VoxelPoly(
+      List<Point2> vertexes,
+      double angle,
+      Point2 linearVelocity,
+      boolean isTouchingGround,
+      double areaRatio,
+      double areaRatioEnergy,
+      double lastAppliedForce,
+      double controlEnergy
+  ) {
+    this(
+        vertexes,
+        angle,
+        linearVelocity,
+        isTouchingGround,
+        areaRatio,
+        areaRatioEnergy,
+        lastAppliedForce,
+        controlEnergy,
+        Map.of()
+    );
   }
 
-  public VoxelPoly(List<Point2> vertexes, double angle, Point2 linearVelocity, boolean isTouchingGround, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy, Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions) {
+  public VoxelPoly(
+      List<Point2> vertexes,
+      double angle,
+      Point2 linearVelocity,
+      boolean isTouchingGround,
+      double areaRatio,
+      double areaRatioEnergy,
+      double lastAppliedForce,
+      double controlEnergy,
+      Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions
+  ) {
     super(vertexes);
     this.angle = angle;
     this.linearVelocity = linearVelocity;
@@ -62,14 +98,6 @@ public class VoxelPoly extends Poly {
     return angle;
   }
 
-  public Point2 getLinearVelocity() {
-    return linearVelocity;
-  }
-
-  public boolean isTouchingGround() {
-    return isTouchingGround;
-  }
-
   public double getAreaRatio() {
     return areaRatio;
   }
@@ -78,15 +106,23 @@ public class VoxelPoly extends Poly {
     return areaRatioEnergy;
   }
 
-  public double getLastAppliedForce() {
-    return lastAppliedForce;
-  }
-
   public double getControlEnergy() {
     return controlEnergy;
   }
 
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
+  }
+
+  public Point2 getLinearVelocity() {
+    return linearVelocity;
+  }
+
   public Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> getMalfunctions() {
     return malfunctions;
+  }
+
+  public boolean isTouchingGround() {
+    return isTouchingGround;
   }
 }

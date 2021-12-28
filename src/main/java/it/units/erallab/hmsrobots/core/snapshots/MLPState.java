@@ -35,18 +35,6 @@ public class MLPState {
     this.activationDomain = activationDomain;
   }
 
-  public double[][] getActivationValues() {
-    return activationValues;
-  }
-
-  public double[][][] getWeights() {
-    return weights;
-  }
-
-  public Domain getActivationDomain() {
-    return activationDomain;
-  }
-
   private static double[][] copyOf(double[][] o) {
     double[][] c = new double[o.length][];
     for (int i = 0; i < o.length; i++) {
@@ -61,6 +49,18 @@ public class MLPState {
       c[i] = copyOf(o[i]);
     }
     return c;
+  }
+
+  public Domain getActivationDomain() {
+    return activationDomain;
+  }
+
+  public double[][] getActivationValues() {
+    return activationValues;
+  }
+
+  public double[][][] getWeights() {
+    return weights;
   }
 
 }

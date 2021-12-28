@@ -32,6 +32,29 @@ import java.util.*;
 import java.util.stream.DoubleStream;
 
 public class Lidar extends AbstractSensor {
+  @JsonProperty
+  private final double rayLength;
+  @JsonProperty
+  private final double[] rayDirections;
+
+  @JsonCreator
+  public Lidar(
+      @JsonProperty("rayLength") double rayLength,
+      @JsonProperty("rayDirections") double... rayDirections
+  ) {
+    super(Collections.nCopies(rayDirections.length, Domain.of(0, rayLength)).toArray(Domain[]::new));
+    this.rayLength = rayLength;
+    this.rayDirections = rayDirections;
+  }
+  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
+    this(
+        rayLength,
+        Arrays.stream(raysPerSide.entrySet().stream()
+            .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
+            .reduce(new double[]{}, ArrayUtils::addAll)).distinct().toArray()
+    );
+  }
+
   public enum Side {
 
     N(Math.PI / 4d, Math.PI * 3d / 4d),
@@ -50,12 +73,12 @@ public class Lidar extends AbstractSensor {
       this.endAngle = endAngle;
     }
 
-    public double getStartAngle() {
-      return startAngle;
-    }
-
     public double getEndAngle() {
       return endAngle;
+    }
+
+    public double getStartAngle() {
+      return startAngle;
     }
 
   }
@@ -64,51 +87,19 @@ public class Lidar extends AbstractSensor {
 
     @Override
     public boolean isAllowed(Filter f) {
-      if (f == null) return true;
+      if (f == null)
+        return true;
       return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
     }
 
   }
 
-  @JsonProperty
-  private final double rayLength;
-  @JsonProperty
-  private final double[] rayDirections;
-
-  @JsonCreator
-  public Lidar(
-      @JsonProperty("rayLength") double rayLength,
-      @JsonProperty("rayDirections") double... rayDirections
-  ) {
-    super(Collections.nCopies(rayDirections.length, Domain.of(0, rayLength)).toArray(Domain[]::new));
-    this.rayLength = rayLength;
-    this.rayDirections = rayDirections;
-  }
-
-  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
-    this(
-        rayLength,
-        Arrays.stream(raysPerSide.entrySet().stream()
-            .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
-            .reduce(new double[]{}, ArrayUtils::addAll)).distinct().toArray()
-    );
-  }
-
   private static double[] sampleRangeWithRays(int numberOfRays, double startAngle, double endAngle) {
     return numberOfRays == 1 ?
         new double[]{(endAngle - startAngle) / 2} :
-        DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1)).limit(numberOfRays).toArray();
-  }
-
-  @Override
-  public double[] sense(double t) {
-    List<RaycastResult> results = new ArrayList<>();
-    return Arrays.stream(rayDirections).map(rayDirection -> {
-      Ray ray = new Ray(voxel.getCenter(), rayDirection + voxel.getAngle());
-      results.clear();
-      voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
-      return results.isEmpty() ? rayLength : results.get(0).getRaycast().getDistance();
-    }).toArray();
+        DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1))
+            .limit(numberOfRays)
+            .toArray();
   }
 
   @Override
@@ -130,5 +121,16 @@ public class Lidar extends AbstractSensor {
         "rayLength=" + rayLength +
         ", rayDirections=" + Arrays.toString(rayDirections) +
         '}';
+  }
+
+  @Override
+  public double[] sense(double t) {
+    List<RaycastResult> results = new ArrayList<>();
+    return Arrays.stream(rayDirections).map(rayDirection -> {
+      Ray ray = new Ray(voxel.getCenter(), rayDirection + voxel.getAngle());
+      results.clear();
+      voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
+      return results.isEmpty() ? rayLength : results.get(0).getRaycast().getDistance();
+    }).toArray();
   }
 }
