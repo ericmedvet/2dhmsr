@@ -185,7 +185,6 @@ public class Starter {
     Random random = new Random();
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-
     int nOfInputs = centralizedSensing.nOfInputs();
     int nOfOutputs = centralizedSensing.nOfOutputs();
     int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
@@ -280,8 +279,12 @@ public class Starter {
             SerializationUtils.clone(phasesRobot.getVoxels())
         )
     ));
-    GridOnlineViewer.run(locomotion, namedSolutionGrid);
-    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)), Drawers::basicWithMiniWorldAndSpectra);
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    GridOnlineViewer.run(
+        locomotion,
+        Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
+        Drawers::basicWithMiniWorldAndSpectra
+    );
     /*try {
       GridFileWriter.save(
           locomotion,
@@ -376,7 +379,7 @@ public class Starter {
 
   public static void main(String[] args) {
     //bipedWithBrain();
-    //bipeds();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
@@ -387,7 +390,7 @@ public class Starter {
     //bipedCentralized();
     //devoComb();
     //bipedPoses();
-    sampleExecution();
+    //sampleExecution();
   }
 
   private static void multiped() {
@@ -479,7 +482,7 @@ public class Starter {
     GridOnlineViewer.run(
         locomotion,
         Grid.create(1, 1, Pair.of("", robot)),
-        s -> Drawers.basicWithMiniWorld(s)
+        Drawers::basicWithMiniWorld
     );
     /*
     try {
