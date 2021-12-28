@@ -36,6 +36,7 @@ public class ControllableVoxel extends Voxel {
   private final ForceMethod forceMethod;
   private transient double controlEnergy;
   private transient double lastAppliedForce;
+
   @JsonCreator
   public ControllableVoxel(
       @JsonProperty("sideLength") double sideLength,

@@ -46,6 +46,7 @@ public class Lidar extends AbstractSensor {
     this.rayLength = rayLength;
     this.rayDirections = rayDirections;
   }
+
   public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
     this(
         rayLength,

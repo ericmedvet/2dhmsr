@@ -45,6 +45,7 @@ public class BreakableVoxel extends SensingVoxel {
   private transient double lastAreaRatioEnergy;
   private transient double[] sensorReadings;
   private transient Random random;
+
   @JsonCreator
   public BreakableVoxel(
       @JsonProperty("sideLength") double sideLength,
@@ -94,6 +95,7 @@ public class BreakableVoxel extends SensingVoxel {
     state = new EnumMap<>(ComponentType.class);
     reset();
   }
+
   public BreakableVoxel(
       double maxForce,
       ForceMethod forceMethod,
@@ -112,6 +114,7 @@ public class BreakableVoxel extends SensingVoxel {
     state = new EnumMap<>(ComponentType.class);
     reset();
   }
+
   public BreakableVoxel(
       List<Sensor> sensors,
       long randomSeed,

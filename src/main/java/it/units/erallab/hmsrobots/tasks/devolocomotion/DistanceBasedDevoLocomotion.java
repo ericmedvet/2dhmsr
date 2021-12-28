@@ -45,6 +45,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
 
   private final double stageMinDistance;
   private final double stageMaxT;
+
   public DistanceBasedDevoLocomotion(
       double stageMinDistance,
       double stageMaxT,

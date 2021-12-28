@@ -60,6 +60,7 @@ public class MLPDrawer extends MemoryDrawer<MLPState> {
   private final Color maxColor;
   private final Color axesColor;
   private final Color textColor;
+
   public MLPDrawer(
       Extractor extractor,
       double windowT,

@@ -216,7 +216,8 @@ public class Outcome {
 
   @Override
   public String toString() {
-    return String.format("Outcome{computationTime=%.2fs, distance=%.2f, time=%.1fs, controlPower=%.1f, areaRatioPower=%.1f}",
+    return String.format(
+        "Outcome{computationTime=%.2fs, distance=%.2f, time=%.1fs, controlPower=%.1f, areaRatioPower=%.1f}",
         getComputationTime(),
         getDistance(),
         getTime(),

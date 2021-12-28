@@ -37,6 +37,7 @@ public class SerializationUtils {
     PRETTY_OM.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.NONE);
     PRETTY_OM.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
   }
+
   private SerializationUtils() {
   }
 

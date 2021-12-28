@@ -96,6 +96,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   protected transient RopeJoint[] ropeJoints;
   private transient World world;
   private transient double areaRatioEnergy;
+
   @JsonCreator
   public Voxel(
       @JsonProperty("sideLength") double sideLength,
@@ -127,6 +128,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     this.springScaffoldings = springScaffoldings;
     assemble();
   }
+
   public Voxel() {
     this(
         SIDE_LENGTH,
@@ -144,6 +146,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
         SPRING_SCAFFOLDINGS
     );
   }
+
   public enum SpringScaffolding {
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS
   }

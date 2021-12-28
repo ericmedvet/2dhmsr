@@ -53,6 +53,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
   private final ScheduledExecutorService executor;
   private final boolean running;
   private double t;
+
   public GridOnlineViewer(Grid<String> namesGrid, Grid<Drawer> drawersGrid, ScheduledExecutorService executor) {
     super("World viewer");
     if (namesGrid.getW() != drawersGrid.getW() || namesGrid.getH() != drawersGrid.getH()) {

@@ -31,6 +31,7 @@ public class Velocity extends AbstractSensor {
   private final EnumSet<Axis> axes;
   @JsonProperty
   private final double maxVelocityNorm;
+
   public Velocity(boolean rotated, double maxVelocityNorm, Axis... axes) {
     this(
         rotated,

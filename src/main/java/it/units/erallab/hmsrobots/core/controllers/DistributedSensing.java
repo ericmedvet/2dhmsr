@@ -55,6 +55,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
     currentSignalsGrid = Grid.create(functions, f -> new double[signals * Dir.values().length]);
     reset();
   }
+
   public DistributedSensing(Grid<? extends SensingVoxel> voxels, int signals) {
     this(
         signals,

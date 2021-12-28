@@ -27,6 +27,7 @@ public class VideoUtils {
 
   private static final EncoderFacility DEFAULT_ENCODER = EncoderFacility.JCODEC;
   private static final Logger L = Logger.getLogger(VideoUtils.class.getName());
+
   private VideoUtils() {
   }
 
