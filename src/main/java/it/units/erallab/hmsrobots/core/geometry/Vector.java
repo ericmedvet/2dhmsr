@@ -16,8 +16,9 @@
  */
 package it.units.erallab.hmsrobots.core.geometry;
 
-public record Vector(Point2 start,
-                     Point2 end) implements Shape {
+import java.io.Serializable;
+
+public record Vector(Point2 start, Point2 end) implements Shape, Serializable {
 
   public static Vector of(Point2 start, Point2 end) {
     return new Vector(start, end);

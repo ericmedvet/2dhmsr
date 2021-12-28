@@ -18,10 +18,12 @@ package it.units.erallab.hmsrobots.core.geometry;
 
 import org.dyn4j.geometry.Vector2;
 
+import java.io.Serializable;
+
 /**
  * @author eric
  */
-public record Point2(double x, double y) implements Shape {
+public record Point2(double x, double y) implements Shape, Serializable {
 
   public static Point2 average(Point2... points) {
     double cx = 0;

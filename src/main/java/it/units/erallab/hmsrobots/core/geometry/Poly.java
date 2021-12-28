@@ -16,10 +16,12 @@
  */
 package it.units.erallab.hmsrobots.core.geometry;
 
+import java.io.Serializable;
+
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public record Poly(Point2[] vertexes) implements Shape {
+public record Poly(Point2[] vertexes) implements Shape, Serializable {
 
   public static Poly of(Point2... vertexes) {
     return new Poly(vertexes);
