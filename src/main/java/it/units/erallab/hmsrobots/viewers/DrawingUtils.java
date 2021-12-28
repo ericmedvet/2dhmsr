@@ -81,7 +81,7 @@ public class DrawingUtils {
   }
 
   public static Path2D toPath(Poly poly, boolean close) {
-    Path2D path = toPath(poly.getVertexes());
+    Path2D path = toPath(poly.vertexes());
     if (close) {
       path.closePath();
     }

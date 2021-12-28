@@ -18,7 +18,6 @@
 package it.units.erallab.hmsrobots.core.snapshots;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 
 import java.util.List;
@@ -27,8 +26,9 @@ import java.util.Map;
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
-public class VoxelPoly extends Poly {
+public class VoxelPoly { //TODO was extending Poly
 
+  private final List<Point2> vertexes;
   private final double angle;
   private final Point2 linearVelocity;
   private final boolean isTouchingGround;
@@ -83,7 +83,7 @@ public class VoxelPoly extends Poly {
       double controlEnergy,
       Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions
   ) {
-    super(vertexes);
+    this.vertexes = vertexes;
     this.angle = angle;
     this.linearVelocity = linearVelocity;
     this.isTouchingGround = isTouchingGround;
@@ -124,5 +124,9 @@ public class VoxelPoly extends Poly {
 
   public boolean isTouchingGround() {
     return isTouchingGround;
+  }
+
+  public Point2[] getVertexes() {
+    return vertexes.toArray(Point2[]::new);
   }
 }

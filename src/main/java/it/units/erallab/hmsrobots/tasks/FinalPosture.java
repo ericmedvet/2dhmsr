@@ -18,7 +18,7 @@
 package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
@@ -63,7 +63,7 @@ public class FinalPosture extends AbstractTask<Robot<?>, Grid<Boolean>> {
     return BehaviorUtils.computePosture(
         robot.getVoxels().values().stream()
             .filter(Objects::nonNull)
-            .map(ControllableVoxel::getVoxelPoly)
+            .map(v -> Poly.of(v.getVoxelPoly().getVertexes()))
             .collect(Collectors.toList()),
         gridSize
     );

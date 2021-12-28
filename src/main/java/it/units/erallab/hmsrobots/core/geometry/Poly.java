@@ -16,25 +16,10 @@
  */
 package it.units.erallab.hmsrobots.core.geometry;
 
-import java.util.List;
-
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Poly implements Shape {
-
-  private final Point2[] vertexes;
-
-  public Poly(List<Point2> vertexes) {
-    this.vertexes = new Point2[vertexes.size()];
-    for (int i = 0; i < vertexes.size(); i++) {
-      this.vertexes[i] = vertexes.get(i);
-    }
-  }
-
-  private Poly(Point2... vertexes) {
-    this.vertexes = vertexes;
-  }
+public record Poly(Point2[] vertexes) implements Shape {
 
   public static Poly of(Point2... vertexes) {
     return new Poly(vertexes);
@@ -58,10 +43,6 @@ public class Poly implements Shape {
   @Override
   public Point2 center() {
     return Point2.average(vertexes);
-  }
-
-  public Point2[] getVertexes() {
-    return vertexes;
   }
 
 }

@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -72,8 +73,8 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
     if (readings.isEmpty()) {
       return;
     }
-    double radius = Math.sqrt(voxelPoly.area()) / 2d;
-    Point2 center = voxelPoly.center();
+    double radius = Math.sqrt(Poly.of(voxelPoly.getVertexes()).area()) / 2d;
+    Point2 center = Poly.of(voxelPoly.getVertexes()).center();
     double voxelAngle = Math.atan2(
         (voxelPoly.getVertexes()[1].y() - voxelPoly.getVertexes()[0].y()),
         (voxelPoly.getVertexes()[1].x() - voxelPoly.getVertexes()[0].x())

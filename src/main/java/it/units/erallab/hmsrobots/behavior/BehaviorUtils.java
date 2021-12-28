@@ -70,7 +70,9 @@ public class BehaviorUtils {
   }
 
   public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
-    Collection<BoundingBox> boxes = polies.stream().map(Shape::boundingBox).collect(Collectors.toList());
+    Collection<BoundingBox> boxes = polies.stream()
+        .filter(VoxelPoly::isTouchingGround)
+        .map(s -> BoundingBox.of(s.getVertexes())).collect(Collectors.toList());
     double robotMinX = boxes.stream()
         .mapToDouble(b -> b.min().x())
         .min()
@@ -79,9 +81,8 @@ public class BehaviorUtils {
         .mapToDouble(b -> b.max().x())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    List<Domain> contacts = polies.stream()
-        .filter(VoxelPoly::isTouchingGround)
-        .map(s -> Domain.of(s.boundingBox().min().x(), s.boundingBox().max().x()))
+    List<Domain> contacts = boxes.stream()
+        .map(b -> Domain.of(b.min().x(), b.max().x()))
         .collect(Collectors.toList());
     boolean[] mask = new boolean[n];
     for (Domain contact : contacts) {

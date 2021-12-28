@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -52,7 +53,7 @@ public class VoxelDrawer extends SubtreeDrawer {
   @Override
   protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
-    Path2D path = DrawingUtils.toPath(voxelPoly, true);
+    Path2D path = DrawingUtils.toPath(Poly.of(voxelPoly.getVertexes()), true);
     g.setColor(STROKE_COLOR);
     g.draw(path);
     if (fillType.equals(FillType.AREA_RATIO)) {

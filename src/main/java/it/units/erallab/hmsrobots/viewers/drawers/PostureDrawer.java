@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
@@ -40,12 +41,7 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
   private final Color axesColor;
 
   public PostureDrawer(
-      Extractor extractor,
-      double windowT,
-      int n,
-      boolean isBoolean,
-      Color dataColor,
-      Color axesColor
+      Extractor extractor, double windowT, int n, boolean isBoolean, Color dataColor, Color axesColor
   ) {
     super(
         extractor,
@@ -53,6 +49,7 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
             .andThen(g -> BehaviorUtils.computePosture(g.values()
                 .stream()
                 .filter(Objects::nonNull)
+                .map(v -> Poly.of(v.getVertexes()))
                 .collect(Collectors.toList()), n)),
         windowT
     );
@@ -83,7 +80,8 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
         g.getClip().getBounds2D().getMaxY()
     );
     BoundingBox pBB = (oBB.width() > oBB.height()) ? BoundingBox.of(
-        oBB.min().x() + (oBB.width() - oBB.height()) / 2d + textH,
+        oBB.min()
+            .x() + (oBB.width() - oBB.height()) / 2d + textH,
         oBB.min().y() + textH,
         oBB.max().x() - (oBB.width() - oBB.height()) / 2d - textH,
         oBB.max().y() - textH
