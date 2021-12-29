@@ -66,19 +66,17 @@ public class BehaviorUtils {
   }
 
   public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
-    Collection<BoundingBox> boxes = polies.stream()
-        .filter(VoxelPoly::isTouchingGround)
-        .map(VoxelPoly::boundingBox)
-        .toList();
-    double robotMinX = boxes.stream()
-        .mapToDouble(b -> b.min().x())
+    double robotMinX = polies.stream()
+        .mapToDouble(b -> b.boundingBox().min().x())
         .min()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    double robotMaxX = boxes.stream()
-        .mapToDouble(b -> b.max().x())
+    double robotMaxX = polies.stream()
+        .mapToDouble(b -> b.boundingBox().max().x())
         .max()
         .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    List<DoubleRange> contacts = boxes.stream().map(b -> DoubleRange.of(b.min().x(), b.max().x())).toList();
+    List<DoubleRange> contacts = polies.stream()
+        .filter(VoxelPoly::isTouchingGround)
+        .map(b -> DoubleRange.of(b.boundingBox().min().x(), b.boundingBox().max().x())).toList();
     boolean[] mask = new boolean[n];
     for (DoubleRange contact : contacts) {
       int minIndex = (int) Math.round((contact.min() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));

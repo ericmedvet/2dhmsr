@@ -31,15 +31,11 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
-import it.units.erallab.hmsrobots.viewers.GridFileWriter;
-import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
-import it.units.erallab.hmsrobots.viewers.VideoUtils;
+import it.units.erallab.hmsrobots.viewers.*;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
 import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
-import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
 import javax.imageio.ImageIO;
@@ -83,28 +79,10 @@ public class Starter {
     Robot ballRobot = new Robot(centralizedSensing, SerializationUtils.clone(ballBody));
     //episode
     Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-15"), new Settings());
-
-    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(2, 1);
-    namedSolutionGrid.set(0, 0, Pair.of("biped", bipedRobot));
-    namedSolutionGrid.set(1, 0, Pair.of("ball", ballRobot));
+    Grid<NamedValue<Robot>> namedSolutionGrid = Grid.create(2, 1);
+    namedSolutionGrid.set(0, 0, new NamedValue<>("biped", bipedRobot));
+    namedSolutionGrid.set(1, 0, new NamedValue<>("ball", ballRobot));
     GridOnlineViewer.run(locomotion, namedSolutionGrid, Drawers::basicWithMiniWorldAndFootprintsAndPosture);
-    if (false) {
-      try {
-        GridFileWriter.save(
-            locomotion,
-            namedSolutionGrid,
-            800,
-            400,
-            1,
-            24,
-            VideoUtils.EncoderFacility.FFMPEG_SMALL,
-            new File("/home/eric/biped+ball-footprints+posture.mp4"),
-            Drawers::basicWithMiniWorldAndFootprintsAndPosture
-        );
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
   }
 
   private static void bipedCentralized() {
@@ -125,7 +103,7 @@ public class Starter {
     Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-15"), new Settings());
     GridOnlineViewer.run(
         locomotion,
-        Grid.create(1, 1, Pair.of("robot", robot)),
+        Grid.create(1, 1, new NamedValue<>("robot", robot)),
         s -> Drawer.of(
             Drawer.clip(BoundingBox.of(0d, 0d, 1d, 0.5d), Drawers.basicWithMiniWorld(s)),
             Drawer.clip(
@@ -173,7 +151,7 @@ public class Starter {
     Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-30"), new Settings());
     GridOnlineViewer.run(
         locomotion,
-        Grid.create(1, 1, Pair.of("", centralized)),
+        Grid.create(1, 1, new NamedValue<>("", centralized)),
         Drawers::basicWithMiniWorldAndBrainUsage
     );
   }
@@ -224,14 +202,14 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(10, Locomotion.createTerrain("downhill-30"), new Settings());
 
-    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(1, 4);
-    namedSolutionGrid.set(0, 0, Pair.of("dist-hetero", distHetero));
-    namedSolutionGrid.set(0, 1, Pair.of("centralized", centralized));
-    namedSolutionGrid.set(0, 2, Pair.of("phasesRobot", phasesRobot));
+    Grid<NamedValue<Robot>> namedSolutionGrid = Grid.create(1, 4);
+    namedSolutionGrid.set(0, 0, new NamedValue<>("dist-hetero", distHetero));
+    namedSolutionGrid.set(0, 1, new NamedValue<>("centralized", centralized));
+    namedSolutionGrid.set(0, 2, new NamedValue<>("phasesRobot", phasesRobot));
     namedSolutionGrid.set(
         0,
         3,
-        Pair.of("phasesRobot-step-0.5", new Robot(
+        new NamedValue<>("phasesRobot-step-0.5", new Robot(
             ((AbstractController) phasesRobot.getController()).step(0.5),
             SerializationUtils.clone(phasesRobot.getVoxels())
         ))
@@ -239,7 +217,7 @@ public class Starter {
     //GridOnlineViewer.run(locomotion, namedSolutionGrid);
     GridOnlineViewer.run(
         locomotion,
-        Grid.create(1, 1, Pair.of("phasesRobot", phasesRobot)),
+        Grid.create(1, 1, new NamedValue<>("phasesRobot", phasesRobot)),
         Drawers::basicWithMiniWorldAndSpectra
     );
     /*try {
@@ -269,9 +247,9 @@ public class Starter {
         .apply(SerializationUtils.clone(unbreakableRobot));
     //episode
     Locomotion locomotion = new Locomotion(60, Locomotion.createTerrain("hilly-0.5-5-0"), new Settings());
-    Grid<Pair<String, Robot>> namedSolutionGrid = Grid.create(1, 2);
-    namedSolutionGrid.set(0, 0, Pair.of("unbreakable", unbreakableRobot));
-    namedSolutionGrid.set(0, 1, Pair.of("breakable", breakableRobot));
+    Grid<NamedValue<Robot>> namedSolutionGrid = Grid.create(1, 2);
+    namedSolutionGrid.set(0, 0, new NamedValue<>("unbreakable", unbreakableRobot));
+    namedSolutionGrid.set(0, 1, new NamedValue<>("breakable", breakableRobot));
     GridOnlineViewer.run(locomotion, namedSolutionGrid);
   }
 
@@ -382,7 +360,7 @@ public class Starter {
     //GridOnlineViewer.run(locomotion, robot);
     GridOnlineViewer.run(
         locomotion,
-        Grid.create(1, 1, Pair.of("phasesRobot", robot)),
+        Grid.create(1, 1, new NamedValue<>("phasesRobot", robot)),
         Drawers::basicWithMiniWorldAndSpectra
     );
   }
@@ -407,7 +385,7 @@ public class Starter {
     //episode
     Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("downhill-30"), new Settings());
 
-    GridOnlineViewer.run(locomotion, Grid.create(1, 1, Pair.of("", robot)), Drawers::basicWithMiniWorld);
+    GridOnlineViewer.run(locomotion, Grid.create(1, 1, new NamedValue<>("", robot)), Drawers::basicWithMiniWorld);
     /*
     try {
       GridFileWriter.save(
