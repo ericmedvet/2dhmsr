@@ -23,14 +23,14 @@ public class BoundingBox implements Shape, Serializable {
   public final Point2 min;
   public final Point2 max;
 
-  public static BoundingBox build(double minX, double minY, double maxX, double maxY) {
-    return build(
-        Point2.build(minX, minY),
-        Point2.build(maxX, maxY)
+  public static BoundingBox of(double minX, double minY, double maxX, double maxY) {
+    return of(
+        Point2.of(minX, minY),
+        Point2.of(maxX, maxY)
     );
   }
 
-  public static BoundingBox build(Point2... points) {
+  public static BoundingBox of(Point2... points) {
     if (points.length == 0) {
       throw new IllegalArgumentException("Cannot build on 0 points");
     }
@@ -45,8 +45,8 @@ public class BoundingBox implements Shape, Serializable {
       maxY = Math.max(maxY, point.y);
     }
     return new BoundingBox(
-        Point2.build(minX, minY),
-        Point2.build(maxX, maxY)
+        Point2.of(minX, minY),
+        Point2.of(maxX, maxY)
     );
   }
 
@@ -64,12 +64,12 @@ public class BoundingBox implements Shape, Serializable {
   }
 
   public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
-    return BoundingBox.build(bb1.min, bb1.max, bb2.min, bb2.max);
+    return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
   }
 
   @Override
   public Point2 center() {
-    return Point2.build((min.x + max.x) / 2d, (min.y + max.x) / 2d);
+    return Point2.of((min.x + max.x) / 2d, (min.y + max.x) / 2d);
   }
 
   @Override

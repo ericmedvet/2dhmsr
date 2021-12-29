@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.core.objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Domain;
 import org.apache.commons.lang3.ArrayUtils;
@@ -159,17 +159,18 @@ public class BreakableVoxel extends SensingVoxel {
   }
 
   @Override
-  public Snapshot getSnapshot() {
-    Snapshot snapshot = new Snapshot(new VoxelPoly(
+  public VoxelPoly getVoxelPoly() {
+    return new VoxelPoly(
         getVertices(),
+        getAngle(),
+        getLinearVelocity(),
+        Touch.isTouchingGround(this),
         getAreaRatio(),
         getAreaRatioEnergy(),
         getLastAppliedForce(),
         getControlEnergy(),
         new EnumMap<>(state)
-    ), getClass());
-    fillSnapshot(snapshot);
-    return snapshot;
+    );
   }
 
   @Override

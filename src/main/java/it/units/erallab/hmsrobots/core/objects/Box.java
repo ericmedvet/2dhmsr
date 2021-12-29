@@ -51,11 +51,11 @@ public class Box implements WorldObject, Snapshottable {
   public Snapshot getSnapshot() {
     Rectangle rectangle = (Rectangle) body.getFixture(0).getShape();
     return new Snapshot(
-        Poly.build(
-            Point2.build(rectangle.getVertices()[0]),
-            Point2.build(rectangle.getVertices()[1]),
-            Point2.build(rectangle.getVertices()[2]),
-            Point2.build(rectangle.getVertices()[3])
+        Poly.of(
+            Point2.of(rectangle.getVertices()[0]),
+            Point2.of(rectangle.getVertices()[1]),
+            Point2.of(rectangle.getVertices()[2]),
+            Point2.of(rectangle.getVertices()[3])
         ),
         getClass()
     );

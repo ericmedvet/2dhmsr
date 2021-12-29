@@ -17,6 +17,7 @@
 package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
@@ -43,8 +44,8 @@ public class AllRobotFollower implements Framer {
   @Override
   public BoundingBox getFrame(double t, Snapshot snapshot, double ratio) {
     //get current bounding box
-    SubtreeDrawer.Extractor.matches(BoundingBox.class, Robot.class, null).extract(snapshot).stream()
-        .map(s -> (BoundingBox) s.getContent())
+    SubtreeDrawer.Extractor.matches(Shape.class, Robot.class, null).extract(snapshot).stream()
+        .map(s -> ((Shape) s.getContent()).boundingBox())
         .reduce(BoundingBox::largest)
         .ifPresent(boundingBox -> boundingBoxes.put(t, boundingBox));
     //clean
@@ -54,13 +55,13 @@ public class AllRobotFollower implements Framer {
     //aggregate
     BoundingBox aggregated = boundingBoxes.values().stream()
         .reduce(BoundingBox::largest)
-        .orElse(BoundingBox.build(0, 0, 1, 1));
+        .orElse(BoundingBox.of(0, 0, 1, 1));
     //enlarge
     double cx = (aggregated.min.x + aggregated.max.x) / 2d;
     double cy = (aggregated.min.y + aggregated.max.y) / 2d;
     double w = aggregated.max.x - aggregated.min.x;
     double h = aggregated.max.y - aggregated.min.y;
-    BoundingBox enlarged = BoundingBox.build(
+    BoundingBox enlarged = BoundingBox.of(
         cx - w / 2d * sizeRelativeMargin,
         cy - h / 2d * sizeRelativeMargin,
         cx + w / 2d * sizeRelativeMargin,
@@ -71,7 +72,7 @@ public class AllRobotFollower implements Framer {
     double fRatio = (enlarged.max.x - enlarged.min.x) / (enlarged.max.y - enlarged.min.y);
     if (fRatio > ratio) {
       //enlarge h
-      adjusted = BoundingBox.build(
+      adjusted = BoundingBox.of(
           enlarged.min.x,
           cy - h / 2d * sizeRelativeMargin * fRatio / ratio,
           enlarged.max.x,
@@ -79,7 +80,7 @@ public class AllRobotFollower implements Framer {
       );
     } else if (fRatio < ratio) {
       //enlarge w
-      adjusted = BoundingBox.build(
+      adjusted = BoundingBox.of(
           cx - w / 2d * sizeRelativeMargin * ratio / fRatio,
           enlarged.min.y,
           cx + w / 2d * sizeRelativeMargin * ratio / fRatio,

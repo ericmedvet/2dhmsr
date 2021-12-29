@@ -26,13 +26,13 @@ public class Vector implements Shape {
     this.end = end;
   }
 
-  public static Vector build(Point2 start, Point2 end) {
+  public static Vector of(Point2 start, Point2 end) {
     return new Vector(start, end);
   }
 
   @Override
   public BoundingBox boundingBox() {
-    return BoundingBox.build(start, end);
+    return BoundingBox.of(start, end);
   }
 
   @Override

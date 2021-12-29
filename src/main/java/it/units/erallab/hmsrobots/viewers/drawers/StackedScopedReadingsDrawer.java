@@ -27,29 +27,22 @@ import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.TreeMap;
 
 /**
  * @author "Eric Medvet" on 2021/09/07 for 2dhmsr
  */
-public class StackedScopedReadingsDrawer extends SubtreeDrawer {
+public class StackedScopedReadingsDrawer extends MemoryDrawer<StackedScopedReadings> {
 
   private final static Color MIN_COLOR = Color.GREEN;
   private final static Color MAX_COLOR = Color.RED;
-  private final static Color LINE_COLOR = Color.BLUE;
 
-  private final double windowT;
   private final Color minColor;
   private final Color maxColor;
 
-  private final SortedMap<Double, StackedScopedReadings> readings;
-
   public StackedScopedReadingsDrawer(Extractor extractor, double windowT, Color minColor, Color maxColor) {
-    super(extractor);
-    this.windowT = windowT;
+    super(extractor, s -> (StackedScopedReadings) s.getContent(), windowT);
     this.minColor = minColor;
     this.maxColor = maxColor;
-    readings = new TreeMap<>();
   }
 
   public StackedScopedReadingsDrawer(Extractor extractor, double windowT) {
@@ -57,26 +50,18 @@ public class StackedScopedReadingsDrawer extends SubtreeDrawer {
   }
 
   @Override
-  protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
-    if (!(snapshot.getContent() instanceof StackedScopedReadings)) {
-      return;
-    }
-    StackedScopedReadings currentReading = (StackedScopedReadings) snapshot.getContent();
-    //update memory
-    readings.put(t, currentReading);
-    while (readings.firstKey() < (t - windowT)) {
-      readings.remove(readings.firstKey());
-    }
+  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, StackedScopedReadings> memory, Graphics2D g) { //TODO rewrite like MLPState
+    StackedScopedReadings currentReading = memory.get(memory.lastKey());
     //plot
     double clipX = g.getClip().getBounds2D().getX();
     double clipY = g.getClip().getBounds2D().getY();
     double clipW = g.getClip().getBounds2D().getWidth();
     double clipH = g.getClip().getBounds2D().getHeight();
-    double deltaT = readings.size() == 1 ? (1d / 60d) : ((readings.lastKey() - readings.firstKey()) / (readings.size() - 1));
+    double deltaT = memory.size() == 1 ? (1d / 60d) : ((memory.lastKey() - memory.firstKey()) / (memory.size() - 1));
     double n = Arrays.stream(currentReading.getScopedReadings()).mapToInt(r -> r.getReadings().length).sum();
     double cellW = clipW * deltaT / windowT;
     double cellH = clipH / n;
-    for (Map.Entry<Double, StackedScopedReadings> entry : readings.entrySet()) {
+    for (Map.Entry<Double, StackedScopedReadings> entry : memory.entrySet()) {
       double x = 1d - (t - entry.getKey()) / windowT;
       double c = 0;
       for (ScopedReadings scopedReadings : entry.getValue().getScopedReadings()) {

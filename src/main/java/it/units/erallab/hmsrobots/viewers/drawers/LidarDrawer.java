@@ -67,7 +67,7 @@ public class LidarDrawer extends SubtreeDrawer {
         g.setColor(strokeColor);
         g.draw(DrawingUtils.toPath(
             center,
-            Point2.build(
+            Point2.of(
                 center.x + rayLength * Math.cos(direction),
                 center.y + rayLength * Math.sin(direction)
             )

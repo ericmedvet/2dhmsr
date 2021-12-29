@@ -36,13 +36,13 @@ public class Poly implements Shape {
     this.vertexes = vertexes;
   }
 
-  public static Poly build(Point2... vertexes) {
+  public static Poly of(Point2... vertexes) {
     return new Poly(vertexes);
   }
 
   @Override
   public BoundingBox boundingBox() {
-    return BoundingBox.build(vertexes);
+    return BoundingBox.of(vertexes);
   }
 
   public Point2[] getVertexes() {

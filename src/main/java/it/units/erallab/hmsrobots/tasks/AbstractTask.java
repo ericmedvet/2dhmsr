@@ -46,7 +46,6 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
     double newT = t + dT;
     world.step(1);
     objects.stream().filter(o -> o instanceof Actionable).forEach(o -> ((Actionable) o).act(newT));
-
     //possibly output snapshot
     if (listener != null) {
       listener.listen(

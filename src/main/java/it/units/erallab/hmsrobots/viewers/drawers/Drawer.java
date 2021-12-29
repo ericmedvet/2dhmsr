@@ -44,7 +44,7 @@ public interface Drawer {
   }
 
   static Drawer diagonals() {
-    return diagonals(Color.GREEN);
+    return diagonals(DrawingUtils.Colors.axes);
   }
 
   static Drawer diagonals(Color color) {
@@ -53,6 +53,28 @@ public interface Drawer {
       g.setColor(color);
       g.draw(new Line2D.Double(r.getX(), r.getY(), r.getMaxX(), r.getMaxY()));
       g.draw(new Line2D.Double(r.getX(), r.getMaxY(), r.getMaxX(), r.getY()));
+    };
+  }
+
+  static Drawer text(String s) {
+    return text(s, DrawingUtils.Alignment.CENTER);
+  }
+
+  static Drawer text(String s, DrawingUtils.Alignment alignment) {
+    return text(s, alignment, DrawingUtils.Colors.text);
+  }
+
+  static Drawer text(String s, DrawingUtils.Alignment alignment, Color color) {
+    return (t, snapshot, g) -> {
+      g.setColor(color);
+      g.drawString(
+          s,
+          switch (alignment) {
+            case LEFT -> g.getClipBounds().x + 1;
+            case CENTER -> g.getClipBounds().x + g.getClipBounds().width / 2 - g.getFontMetrics().stringWidth(s) / 2;
+            case RIGHT -> g.getClipBounds().x + g.getClipBounds().width - 1 - g.getFontMetrics().stringWidth(s);
+          },
+          g.getClipBounds().y + 1 + g.getFontMetrics().getMaxAscent());
     };
   }
 
@@ -89,7 +111,7 @@ public interface Drawer {
 
   static Drawer transform(Framer framer, Drawer drawer) {
     return (t, snapshot, g) -> {
-      BoundingBox graphicsFrame = BoundingBox.build(
+      BoundingBox graphicsFrame = BoundingBox.of(
           g.getClip().getBounds2D().getX(),
           g.getClip().getBounds2D().getY(),
           g.getClip().getBounds2D().getMaxX(),

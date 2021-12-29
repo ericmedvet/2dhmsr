@@ -16,10 +16,10 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
-import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
@@ -87,9 +87,9 @@ public class Ground implements WorldObject, Snapshottable {
   public Snapshot getSnapshot() {
     Point2[] vertices = new Point2[polygon.size()];
     for (int i = 0; i < vertices.length; i++) {
-      vertices[i] = Point2.build(polygon.get(i));
+      vertices[i] = Point2.of(polygon.get(i));
     }
-    return new Snapshot(Poly.build(vertices), getClass());
+    return new Snapshot(Poly.of(vertices), getClass());
   }
 
   @Override
