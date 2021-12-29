@@ -18,7 +18,6 @@ package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -47,13 +46,13 @@ public class GridEpisodeRunner<S> implements Runnable {
     }
   }
 
-  private final Grid<Pair<String, S>> namedSolutionGrid;
+  private final Grid<NamedValue<S>> namedSolutionGrid;
   private final Task<S, ?> episode;
   private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
   public GridEpisodeRunner(
-      Grid<Pair<String, S>> namedSolutionGrid,
+      Grid<NamedValue<S>> namedSolutionGrid,
       Task<S, ?> episode,
       GridSnapshotListener gridSnapshotListener,
       ExecutorService executor
@@ -69,28 +68,26 @@ public class GridEpisodeRunner<S> implements Runnable {
     //start episodes
     List<Future<?>> results = new ArrayList<>();
     namedSolutionGrid.stream()
-        .filter(p -> p.value() != null && p.value().getRight() != null)
-        .forEach(entry -> {
-          results.add(executor.submit(() -> {
-            L.fine(String.format(
-                "Starting %s in position (%d,%d)",
-                episode.getClass().getSimpleName(),
-                entry.key().x(),
-                entry.key().y()
-            ));
-            Object outcome = episode.apply(
-                entry.value().getRight(),
-                gridSnapshotListener.listener(entry.key().x(), entry.key().y())
-            );
-            L.fine(String.format(
-                "Ended %s in position (%d,%d) with outcome %s",
-                episode.getClass().getSimpleName(),
-                entry.key().x(),
-                entry.key().y(),
-                outcome
-            ));
-          }));
-        });
+        .filter(p -> p.value() != null && p.value().value() != null)
+        .forEach(entry -> results.add(executor.submit(() -> {
+          L.fine(String.format(
+              "Starting %s in position (%d,%d)",
+              episode.getClass().getSimpleName(),
+              entry.key().x(),
+              entry.key().y()
+          ));
+          Object outcome = episode.apply(
+              entry.value().value(),
+              gridSnapshotListener.listener(entry.key().x(), entry.key().y())
+          );
+          L.fine(String.format(
+              "Ended %s in position (%d,%d) with outcome %s",
+              episode.getClass().getSimpleName(),
+              entry.key().x(),
+              entry.key().y(),
+              outcome
+          ));
+        })));
     //wait for results
     for (Future<?> result : results) {
       try {

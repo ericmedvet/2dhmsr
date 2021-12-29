@@ -24,7 +24,6 @@ import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -146,14 +145,14 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
   public static <S> void run(
       Task<S, ?> task,
-      Grid<Pair<String, S>> namedSolutions,
+      Grid<NamedValue<S>> namedSolutions,
       Function<String, Drawer> drawerSupplier
   ) {
     ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.getLeft())),
+        Grid.create(namedSolutions, p -> p == null ? null : p.name()),
+        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.name())),
         uiExecutor
     );
     gridOnlineViewer.start(3);
@@ -166,22 +165,22 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     runner.run();
   }
 
-  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions) {
+  public static <S> void run(Task<S, ?> task, Grid<NamedValue<S>> namedSolutions) {
     run(task, namedSolutions, Drawers::basicWithMiniWorld);
   }
 
   public static <S> void run(Task<S, ?> task, List<S> ss) {
     int nRows = (int) Math.ceil(Math.sqrt(ss.size()));
     int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
-    Grid<Pair<String, S>> namedSolutions = Grid.create(nRows, nCols);
+    Grid<NamedValue<S>> namedSolutions = Grid.create(nRows, nCols);
     for (int i = 0; i < ss.size(); i++) {
-      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), Pair.of(Integer.toString(i), ss.get(i)));
+      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), new NamedValue<>(Integer.toString(i), ss.get(i)));
     }
     run(task, namedSolutions);
   }
 
   public static <S> void run(Task<S, ?> task, S s) {
-    run(task, Grid.create(1, 1, Pair.of("", s)));
+    run(task, Grid.create(1, 1, new NamedValue<>("", s)));
   }
 
   @Override

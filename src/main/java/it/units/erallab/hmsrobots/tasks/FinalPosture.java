@@ -23,9 +23,10 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.util.Grid;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class FinalPosture extends AbstractTask<Robot, Grid<Boolean>> {
   @Override
   public Grid<Boolean> apply(Robot robot, SnapshotListener listener) {
     //init world
-    World world = new World();
+    World<Body> world = new World<>();
     world.setSettings(settings);
     world.setGravity(Vector2.create(0d, Math.PI));
     List<WorldObject> worldObjects = new ArrayList<>();

@@ -21,8 +21,9 @@ import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
+import org.dyn4j.world.World;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
   protected static double updateWorld(
       final double t,
       final double dT,
-      final World world,
+      final World<Body> world,
       final List<WorldObject> objects,
       final SnapshotListener listener
   ) {

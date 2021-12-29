@@ -28,8 +28,9 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
+import org.dyn4j.world.World;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
   public DevoOutcome apply(UnaryOperator<Robot> solution, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
-    World world = new World();
+    World<Body> world = new World<>();
     world.setSettings(settings);
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
     Robot robot = solution.apply(null);
@@ -124,7 +125,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
       );
       observations.put(t, new Outcome.Observation(
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-          ground.yAt(robot.getCenter().x),
+          ground.yAt(robot.center().x()),
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
       //check if stage ended
@@ -148,7 +149,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
         world.removeAllBodies();
         rebuildWorld(ground, robot, world, minX);
         worldObjects = List.of(ground, robot);
-        stageX = robot.getCenter().x;
+        stageX = robot.center().x();
         targetXs.add(stageX + stageMinDistance);
       }
     }

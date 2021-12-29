@@ -24,7 +24,6 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -65,7 +64,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
       File file,
       Grid<String> namesGrid,
       Grid<Drawer> drawersGrid
-  ) throws IOException {
+  ) {
     if (namesGrid.getW() != drawersGrid.getW() || namesGrid.getH() != drawersGrid.getH()) {
       throw new IllegalArgumentException("Names grid and drawers grid should have the same size");
     }
@@ -94,7 +93,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   public static <S> void save(
       Task<S, ?> task,
-      Grid<Pair<String, S>> namedSolutions,
+      Grid<NamedValue<S>> namedSolutions,
       int w,
       int h,
       double startTime,
@@ -102,12 +101,12 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
       VideoUtils.EncoderFacility encoder,
       File file,
       Function<String, Drawer> drawerSupplier
-  ) throws IOException {
+  ) {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     GridFileWriter gridFileWriter = new GridFileWriter(
         w, h, startTime, frameRate, encoder, file,
-        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.getLeft()))
+        Grid.create(namedSolutions, p -> p == null ? null : p.name()),
+        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.name()))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
         namedSolutions,
@@ -121,7 +120,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
 
   public static <S> void save(
       Task<S, ?> task,
-      Grid<Pair<String, S>> namedSolutions,
+      Grid<NamedValue<S>> namedSolutions,
       int w,
       int h,
       double startTime,
@@ -144,9 +143,9 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
   ) throws IOException {
     int nRows = (int) Math.ceil(Math.sqrt(ss.size()));
     int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
-    Grid<Pair<String, S>> namedSolutions = Grid.create(nRows, nCols);
+    Grid<NamedValue<S>> namedSolutions = Grid.create(nRows, nCols);
     for (int i = 0; i < ss.size(); i++) {
-      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), Pair.of(Integer.toString(i), ss.get(i)));
+      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), new NamedValue<>(Integer.toString(i), ss.get(i)));
     }
     save(task, namedSolutions, w, h, startTime, frameRate, encoder, file);
   }
@@ -161,7 +160,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
       VideoUtils.EncoderFacility encoder,
       File file
   ) throws IOException {
-    save(task, Grid.create(1, 1, Pair.of("solution", s)), w, h, startTime, frameRate, encoder, file);
+    save(task, Grid.create(1, 1, new NamedValue<>("solution", s)), w, h, startTime, frameRate, encoder, file);
   }
 
   @Override

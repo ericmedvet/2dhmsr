@@ -20,10 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.Actionable;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
-import it.units.erallab.hmsrobots.core.geometry.Vector;
+import it.units.erallab.hmsrobots.core.geometry.*;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -32,28 +29,29 @@ import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 import org.dyn4j.dynamics.joint.Joint;
-import org.dyn4j.dynamics.joint.RopeJoint;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Transform;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
+@SuppressWarnings("UnaryPlus")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class Voxel implements Actionable, Serializable, Snapshottable, WorldObject {
+public class Voxel implements Actionable, Serializable, Snapshottable, WorldObject, Shape {
 
   public static final double SIDE_LENGTH = 3d;
   public static final double MASS_SIDE_LENGTH_RATIO = .40d;
@@ -64,7 +62,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   public static final double FRICTION = 10d;
   public static final double RESTITUTION = 0.1d;
   public static final double MASS = 1d;
-  public static final boolean LIMIT_CONTRACTION_FLAG = true;
   public static final boolean MASS_COLLISION_FLAG = false;
   public static final double AREA_RATIO_MAX_DELTA = 0.225d;
   public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
@@ -77,7 +74,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   @JsonProperty
   private final double massSideLengthRatio;
   @JsonProperty
-  private final double springD;
+  protected final double springD;
   @JsonProperty
   private final double massLinearDamping;
   @JsonProperty
@@ -88,8 +85,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   private final double restitution;
   @JsonProperty
   private final double mass;
-  @JsonProperty
-  private final boolean limitContractionFlag;
   @JsonProperty
   private final boolean massCollisionFlag;
   @JsonProperty
@@ -104,9 +99,8 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   private final List<Sensor> sensors;
 
   protected transient Body[] vertexBodies;
-  protected transient DistanceJoint[] springJoints;
-  protected transient RopeJoint[] ropeJoints;
-  private transient World world;
+  protected transient List<DistanceJoint<Body>> springJoints;
+  private transient World<Body> world;
   private transient double areaRatioEnergy;
   private transient double controlEnergy;
   private transient double lastAppliedForce;
@@ -126,7 +120,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       @JsonProperty("friction") double friction,
       @JsonProperty("restitution") double restitution,
       @JsonProperty("mass") double mass,
-      @JsonProperty("limitContractionFlag") boolean limitContractionFlag,
       @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
       @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
       @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
@@ -143,7 +136,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     this.friction = friction;
     this.restitution = restitution;
     this.mass = mass;
-    this.limitContractionFlag = limitContractionFlag;
     this.massCollisionFlag = massCollisionFlag;
     this.areaRatioMaxDelta = areaRatioMaxDelta;
     this.springScaffoldings = springScaffoldings;
@@ -164,7 +156,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
         FRICTION,
         RESTITUTION,
         MASS,
-        LIMIT_CONTRACTION_FLAG,
         MASS_COLLISION_FLAG,
         AREA_RATIO_MAX_DELTA,
         SPRING_SCAFFOLDINGS,
@@ -182,13 +173,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     SIDE_EXTERNAL, SIDE_INTERNAL, SIDE_CROSS, CENTRAL_CROSS
   }
 
-  public static class ParentFilter implements Filter {
-
-    private final Object parent;
-
-    public ParentFilter(Object parent) {
-      this.parent = parent;
-    }
+  public record ParentFilter(Object parent) implements Filter {
 
     @Override
     public boolean isAllowed(Filter f) {
@@ -259,12 +244,12 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
         body.applyForce(force);
       }
     } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
-      for (DistanceJoint joint : springJoints) {
+      for (DistanceJoint<Body> joint : springJoints) {
         Voxel.SpringRange range = (SpringRange) joint.getUserData();
         if (f >= 0) { // shrink
-          joint.setDistance(range.rest - (range.rest - range.min) * f);
+          joint.setRestDistance(range.rest - (range.rest - range.min) * f);
         } else if (f < 0) { // expand
-          joint.setDistance(range.rest + (range.max - range.rest) * -f);
+          joint.setRestDistance(range.rest + (range.max - range.rest) * -f);
         }
       }
     }
@@ -282,15 +267,12 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   }
 
   @Override
-  public void addTo(World world) {
+  public void addTo(World<Body> world) {
     if (this.world != null) {
       for (Body body : vertexBodies) {
         this.world.removeBody(body);
       }
-      for (Joint joint : springJoints) {
-        this.world.removeJoint(joint);
-      }
-      for (Joint joint : ropeJoints) {
+      for (Joint<Body> joint : springJoints) {
         this.world.removeJoint(joint);
       }
     }
@@ -298,10 +280,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     for (Body body : vertexBodies) {
       world.addBody(body);
     }
-    for (Joint joint : springJoints) {
-      world.addJoint(joint);
-    }
-    for (Joint joint : ropeJoints) {
+    for (Joint<Body> joint : springJoints) {
       world.addJoint(joint);
     }
   }
@@ -312,10 +291,10 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     double density = mass * massSideLength / massSideLength / 4;
     //build bodies
     vertexBodies = new Body[4];
-    vertexBodies[0] = new Body(1); //NW
-    vertexBodies[1] = new Body(1); //NE
-    vertexBodies[2] = new Body(1); //SE
-    vertexBodies[3] = new Body(1); //SW
+    vertexBodies[0] = new Body(); //NW
+    vertexBodies[1] = new Body(); //NE
+    vertexBodies[2] = new Body(); //SE
+    vertexBodies[3] = new Body(); //SW
     vertexBodies[0].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[1].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
     vertexBodies[2].addFixture(new Rectangle(massSideLength, massSideLength), density, friction, restitution);
@@ -329,42 +308,8 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       body.setLinearDamping(massLinearDamping);
       body.setAngularDamping(massAngularDamping);
     }
-    //build rope joints
-    List<RopeJoint> localRopeJoints = new ArrayList<>();
-    if (limitContractionFlag) {
-      localRopeJoints.add(new RopeJoint(
-          vertexBodies[0],
-          vertexBodies[1],
-          vertexBodies[0].getWorldCenter(),
-          vertexBodies[1].getWorldCenter()
-      ));
-      localRopeJoints.add(new RopeJoint(
-          vertexBodies[1],
-          vertexBodies[2],
-          vertexBodies[1].getWorldCenter(),
-          vertexBodies[2].getWorldCenter()
-      ));
-      localRopeJoints.add(new RopeJoint(
-          vertexBodies[2],
-          vertexBodies[3],
-          vertexBodies[2].getWorldCenter(),
-          vertexBodies[3].getWorldCenter()
-      ));
-      localRopeJoints.add(new RopeJoint(
-          vertexBodies[3],
-          vertexBodies[0],
-          vertexBodies[3].getWorldCenter(),
-          vertexBodies[0].getWorldCenter()
-      ));
-      for (RopeJoint ropeJoint : localRopeJoints) {
-        ropeJoint.setLowerLimit(massSideLength);
-        ropeJoint.setLowerLimitEnabled(true);
-        ropeJoint.setUpperLimitEnabled(false);
-      }
-    }
-    ropeJoints = localRopeJoints.toArray(new RopeJoint[0]);
     //build distance joints
-    List<DistanceJoint> allSpringJoints = new ArrayList<>();
+    List<DistanceJoint<Body>> allSpringJoints = new ArrayList<>();
     double minSideLength = Math.sqrt(sideLength * sideLength * (1d - areaRatioMaxDelta));
     double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + areaRatioMaxDelta));
     SpringRange sideParallelRange = new SpringRange(
@@ -383,150 +328,152 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
         (maxSideLength - massSideLength) * Math.sqrt(2d)
     );
     if (springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
-      List<DistanceJoint> localSpringJoints = new ArrayList<>();
-      localSpringJoints.add(new DistanceJoint(
+      List<DistanceJoint<Body>> localSpringJoints = new ArrayList<>();
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[0],
           vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[1],
           vertexBodies[2],
           vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[2],
           vertexBodies[3],
           vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[3],
           vertexBodies[0],
           vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
-      for (DistanceJoint joint : localSpringJoints) {
+      for (DistanceJoint<Body> joint : localSpringJoints) {
         joint.setUserData(sideParallelRange);
       }
       allSpringJoints.addAll(localSpringJoints);
     }
     if (springScaffoldings.contains(SpringScaffolding.SIDE_EXTERNAL)) {
-      List<DistanceJoint> localSpringJoints = new ArrayList<>();
-      localSpringJoints.add(new DistanceJoint(
+      List<DistanceJoint<Body>> localSpringJoints = new ArrayList<>();
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[0],
           vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[1],
           vertexBodies[2],
           vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[2],
           vertexBodies[3],
           vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[3],
           vertexBodies[0],
           vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
-      for (DistanceJoint joint : localSpringJoints) {
+      for (DistanceJoint<Body> joint : localSpringJoints) {
         joint.setUserData(sideParallelRange);
       }
       allSpringJoints.addAll(localSpringJoints);
     }
     if (springScaffoldings.contains(SpringScaffolding.SIDE_CROSS)) {
-      List<DistanceJoint> localSpringJoints = new ArrayList<>();
-      localSpringJoints.add(new DistanceJoint(
+      List<DistanceJoint<Body>> localSpringJoints = new ArrayList<>();
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[0],
           vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[0],
           vertexBodies[1],
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[1],
           vertexBodies[2],
           vertexBodies[1].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[1],
           vertexBodies[2],
           vertexBodies[1].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[2].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[2],
           vertexBodies[3],
           vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[2],
           vertexBodies[3],
           vertexBodies[2].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d),
           vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[3],
           vertexBodies[0],
           vertexBodies[3].getWorldCenter().copy().add(-massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[3],
           vertexBodies[0],
           vertexBodies[3].getWorldCenter().copy().add(+massSideLength / 2d, +massSideLength / 2d),
           vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
-      for (DistanceJoint joint : localSpringJoints) {
+      for (DistanceJoint<Body> joint : localSpringJoints) {
         joint.setUserData(sideCrossRange);
       }
       allSpringJoints.addAll(localSpringJoints);
     }
     if (springScaffoldings.contains(SpringScaffolding.CENTRAL_CROSS)) {
-      List<DistanceJoint> localSpringJoints = new ArrayList<>();
-      localSpringJoints.add(new DistanceJoint(
+      List<DistanceJoint<Body>> localSpringJoints = new ArrayList<>();
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[0],
           vertexBodies[2],
           vertexBodies[0].getWorldCenter(),
           vertexBodies[2].getWorldCenter()
       ));
-      localSpringJoints.add(new DistanceJoint(
+      localSpringJoints.add(new DistanceJoint<>(
           vertexBodies[1],
           vertexBodies[3],
           vertexBodies[1].getWorldCenter(),
           vertexBodies[3].getWorldCenter()
       ));
-      for (DistanceJoint joint : localSpringJoints) {
+      for (DistanceJoint<Body> joint : localSpringJoints) {
         joint.setUserData(centralCrossRange);
       }
       allSpringJoints.addAll(localSpringJoints);
     }
     //setup spring joints
-    for (DistanceJoint joint : allSpringJoints) {
-      joint.setDistance(((SpringRange) joint.getUserData()).rest);
+    for (DistanceJoint<Body> joint : allSpringJoints) {
+      joint.setRestDistance(((SpringRange) joint.getUserData()).rest);
+      joint.setCollisionAllowed(true);
       joint.setFrequency(springF);
       joint.setDampingRatio(springD);
     }
-    springJoints = allSpringJoints.toArray(new DistanceJoint[0]);
+    springJoints = Collections.unmodifiableList(allSpringJoints);
   }
 
+  @Override
   public BoundingBox boundingBox() {
     double minX = Double.POSITIVE_INFINITY;
     double maxX = Double.NEGATIVE_INFINITY;
@@ -549,27 +496,32 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   }
 
   public double getAreaRatio() {
-    Poly poly = Poly.of(
-        Point2.of(getIndexedVertex(0, 3)),
-        Point2.of(getIndexedVertex(1, 2)),
-        Point2.of(getIndexedVertex(2, 1)),
-        Point2.of(getIndexedVertex(3, 0))
-    );
-    return poly.area() / sideLength / sideLength;
+    return area() / sideLength / sideLength;
   }
 
   public double getAreaRatioEnergy() {
     return areaRatioEnergy;
   }
 
-  public Vector2 getCenter() {
+  @Override
+  public Point2 center() {
     double xc = 0d;
     double yc = 0d;
     for (Body vertex : vertexBodies) {
       xc = xc + vertex.getWorldCenter().x;
       yc = yc + vertex.getWorldCenter().y;
     }
-    return new Vector2(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
+    return Point2.of(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
+  }
+
+  @Override
+  public double area() {
+    return Poly.of(
+        Point2.of(getIndexedVertex(0, 3)),
+        Point2.of(getIndexedVertex(1, 2)),
+        Point2.of(getIndexedVertex(2, 1)),
+        Point2.of(getIndexedVertex(3, 0))
+    ).area();
   }
 
   private Vector2 getIndexedVertex(int i, int j) {
@@ -602,7 +554,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       snapshot.getChildren().add(new Snapshot(rectangleToPoly(body), getClass()));
     }
     //add joints
-    for (DistanceJoint joint : springJoints) {
+    for (DistanceJoint<Body> joint : springJoints) {
       snapshot.getChildren()
           .add(new Snapshot(Vector.of(Point2.of(joint.getAnchor1()), Point2.of(joint.getAnchor2())), getClass()));
     }
@@ -639,7 +591,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     );
   }
 
-  public World getWorld() {
+  public World<Body> getWorld() {
     return world;
   }
 
@@ -676,7 +628,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
 
   @Override
   public String toString() {
-    return "Voxel{" + "sideLength=" + sideLength + ", massSideLengthRatio=" + massSideLengthRatio + ", springF=" + springF + ", springD=" + springD + ", massLinearDamping=" + massLinearDamping + ", massAngularDamping=" + massAngularDamping + ", friction=" + friction + ", restitution=" + restitution + ", mass=" + mass + ", limitContractionFlag=" + limitContractionFlag + ", massCollisionFlag=" + massCollisionFlag + ", areaRatioMaxDelta=" + areaRatioMaxDelta + ", springScaffoldings=" + springScaffoldings + ", areaRatioEnergy=" + areaRatioEnergy + '}';
+    return "Voxel{" + "sideLength=" + sideLength + ", massSideLengthRatio=" + massSideLengthRatio + ", springF=" + springF + ", springD=" + springD + ", massLinearDamping=" + massLinearDamping + ", massAngularDamping=" + massAngularDamping + ", friction=" + friction + ", restitution=" + restitution + ", mass=" + mass + ", massCollisionFlag=" + massCollisionFlag + ", areaRatioMaxDelta=" + areaRatioMaxDelta + ", springScaffoldings=" + springScaffoldings + ", areaRatioEnergy=" + areaRatioEnergy + '}';
   }
 
   public void translate(Vector2 v) {

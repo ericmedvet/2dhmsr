@@ -18,7 +18,6 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.math3.util.Pair;
 
 import java.io.Serializable;
 import java.util.*;
@@ -39,6 +38,8 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   private double[][][] means;
   private double[][][] absMeans;
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
+
+  private record PruningPair(int[] indexes, double value) {}
 
   public PruningMultiLayerPerceptron(
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
@@ -136,9 +137,9 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     return activationValues[neurons.length - 1];
   }
 
-  private void prune(List<Pair<int[], Double>> localPairs) {
-    localPairs.sort(Comparator.comparing(Pair::getValue));
-    localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.getKey()));
+  private void prune(List<PruningPair> localPairs) {
+    localPairs.sort(Comparator.comparing(PruningPair::value));
+    localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.indexes()));
   }
 
   private void prune(int[] is) {
@@ -153,12 +154,12 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
 
   private void prune() {
     pruned = true;
-    List<Pair<int[], Double>> pairs = new ArrayList<>();
+    List<PruningPair> pairs = new ArrayList<>();
     Random random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
         for (int k = 0; k < neurons[i - 1] + 1; k++) {
-          pairs.add(Pair.create(
+          pairs.add(new PruningPair(
               new int[]{i, j, k},
               switch (criterion) {
                 case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
@@ -176,7 +177,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     } else if (context.equals(Context.LAYER)) {
       for (int i = 1; i < neurons.length; i++) {
         final int localI = i;
-        prune(pairs.stream().filter(p -> p.getKey()[0] == localI).toList());
+        prune(pairs.stream().filter(p -> p.indexes()[0] == localI).toList());
       }
     } else if (context.equals(Context.NEURON)) {
       for (int i = 1; i < neurons.length; i++) {
@@ -184,7 +185,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
           final int localI = i;
           final int localJ = j;
           prune(pairs.stream()
-              .filter(p -> p.getKey()[0] == localI && p.getKey()[1] == localJ)
+              .filter(p -> p.indexes()[0] == localI && p.indexes()[1] == localJ)
               .toList());
         }
       }

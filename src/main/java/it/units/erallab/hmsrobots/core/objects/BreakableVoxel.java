@@ -25,6 +25,7 @@ import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.apache.commons.lang3.ArrayUtils;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
 import java.util.*;
@@ -59,7 +60,6 @@ public class BreakableVoxel extends Voxel {
       @JsonProperty("friction") double friction,
       @JsonProperty("restitution") double restitution,
       @JsonProperty("mass") double mass,
-      @JsonProperty("limitContractionFlag") boolean limitContractionFlag,
       @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
       @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
       @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
@@ -81,7 +81,6 @@ public class BreakableVoxel extends Voxel {
         friction,
         restitution,
         mass,
-        limitContractionFlag,
         massCollisionFlag,
         areaRatioMaxDelta,
         springScaffoldings,
@@ -274,11 +273,12 @@ public class BreakableVoxel extends Voxel {
 
   private void updateStructureMalfunctionType() {
     if (state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE)) {
-      for (DistanceJoint springJoint : springJoints) {
+      for (DistanceJoint<Body> springJoint : springJoints) {
         springJoint.setFrequency(springF);
+        springJoint.setDampingRatio(springD);
       }
     } else if (state.get(ComponentType.STRUCTURE).equals(MalfunctionType.FROZEN)) {
-      for (DistanceJoint springJoint : springJoints) {
+      for (DistanceJoint<Body> springJoint : springJoints) {
         springJoint.setFrequency(0d);
         springJoint.setDampingRatio(0d);
       }

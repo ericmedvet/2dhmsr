@@ -20,7 +20,9 @@ package it.units.erallab.hmsrobots.core.controllers;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public abstract class AbstractController implements Controller {
+import java.io.Serializable;
+
+public abstract class AbstractController implements Controller, Serializable {
 
   public abstract Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels);
 

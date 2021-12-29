@@ -19,7 +19,6 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.*;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.math3.util.Pair;
 
 import java.io.Serializable;
 import java.util.*;
@@ -204,14 +203,14 @@ public class SelfOrganizing implements Controller {
     @JsonCreator
     public Neuron(
         @JsonProperty("index") int idx,
-        @JsonProperty("x") int coord1,
-        @JsonProperty("y") int coord2,
-        @JsonProperty("function") MultiLayerPerceptron.ActivationFunction a
+        @JsonProperty("x") int x,
+        @JsonProperty("y") int y,
+        @JsonProperty("function") MultiLayerPerceptron.ActivationFunction function
     ) {
       index = idx;
-      x = coord1;
-      y = coord2;
-      function = a;
+      this.x = x;
+      this.y = y;
+      this.function = function;
       ingoingEdges = new ArrayList<>();
       resetState();
     }
@@ -434,8 +433,8 @@ public class SelfOrganizing implements Controller {
     return out;
   }
 
-  public Pair<Integer, Integer>[] getValidAndDistinctCoordinates() {
-    return getNeurons().stream().map(n -> new Pair<>(n.getX(), n.getY())).distinct().toArray(Pair[]::new);
+  public Grid.Key[] getValidAndDistinctCoordinates() {
+    return getNeurons().stream().map(n -> new Grid.Key(n.getX(), n.getY())).distinct().toArray(Grid.Key[]::new);
   }
 
   public void removeEdge(Edge edge) {

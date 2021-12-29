@@ -50,14 +50,8 @@ public class PoseUtils {
     }
   }
 
-  private static class ClusterablePosture implements Clusterable {
-    private final Set<Grid.Key> pose;
-    private final Grid<Boolean> posture;
-
-    public ClusterablePosture(Set<Grid.Key> pose, Grid<Boolean> posture) {
-      this.pose = pose;
-      this.posture = posture;
-    }
+  private record ClusterablePosture(Set<Grid.Key> pose,
+                                    Grid<Boolean> posture) implements Clusterable {
 
     @Override
     public double[] getPoint() {

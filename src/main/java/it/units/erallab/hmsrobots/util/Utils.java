@@ -18,7 +18,6 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -60,14 +59,13 @@ public class Utils {
   }
 
   public static <K> Grid<K> gridConnected(Grid<K> kGrid, Comparator<K> comparator, int n) {
+    record KeyPair(Grid.Key first, Grid.Key second) {}
     Comparator<Grid.Entry<K>> entryComparator = (e1, e2) -> comparator.compare(e1.value(), e2.value());
-    Predicate<Pair<Grid.Entry<?>, Grid.Entry<?>>> adjacencyPredicate = p -> (Math.abs(p.getLeft()
-        .key()
-        .x() - p.getRight()
-        .key().x()) <= 1 && p.getLeft().key().y() == p.getRight().key().y()) || (Math.abs(p.getLeft()
-        .key()
-        .y() - p.getRight()
-        .key().y()) <= 1 && p.getLeft().key().x() == p.getRight().key().x());
+    Predicate<KeyPair> adjacencyPredicate = p -> (Math.abs(p.first()
+        .x() - p.second()
+        .x()) <= 1 && p.first().y() == p.second().y()) || (Math.abs(p.first()
+        .y() - p.second()
+        .y()) <= 1 && p.first().x() == p.second().x());
     Grid.Entry<K> entryFirst = kGrid.stream()
         .min(entryComparator)
         .orElseThrow(() -> new IllegalArgumentException("Grid has no max element"));
@@ -77,7 +75,7 @@ public class Utils {
       Set<Grid.Entry<K>> candidates = kGrid.stream()
           .filter(e -> e.value() != null)
           .filter(e -> !selected.contains(e))
-          .filter(e -> selected.stream().anyMatch(f -> adjacencyPredicate.test(Pair.of(e, f))))
+          .filter(e -> selected.stream().anyMatch(f -> adjacencyPredicate.test(new KeyPair(e.key(), f.key()))))
           .collect(Collectors.toSet());
       if (candidates.isEmpty()) {
         break;
@@ -270,23 +268,23 @@ public class Utils {
     } else if (n <= 0) {
       throw new IllegalArgumentException(String.format("Non-positive number of directions provided: %d", n));
     }
-    List<Pair<Integer, Integer>> coordinates = posture.stream()
+    List<Grid.Key> coordinates = posture.stream()
         .filter(Grid.Entry::value)
-        .map(e -> Pair.of(e.key().x(), e.key().y()))
+        .map(Grid.Entry::key)
         .toList();
     List<Double> diameters = new ArrayList<>();
     for (int i = 0; i < n; ++i) {
       double theta = (2 * i * Math.PI) / n;
-      List<Pair<Double, Double>> rotatedCoordinates = coordinates.stream()
-          .map(p -> Pair.of(
-              p.getLeft() * Math.cos(theta) - p.getRight() * Math.sin(theta),
-              p.getLeft() * Math.sin(theta) + p.getRight() * Math.cos(theta)
+      List<Grid.Key> rotatedCoordinates = coordinates.stream()
+          .map(p -> new Grid.Key(
+              (int) Math.round(p.x() * Math.cos(theta) - p.y() * Math.sin(theta)),
+              (int) Math.round(p.x() * Math.sin(theta) + p.y() * Math.cos(theta))
           ))
           .toList();
-      double minX = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
-      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
-      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getRight)).get().getRight();
-      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getRight)).get().getRight();
+      double minX = rotatedCoordinates.stream().min(Comparator.comparingInt(Grid.Key::x)).get().x();
+      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Grid.Key::x)).get().x();
+      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Grid.Key::y)).get().y();
+      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(Grid.Key::y)).get().y();
       double sideX = maxX - minX + 1;
       double sideY = maxY - minY + 1;
       diameters.add(Math.min(sideX, sideY) / Math.max(sideX, sideY));

@@ -22,9 +22,10 @@ import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.util.Objects;
 import java.util.function.UnaryOperator;
@@ -48,7 +49,7 @@ public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot>, 
   @Override
   public abstract DevoOutcome apply(UnaryOperator<Robot> solution, SnapshotListener listener);
 
-  protected void rebuildWorld(Ground ground, Robot robot, World world, double newMinX) {
+  protected void rebuildWorld(Ground ground, Robot robot, World<Body> world, double newMinX) {
     ground.addTo(world);
     robot.addTo(world);
     //position robot: translate on x
@@ -56,7 +57,7 @@ public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot>, 
     //translate on y
     double minYGap = robot.getVoxels().values().stream()
         .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.getCenter().x))
+        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.center().x()))
         .min().orElse(0d);
     robot.translate(new Vector2(0, Locomotion.INITIAL_PLACEMENT_Y_GAP - minYGap));
   }
