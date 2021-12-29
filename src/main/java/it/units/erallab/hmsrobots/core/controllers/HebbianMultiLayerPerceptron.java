@@ -59,7 +59,7 @@ public class HebbianMultiLayerPerceptron extends MultiLayerPerceptron implements
   public HebbianMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbianCoefficients, double eta, Random rnd, boolean weightsNormalization) {
     this(
         activationFunction,
-        randomWeights(countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput), rnd),
+        generateRandomWeights(countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput), rnd),
         unflatHebbianCoefficients(hebbianCoefficients, countNeurons(nOfInput, innerNeurons, nOfOutput)),
         countNeurons(nOfInput, innerNeurons, nOfOutput),
         initEta(eta, countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -85,7 +85,7 @@ public class HebbianMultiLayerPerceptron extends MultiLayerPerceptron implements
   public HebbianMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] hebbianCoefficients, double[][][] eta, Random rnd, boolean weightsNormalization) {
     this(
         activationFunction,
-        randomWeights(countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput), rnd),
+        generateRandomWeights(countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput)), countNeurons(nOfInput, innerNeurons, nOfOutput), rnd),
         unflatHebbianCoefficients(hebbianCoefficients, countNeurons(nOfInput, innerNeurons, nOfOutput)),
         countNeurons(nOfInput, innerNeurons, nOfOutput),
         eta,
@@ -106,7 +106,7 @@ public class HebbianMultiLayerPerceptron extends MultiLayerPerceptron implements
     }
   }
 
-  public void setInitWeights(double[] params) {
+  public void setInitialWeights(double[] params) {
     double[][][] newWeights = unflat(params, neurons);
     for (int l = 0; l < newWeights.length; l++) {
       for (int s = 0; s < newWeights[l].length; s++) {
@@ -128,7 +128,7 @@ public class HebbianMultiLayerPerceptron extends MultiLayerPerceptron implements
     return startingWeights;
   }
 
-  private static double[][][] randomWeights(int nOfWeights, int[] neurons, Random random) {
+  private static double[][][] generateRandomWeights(int nOfWeights, int[] neurons, Random random) {
     double[] randomWeights = IntStream.range(0, nOfWeights)
         .mapToDouble(i -> random != null ? (random.nextDouble() * 2) - 1 : 0d)
         .toArray();
@@ -204,7 +204,7 @@ public class HebbianMultiLayerPerceptron extends MultiLayerPerceptron implements
     return vector;
   }
 
-  public void hebbianUpdate(double[][] values) {
+  private void hebbianUpdate(double[][] values) {
     for (int layer = 1; layer < neurons.length; layer++) {
       for (int destNeuron = 0; destNeuron < neurons[layer]; destNeuron++) {
         // update bias
@@ -270,7 +270,7 @@ public class HebbianMultiLayerPerceptron extends MultiLayerPerceptron implements
     }
   }
 
-  public static double[][][] initEta(double eta, int[] neurons) {
+  private static double[][][] initEta(double eta, int[] neurons) {
     double[][][] unflatEtas = new double[neurons.length - 1][][];
     for (int i = 1; i < neurons.length; i++) {
       unflatEtas[i - 1] = new double[neurons[i]][neurons[i - 1] + 1];
