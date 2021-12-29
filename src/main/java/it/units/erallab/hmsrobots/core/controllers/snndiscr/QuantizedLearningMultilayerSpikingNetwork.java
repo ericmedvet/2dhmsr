@@ -112,84 +112,64 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   public int[][] apply(double t, int[][] inputs) {
     timeWindowSize = t - previousApplicationTime;
     double deltaTF = 1000 * timeWindowSize / (double) ARRAY_SIZE;
-    if (inputs.length != neurons[0].length) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
-    }
-    int[][][] outputSpikes = new int[neurons.length][][];
-    int[][] thisLayersOutputs = null;
-    // destination neuron, array of incoming weights
-    double[][] incomingWeights = new double[inputs.length][inputs.length];
-    for (int i = 0; i < incomingWeights.length; i++) {
-      incomingWeights[i][i] = 1;
-      if (neurons[0][i] instanceof QuantizedIzhikevicNeuron) {
-        incomingWeights[i][i] = 100;
-      }
-    }
+    int[][] outputSpikes = super.apply(t, inputs);
     // iterating over layers
-    for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
-      QuantizedSpikingFunction[] layer = neurons[layerIndex];
-      thisLayersOutputs = new int[layer.length][];
-      for (int neuronIndex = 0; neuronIndex < layer.length; neuronIndex++) {
-        double[] weightedInputSpikeTrain = createWeightedSpikeTrain(layerIndex > 0 ? outputSpikes[layerIndex - 1] : inputs, incomingWeights[neuronIndex]);
-        layer[neuronIndex].setSumOfIncomingWeights(Arrays.stream(incomingWeights[neuronIndex]).sum());  // for homeostasis
-        thisLayersOutputs[neuronIndex] = layer[neuronIndex].compute(weightedInputSpikeTrain, t);
-        // learning (not on the inputs)
-        if (t <= lastLearningTime && layerIndex > 0) {
-          for (int previousNeuronIndex = 0; previousNeuronIndex < neurons[layerIndex - 1].length; previousNeuronIndex++) {
-            double deltaW = 0;
-            for (int tOut : thisLayersOutputs[neuronIndex]) {
-              if (tOut > 0) {
-                for (int tIn : outputSpikes[layerIndex - 1][previousNeuronIndex]) {
-                  if (tIn > 0) {
-                    deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn) * deltaTF);
+    if (t <= lastLearningTime) {
+      for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
+        for (int neuronIndex = 0; neuronIndex < neurons[layerIndex].length; neuronIndex++) {
+
+          // learning wrt the prev. neuron: this neuron's current spikes vs prev. neuron's current spikes and prev. neuron's prev. spikes
+          if (layerIndex > 0) {
+            for (int previousNeuronIndex = 0; previousNeuronIndex < neurons[layerIndex - 1].length; previousNeuronIndex++) {
+              double deltaW = 0;
+              for (int tOut : currentSpikes[layerIndex][neuronIndex]) {
+                if (tOut > 0) {
+                  for (int tIn : currentSpikes[layerIndex - 1][previousNeuronIndex]) {
+                    if (tIn > 0) {
+                      deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn) * deltaTF);
+                    }
+                  }
+                  for (int tIn : previousTimeOutputSpikes[layerIndex - 1][previousNeuronIndex]) {
+                    if (tIn > 0) {
+                      deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn + ARRAY_SIZE) * deltaTF);
+                    }
                   }
                 }
-                for (int tIn : previousTimeOutputSpikes[layerIndex - 1][previousNeuronIndex]) {
-                  if (tIn > 0) {
-                    deltaW += learningRules[layerIndex - 1][previousNeuronIndex][neuronIndex].computeDeltaW((tOut - tIn + ARRAY_SIZE) * deltaTF);
+              }
+              weights[layerIndex - 1][previousNeuronIndex][neuronIndex] += deltaW;
+            }
+          }
+
+          // learning wrt the following neuron: this neuron's current spikes vs following neuron's prev. spikes
+          if (layerIndex < neurons.length - 1) {
+            for (int followingNeuronIndex = 0; followingNeuronIndex < neurons[layerIndex + 1].length; followingNeuronIndex++) {
+              for (int tOut : currentSpikes[layerIndex][neuronIndex]) {
+                if (tOut > 0) {
+                  for (int tIn : previousTimeOutputSpikes[layerIndex + 1][followingNeuronIndex]) {
+                    if (tIn > 0) {
+                      weights[layerIndex][neuronIndex][followingNeuronIndex] += learningRules[layerIndex][neuronIndex][followingNeuronIndex].computeDeltaW((tOut - tIn + ARRAY_SIZE) * deltaTF);
+                    }
                   }
                 }
               }
             }
-            weights[layerIndex - 1][previousNeuronIndex][neuronIndex] += deltaW;
           }
-        }
-        if (spikesTracker) {
-          int arrayLength = thisLayersOutputs[neuronIndex].length;
-          int finalLayerIndex = layerIndex;
-          int finalNeuronIndex = neuronIndex;
-          Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * timeWindowSize + previousApplicationTime));
-        }
-      }
-      outputSpikes[layerIndex] = thisLayersOutputs;
-      currentSpikes[layerIndex] = new int[thisLayersOutputs.length][];
-      for (int i = 0; i < currentSpikes[layerIndex].length; i++) {
-        currentSpikes[layerIndex][i] = Arrays.stream(thisLayersOutputs[i]).toArray();
-      }
-      if (layerIndex == neurons.length - 1) {
-        break;
-      }
-      incomingWeights = new double[neurons[layerIndex + 1].length][neurons[layerIndex].length];
-      for (int i = 0; i < incomingWeights.length; i++) {
-        for (int j = 0; j < incomingWeights[0].length; j++) {
-          incomingWeights[i][j] = weights[layerIndex][j][i];
         }
       }
     }
     // updating stored spikes
-    for (int layerIndex = 0; layerIndex < outputSpikes.length; layerIndex++) {
-      for (int neuronIndex = 0; neuronIndex < outputSpikes[layerIndex].length; neuronIndex++) {
+    for (int layerIndex = 0; layerIndex < currentSpikes.length; layerIndex++) {
+      for (int neuronIndex = 0; neuronIndex < currentSpikes[layerIndex].length; neuronIndex++) {
         // shift the previous ones ARRAY_SIZE to the left and add the current ones
         System.arraycopy(previousTimeOutputSpikes[layerIndex][neuronIndex], ARRAY_SIZE, previousTimeOutputSpikes[layerIndex][neuronIndex], 0, STDP_LEARNING_WINDOW - 2 * ARRAY_SIZE);
-        System.arraycopy(outputSpikes[layerIndex][neuronIndex], 0, previousTimeOutputSpikes[layerIndex][neuronIndex], STDP_LEARNING_WINDOW - 2 * ARRAY_SIZE, ARRAY_SIZE);
+        System.arraycopy(currentSpikes[layerIndex][neuronIndex], 0, previousTimeOutputSpikes[layerIndex][neuronIndex], STDP_LEARNING_WINDOW - 2 * ARRAY_SIZE, ARRAY_SIZE);
       }
     }
     if (weightsClipping) {
       clipWeights();
     }
     weightsInTime.put(t, flat(weights, neurons));
-    previousApplicationTime = t;
-    return thisLayersOutputs;
+    return outputSpikes;
   }
 
   private void clipWeights() {
@@ -215,7 +195,7 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
     weightsClipping = false;
   }
 
-  // for each layer, for each neuron, list incoming weights in order
+  // for each layer, for each neuron, list incoming rules in order
   public static STDPLearningRule[] flat(STDPLearningRule[][][] unflatRules, QuantizedSpikingFunction[][] neurons) {
     STDPLearningRule[] flatRules = new STDPLearningRule[countWeights(neurons)];
     int c = 0;
@@ -285,5 +265,10 @@ public class QuantizedLearningMultilayerSpikingNetwork extends QuantizedMultilay
   public void reset() {
     super.reset();
     copyWeights(initialWeights, weights);
+    for (int[][] layer : previousTimeOutputSpikes) {
+      for (int[] neuron : layer) {
+        Arrays.fill(neuron, 0);
+      }
+    }
   }
 }
