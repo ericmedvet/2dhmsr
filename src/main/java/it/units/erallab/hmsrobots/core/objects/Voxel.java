@@ -20,10 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.units.erallab.hmsrobots.core.Actionable;
-import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
-import it.units.erallab.hmsrobots.core.geometry.Vector;
+import it.units.erallab.hmsrobots.core.geometry.*;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -52,8 +49,9 @@ import java.util.List;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
+@SuppressWarnings("UnaryPlus")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class Voxel implements Actionable, Serializable, Snapshottable, WorldObject {
+public class Voxel implements Actionable, Serializable, Snapshottable, WorldObject, Shape {
 
   public static final double SIDE_LENGTH = 3d;
   public static final double MASS_SIDE_LENGTH_RATIO = .40d;
@@ -527,6 +525,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     springJoints = allSpringJoints.toArray(new DistanceJoint[0]);
   }
 
+  @Override
   public BoundingBox boundingBox() {
     double minX = Double.POSITIVE_INFINITY;
     double maxX = Double.NEGATIVE_INFINITY;
@@ -549,27 +548,32 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   }
 
   public double getAreaRatio() {
-    Poly poly = Poly.of(
-        Point2.of(getIndexedVertex(0, 3)),
-        Point2.of(getIndexedVertex(1, 2)),
-        Point2.of(getIndexedVertex(2, 1)),
-        Point2.of(getIndexedVertex(3, 0))
-    );
-    return poly.area() / sideLength / sideLength;
+    return area() / sideLength / sideLength;
   }
 
   public double getAreaRatioEnergy() {
     return areaRatioEnergy;
   }
 
-  public Vector2 getCenter() {
+  @Override
+  public Point2 center() {
     double xc = 0d;
     double yc = 0d;
     for (Body vertex : vertexBodies) {
       xc = xc + vertex.getWorldCenter().x;
       yc = yc + vertex.getWorldCenter().y;
     }
-    return new Vector2(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
+    return Point2.of(xc / (double) vertexBodies.length, yc / (double) vertexBodies.length);
+  }
+
+  @Override
+  public double area() {
+    return Poly.of(
+        Point2.of(getIndexedVertex(0, 3)),
+        Point2.of(getIndexedVertex(1, 2)),
+        Point2.of(getIndexedVertex(2, 1)),
+        Point2.of(getIndexedVertex(3, 0))
+    ).area();
   }
 
   private Vector2 getIndexedVertex(int i, int j) {

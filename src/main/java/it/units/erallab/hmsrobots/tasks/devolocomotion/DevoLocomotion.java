@@ -56,7 +56,7 @@ public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot>, 
     //translate on y
     double minYGap = robot.getVoxels().values().stream()
         .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.getCenter().x))
+        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.center().x()))
         .min().orElse(0d);
     robot.translate(new Vector2(0, Locomotion.INITIAL_PLACEMENT_Y_GAP - minYGap));
   }

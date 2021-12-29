@@ -108,7 +108,7 @@ public class TimeBasedDevoLocomotion extends DevoLocomotion {
       );
       observations.put(t, new Outcome.Observation(
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-          ground.yAt(robot.getCenter().x),
+          ground.yAt(robot.center().x()),
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
       //check if develop

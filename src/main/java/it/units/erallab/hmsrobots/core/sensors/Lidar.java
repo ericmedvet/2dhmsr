@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
+import org.dyn4j.geometry.Vector2;
 
 import java.io.Serializable;
 import java.util.*;
@@ -128,7 +130,8 @@ public class Lidar extends AbstractSensor {
   public double[] sense(double t) {
     List<RaycastResult> results = new ArrayList<>();
     return Arrays.stream(rayDirections).map(rayDirection -> {
-      Ray ray = new Ray(voxel.getCenter(), rayDirection + voxel.getAngle());
+      Point2 center = voxel.center();
+      Ray ray = new Ray(new Vector2(center.x(), center.y()), rayDirection + voxel.getAngle());
       results.clear();
       voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
       return results.isEmpty() ? rayLength : results.get(0).getRaycast().getDistance();

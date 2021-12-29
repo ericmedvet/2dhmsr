@@ -173,11 +173,11 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     //translate on y
     double minYGap = robot.getVoxels().values().stream()
         .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.getCenter().x))
+        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.center().x()))
         .min().orElse(0d);
     robot.translate(new Vector2(0, INITIAL_PLACEMENT_Y_GAP - minYGap));
     //get initial x
-    double initCenterX = robot.getCenter().x;
+    double initCenterX = robot.center().x();
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
@@ -188,7 +188,7 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       observations.put(t, new Outcome.Observation(
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-          ground.yAt(robot.getCenter().x),
+          ground.yAt(robot.center().x()),
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
     }

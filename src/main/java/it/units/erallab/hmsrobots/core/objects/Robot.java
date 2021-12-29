@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.Actionable;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
@@ -43,7 +45,7 @@ import java.util.Objects;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot implements Actionable, Serializable, WorldObject, Snapshottable {
+public class Robot implements Actionable, Serializable, WorldObject, Snapshottable, Shape {
 
   @JsonProperty
   private final Controller controller;
@@ -117,23 +119,20 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
     }
   }
 
+  @SuppressWarnings("OptionalGetWithoutIsPresent")
+  @Override
   public BoundingBox boundingBox() {
     return voxels.values().stream().filter(Objects::nonNull).map(Voxel::boundingBox).reduce(BoundingBox::largest).get();
   }
 
-  public Vector2 getCenter() {
-    double xc = 0d;
-    double yc = 0d;
-    double n = 0;
-    for (Voxel voxel : voxels.values()) {
-      if (voxel != null) {
-        final Vector2 center = voxel.getCenter();
-        xc = xc + center.x;
-        yc = yc + center.y;
-        n = n + 1;
-      }
-    }
-    return new Vector2(xc / n, yc / n);
+  @Override
+  public Point2 center() {
+    return Point2.average(voxels.values().stream().filter(Objects::nonNull).map(Voxel::center).toArray(Point2[]::new));
+  }
+
+  @Override
+  public double area() {
+    return voxels.values().stream().filter(Objects::nonNull).mapToDouble(Voxel::area).sum();
   }
 
   public Controller getController() {
@@ -143,12 +142,9 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
   @Override
   public Snapshot getSnapshot() {
     Grid<Snapshot> voxelSnapshots = Grid.create(voxels, v -> v == null ? null : v.getSnapshot());
-    Snapshot snapshot = new Snapshot(new RobotShape(Grid.create(
-        voxelSnapshots,
+    Snapshot snapshot = new Snapshot(new RobotShape(Grid.create(voxelSnapshots,
         s -> s == null ? null : ((VoxelPoly) s.getContent())
-    ), boundingBox()),
-        getClass()
-    );
+    ), boundingBox()), getClass());
     if (controller instanceof Snapshottable) {
       snapshot.getChildren().add(((Snapshottable) controller).getSnapshot());
     }

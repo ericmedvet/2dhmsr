@@ -124,7 +124,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
       );
       observations.put(t, new Outcome.Observation(
           Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-          ground.yAt(robot.getCenter().x),
+          ground.yAt(robot.center().x()),
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
       //check if stage ended
@@ -148,7 +148,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
         world.removeAllBodies();
         rebuildWorld(ground, robot, world, minX);
         worldObjects = List.of(ground, robot);
-        stageX = robot.getCenter().x;
+        stageX = robot.center().x();
         targetXs.add(stageX + stageMinDistance);
       }
     }
