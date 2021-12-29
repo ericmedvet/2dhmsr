@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
@@ -46,14 +45,11 @@ public class SerializationUtils {
   public static class LambdaJsonDeserializer extends JsonDeserializer<SerializableFunction<?, ?>> {
     @Override
     public SerializableFunction<?, ?> deserialize(
-        JsonParser jsonParser,
-        DeserializationContext deserializationContext
-    ) throws IOException, JsonProcessingException {
+        JsonParser jsonParser, DeserializationContext deserializationContext
+    ) throws IOException {
       byte[] value = jsonParser.getBinaryValue();
-      try (
-          ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(value);
-          ObjectInputStream inputStream = new ObjectInputStream(byteArrayInputStream)
-      ) {
+      try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(value); ObjectInputStream inputStream = new ObjectInputStream(
+          byteArrayInputStream)) {
         return (SerializableFunction<?, ?>) inputStream.readObject();
       } catch (ClassNotFoundException e) {
         throw new IOException(e);
@@ -62,9 +58,7 @@ public class SerializationUtils {
 
     @Override
     public Object deserializeWithType(
-        JsonParser jsonParser,
-        DeserializationContext deserializationContext,
-        TypeDeserializer typeDeserializer
+        JsonParser jsonParser, DeserializationContext deserializationContext, TypeDeserializer typeDeserializer
     ) throws IOException {
       return deserialize(jsonParser, deserializationContext);
     }
@@ -77,10 +71,8 @@ public class SerializationUtils {
         JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider
     ) throws IOException {
-      try (
-          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-          ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream)
-      ) {
+      try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(); ObjectOutputStream outputStream = new ObjectOutputStream(
+          byteArrayOutputStream)) {
         outputStream.writeObject(serializableFunction);
         jsonGenerator.writeBinary(byteArrayOutputStream.toByteArray());
       }
@@ -105,6 +97,7 @@ public class SerializationUtils {
     return clone(t, DEFAULT_CLONE_MODE);
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> T clone(T t, Mode mode) {
     return (T) deserialize(serialize(t, mode), t.getClass(), mode);
   }
@@ -136,10 +129,10 @@ public class SerializationUtils {
   }
 
   private static byte[] gzip(byte[] raw) throws IOException {
-    try (
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        GZIPOutputStream gos = new GZIPOutputStream(baos, true);
-    ) {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); GZIPOutputStream gos = new GZIPOutputStream(
+        baos,
+        true
+    );) {
       gos.write(raw);
       gos.flush();
       gos.close();
@@ -147,11 +140,9 @@ public class SerializationUtils {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private static <T> T javaDeserialize(byte[] raw, Class<T> tClass) throws IOException {
-    try (
-        ByteArrayInputStream bais = new ByteArrayInputStream(raw);
-        ObjectInputStream ois = new ObjectInputStream(bais)
-    ) {
+    try (ByteArrayInputStream bais = new ByteArrayInputStream(raw); ObjectInputStream ois = new ObjectInputStream(bais)) {
       Object o = ois.readObject();
       return (T) o;
     } catch (ClassNotFoundException e) {
@@ -160,10 +151,7 @@ public class SerializationUtils {
   }
 
   private static byte[] javaSerialize(Object object) throws IOException {
-    try (
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos)
-    ) {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(baos)) {
       oos.writeObject(object);
       oos.flush();
       return baos.toByteArray();
@@ -198,11 +186,7 @@ public class SerializationUtils {
   }
 
   private static byte[] ungzip(byte[] raw) throws IOException {
-    try (
-        ByteArrayInputStream bais = new ByteArrayInputStream(raw);
-        GZIPInputStream gis = new GZIPInputStream(bais);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ) {
+    try (ByteArrayInputStream bais = new ByteArrayInputStream(raw); GZIPInputStream gis = new GZIPInputStream(bais); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
       byte[] buf = new byte[1024];
       while (true) {
         int read = gis.read(buf);

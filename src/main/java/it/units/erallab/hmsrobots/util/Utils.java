@@ -22,7 +22,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,8 +30,6 @@ import java.util.stream.Collectors;
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public class Utils {
-
-  private static final Logger L = Logger.getLogger(Utils.class.getName());
 
   private Utils() {
   }
@@ -266,6 +263,7 @@ public class Utils {
     return (double) nVoxels / nConvexHull;
   }
 
+  @SuppressWarnings("OptionalGetWithoutIsPresent")
   public static double shapeElongation(Grid<Boolean> posture, int n) {
     if (posture.values().stream().noneMatch(e -> e)) {
       throw new IllegalArgumentException("Grid is empty");
