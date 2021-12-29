@@ -42,12 +42,7 @@ public class PoseUtils {
   private PoseUtils() {
   }
 
-  private static class ClusterableGridKey implements Clusterable { // TODO to record
-    private final Grid.Key key;
-
-    public ClusterableGridKey(Grid.Key key) {
-      this.key = key;
-    }
+  private record ClusterableGridKey(Grid.Key key) implements Clusterable {
 
     @Override
     public double[] getPoint() {
@@ -155,11 +150,7 @@ public class PoseUtils {
   }
 
   public static Grid<Boolean> computeDynamicPosture(
-      Grid<Boolean> shape,
-      Set<Grid.Key> pose,
-      Voxel voxelPrototype,
-      double finalT,
-      int gridSize
+      Grid<Boolean> shape, Set<Grid.Key> pose, Voxel voxelPrototype, double finalT, int gridSize
   ) {
     Grid<Voxel> body = Grid.create(shape, b -> b ? SerializationUtils.clone(voxelPrototype) : null);
     PosesController controller = new PosesController(0.5d, List.of(pose));
