@@ -34,7 +34,7 @@ public class Touch extends AbstractSensor {
 
   public static boolean isTouching(Voxel voxel) {
     for (Body vertexBody : voxel.getVertexBodies()) {
-      List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      List<Body> inContactBodies = voxel.getWorld().getInContactBodies(vertexBody, false);
       for (Body inContactBody : inContactBodies) {
         Object userData = inContactBody.getUserData();
         if (userData == null) {
@@ -49,7 +49,7 @@ public class Touch extends AbstractSensor {
 
   public static boolean isTouchingGround(Voxel voxel) {
     for (Body vertexBody : voxel.getVertexBodies()) {
-      List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      List<Body> inContactBodies = voxel.getWorld().getInContactBodies(vertexBody, false);
       for (Body inContactBody : inContactBodies) {
         if ((inContactBody.getUserData() != null) && (inContactBody.getUserData().equals(Ground.class))) {
           return true;

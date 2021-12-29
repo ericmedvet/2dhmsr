@@ -21,10 +21,10 @@ import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -37,14 +37,14 @@ public class Box implements WorldObject, Snapshottable {
   private final Body body;
 
   public Box(double w, double h, double angle, double mass) {
-    body = new Body(1);
+    body = new Body();
     body.addFixture(new Rectangle(w, h), mass / w / h, FRICTION, RESTITUTION);
     body.setMass(MassType.NORMAL);
     body.rotate(angle);
   }
 
   @Override
-  public void addTo(World world) {
+  public void addTo(World<Body> world) {
     world.addBody(body);
   }
 

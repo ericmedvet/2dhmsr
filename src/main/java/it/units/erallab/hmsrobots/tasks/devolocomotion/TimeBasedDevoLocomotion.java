@@ -27,8 +27,9 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
+import org.dyn4j.world.World;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -90,7 +91,7 @@ public class TimeBasedDevoLocomotion extends DevoLocomotion {
     List<Double> copiedDevelopmentSchedule = new LinkedList<>(developmentSchedule);
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
-    World world = new World();
+    World<Body> world = new World<>();
     world.setSettings(settings);
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
     Robot robot = solution.apply(null);

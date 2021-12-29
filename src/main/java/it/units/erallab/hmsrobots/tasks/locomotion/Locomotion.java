@@ -25,9 +25,10 @@ import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Utils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -64,6 +65,7 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     String downhill = "downhill-(?<angle>[0-9]+(\\.[0-9]+)?)";
     String uphill = "uphill-(?<angle>[0-9]+(\\.[0-9]+)?)";
     Map<String, String> params;
+    //noinspection UnusedAssignment
     if ((params = Utils.params(flat, name)) != null) {
       return new double[][]{
           new double[]{0, TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH},
@@ -160,7 +162,7 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
   public Outcome apply(Robot robot, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
-    World world = new World();
+    World<Body> world = new World<>();
     world.setSettings(settings);
     List<WorldObject> worldObjects = new ArrayList<>();
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);

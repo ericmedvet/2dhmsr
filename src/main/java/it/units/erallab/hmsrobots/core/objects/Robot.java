@@ -29,10 +29,10 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.joint.Joint;
 import org.dyn4j.dynamics.joint.WeldJoint;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -52,7 +52,7 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
   @JsonProperty
   private final Grid<Voxel> voxels;
 
-  private transient List<Joint> joints;
+  private transient List<Joint<Body>> joints;
 
   @JsonCreator
   public Robot(
@@ -63,8 +63,9 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
     reset();
   }
 
-  private static Joint join(Body body1, Body body2) {
-    return new WeldJoint(body1, body2, new Vector2((body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
+  private static Joint<Body> join(Body body1, Body body2) {
+    return new WeldJoint<>(body1, body2, new Vector2(
+        (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
         (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
   }
@@ -83,13 +84,13 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
   }
 
   @Override
-  public void addTo(World world) {
+  public void addTo(World<Body> world) {
     for (Voxel voxel : voxels.values()) {
       if (voxel != null) {
         voxel.addTo(world);
       }
     }
-    for (Joint joint : joints) {
+    for (Joint<Body> joint : joints) {
       world.addJoint(joint);
     }
   }
@@ -142,7 +143,8 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
   @Override
   public Snapshot getSnapshot() {
     Grid<Snapshot> voxelSnapshots = Grid.create(voxels, v -> v == null ? null : v.getSnapshot());
-    Snapshot snapshot = new Snapshot(new RobotShape(Grid.create(voxelSnapshots,
+    Snapshot snapshot = new Snapshot(new RobotShape(Grid.create(
+        voxelSnapshots,
         s -> s == null ? null : ((VoxelPoly) s.getContent())
     ), boundingBox()), getClass());
     if (controller instanceof Snapshottable) {

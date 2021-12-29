@@ -24,13 +24,17 @@ import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.apache.commons.lang3.ArrayUtils;
-import org.dyn4j.collision.Filter;
-import org.dyn4j.dynamics.RaycastResult;
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.DetectFilter;
+import org.dyn4j.world.result.RaycastResult;
 
-import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.DoubleStream;
 
 public class Lidar extends AbstractSensor {
@@ -86,16 +90,15 @@ public class Lidar extends AbstractSensor {
 
   }
 
-  public static class RaycastFilter implements Filter, Serializable {
-
-    @Override
-    public boolean isAllowed(Filter f) {
-      if (f == null)
-        return true;
-      return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
-    }
-
-  }
+  private final static DetectFilter<Body, BodyFixture> FILTER = new DetectFilter<>(
+      true,
+      true,
+      f -> {
+        if (f == null)
+          return true;
+        return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
+      }
+  );
 
   private static double[] sampleRangeWithRays(int numberOfRays, double startAngle, double endAngle) {
     return numberOfRays == 1 ?
@@ -128,13 +131,11 @@ public class Lidar extends AbstractSensor {
 
   @Override
   public double[] sense(double t) {
-    List<RaycastResult> results = new ArrayList<>();
     return Arrays.stream(rayDirections).map(rayDirection -> {
       Point2 center = voxel.center();
       Ray ray = new Ray(new Vector2(center.x(), center.y()), rayDirection + voxel.getAngle());
-      results.clear();
-      voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
-      return results.isEmpty() ? rayLength : results.get(0).getRaycast().getDistance();
+      List<RaycastResult<Body, BodyFixture>> results = voxel.getWorld().raycast(ray, rayLength, FILTER);
+      return results.stream().mapToDouble(r -> r.getRaycast().getDistance()).min().orElse(rayLength);
     }).toArray();
   }
 }
