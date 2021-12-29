@@ -36,40 +36,18 @@ public class Outcome {
     this.observations = Collections.unmodifiableSortedMap(new TreeMap<>(observations));
   }
 
-  public static class Observation {
-    private final Grid<VoxelPoly> voxelPolies;
-    private final double terrainHeight;
-    private final double computationTime;
-
-    public Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
-      this.voxelPolies = voxelPolies;
-      this.terrainHeight = terrainHeight;
-      this.computationTime = computationTime;
-    }
-
-    public double getComputationTime() {
-      return computationTime;
-    }
-
-    public double getTerrainHeight() {
-      return terrainHeight;
-    }
-
-    public Grid<VoxelPoly> getVoxelPolies() {
-      return voxelPolies;
-    }
-  }
+  public record Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {}
 
   public double getAreaRatioEnergy() {
     double initialEnergy = observations.get(observations.firstKey())
-        .getVoxelPolies()
+        .voxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
         .mapToDouble(VoxelPoly::getAreaRatioEnergy)
         .sum();
     double finalEnergy = observations.get(observations.lastKey())
-        .getVoxelPolies()
+        .voxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
@@ -85,10 +63,7 @@ public class Outcome {
   public Grid<Boolean> getAveragePosture(int n) {
     return BehaviorUtils.computeAveragePosture(observations.values()
         .stream()
-        .map(o -> BehaviorUtils.computePosture(
-            o.getVoxelPolies().values().stream().filter(Objects::nonNull).toList(),
-            n
-        ))
+        .map(o -> BehaviorUtils.computePosture(o.voxelPolies().values().stream().filter(Objects::nonNull).toList(), n))
         .toList());
   }
 
@@ -96,7 +71,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getAngle()
+            e -> BehaviorUtils.getCentralElement(e.getValue().voxelPolies()).getAngle()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -105,7 +80,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().x()
+            e -> BehaviorUtils.getCentralElement(e.getValue().voxelPolies()).center().x()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -114,7 +89,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().x()
+            e -> BehaviorUtils.getCentralElement(e.getValue().voxelPolies()).getLinearVelocity().x()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -123,7 +98,7 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).center().y()
+            e -> BehaviorUtils.getCentralElement(e.getValue().voxelPolies()).center().y()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
@@ -132,26 +107,26 @@ public class Outcome {
     SortedMap<Double, Double> signal = new TreeMap<>(observations.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey,
-            e -> BehaviorUtils.getCentralElement(e.getValue().getVoxelPolies()).getLinearVelocity().y()
+            e -> BehaviorUtils.getCentralElement(e.getValue().voxelPolies()).getLinearVelocity().y()
         )));
     return BehaviorUtils.computeQuantizedSpectrum(signal, minF, maxF, nBins);
   }
 
   public double getComputationTime() {
-    return observations.get(observations.lastKey()).getComputationTime() - observations.get(observations.firstKey())
-        .getComputationTime();
+    return observations.get(observations.lastKey()).computationTime() - observations.get(observations.firstKey())
+        .computationTime();
   }
 
   public double getControlEnergy() {
     double initialEnergy = observations.get(observations.firstKey())
-        .getVoxelPolies()
+        .voxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
         .mapToDouble(VoxelPoly::getControlEnergy)
         .sum();
     double finalEnergy = observations.get(observations.lastKey())
-        .getVoxelPolies()
+        .voxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
@@ -170,13 +145,13 @@ public class Outcome {
 
   public double getDistance() {
     Point2 initialCenter = BehaviorUtils.center(observations.get(observations.firstKey())
-        .getVoxelPolies()
+        .voxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
         .toList());
     Point2 finalCenter = BehaviorUtils.center(observations.get(observations.lastKey())
-        .getVoxelPolies()
+        .voxelPolies()
         .values()
         .stream()
         .filter(Objects::nonNull)
@@ -185,16 +160,15 @@ public class Outcome {
   }
 
   public List<SortedMap<DoubleRange, Double>> getFootprintsSpectra(int n, double minF, double maxF, int nBins) {
-    SortedMap<Double, Footprint> footprints = new TreeMap<>(observations.entrySet()
-        .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey,
-            e -> BehaviorUtils.computeFootprint(e.getValue()
-                .getVoxelPolies()
-                .values()
-                .stream()
-                .filter(Objects::nonNull)
-                .toList(), n)
-        )));
+    SortedMap<Double, Footprint> footprints = new TreeMap<>(observations.entrySet().stream().collect(Collectors.toMap(
+        Map.Entry::getKey,
+        e -> BehaviorUtils.computeFootprint(e.getValue()
+            .voxelPolies()
+            .values()
+            .stream()
+            .filter(Objects::nonNull)
+            .toList(), n)
+    )));
     return IntStream.range(0, n)
         .mapToObj(i -> BehaviorUtils.computeQuantizedSpectrum(new TreeMap<>(footprints.entrySet()
                 .stream()
