@@ -18,6 +18,8 @@ package it.units.erallab.hmsrobots.core.objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
@@ -161,7 +163,7 @@ public class BreakableVoxel extends SensingVoxel {
   @Override
   public VoxelPoly getVoxelPoly() {
     return new VoxelPoly(
-        getVertices(),
+        Poly.of(getVertices().toArray(Point2[]::new)),
         getAngle(),
         getLinearVelocity(),
         Touch.isTouchingGround(this),

@@ -68,7 +68,7 @@ public class BehaviorUtils {
   public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
     Collection<BoundingBox> boxes = polies.stream()
         .filter(VoxelPoly::isTouchingGround)
-        .map(s -> BoundingBox.of(s.getVertexes()))
+        .map(VoxelPoly::boundingBox)
         .toList();
     double robotMinX = boxes.stream()
         .mapToDouble(b -> b.min().x())

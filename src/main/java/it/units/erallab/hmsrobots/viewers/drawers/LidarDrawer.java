@@ -17,7 +17,6 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -53,7 +52,7 @@ public class LidarDrawer extends SubtreeDrawer {
       return;
     }
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
-    Point2 center = Poly.of(voxelPoly.getVertexes()).center();
+    Point2 center = voxelPoly.center();
     for (Snapshot lidarSnapshot : lidarSnapshots) {
       LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
       double angle = lidarReadings.getVoxelAngle();

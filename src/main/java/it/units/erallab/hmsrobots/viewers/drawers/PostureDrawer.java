@@ -19,7 +19,6 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
@@ -48,7 +47,6 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
             .andThen(g -> BehaviorUtils.computePosture(g.values()
                 .stream()
                 .filter(Objects::nonNull)
-                .map(v -> Poly.of(v.getVertexes()))
                 .toList(), n)),
         windowT
     );

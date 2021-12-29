@@ -559,7 +559,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
 
   public VoxelPoly getVoxelPoly() {
     return new VoxelPoly(
-        getVertices(),
+        Poly.of(getVertices().toArray(Point2[]::new)),
         getAngle(),
         getLinearVelocity(),
         Touch.isTouchingGround(this),

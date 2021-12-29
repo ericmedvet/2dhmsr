@@ -77,7 +77,7 @@ public class InfoDrawer implements Drawer {
           .map(s -> Point2.average(
               s.getChildren().stream()
                   .filter(c -> Voxel.class.isAssignableFrom(c.getSnapshottableClass()))
-                  .map(c -> Point2.average(((VoxelPoly) c.getContent()).getVertexes()))
+                  .map(c -> ((VoxelPoly) c.getContent()).center())
                   .toArray(Point2[]::new))
           )
           .toList();

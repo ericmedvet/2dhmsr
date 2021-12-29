@@ -53,7 +53,7 @@ public class VoxelDrawer extends SubtreeDrawer {
   @Override
   protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     VoxelPoly voxelPoly = (VoxelPoly) snapshot.getContent();
-    Path2D path = DrawingUtils.toPath(Poly.of(voxelPoly.getVertexes()), true);
+    Path2D path = DrawingUtils.toPath(Poly.of(voxelPoly.vertexes()), true);
     g.setColor(STROKE_COLOR);
     g.draw(path);
     if (fillType.equals(FillType.AREA_RATIO)) {
@@ -77,19 +77,19 @@ public class VoxelDrawer extends SubtreeDrawer {
       if (!voxelPoly.getMalfunctions()
           .get(BreakableVoxel.ComponentType.ACTUATOR)
           .equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(DrawingUtils.toPath(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[2]));
+        g.draw(DrawingUtils.toPath(voxelPoly.vertexes()[0], voxelPoly.vertexes()[2]));
       }
       if (!voxelPoly.getMalfunctions()
           .get(BreakableVoxel.ComponentType.SENSORS)
           .equals(BreakableVoxel.MalfunctionType.NONE)) {
-        g.draw(DrawingUtils.toPath(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[3]));
+        g.draw(DrawingUtils.toPath(voxelPoly.vertexes()[1], voxelPoly.vertexes()[3]));
       }
       if (!voxelPoly.getMalfunctions()
           .get(BreakableVoxel.ComponentType.STRUCTURE)
           .equals(BreakableVoxel.MalfunctionType.NONE)) {
         g.draw(DrawingUtils.toPath(
-            Point2.average(voxelPoly.getVertexes()[0], voxelPoly.getVertexes()[3]),
-            Point2.average(voxelPoly.getVertexes()[1], voxelPoly.getVertexes()[2])
+            Point2.average(voxelPoly.vertexes()[0], voxelPoly.vertexes()[3]),
+            Point2.average(voxelPoly.vertexes()[1], voxelPoly.vertexes()[2])
         ));
       }
     }

@@ -17,18 +17,20 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
+import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
-public class VoxelPoly { //TODO was extending Poly
+public class VoxelPoly implements Shape {
 
-  private final List<Point2> vertexes;
+  private final Poly poly;
   private final double angle;
   private final Point2 linearVelocity;
   private final boolean isTouchingGround;
@@ -39,18 +41,18 @@ public class VoxelPoly { //TODO was extending Poly
   private final Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions;
 
   public VoxelPoly(
-      List<Point2> vertexes,
+      Poly poly,
       double angle,
       Point2 linearVelocity,
       boolean isTouchingGround,
       double areaRatio,
       double areaRatioEnergy
   ) {
-    this(vertexes, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, 0d, 0d);
+    this(poly, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, 0d, 0d);
   }
 
   public VoxelPoly(
-      List<Point2> vertexes,
+      Poly poly,
       double angle,
       Point2 linearVelocity,
       boolean isTouchingGround,
@@ -60,7 +62,7 @@ public class VoxelPoly { //TODO was extending Poly
       double controlEnergy
   ) {
     this(
-        vertexes,
+        poly,
         angle,
         linearVelocity,
         isTouchingGround,
@@ -73,7 +75,7 @@ public class VoxelPoly { //TODO was extending Poly
   }
 
   public VoxelPoly(
-      List<Point2> vertexes,
+      Poly poly,
       double angle,
       Point2 linearVelocity,
       boolean isTouchingGround,
@@ -83,7 +85,7 @@ public class VoxelPoly { //TODO was extending Poly
       double controlEnergy,
       Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions
   ) {
-    this.vertexes = vertexes;
+    this.poly = poly;
     this.angle = angle;
     this.linearVelocity = linearVelocity;
     this.isTouchingGround = isTouchingGround;
@@ -126,7 +128,22 @@ public class VoxelPoly { //TODO was extending Poly
     return isTouchingGround;
   }
 
-  public Point2[] getVertexes() {
-    return vertexes.toArray(Point2[]::new);
+  @Override
+  public BoundingBox boundingBox() {
+    return poly.boundingBox();
+  }
+
+  @Override
+  public Point2 center() {
+    return poly.center();
+  }
+
+  @Override
+  public double area() {
+    return poly.area();
+  }
+
+  public Point2[] vertexes() {
+    return poly.vertexes();
   }
 }

@@ -21,5 +21,5 @@ package it.units.erallab.hmsrobots.core.snapshots;
  * @author eric on 2021/08/12 for 2dhmsr
  */
 public interface Snapshottable {
-  Snapshot getSnapshot(); //TODO maybe later add a filter
+  Snapshot getSnapshot();
 }

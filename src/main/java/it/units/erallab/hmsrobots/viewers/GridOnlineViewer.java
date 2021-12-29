@@ -142,15 +142,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     );
   }
 
-  private static class TimedSnapshot { // TODO to record
-    private final double t;
-    private final Snapshot snapshot;
-
-    public TimedSnapshot(double t, Snapshot snapshot) {
-      this.t = t;
-      this.snapshot = snapshot;
-    }
-  }
+  private record TimedSnapshot(double t, Snapshot snapshot) {}
 
   public static <S> void run(
       Task<S, ?> task,
