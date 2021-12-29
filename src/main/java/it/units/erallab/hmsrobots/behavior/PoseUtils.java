@@ -18,8 +18,8 @@
 package it.units.erallab.hmsrobots.behavior;
 
 import it.units.erallab.hmsrobots.core.controllers.PosesController;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.tasks.FinalPosture;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
@@ -42,7 +42,7 @@ public class PoseUtils {
   private PoseUtils() {
   }
 
-  private static class ClusterableGridKey implements Clusterable {
+  private static class ClusterableGridKey implements Clusterable { // TODO to record
     private final Grid.Key key;
 
     public ClusterableGridKey(Grid.Key key) {
@@ -121,7 +121,7 @@ public class PoseUtils {
       Set<Set<Grid.Key>> startingPoses,
       int n,
       int seed,
-      ControllableVoxel voxelPrototype,
+      Voxel voxelPrototype,
       double finalT,
       int gridSize
   ) {
@@ -157,13 +157,13 @@ public class PoseUtils {
   public static Grid<Boolean> computeDynamicPosture(
       Grid<Boolean> shape,
       Set<Grid.Key> pose,
-      ControllableVoxel voxelPrototype,
+      Voxel voxelPrototype,
       double finalT,
       int gridSize
   ) {
-    Grid<ControllableVoxel> body = Grid.create(shape, b -> b ? SerializationUtils.clone(voxelPrototype) : null);
+    Grid<Voxel> body = Grid.create(shape, b -> b ? SerializationUtils.clone(voxelPrototype) : null);
     PosesController controller = new PosesController(0.5d, List.of(pose));
-    Robot<ControllableVoxel> robot = new Robot<>(controller, body);
+    Robot robot = new Robot(controller, body);
     FinalPosture finalPosture = new FinalPosture(gridSize, finalT);
     return finalPosture.apply(robot);
   }

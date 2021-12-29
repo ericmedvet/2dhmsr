@@ -19,13 +19,13 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public class SmoothedController<V extends ControllableVoxel> extends AbstractController<V> {
+public class SmoothedController extends AbstractController {
 
   @JsonProperty
-  private final AbstractController<V> innerController;
+  private final AbstractController innerController;
   @JsonProperty
   private final double controlSignalSpeed;
 
@@ -34,7 +34,7 @@ public class SmoothedController<V extends ControllableVoxel> extends AbstractCon
 
   @JsonCreator
   public SmoothedController(
-      @JsonProperty("innerController") AbstractController<V> innerController,
+      @JsonProperty("innerController") AbstractController innerController,
       @JsonProperty("stepT") double controlSignalSpeed
   ) {
     this.innerController = innerController;
@@ -42,7 +42,7 @@ public class SmoothedController<V extends ControllableVoxel> extends AbstractCon
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     Grid<Double> targetControlSignals = innerController.computeControlSignals(t, voxels);
     if (currentControlSignals == null) {
       currentControlSignals = Grid.create(targetControlSignals, v -> 0d);

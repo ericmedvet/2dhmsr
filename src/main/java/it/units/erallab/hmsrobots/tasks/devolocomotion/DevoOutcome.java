@@ -42,12 +42,12 @@ public class DevoOutcome {
   }
 
   public static class DevoStageOutcome {
-    private final Robot<?> robot;
+    private final Robot robot;
     private final double velocity;
     private final double time;
     private final double distance;
 
-    public DevoStageOutcome(Robot<?> robot, Outcome outcome) {
+    public DevoStageOutcome(Robot robot, Outcome outcome) {
       this.robot = robot;
       this.velocity = outcome.getVelocity();
       this.time = outcome.getTime();
@@ -68,7 +68,7 @@ public class DevoOutcome {
     return outcomeList.stream().map(d -> d.distance).toList();
   }
 
-  public List<Robot<?>> getRobots() {
+  public List<Robot> getRobots() {
     return outcomeList.stream().map(devoStageOutcome -> devoStageOutcome.robot).collect(Collectors.toList());
   }
 

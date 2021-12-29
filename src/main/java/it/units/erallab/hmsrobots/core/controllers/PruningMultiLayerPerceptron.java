@@ -20,9 +20,10 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.math3.util.Pair;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable {
+public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable, Serializable {
 
   @JsonProperty
   private final double pruningTime;

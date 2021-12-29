@@ -17,7 +17,7 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
@@ -36,7 +36,7 @@ public class LidarDrawer extends SubtreeDrawer {
   private final Color strokeColor;
 
   public LidarDrawer(Color strokeColor) {
-    super(Extractor.matches(null, SensingVoxel.class, null));
+    super(Extractor.matches(null, Voxel.class, null));
     this.strokeColor = strokeColor;
   }
 

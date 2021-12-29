@@ -18,16 +18,17 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * @author eric
  */
-public class DistributedSensing extends AbstractController<SensingVoxel> {
+public class DistributedSensing extends AbstractController {
 
   @JsonProperty
   private final int signals;
@@ -56,7 +57,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
     reset();
   }
 
-  public DistributedSensing(Grid<? extends SensingVoxel> voxels, int signals) {
+  public DistributedSensing(Grid<Voxel> voxels, int signals) {
     this(
         signals,
         Grid.create(voxels, v -> (v == null) ? 0 : nOfInputs(v, signals)),
@@ -101,7 +102,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
     }
   }
 
-  private static class FunctionWrapper implements TimedRealFunction {
+  private static class FunctionWrapper implements TimedRealFunction, Serializable {
     @JsonProperty
     private final TimedRealFunction inner;
 
@@ -126,18 +127,18 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
     }
   }
 
-  public static int nOfInputs(SensingVoxel voxel, int signals) {
+  public static int nOfInputs(Voxel voxel, int signals) {
     return signals * Dir.values().length + voxel.getSensors().stream().mapToInt(s -> s.getDomains().length).sum();
   }
 
-  public static int nOfOutputs(SensingVoxel voxel, int signals) {
+  public static int nOfOutputs(Voxel voxel, int signals) {
     return 1 + signals * Dir.values().length;
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     Grid<Double> controSignals = Grid.create(voxels.getW(), voxels.getH());
-    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
+    for (Grid.Entry<Voxel> entry : voxels) {
       if (entry.value() == null) {
         continue;
       }
@@ -160,7 +161,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
           this.signals * Dir.values().length
       );
     }
-    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
+    for (Grid.Entry<Voxel> entry : voxels) {
       if (entry.value() == null) {
         continue;
       }

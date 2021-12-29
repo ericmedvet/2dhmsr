@@ -18,8 +18,8 @@
 package it.units.erallab.hmsrobots.tasks;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.util.Grid;
@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class FinalPosture extends AbstractTask<Robot<?>, Grid<Boolean>> {
+public class FinalPosture extends AbstractTask<Robot, Grid<Boolean>> {
 
   private final int gridSize;
   private final double finalT;
@@ -43,7 +43,7 @@ public class FinalPosture extends AbstractTask<Robot<?>, Grid<Boolean>> {
   }
 
   @Override
-  public Grid<Boolean> apply(Robot<?> robot, SnapshotListener listener) {
+  public Grid<Boolean> apply(Robot robot, SnapshotListener listener) {
     //init world
     World world = new World();
     world.setSettings(settings);
@@ -62,7 +62,7 @@ public class FinalPosture extends AbstractTask<Robot<?>, Grid<Boolean>> {
     return BehaviorUtils.computePosture(
         robot.getVoxels().values().stream()
             .filter(Objects::nonNull)
-            .map(ControllableVoxel::getVoxelPoly)
+            .map(Voxel::getVoxelPoly)
             .toList(),
         gridSize
     );

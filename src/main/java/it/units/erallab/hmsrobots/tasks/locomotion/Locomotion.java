@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
+public class Locomotion extends AbstractTask<Robot, Outcome> {
 
   public final static double INITIAL_PLACEMENT_X_GAP = 1d;
   public final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -157,7 +157,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
   }
 
   @Override
-  public Outcome apply(Robot<?> robot, SnapshotListener listener) {
+  public Outcome apply(Robot robot, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();

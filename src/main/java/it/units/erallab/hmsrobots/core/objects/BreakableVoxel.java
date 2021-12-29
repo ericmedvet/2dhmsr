@@ -29,7 +29,7 @@ import org.dyn4j.dynamics.joint.DistanceJoint;
 
 import java.util.*;
 
-public class BreakableVoxel extends SensingVoxel {
+public class BreakableVoxel extends Voxel {
 
   @JsonProperty
   private final Map<ComponentType, Set<MalfunctionType>> malfunctions;

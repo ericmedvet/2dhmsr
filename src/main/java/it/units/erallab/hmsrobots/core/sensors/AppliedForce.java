@@ -16,7 +16,6 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
 import it.units.erallab.hmsrobots.util.DoubleRange;
 
 public class AppliedForce extends AbstractSensor {
@@ -30,7 +29,7 @@ public class AppliedForce extends AbstractSensor {
 
   @Override
   protected double[] sense(double t) {
-    return new double[]{((ControllableVoxel) voxel).getLastAppliedForce()};
+    return new double[]{voxel.getLastAppliedForce()};
 
   }
 }

@@ -17,19 +17,20 @@
 
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.DoubleRange;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
-public abstract class AbstractSensor implements Sensor {
+public abstract class AbstractSensor implements Sensor, Serializable {
   protected final DoubleRange[] domains;
-  protected SensingVoxel voxel;
+  protected Voxel voxel;
   protected double[] readings;
 
   public AbstractSensor(DoubleRange[] domains) {
@@ -59,17 +60,18 @@ public abstract class AbstractSensor implements Sensor {
 
   @Override
   public Snapshot getSnapshot() {
-    return new Snapshot(new ScopedReadings(Arrays.copyOf(readings, readings.length),
+    return new Snapshot(new ScopedReadings(
+        Arrays.copyOf(readings, readings.length),
         Arrays.copyOf(domains, domains.length)
     ), getClass());
   }
 
-  public SensingVoxel getVoxel() {
+  public Voxel getVoxel() {
     return voxel;
   }
 
   @Override
-  public void setVoxel(SensingVoxel voxel) {
+  public void setVoxel(Voxel voxel) {
     this.voxel = voxel;
   }
 

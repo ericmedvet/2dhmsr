@@ -17,7 +17,7 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
@@ -41,7 +41,7 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
   private final Color strokeColor;
 
   public SensorReadingsSectorDrawer(Color color) {
-    super(Extractor.matches(VoxelPoly.class, SensingVoxel.class, null));
+    super(Extractor.matches(VoxelPoly.class, Voxel.class, null));
     this.fillColor = DrawingUtils.alphaed(color, 0.33f);
     this.strokeColor = color;
   }

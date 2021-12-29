@@ -90,13 +90,13 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
   }
 
   @Override
-  public DevoOutcome apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener) {
+  public DevoOutcome apply(UnaryOperator<Robot> solution, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
     world.setSettings(settings);
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
-    Robot<?> robot = solution.apply(null);
+    Robot robot = solution.apply(null);
     rebuildWorld(ground, robot, world, initialPlacement);
     List<WorldObject> worldObjects = List.of(ground, robot);
     //run

@@ -43,19 +43,18 @@ import java.util.Objects;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Robot<V extends ControllableVoxel> implements Actionable, Serializable, WorldObject, Snapshottable {
+public class Robot implements Actionable, Serializable, WorldObject, Snapshottable {
 
   @JsonProperty
-  private final Controller<V> controller;
+  private final Controller controller;
   @JsonProperty
-  private final Grid<? extends V> voxels;
+  private final Grid<Voxel> voxels;
 
   private transient List<Joint> joints;
 
   @JsonCreator
   public Robot(
-      @JsonProperty("controller") Controller<V> controller,
-      @JsonProperty("voxels") Grid<? extends V> voxels
+      @JsonProperty("controller") Controller controller, @JsonProperty("voxels") Grid<Voxel> voxels
   ) {
     this.controller = controller;
     this.voxels = voxels;
@@ -63,8 +62,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
   }
 
   private static Joint join(Body body1, Body body2) {
-    return new WeldJoint(body1, body2, new Vector2(
-        (body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
+    return new WeldJoint(body1, body2, new Vector2((body1.getWorldCenter().x + body1.getWorldCenter().x) / 2d,
         (body1.getWorldCenter().y + body1.getWorldCenter().y) / 2d
     ));
   }
@@ -77,7 +75,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
 
   @Override
   public void reset() {
-    voxels.values().stream().filter(Objects::nonNull).forEach(ControllableVoxel::reset);
+    voxels.values().stream().filter(Objects::nonNull).forEach(Voxel::reset);
     assemble();
     controller.reset();
   }
@@ -102,10 +100,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
         Voxel voxel = voxels.get(gx, gy);
         if (voxel != null) {
           voxel.setOwner(this);
-          voxel.translate(new Vector2(
-              (double) gx * voxel.getSideLength(),
-              (double) gy * voxel.getSideLength()
-          ));
+          voxel.translate(new Vector2((double) gx * voxel.getSideLength(), (double) gy * voxel.getSideLength()));
           //check for adjacent voxels
           if ((gx > 0) && (voxels.get(gx - 1, gy) != null)) {
             Voxel adjacent = voxels.get(gx - 1, gy);
@@ -123,11 +118,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
   }
 
   public BoundingBox boundingBox() {
-    return voxels.values().stream()
-        .filter(Objects::nonNull)
-        .map(Voxel::boundingBox)
-        .reduce(BoundingBox::largest)
-        .get();
+    return voxels.values().stream().filter(Objects::nonNull).map(Voxel::boundingBox).reduce(BoundingBox::largest).get();
   }
 
   public Vector2 getCenter() {
@@ -145,29 +136,27 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
     return new Vector2(xc / n, yc / n);
   }
 
-  public Controller<V> getController() {
+  public Controller getController() {
     return controller;
   }
 
   @Override
   public Snapshot getSnapshot() {
     Grid<Snapshot> voxelSnapshots = Grid.create(voxels, v -> v == null ? null : v.getSnapshot());
-    Snapshot snapshot = new Snapshot(
-        new RobotShape(
-            Grid.create(voxelSnapshots, s -> s == null ? null : ((VoxelPoly) s.getContent())),
-            boundingBox()
-        ),
+    Snapshot snapshot = new Snapshot(new RobotShape(Grid.create(
+        voxelSnapshots,
+        s -> s == null ? null : ((VoxelPoly) s.getContent())
+    ), boundingBox()),
         getClass()
     );
     if (controller instanceof Snapshottable) {
       snapshot.getChildren().add(((Snapshottable) controller).getSnapshot());
     }
-    snapshot.getChildren()
-        .addAll(voxelSnapshots.values().stream().filter(Objects::nonNull).toList());
+    snapshot.getChildren().addAll(voxelSnapshots.values().stream().filter(Objects::nonNull).toList());
     return snapshot;
   }
 
-  public Grid<? extends V> getVoxels() {
+  public Grid<Voxel> getVoxels() {
     return voxels;
   }
 
@@ -179,10 +168,7 @@ public class Robot<V extends ControllableVoxel> implements Actionable, Serializa
 
   @Override
   public String toString() {
-    return "Robot{" +
-        "controller=" + controller +
-        ", voxels=" + voxels +
-        '}';
+    return "Robot{" + "controller=" + controller + ", voxels=" + voxels + '}';
   }
 
   public void translate(Vector2 v) {

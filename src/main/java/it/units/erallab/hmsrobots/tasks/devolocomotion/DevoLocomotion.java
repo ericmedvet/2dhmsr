@@ -32,7 +32,7 @@ import java.util.function.UnaryOperator;
 /**
  * @author "Giorgia Nadizar" on 2021/12/04 for VSREvolution
  */
-public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>>, DevoOutcome> {
+public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot>, DevoOutcome> {
 
   protected final double maxT;
   protected final double[][] groundProfile;
@@ -46,9 +46,9 @@ public abstract class DevoLocomotion extends AbstractTask<UnaryOperator<Robot<?>
   }
 
   @Override
-  public abstract DevoOutcome apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener);
+  public abstract DevoOutcome apply(UnaryOperator<Robot> solution, SnapshotListener listener);
 
-  protected void rebuildWorld(Ground ground, Robot<?> robot, World world, double newMinX) {
+  protected void rebuildWorld(Ground ground, Robot robot, World world, double newMinX) {
     ground.addTo(world);
     robot.addTo(world);
     //position robot: translate on x

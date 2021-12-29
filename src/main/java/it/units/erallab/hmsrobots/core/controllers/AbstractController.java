@@ -17,15 +17,15 @@
 
 package it.units.erallab.hmsrobots.core.controllers;
 
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public abstract class AbstractController<V extends ControllableVoxel> implements Controller<V> {
+public abstract class AbstractController implements Controller {
 
-  public abstract Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels);
+  public abstract Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels);
 
   @Override
-  public void control(double t, Grid<? extends V> voxels) {
+  public void control(double t, Grid<Voxel> voxels) {
     Grid<Double> controlSignals = computeControlSignals(t, voxels);
     voxels.forEach(e -> {
       if (e.value() != null) {
@@ -34,12 +34,12 @@ public abstract class AbstractController<V extends ControllableVoxel> implements
     });
   }
 
-  public AbstractController<V> smoothed(double controlSignalSpeed) {
-    return new SmoothedController<>(this, controlSignalSpeed);
+  public AbstractController smoothed(double controlSignalSpeed) {
+    return new SmoothedController(this, controlSignalSpeed);
   }
 
-  public AbstractController<V> step(double stepT) {
-    return new StepController<>(this, stepT);
+  public AbstractController step(double stepT) {
+    return new StepController(this, stepT);
   }
 
 }

@@ -17,7 +17,7 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.*;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.math3.util.Pair;
 
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * @author federico
  */
-public class SelfOrganizing implements Controller<SensingVoxel> {
+public class SelfOrganizing implements Controller {
 
   @JsonProperty
   private final Map<Integer, Neuron> neurons;
@@ -57,8 +57,8 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
 
     @Override
-    public void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller) {
-      SensingVoxel voxel = voxels.get(x, y);
+    public void forward(Grid<Voxel> voxels, SelfOrganizing controller) {
+      Voxel voxel = voxels.get(x, y);
       message = function.apply(ingoingEdges.stream().mapToDouble(e -> propagate(e, controller)).sum());
       voxel.applyForce(message);
     }
@@ -156,7 +156,7 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
 
     @Override
-    public void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller) {
+    public void forward(Grid<Voxel> voxels, SelfOrganizing controller) {
       message = function.apply(ingoingEdges.stream().mapToDouble(e -> propagate(e, controller)).sum());
     }
 
@@ -216,7 +216,7 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
       resetState();
     }
 
-    public abstract void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller);
+    public abstract void forward(Grid<Voxel> voxels, SelfOrganizing controller);
 
     public abstract boolean isActuator();
 
@@ -314,8 +314,8 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
 
     @Override
-    public void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller) {
-      SensingVoxel voxel = voxels.get(x, y);
+    public void forward(Grid<Voxel> voxels, SelfOrganizing controller) {
+      Voxel voxel = voxels.get(x, y);
       message = function.apply(voxel.getSensors().stream().flatMapToDouble(x -> Arrays.stream(x.getReadings()))
           .toArray()[numSensor]);
     }
@@ -371,7 +371,7 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
   }
 
   @Override
-  public void control(double t, Grid<? extends SensingVoxel> voxels) {
+  public void control(double t, Grid<Voxel> voxels) {
     getNeurons().forEach(n -> n.forward(voxels, this));
     getNeurons().forEach(Neuron::advance);
   }
@@ -400,8 +400,7 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
   public List<Edge> getEdges() {
     return neurons.values()
         .stream()
-        .flatMap(n -> n.getIngoingEdges().stream())
-        .collect(Collectors.toUnmodifiableList());
+        .flatMap(n -> n.getIngoingEdges().stream()).toList();
   }
 
   private int getFirstAvailableIndex() {
@@ -414,7 +413,7 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
   }
 
   public List<Neuron> getNeurons() {
-    return neurons.values().stream().collect(Collectors.toUnmodifiableList());
+    return neurons.values().stream().toList();
   }
 
   public Map<Integer, Neuron> getNeuronsMap() {
@@ -435,7 +434,7 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     return out;
   }
 
-  public Pair[] getValidAndDistinctCoordinates() {
+  public Pair<Integer, Integer>[] getValidAndDistinctCoordinates() {
     return getNeurons().stream().map(n -> new Pair<>(n.getX(), n.getY())).distinct().toArray(Pair[]::new);
   }
 

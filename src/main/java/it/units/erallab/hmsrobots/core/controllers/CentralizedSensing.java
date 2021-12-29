@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.Sensor;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -34,7 +34,7 @@ import java.util.Objects;
 /**
  * @author eric
  */
-public class CentralizedSensing extends AbstractController<SensingVoxel> implements Snapshottable {
+public class CentralizedSensing extends AbstractController implements Snapshottable {
 
   @JsonProperty
   private final int nOfInputs;
@@ -59,15 +59,15 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
     setFunction(function);
   }
 
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels) {
+  public CentralizedSensing(Grid<Voxel> voxels) {
     this(voxels, RealFunction.build(in -> new double[nOfOutputs(voxels)], nOfInputs(voxels), nOfOutputs(voxels)));
   }
 
-  public CentralizedSensing(Grid<? extends SensingVoxel> voxels, TimedRealFunction function) {
+  public CentralizedSensing(Grid<Voxel> voxels, TimedRealFunction function) {
     this(nOfInputs(voxels), nOfOutputs(voxels), function);
   }
 
-  public static int nOfInputs(Grid<? extends SensingVoxel> voxels) {
+  public static int nOfInputs(Grid<Voxel> voxels) {
     return voxels.values().stream()
         .filter(Objects::nonNull)
         .mapToInt(v -> v.getSensors().stream()
@@ -76,23 +76,23 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
         .sum();
   }
 
-  public static int nOfOutputs(Grid<? extends SensingVoxel> voxels) {
+  public static int nOfOutputs(Grid<Voxel> voxels) {
     return (int) voxels.values().stream()
         .filter(Objects::nonNull)
         .count();
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     //collect inputs
     inputs = voxels.values().stream()
         .filter(Objects::nonNull)
-        .map(SensingVoxel::getSensorReadings)
+        .map(Voxel::getSensorReadings)
         .reduce(ArrayUtils::addAll)
         .orElse(new double[nOfInputs]);
     inputDomains = voxels.values().stream()
         .filter(Objects::nonNull)
-        .map(SensingVoxel::getSensors)
+        .map(Voxel::getSensors)
         .flatMap(Collection::stream)
         .map(Sensor::getDomains)
         .reduce(ArrayUtils::addAll)
@@ -102,7 +102,7 @@ public class CentralizedSensing extends AbstractController<SensingVoxel> impleme
     //apply inputs
     Grid<Double> controlSignals = Grid.create(voxels.getW(), voxels.getH());
     int c = 0;
-    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
+    for (Grid.Entry<Voxel> entry : voxels) {
       if (entry.value() != null) {
         if (c < outputs.length) {
           controlSignals.set(entry.key().x(), entry.key().y(), outputs[c]);

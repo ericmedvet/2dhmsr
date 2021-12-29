@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
@@ -32,7 +32,7 @@ import java.util.Objects;
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class TimeFunctions extends AbstractController<ControllableVoxel> implements Snapshottable {
+public class TimeFunctions extends AbstractController implements Snapshottable {
 
   @JsonProperty
   private final Grid<SerializableFunction<Double, Double>> functions;
@@ -47,11 +47,11 @@ public class TimeFunctions extends AbstractController<ControllableVoxel> impleme
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends ControllableVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     outputs = new double[(int) voxels.values().stream().filter(Objects::nonNull).count()];
     Grid<Double> controlSignals = Grid.create(voxels.getW(), voxels.getH());
     int c = 0;
-    for (Grid.Entry<? extends ControllableVoxel> entry : voxels) {
+    for (Grid.Entry<Voxel> entry : voxels) {
       SerializableFunction<Double, Double> function = functions.get(entry.key().x(), entry.key().y());
       if ((entry.value() != null) && (function != null)) {
         double v = function.apply(t);
