@@ -55,6 +55,7 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     spikes = new List[neurons.length][];
     currentSpikes = new int[neurons.length][][];
     for (int i = 0; i < neurons.length; i++) {
+      currentSpikes[i] = new int[neurons[i].length][];
       spikes[i] = new List[neurons[i].length];
       for (int j = 0; j < spikes[i].length; j++) {
         spikes[i][j] = new ArrayList<>();
@@ -135,8 +136,6 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     if (inputs.length != neurons[0].length) {
       throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0].length, inputs.length));
     }
-    int[][] previousLayersOutputs = inputs;
-    int[][] thisLayersOutputs = null;
     // destination neuron, array of incoming weights
     double[][] incomingWeights = new double[inputs.length][inputs.length];
     for (int i = 0; i < incomingWeights.length; i++) {
@@ -148,21 +147,16 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
     // iterating over layers
     for (int layerIndex = 0; layerIndex < neurons.length; layerIndex++) {
       QuantizedSpikingFunction[] layer = neurons[layerIndex];
-      thisLayersOutputs = new int[layer.length][];
       for (int neuronIndex = 0; neuronIndex < layer.length; neuronIndex++) {
-        double[] weightedInputSpikeTrain = createWeightedSpikeTrain(previousLayersOutputs, incomingWeights[neuronIndex]);
+        double[] weightedInputSpikeTrain = createWeightedSpikeTrain(layerIndex == 0 ? inputs : currentSpikes[layerIndex - 1], incomingWeights[neuronIndex]);
         layer[neuronIndex].setSumOfIncomingWeights(Arrays.stream(incomingWeights[neuronIndex]).sum());  // for homeostasis
-        thisLayersOutputs[neuronIndex] = layer[neuronIndex].compute(weightedInputSpikeTrain, t);
+        currentSpikes[layerIndex][neuronIndex] = layer[neuronIndex].compute(weightedInputSpikeTrain, t);
         if (spikesTracker) {
-          int arrayLength = thisLayersOutputs[neuronIndex].length;
+          int arrayLength = currentSpikes[layerIndex][neuronIndex].length;
           int finalLayerIndex = layerIndex;
           int finalNeuronIndex = neuronIndex;
-          Arrays.stream(thisLayersOutputs[neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * timeWindowSize + previousApplicationTime));
+          Arrays.stream(currentSpikes[layerIndex][neuronIndex]).forEach(x -> spikes[finalLayerIndex][finalNeuronIndex].add(x / arrayLength * timeWindowSize + previousApplicationTime));
         }
-      }
-      currentSpikes[layerIndex] = new int[thisLayersOutputs.length][];
-      for (int i = 0; i < currentSpikes[layerIndex].length; i++) {
-        currentSpikes[layerIndex][i] = Arrays.stream(thisLayersOutputs[i]).toArray();
       }
       if (layerIndex == neurons.length - 1) {
         break;
@@ -173,10 +167,9 @@ public class QuantizedMultilayerSpikingNetwork implements QuantizedMultivariateS
           incomingWeights[i][j] = weights[layerIndex][j][i];
         }
       }
-      previousLayersOutputs = thisLayersOutputs;
     }
     previousApplicationTime = t;
-    return thisLayersOutputs;
+    return currentSpikes[currentSpikes.length - 1];
   }
 
   protected double[] createWeightedSpikeTrain(int[][] inputs, double[] weights) {
