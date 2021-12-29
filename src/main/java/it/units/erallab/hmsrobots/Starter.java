@@ -28,7 +28,6 @@ import it.units.erallab.hmsrobots.core.sensors.Velocity;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.tasks.devolocomotion.TimeBasedDevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
-import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
@@ -44,7 +43,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.dyn4j.dynamics.Settings;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -326,18 +324,17 @@ public class Starter {
 
   public static void main(String[] args) {
     //bipedWithBrain();
-    bipeds();
+    //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
     //multiped();
-    //bipedAndBall();
+    bipedAndBall();
     //bipedCentralized();
     //devoComb();
     //bipedPoses();
-    //sampleExecution();
   }
 
   private static void multiped() {
@@ -443,29 +440,6 @@ public class Starter {
         new Settings()
     );
     GridOnlineViewer.run(locomotion, robot);
-  }
-
-  private static void sampleExecution() {
-    final Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("flat"), new Settings());
-    Grid<Boolean> shape = RobotUtils.buildShape("worm-5x2");
-    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
-    Robot robot = new Robot(new TimeFunctions(Grid.create(
-        body.getW(),
-        body.getH(),
-        (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) body.getW()))
-    )), body);
-    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5,
-        5.5,
-        0.1,
-        300,
-        200,
-        FramesImageBuilder.Direction.HORIZONTAL,
-        Drawers.basic()
-    );
-    Outcome result = locomotion.apply(robot, framesImageBuilder);
-    BufferedImage image = framesImageBuilder.getImage();
-    System.out.println("Outcome: " + result);
   }
 
 }

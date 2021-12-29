@@ -41,46 +41,42 @@ A graphical representation of a moving VSR:
 
 ## Using the sofware
 
-2D-VSR-Sim is meant to be used within or together with another software that performs the actual optimization. This software is organized as a Java package containing the classes and the interfaces that represent the VSR model and related concepts. The voxel is represented by the `Voxel` class and its parameters, together with its sensors, can be specified using the `Voxel.Description` class. The VSR is represented by the `Robot` class; a description of a VSR, that can be used for building a VSR accordingly, is represented by the `Robot.Description` class. A controller is represented by the interface `Controller`, a functional interface that takes ad input the sensor readings and gives as outputs the control values (one for each voxel). A task, i.e., some activity whose degree of accomplishment can be evaluated quantitatively according to one or more indexes, is described by the interface `Task`.
+2D-VSR-Sim is meant to be used within or together with another software that performs the actual optimization. This software is organized as a Java package containing the classes and the interfaces that represent the VSR model and related concepts. The voxel is modeled by the `Voxel` class. A `Voxel` can be equipped with zero or more sensors, modeled by the `Sensor` class. The VSR is modeled by the `Robot` class. A controller is modeled by the interface `Controller`. A task, i.e., some activity whose degree of accomplishment can be evaluated quantitatively according to one or more indexes, is described by the interface `Task`.
 
-2D-VSR-Sim provides a mechanism for keeping track of an ongoing simulation based on the observer pattern. A `SnapshotListener` interface represents the observer that is notified of progresses in the simulation, each in the form of a `Snapshot`: the latter is an immutable representation of the state of all the objects (e.g., positions of voxels, values of their sensor readings) in the simulation at a given time. There are two listeners implementing this interface:
+2D-VSR-Sim provides a mechanism for keeping track of an ongoing simulation based on the observer pattern. A `SnapshotListener` interface represents the observer that is notified of progresses in the simulation, each in the form of a `Snapshot`: the latter is an immutable representation of the state of all the objects (e.g., positions of voxels, values of their sensor readings) in the simulation at a given time. There are two listeners implementing (indirectly) this interface:
 
 - `GridOnlineViewer` renders a visualization of the simulated world within a GUI;
 - `GridFileWriter` produces a video file.
 
 Both can process multiple simulations together, organized in a grid. The possibility of visualizing many simulations together can be useful, for example, for comparing different stages of an optimization.
 
-The GUI for `GridOnlineViewer`:
-![The GUI of the simulation viewer](/assets/gui.png)
-On top of the GUI, a set of UI controls allows the user to customize the visualization with immediate effect. Sensor readings can be visualized as well as voxels SDSs and masses.
-
 ### Sample code
 
 A brief fragment of code using for setting up a VSR, testing it in the task of locomotion and saving an image with a few frames of the resulting behavior. This VSR is controlled with a periodic sinusoidal signal whose phase changes along the x-direction of the robot.
 
 ```java
-public class Starter {
-
-  private static void main(String[] args) {
-    final Locomotion locomotion = new Locomotion(
-        20,
-        Locomotion.createTerrain("flat"),
-        new Settings()
-    );
-    Grid<Boolean> shape = RobotUtils.buildShape("worm-5x2");
-    Grid<? extends SensingVoxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
-    Robot<ControllableVoxel> robot = new Robot<>(
-        new TimeFunctions(Grid.create(
-            body.getW(), body.getH(),
-            (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) body.getW()))
-        )),
-        body
-    );
+public class Example {
+  public static void main(String[] args) throws IOException {
+    Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("flat"), new Settings());
+    Grid<Boolean> shape = RobotUtils.buildShape("biped-4x3");
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
+    Robot robot = new Robot(new TimeFunctions(Grid.create(
+        body.getW(),
+        body.getH(),
+        (x, y) -> (Double t) -> Math.sin(-2 * Math.PI * t + Math.PI * ((double) x / (double) body.getW()))
+    )), body);
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5, 5.5, 0.1, 300, 200, FramesImageBuilder.Direction.HORIZONTAL, Drawers.basic()
+        4,
+        5,
+        0.2,
+        300,
+        200,
+        FramesImageBuilder.Direction.HORIZONTAL,
+        Drawers.basic()
     );
     Outcome result = locomotion.apply(robot, framesImageBuilder);
     BufferedImage image = framesImageBuilder.getImage();
+    ImageIO.write(image, "png", new File("frames.png"));
     System.out.println("Outcome: " + result);
   }
 }
@@ -94,22 +90,21 @@ This piece of code shows a method for assessing a VSR whose voxels are actuated 
 public class Example {
   public static double assessOnLocomotion(double[] phases) {
     // set robot shape and sensors
-    Grid<ControllableVoxel> voxels = Grid.create(10, 4, (x, y) -> new ControllableVoxel());
+    Grid<Boolean> shape = RobotUtils.buildShape("worm-10x4");
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t-0").apply(shape);
     // set controller
     double f = 1d;
-    Controller<ControllableVoxel> controller = new TimeFunctions(Grid.create(
-        voxels.getW(),
-        voxels.getH(),
-        (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / voxels.getH()))])
+    Controller controller = new TimeFunctions(Grid.create(
+        body.getW(),
+        body.getH(),
+        (x, y) -> (t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * phases[(x + (int) Math.floor(y / body.getH()))])
     ));
-    Robot<ControllableVoxel> robot = new Robot<>(controller, voxels);
+    Robot robot = new Robot(controller, body);
     // set task
-    Settings settings = new Settings();
-    settings.setStepFrequency(1d / 30d);
     Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("flat"),
-        settings
+        new Settings()
     );
     // do task
     Outcome outcome = locomotion.apply(robot);
@@ -130,47 +125,25 @@ This example is similar to the one above, but here the controller of the robot i
 public class Example {
   public static double assessOnLocomotion(double[] weights) {
     // set robot shape and sensors
-    final Grid<Boolean> structure = Grid.create(7, 4, (x, y) -> (x < 2) || (x >= 5) || (y > 0));
-    Grid<SensingVoxel> voxels = Grid.create(structure.getW(), structure.getH(), (x, y) -> {
-      if (structure.get(x, y)) {
-        if (y > 2) {
-          return new SensingVoxel(Arrays.asList(
-              new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y),
-              new Average(new Velocity(true, 3d, Velocity.Axis.X, Velocity.Axis.Y), 1d)
-          ));
-        }
-        if (y == 0) {
-          return new SensingVoxel(Arrays.asList(
-              new Average(new Touch(), 1d)
-          ));
-        }
-        return new SensingVoxel(Arrays.asList(
-            new AreaRatio()
-        ));
-      }
-      return null;
-    });
+    Grid<Boolean> shape = RobotUtils.buildShape("biped-7x4");
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(shape);
     // set controller
-    CentralizedSensing<SensingVoxel> controller = new CentralizedSensing<>(SerializationUtils.clone(voxels));
+    CentralizedSensing controller = new CentralizedSensing(body);
     MultiLayerPerceptron mlp = new MultiLayerPerceptron(
         MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
         new int[0],
         centralizedSensing.nOfOutputs()
     );
-    double[] ws = mlp.getParams();
-    IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextGaussian());
-    mlp.setParams(ws);
+    mlp.setParams(weights);
     centralizedSensing.setFunction(mlp);
     // build robot
-    Robot<SensingVoxel> robot = new Robot(controller, voxels);
+    Robot robot = new Robot(controller, body);
     // set task
-    Settings settings = new Settings();
-    settings.setStepFrequency(1d / 30d);
     Locomotion locomotion = new Locomotion(
         60,
         Locomotion.createTerrain("flat"),
-        settings
+        new Settings()
     );
     // do task
     Outcome outcome = locomotion.apply(robot);
