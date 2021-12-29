@@ -34,11 +34,6 @@
             <version>3.3.0</version>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>31.0.1-jre</version>
-        </dependency>
-        <dependency>
             <groupId>org.jcodec</groupId>
             <artifactId>jcodec</artifactId>
             <version>0.2.5</version>
