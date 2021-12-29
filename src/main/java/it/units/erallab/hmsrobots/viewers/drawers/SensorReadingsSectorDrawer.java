@@ -17,17 +17,16 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class SensorReadingsSectorDrawer extends SubtreeDrawer {
@@ -42,7 +41,7 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
   private final Color strokeColor;
 
   public SensorReadingsSectorDrawer(Color color) {
-    super(Extractor.matches(VoxelPoly.class, SensingVoxel.class, null));
+    super(Extractor.matches(VoxelPoly.class, Voxel.class, null));
     this.fillColor = DrawingUtils.alphaed(color, 0.33f);
     this.strokeColor = color;
   }
@@ -53,11 +52,11 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
 
   private static Path2D getSector(Point2 c, double r, double a1, double a2) {
     Path2D sector = new Path2D.Double();
-    sector.moveTo(c.x, c.y);
+    sector.moveTo(c.x(), c.y());
     for (double a = a1; a < a2; a = a + ANGLE_RESOLUTION) {
-      sector.lineTo(c.x + r * Math.cos(a), c.y + r * Math.sin(a));
+      sector.lineTo(c.x() + r * Math.cos(a), c.y() + r * Math.sin(a));
     }
-    sector.lineTo(c.x + r * Math.cos(a2), c.y + r * Math.sin(a2));
+    sector.lineTo(c.x() + r * Math.cos(a2), c.y() + r * Math.sin(a2));
     sector.closePath();
     return sector;
   }
@@ -68,14 +67,20 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
     List<ScopedReadings> readings = snapshot.getChildren().stream()
         .filter(s -> s.getContent() instanceof ScopedReadings)
         .map(s -> (ScopedReadings) s.getContent())
-        .collect(Collectors.toList());
+        .toList();
     if (readings.isEmpty()) {
       return;
     }
     double radius = Math.sqrt(voxelPoly.area()) / 2d;
     Point2 center = voxelPoly.center();
-    double voxelAngle = Math.atan2((voxelPoly.getVertexes()[1].y - voxelPoly.getVertexes()[0].y), (voxelPoly.getVertexes()[1].x - voxelPoly.getVertexes()[0].x)) / 2d +
-        Math.atan2((voxelPoly.getVertexes()[2].y - voxelPoly.getVertexes()[3].y), (voxelPoly.getVertexes()[2].x - voxelPoly.getVertexes()[3].x)) / 2d;
+    double voxelAngle = Math.atan2(
+        (voxelPoly.vertexes()[1].y() - voxelPoly.vertexes()[0].y()),
+        (voxelPoly.vertexes()[1].x() - voxelPoly.vertexes()[0].x())
+    ) / 2d +
+        Math.atan2(
+            (voxelPoly.vertexes()[2].y() - voxelPoly.vertexes()[3].y()),
+            (voxelPoly.vertexes()[2].x() - voxelPoly.vertexes()[3].x())
+        ) / 2d;
     double angle = ROTATED ? voxelAngle : 0d;
     double sensorSliceAngle = SPAN_ANGLE / (double) readings.size();
     for (int i = 0; i < readings.size(); i++) {
@@ -89,8 +94,8 @@ public class SensorReadingsSectorDrawer extends SubtreeDrawer {
       g.setColor(fillColor);
       for (int j = 0; j < readings.get(i).getReadings().length; j++) {
         double value = readings.get(i).getReadings()[j];
-        Domain d = readings.get(i).getDomains()[j];
-        double normalizedRadius = radius * Math.min(1d, Math.max(0d, (value - d.getMin()) / (d.getMax() - d.getMin())));
+        DoubleRange d = readings.get(i).getDomains()[j];
+        double normalizedRadius = radius * d.normalize(value);
         double valueStartingAngle = sensorStartingAngle + (double) j * valueSliceAngle;
         double valueEndingAngle = valueStartingAngle + valueSliceAngle;
         Path2D sector = getSector(center, normalizedRadius, valueStartingAngle, valueEndingAngle);

@@ -16,10 +16,15 @@
  */
 package it.units.erallab.hmsrobots.core.geometry;
 
-import java.io.Serializable;
-
-public interface Shape extends Serializable {
+public interface Shape {
   BoundingBox boundingBox();
 
-  Point2 center();
+  default Point2 center() {
+    return boundingBox().center();
+  }
+
+  default double area() {
+    return boundingBox().area();
+  }
+
 }

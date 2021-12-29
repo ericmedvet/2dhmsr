@@ -43,6 +43,39 @@ import java.util.function.UnaryOperator;
  */
 public class DistanceBasedDevoLocomotion extends DevoLocomotion {
 
+  private final double stageMinDistance;
+  private final double stageMaxT;
+
+  public DistanceBasedDevoLocomotion(
+      double stageMinDistance,
+      double stageMaxT,
+      double maxT,
+      double[][] groundProfile,
+      double initialPlacement,
+      Settings settings
+  ) {
+    super(maxT, groundProfile, initialPlacement, settings);
+    this.stageMinDistance = stageMinDistance;
+    this.stageMaxT = stageMaxT;
+  }
+
+  public DistanceBasedDevoLocomotion(
+      double stageMinDistance,
+      double stageMaxT,
+      double maxT,
+      double[][] groundProfile,
+      Settings settings
+  ) {
+    this(
+        stageMinDistance,
+        stageMaxT,
+        maxT,
+        groundProfile,
+        groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP,
+        settings
+    );
+  }
+
   public static class CurrentTarget implements Snapshottable {
     private final List<Double> targets;
 
@@ -56,27 +89,14 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
     }
   }
 
-  private final double stageMinDistance;
-  private final double stageMaxT;
-
-  public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, double initialPlacement, Settings settings) {
-    super(maxT, groundProfile, initialPlacement, settings);
-    this.stageMinDistance = stageMinDistance;
-    this.stageMaxT = stageMaxT;
-  }
-
-  public DistanceBasedDevoLocomotion(double stageMinDistance, double stageMaxT, double maxT, double[][] groundProfile, Settings settings) {
-    this(stageMinDistance, stageMaxT, maxT, groundProfile, groundProfile[0][1] + Locomotion.INITIAL_PLACEMENT_X_GAP, settings);
-  }
-
   @Override
-  public DevoOutcome apply(UnaryOperator<Robot<?>> solution, SnapshotListener listener) {
+  public DevoOutcome apply(UnaryOperator<Robot> solution, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World world = new World();
     world.setSettings(settings);
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);
-    Robot<?> robot = solution.apply(null);
+    Robot robot = solution.apply(null);
     rebuildWorld(ground, robot, world, initialPlacement);
     List<WorldObject> worldObjects = List.of(ground, robot);
     //run
@@ -84,7 +104,7 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
     Map<Double, Outcome.Observation> observations = new HashMap<>();
     double t = 0d;
     double stageT = t;
-    double stageX = robot.boundingBox().min.x;
+    double stageX = robot.boundingBox().min().x();
     List<Double> targetXs = new ArrayList<>();
     CurrentTarget currentTarget = new CurrentTarget(targetXs);
     targetXs.add(stageX);
@@ -112,14 +132,17 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
         break;
       }
       //check if develop
-      if (robot.boundingBox().min.x - stageX > stageMinDistance) {
+      if (robot.boundingBox().min().x() - stageX > stageMinDistance) {
         stageT = t;
         //save outcome
-        DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(robot, new Outcome(observations));
+        DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(
+            robot,
+            new Outcome(observations)
+        );
         devoOutcome.addDevoStageOutcome(devoStageOutcome);
         observations = new HashMap<>();
         //develop
-        double minX = robot.boundingBox().min.x;
+        double minX = robot.boundingBox().min().x();
         robot = solution.apply(robot);
         //place
         world.removeAllBodies();
@@ -130,7 +153,10 @@ public class DistanceBasedDevoLocomotion extends DevoLocomotion {
       }
     }
     if (!observations.isEmpty()) {
-      DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(robot, new Outcome(observations));
+      DevoOutcome.DevoStageOutcome devoStageOutcome = new DevoOutcome.DevoStageOutcome(
+          robot,
+          new Outcome(observations)
+      );
       devoOutcome.addDevoStageOutcome(devoStageOutcome);
     }
     stopWatch.stop();

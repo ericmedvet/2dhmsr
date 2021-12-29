@@ -28,6 +28,11 @@ import java.awt.geom.Path2D;
  */
 public class DrawingUtils {
 
+  private DrawingUtils() {
+  }
+
+  public enum Alignment {LEFT, CENTER, RIGHT}
+
   public static class Colors {
     public final static Color TEXT = Color.BLUE;
     public final static Color AXES = Color.BLACK;
@@ -37,9 +42,17 @@ public class DrawingUtils {
     public final static Color DATA_ZERO = Color.BLACK;
   }
 
-  public enum Alignment {LEFT, CENTER, RIGHT}
+  public static Color alphaed(Color color, float alpha) {
+    return new Color(
+        (float) color.getRed() / 255f,
+        (float) color.getGreen() / 255f,
+        (float) color.getBlue() / 255f,
+        alpha
+    );
+  }
 
-  private DrawingUtils() {
+  public static Stroke getScaleIndependentStroke(float thickness, float scale) {
+    return new BasicStroke(thickness / scale);
   }
 
   public static Color linear(final Color c1, final Color c2, final Color c3, float x1, float x2, float x3, float x) {
@@ -68,7 +81,7 @@ public class DrawingUtils {
   }
 
   public static Path2D toPath(Poly poly, boolean close) {
-    Path2D path = toPath(poly.getVertexes());
+    Path2D path = toPath(poly.vertexes());
     if (close) {
       path.closePath();
     }
@@ -77,23 +90,11 @@ public class DrawingUtils {
 
   public static Path2D toPath(Point2... points) {
     Path2D path = new Path2D.Double();
-    path.moveTo(points[0].x, points[0].y);
+    path.moveTo(points[0].x(), points[0].y());
     for (int i = 1; i < points.length; i++) {
-      path.lineTo(points[i].x, points[i].y);
+      path.lineTo(points[i].x(), points[i].y());
     }
     return path;
-  }
-
-  public static Color alphaed(Color color, float alpha) {
-    return new Color(
-        (float) color.getRed() / 255f,
-        (float) color.getGreen() / 255f,
-        (float) color.getBlue() / 255f,
-        alpha);
-  }
-
-  public static Stroke getScaleIndependentStroke(float thickness, float scale) {
-    return new BasicStroke(thickness / scale);
   }
 
 }

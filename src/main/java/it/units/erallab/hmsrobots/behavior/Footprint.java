@@ -33,21 +33,19 @@ public class Footprint {
     return mask;
   }
 
-  public int length() {
-    return mask.length;
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(mask);
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
     Footprint footprint = (Footprint) o;
     return Arrays.equals(mask, footprint.mask);
-  }
-
-  @Override
-  public int hashCode() {
-    return Arrays.hashCode(mask);
   }
 
   @Override
@@ -57,6 +55,10 @@ public class Footprint {
       sb.append(b ? '_' : '.');
     }
     return sb.toString();
+  }
+
+  public int length() {
+    return mask.length;
   }
 }
 

@@ -47,7 +47,7 @@ public class Noisy extends CompositeSensor {
     this.seed = seed;
     random = new Random(seed);
     sigmas = Arrays.stream(sensor.getDomains())
-        .mapToDouble(d -> Math.abs(d.getMax() - d.getMin()) * sigma)
+        .mapToDouble(d -> d.extent() * sigma)
         .toArray();
     reset();
   }

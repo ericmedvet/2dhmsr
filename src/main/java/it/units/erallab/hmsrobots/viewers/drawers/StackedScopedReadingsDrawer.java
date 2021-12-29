@@ -47,7 +47,12 @@ public class StackedScopedReadingsDrawer extends MemoryDrawer<StackedScopedReadi
   }
 
   @Override
-  protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, StackedScopedReadings> memory, Graphics2D g) { //TODO rewrite like MLPState
+  protected void innerDraw(
+      double t,
+      Snapshot snapshot,
+      SortedMap<Double, StackedScopedReadings> memory,
+      Graphics2D g
+  ) { //TODO rewrite like MLPState
     StackedScopedReadings currentReading = memory.get(memory.lastKey());
     //plot
     double clipX = g.getClip().getBounds2D().getX();
@@ -63,7 +68,7 @@ public class StackedScopedReadingsDrawer extends MemoryDrawer<StackedScopedReadi
       double c = 0;
       for (ScopedReadings scopedReadings : entry.getValue().getScopedReadings()) {
         for (int i = 0; i < scopedReadings.getReadings().length; i++) {
-          double v = (scopedReadings.getReadings()[i] - scopedReadings.getDomains()[i].getMin()) / (scopedReadings.getDomains()[i].getMax() - scopedReadings.getDomains()[i].getMin());
+          double v = scopedReadings.getDomains()[i].normalize(scopedReadings.getReadings()[i]);
           double y = c / (n + currentReading.getScopedReadings().length - 1);
           c = c + 1;
           g.setColor(DrawingUtils.linear(minColor, maxColor, 0f, 1f, (float) v));

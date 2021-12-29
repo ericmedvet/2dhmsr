@@ -27,19 +27,15 @@ import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author "Eric Medvet" on 2021/08/27 for 2dhmsr
  */
 public class InfoDrawer implements Drawer {
 
-  public enum RobotInfo {CENTER_POSITION, CENTER_VELOCITY}
-
   private final String string;
   private final Set<RobotInfo> robotInfos;
   private final double windowT;
-
   private final List<SortedMap<Double, Point2>> centerPositions;
 
   public InfoDrawer(String string, Set<RobotInfo> robotInfos, double windowT) {
@@ -61,6 +57,8 @@ public class InfoDrawer implements Drawer {
     this("");
   }
 
+  public enum RobotInfo {CENTER_POSITION, CENTER_VELOCITY}
+
   @Override
   public void draw(double t, Snapshot snapshot, Graphics2D g) {
     //prepare string
@@ -73,13 +71,16 @@ public class InfoDrawer implements Drawer {
     //collect robots info
     if (!robotInfos.isEmpty()) {
       //get centers
-      List<Point2> currentCenterPositions = SubtreeDrawer.Extractor.matches(null, Robot.class, null).extract(snapshot).stream()
+      List<Point2> currentCenterPositions = SubtreeDrawer.Extractor.matches(null, Robot.class, null)
+          .extract(snapshot)
+          .stream()
           .map(s -> Point2.average(
               s.getChildren().stream()
                   .filter(c -> Voxel.class.isAssignableFrom(c.getSnapshottableClass()))
-                  .map(c -> Point2.average(((VoxelPoly) c.getContent()).getVertexes()))
+                  .map(c -> ((VoxelPoly) c.getContent()).center())
                   .toArray(Point2[]::new))
-          ).collect(Collectors.toList());
+          )
+          .toList();
       //add to maps
       for (int i = 0; i < currentCenterPositions.size(); i++) {
         if (centerPositions.size() <= i) {
@@ -99,16 +100,18 @@ public class InfoDrawer implements Drawer {
         Point2 oldestPos = centerPositions.get(i).get(centerPositions.get(i).firstKey());
         sb.append(String.format("robot %d:", i));
         if (robotInfos.contains(RobotInfo.CENTER_POSITION)) {
-          sb.append(String.format(" pos=(%5.1f,%5.1f)",
-              currentPos.x,
-              currentPos.y
+          sb.append(String.format(
+              " pos=(%5.1f,%5.1f)",
+              currentPos.x(),
+              currentPos.y()
           ));
         }
         if (robotInfos.contains(RobotInfo.CENTER_VELOCITY)) {
-          sb.append(String.format(" vel[%.0f]=(%+5.1f,%+5.1f)%n",
+          sb.append(String.format(
+              " vel[%.0f]=(%+5.1f,%+5.1f)%n",
               windowT,
-              (currentPos.x - oldestPos.x) / windowT,
-              (currentPos.y - oldestPos.y) / windowT
+              (currentPos.x() - oldestPos.x()) / windowT,
+              (currentPos.y() - oldestPos.y()) / windowT
           ));
         }
       }

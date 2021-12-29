@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
@@ -35,42 +35,12 @@ import java.util.stream.Collectors;
  */
 public class MultiLayerPerceptron implements Serializable, RealFunction, Parametrized, Snapshottable {
 
-  public enum ActivationFunction implements Function<Double, Double> {
-    RELU(x -> (x < 0) ? 0d : x, Domain.of(0d, Double.POSITIVE_INFINITY)),
-    SIGMOID(x -> 1d / (1d + Math.exp(-x)), Domain.of(0d, 1d)),
-    SIN(Math::sin, Domain.of(-1d, 1d)),
-    TANH(Math::tanh, Domain.of(-1d, 1d)),
-    SIGN(Math::signum, Domain.of(-1d, 1d)),
-    IDENTITY(x -> x, Domain.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
-
-    private final Function<Double, Double> f;
-    private final Domain domain;
-
-    ActivationFunction(Function<Double, Double> f, Domain domain) {
-      this.f = f;
-      this.domain = domain;
-    }
-
-    public Function<Double, Double> getF() {
-      return f;
-    }
-
-    public Domain getDomain() {
-      return domain;
-    }
-
-    public Double apply(Double x) {
-      return f.apply(x);
-    }
-  }
-
   @JsonProperty
   protected final ActivationFunction activationFunction;
   @JsonProperty
   protected final double[][][] weights;
   @JsonProperty
   protected final int[] neurons;
-
   protected final double[][] activationValues;
 
   @JsonCreator
@@ -92,7 +62,13 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     }
   }
 
-  public MultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights) {
+  public MultiLayerPerceptron(
+      ActivationFunction activationFunction,
+      int nOfInput,
+      int[] innerNeurons,
+      int nOfOutput,
+      double[] weights
+  ) {
     this(
         activationFunction,
         unflat(weights, countNeurons(nOfInput, innerNeurons, nOfOutput)),
@@ -110,6 +86,35 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     );
   }
 
+  public enum ActivationFunction implements Function<Double, Double> {
+    RELU(x -> (x < 0) ? 0d : x, DoubleRange.of(0d, Double.POSITIVE_INFINITY)),
+    SIGMOID(x -> 1d / (1d + Math.exp(-x)), DoubleRange.of(0d, 1d)),
+    SIN(Math::sin, DoubleRange.of(-1d, 1d)),
+    TANH(Math::tanh, DoubleRange.of(-1d, 1d)),
+    SIGN(Math::signum, DoubleRange.of(-1d, 1d)),
+    IDENTITY(x -> x, DoubleRange.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+
+    private final Function<Double, Double> f;
+    private final DoubleRange domain;
+
+    ActivationFunction(Function<Double, Double> f, DoubleRange domain) {
+      this.f = f;
+      this.domain = domain;
+    }
+
+    public Double apply(Double x) {
+      return f.apply(x);
+    }
+
+    public DoubleRange getDomain() {
+      return domain;
+    }
+
+    public Function<Double, Double> getF() {
+      return f;
+    }
+  }
+
   public static int[] countNeurons(int nOfInput, int[] innerNeurons, int nOfOutput) {
     final int[] neurons;
     neurons = new int[2 + innerNeurons.length];
@@ -117,6 +122,32 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     neurons[0] = nOfInput;
     neurons[neurons.length - 1] = nOfOutput;
     return neurons;
+  }
+
+  public static int countWeights(int[] neurons) {
+    int c = 0;
+    for (int i = 1; i < neurons.length; i++) {
+      c = c + neurons[i] * (neurons[i - 1] + 1);
+    }
+    return c;
+  }
+
+  public static int countWeights(int nOfInput, int[] innerNeurons, int nOfOutput) {
+    return countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput));
+  }
+
+  public static double[] flat(double[][][] unflatWeights, int[] neurons) {
+    double[] flatWeights = new double[countWeights(neurons)];
+    int c = 0;
+    for (int i = 1; i < neurons.length; i++) {
+      for (int j = 0; j < neurons[i]; j++) {
+        for (int k = 0; k < neurons[i - 1] + 1; k++) {
+          flatWeights[c] = unflatWeights[i - 1][j][k];
+          c = c + 1;
+        }
+      }
+    }
+    return flatWeights;
   }
 
   public static double[][][] unflat(double[] flatWeights, int[] neurons) {
@@ -134,36 +165,14 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     return unflatWeights;
   }
 
-  public static double[] flat(double[][][] unflatWeights, int[] neurons) {
-    double[] flatWeights = new double[countWeights(neurons)];
-    int c = 0;
-    for (int i = 1; i < neurons.length; i++) {
-      for (int j = 0; j < neurons[i]; j++) {
-        for (int k = 0; k < neurons[i - 1] + 1; k++) {
-          flatWeights[c] = unflatWeights[i - 1][j][k];
-          c = c + 1;
-        }
-      }
-    }
-    return flatWeights;
-  }
-
-  public static int countWeights(int[] neurons) {
-    int c = 0;
-    for (int i = 1; i < neurons.length; i++) {
-      c = c + neurons[i] * (neurons[i - 1] + 1);
-    }
-    return c;
-  }
-
-  public static int countWeights(int nOfInput, int[] innerNeurons, int nOfOutput) {
-    return countWeights(countNeurons(nOfInput, innerNeurons, nOfOutput));
-  }
-
   @Override
   public double[] apply(double[] input) {
     if (input.length != neurons[0]) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
+      throw new IllegalArgumentException(String.format(
+          "Expected input length is %d: found %d",
+          neurons[0],
+          input.length
+      ));
     }
     activationValues[0] = Arrays.stream(input).map(activationFunction.f::apply).toArray();
     for (int i = 1; i < neurons.length; i++) {
@@ -179,6 +188,10 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     return activationValues[neurons.length - 1];
   }
 
+  public double[][] getActivationValues() {
+    return activationValues;
+  }
+
   @Override
   public int getInputDimension() {
     return neurons[0];
@@ -189,29 +202,13 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
     return neurons[neurons.length - 1];
   }
 
-  public double[][][] getWeights() {
-    return weights;
-  }
-
   public int[] getNeurons() {
     return neurons;
-  }
-
-  public double[][] getActivationValues() {
-    return activationValues;
   }
 
   @Override
   public double[] getParams() {
     return MultiLayerPerceptron.flat(weights, neurons);
-  }
-
-  @Override
-  public Snapshot getSnapshot() {
-    return new Snapshot(
-        new MLPState(getActivationValues(), getWeights(), activationFunction.getDomain()),
-        getClass()
-    );
   }
 
   @Override
@@ -222,6 +219,18 @@ public class MultiLayerPerceptron implements Serializable, RealFunction, Paramet
         System.arraycopy(newWeights[l][s], 0, weights[l][s], 0, newWeights[l][s].length);
       }
     }
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return new Snapshot(
+        new MLPState(getActivationValues(), getWeights(), activationFunction.getDomain()),
+        getClass()
+    );
+  }
+
+  public double[][][] getWeights() {
+    return weights;
   }
 
   @Override

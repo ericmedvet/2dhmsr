@@ -18,26 +18,12 @@ package it.units.erallab.hmsrobots.core.geometry;
 
 import org.dyn4j.geometry.Vector2;
 
+import java.io.Serializable;
+
 /**
  * @author eric
  */
-public class Point2 implements Shape {
-
-  public final double x;
-  public final double y;
-
-  private Point2(double x, double y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  public static Point2 of(double x, double y) {
-    return new Point2(x, y);
-  }
-
-  public static Point2 of(Vector2 v) {
-    return new Point2(v.x, v.y);
-  }
+public record Point2(double x, double y) implements Shape, Serializable {
 
   public static Point2 average(Point2... points) {
     double cx = 0;
@@ -49,6 +35,14 @@ public class Point2 implements Shape {
       n = n + 1;
     }
     return Point2.of(cx / n, cy / n);
+  }
+
+  public static Point2 of(Vector2 v) {
+    return new Point2(v.x, v.y);
+  }
+
+  public static Point2 of(double x, double y) {
+    return new Point2(x, y);
   }
 
   @Override

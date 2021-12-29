@@ -38,12 +38,13 @@ public class Gait {
     this.purity = purity;
   }
 
-  public List<Footprint> getFootprints() {
-    return footprints;
-  }
-
-  public double getModeInterval() {
-    return modeInterval;
+  public double getAvgTouchArea() {
+    return footprints.stream()
+        .mapToDouble(f -> IntStream.range(0, f.length())
+            .mapToDouble(i -> f.getMask()[i] ? 1d : 0d)
+            .sum() / (double) f.length())
+        .average()
+        .orElse(0d);
   }
 
   public double getCoverage() {
@@ -54,23 +55,23 @@ public class Gait {
     return duration;
   }
 
-  public double getPurity() {
-    return purity;
+  public List<Footprint> getFootprints() {
+    return footprints;
   }
 
-  public double getAvgTouchArea() {
-    return footprints.stream()
-        .mapToDouble(f -> IntStream.range(0, f.length())
-            .mapToDouble(i -> f.getMask()[i] ? 1d : 0d)
-            .sum() / (double) f.length())
-        .average()
-        .orElse(0d);
+  public double getModeInterval() {
+    return modeInterval;
+  }
+
+  public double getPurity() {
+    return purity;
   }
 
   @Override
   public String toString() {
     return String.format("Gait{footprints=%s, modeInterval=%.1fs, coverage=%.2f, duration=%.1fs, purity=%.2f}",
-        footprints, modeInterval, coverage, duration, purity);
+        footprints, modeInterval, coverage, duration, purity
+    );
   }
 
 }

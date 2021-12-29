@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,7 +31,7 @@ public class DynamicNormalization extends AggregatorSensor {
       @JsonProperty("interval") double interval
   ) {
     super(
-        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
+        Collections.nCopies(sensor.getDomains().length, DoubleRange.of(0d, 1d)).toArray(DoubleRange[]::new),
         sensor,
         interval
     );

@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Collections;
 
@@ -28,10 +28,7 @@ public class Normalization extends CompositeSensor {
   public Normalization(
       @JsonProperty("sensor") Sensor sensor
   ) {
-    super(
-        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
-        sensor
-    );
+    super(Collections.nCopies(sensor.getDomains().length, DoubleRange.of(0d, 1d)).toArray(DoubleRange[]::new), sensor);
   }
 
   @Override
@@ -39,8 +36,8 @@ public class Normalization extends CompositeSensor {
     double[] innerValues = sensor.getReadings();
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
-      Domain d = sensor.getDomains()[i];
-      values[i] = Math.min(Math.max((innerValues[i] - d.getMin()) / (d.getMax() - d.getMin()), 0d), 1d);
+      DoubleRange d = sensor.getDomains()[i];
+      values[i] = d.normalize(innerValues[i]);
     }
     return values;
   }

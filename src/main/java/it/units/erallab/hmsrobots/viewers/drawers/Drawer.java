@@ -35,12 +35,35 @@ public interface Drawer {
 
   void draw(double t, Snapshot snapshot, Graphics2D g);
 
-  static Drawer of(Drawer... drawers) {
-    return of(List.of(drawers));
+  static Drawer clear() {
+    return clear(Color.WHITE);
   }
 
-  static Drawer of(List<Drawer> drawers) {
-    return (t, snapshot, g) -> drawers.forEach(d -> d.draw(t, snapshot, g));
+  static Drawer clear(Color color) {
+    return (t, snapshot, g) -> {
+      g.setColor(color);
+      g.fill(g.getClip());
+    };
+  }
+
+  static Drawer clip(BoundingBox boundingBox, Drawer drawer) {
+    return (t, snapshot, g) -> {
+      Shape shape = g.getClip();
+      double clipX = shape.getBounds2D().getX();
+      double clipY = shape.getBounds2D().getY();
+      double clipW = shape.getBounds2D().getWidth();
+      double clipH = shape.getBounds2D().getHeight();
+      g.clip(new Rectangle2D.Double(
+          clipX + boundingBox.min().x() * clipW,
+          clipY + boundingBox.min().y() * clipH,
+          clipW * boundingBox.width(),
+          clipH * boundingBox.height()
+      ));
+      //draw
+      drawer.draw(t, snapshot, g);
+      //restore clip and transform
+      g.setClip(shape);
+    };
   }
 
   static Drawer diagonals() {
@@ -54,6 +77,14 @@ public interface Drawer {
       g.draw(new Line2D.Double(r.getX(), r.getY(), r.getMaxX(), r.getMaxY()));
       g.draw(new Line2D.Double(r.getX(), r.getMaxY(), r.getMaxX(), r.getY()));
     };
+  }
+
+  static Drawer of(Drawer... drawers) {
+    return of(List.of(drawers));
+  }
+
+  static Drawer of(List<Drawer> drawers) {
+    return (t, snapshot, g) -> drawers.forEach(d -> d.draw(t, snapshot, g));
   }
 
   static Drawer text(String s) {
@@ -74,38 +105,8 @@ public interface Drawer {
             case CENTER -> g.getClipBounds().x + g.getClipBounds().width / 2 - g.getFontMetrics().stringWidth(s) / 2;
             case RIGHT -> g.getClipBounds().x + g.getClipBounds().width - 1 - g.getFontMetrics().stringWidth(s);
           },
-          g.getClipBounds().y + 1 + g.getFontMetrics().getMaxAscent());
-    };
-  }
-
-  static Drawer clear() {
-    return clear(Color.WHITE);
-  }
-
-  static Drawer clear(Color color) {
-    return (t, snapshot, g) -> {
-      g.setColor(color);
-      g.fill(g.getClip());
-    };
-  }
-
-  static Drawer clip(BoundingBox boundingBox, Drawer drawer) {
-    return (t, snapshot, g) -> {
-      Shape shape = g.getClip();
-      double clipX = shape.getBounds2D().getX();
-      double clipY = shape.getBounds2D().getY();
-      double clipW = shape.getBounds2D().getWidth();
-      double clipH = shape.getBounds2D().getHeight();
-      g.clip(new Rectangle2D.Double(
-          clipX + boundingBox.min.x * clipW,
-          clipY + boundingBox.min.y * clipH,
-          clipW * boundingBox.width(),
-          clipH * boundingBox.height()
-      ));
-      //draw
-      drawer.draw(t, snapshot, g);
-      //restore clip and transform
-      g.setClip(shape);
+          g.getClipBounds().y + 1 + g.getFontMetrics().getMaxAscent()
+      );
     };
   }
 
@@ -126,9 +127,9 @@ public interface Drawer {
       double yRatio = graphicsFrame.height() / worldFrame.height();
       double ratio = Math.min(xRatio, yRatio);
       AffineTransform at = new AffineTransform();
-      at.translate(graphicsFrame.min.x, graphicsFrame.min.y);
+      at.translate(graphicsFrame.min().x(), graphicsFrame.min().y());
       at.scale(ratio, -ratio);
-      at.translate(-worldFrame.min.x, -worldFrame.max.y);
+      at.translate(-worldFrame.min().x(), -worldFrame.max().y());
       //apply transform and stroke
       g.setTransform(at);
       g.setStroke(DrawingUtils.getScaleIndependentStroke(1, (float) ratio));

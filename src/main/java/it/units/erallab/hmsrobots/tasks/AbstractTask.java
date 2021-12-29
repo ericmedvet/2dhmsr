@@ -25,7 +25,6 @@ import org.dyn4j.dynamics.Settings;
 import org.dyn4j.dynamics.World;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
@@ -38,11 +37,13 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
     this.settings = settings;
   }
 
-  public Settings getSettings() {
-    return settings;
-  }
-
-  protected static double updateWorld(final double t, final double dT, final World world, final List<WorldObject> objects, final SnapshotListener listener) {
+  protected static double updateWorld(
+      final double t,
+      final double dT,
+      final World world,
+      final List<WorldObject> objects,
+      final SnapshotListener listener
+  ) {
     double newT = t + dT;
     world.step(1);
     objects.stream().filter(o -> o instanceof Actionable).forEach(o -> ((Actionable) o).act(newT));
@@ -54,11 +55,15 @@ public abstract class AbstractTask<T, R> implements Task<T, R> {
               objects.stream()
                   .filter(o -> o instanceof Snapshottable)
                   .map(o -> ((Snapshottable) o).getSnapshot())
-                  .collect(Collectors.toList())
+                  .toList()
           )
       );
     }
     return newT;
+  }
+
+  public Settings getSettings() {
+    return settings;
   }
 
 }
