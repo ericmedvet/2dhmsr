@@ -96,8 +96,4 @@ public abstract class STDPLearningRule implements Parametrized, Serializable {
     return (Math.max(Math.min(param, 1), -1) / 2 + 0.5) * (max - min) + min;
   }
 
-  public static void main(String[] args) {
-    System.out.println(scaleParameter(1, 0.1, 1));
-  }
-
 }
