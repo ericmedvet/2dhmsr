@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.AbstractController;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
-import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -15,7 +14,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-public class QuantizedDistributedSpikingSensing extends AbstractController<SensingVoxel> {
+public class QuantizedDistributedSpikingSensing extends AbstractController {
 
   private static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
 
@@ -83,7 +82,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController<Sensi
     reset();
   }
 
-  public QuantizedDistributedSpikingSensing(Grid<? extends SensingVoxel> voxels, int signals, QuantizedSpikingFunction spikingFunction, QuantizedValueToSpikeTrainConverter valueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter spikeTrainToValueConverter) {
+  public QuantizedDistributedSpikingSensing(Grid<Voxel> voxels, int signals, QuantizedSpikingFunction spikingFunction, QuantizedValueToSpikeTrainConverter valueToSpikeTrainConverter, QuantizedSpikeTrainToValueConverter spikeTrainToValueConverter) {
     this(
         signals,
         Grid.create(voxels, v -> (v == null) ? 0 : DistributedSensing.nOfInputs(v, signals)),
@@ -122,27 +121,27 @@ public class QuantizedDistributedSpikingSensing extends AbstractController<Sensi
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     Grid<Double> controlSignals = Grid.create(voxels);
-    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
-      if (entry.getValue() == null) {
+    for (Grid.Entry<Voxel> entry : voxels) {
+      if (entry.value() == null) {
         continue;
       }
       //get inputs
-      int[][] lastSignals = getLastSignals(entry.getX(), entry.getY());
-      int[][] sensorValues = convertSensorReadings(entry.getValue().getSensorReadings(), inputConverters.get(entry.getX(), entry.getY()), t);
+      int[][] lastSignals = getLastSignals(entry.key().x(), entry.key().y());
+      int[][] sensorValues = convertSensorReadings(entry.value().getSensorReadings(), inputConverters.get(entry.key().x(), entry.key().y()), t);
       int[][] inputs = ArrayUtils.addAll(lastSignals, sensorValues);
       //compute outputs
-      QuantizedMultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
+      QuantizedMultivariateSpikingFunction function = functions.get(entry.key().x(), entry.key().y());
       int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + signals * Dir.values().length][ARRAY_SIZE];
       //apply outputs
-      double force = outputConverters.get(entry.getX(), entry.getY()).convert(outputs[0], t - previousTime);
-      controlSignals.set(entry.getX(), entry.getY(), force);
-      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
+      double force = outputConverters.get(entry.key().x(), entry.key().y()).convert(outputs[0], t - previousTime);
+      controlSignals.set(entry.key().x(), entry.key().y(), force);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, signals * Dir.values().length);
     }
     previousTime = t;
-    for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
-      System.arraycopy(currentSignalsGrid.get(entry.getX(), entry.getY()), 0, lastSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
+    for (Grid.Entry<Voxel> entry : voxels) {
+      System.arraycopy(currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, lastSignalsGrid.get(entry.key().x(), entry.key().y()), 0, signals * Dir.values().length);
     }
     return controlSignals;
   }

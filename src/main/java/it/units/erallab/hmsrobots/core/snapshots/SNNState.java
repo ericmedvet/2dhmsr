@@ -17,9 +17,8 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
-import it.units.erallab.hmsrobots.core.controllers.snn.converters.stv.SpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -32,7 +31,7 @@ public class SNNState extends MLPState {
   private final int[][][] spikes;
 
   public SNNState(int[][][] spikes, double[][][] weights, QuantizedSpikeTrainToValueConverter[][] converters, double timeWindowSize) {
-    super(computeFiringRates(spikes, converters,timeWindowSize), weights, Domain.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+    super(computeFiringRates(spikes, converters, timeWindowSize), weights, DoubleRange.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
     this.spikes = copyOf(spikes);
   }
 
@@ -41,7 +40,7 @@ public class SNNState extends MLPState {
     IntStream.range(0, spikes.length).forEach(layer -> {
       firingRates[layer] = new double[spikes[layer].length];
       IntStream.range(0, spikes[layer].length).forEach(neuron ->
-          firingRates[layer][neuron] = converters[layer][neuron].convert(spikes[layer][neuron],timeWindowSize)
+          firingRates[layer][neuron] = converters[layer][neuron].convert(spikes[layer][neuron], timeWindowSize)
       );
     });
     return firingRates;

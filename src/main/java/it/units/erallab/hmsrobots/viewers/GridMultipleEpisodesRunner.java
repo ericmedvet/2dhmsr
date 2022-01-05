@@ -64,11 +64,11 @@ public class GridMultipleEpisodesRunner<S> implements Runnable {
     List<Future<?>> results = new ArrayList<>();
     solutionsGrid.stream()
         .forEach(entry -> results.add(executor.submit(() -> {
-          L.fine(String.format("Starting %s in position (%d,%d)", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY()));
-          S solution = entry.getValue().getLeft();
-          Task<S, ?> task = entry.getValue().getRight();
-          Object outcome = task.apply(SerializationUtils.clone(solution), gridSnapshotListener.listener(entry.getX(), entry.getY()));
-          L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.getValue().getClass().getSimpleName(), entry.getX(), entry.getY(), outcome));
+          L.fine(String.format("Starting %s in position (%d,%d)", entry.value().getClass().getSimpleName(), entry.key().x(), entry.key().y()));
+          S solution = entry.value().getLeft();
+          Task<S, ?> task = entry.value().getRight();
+          Object outcome = task.apply(SerializationUtils.clone(solution), gridSnapshotListener.listener(entry.key().x(), entry.key().y()));
+          L.fine(String.format("Ended %s in position (%d,%d) with outcome %s", entry.value().getClass().getSimpleName(), entry.key().x(), entry.key().y(), outcome));
         })));
     //wait for results
     for (Future<?> result : results) {
