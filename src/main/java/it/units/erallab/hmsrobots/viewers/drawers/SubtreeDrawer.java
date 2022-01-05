@@ -29,22 +29,23 @@ import java.util.List;
  */
 public abstract class SubtreeDrawer implements Drawer {
 
+  private final Extractor extractor;
+
+  public SubtreeDrawer(Extractor extractor) {
+    this.extractor = extractor;
+  }
+
   @FunctionalInterface
   public interface Extractor {
     List<Snapshot> extract(Snapshot snapshot);
 
-    static Extractor matches(Class<?> contentClass, Class<? extends Snapshottable> snapshottableClass, Integer index) {
-      return snapshot -> {
-        List<Snapshot> snapshots = new ArrayList<>();
-        if (matches(snapshot, 0, contentClass, snapshottableClass, index)) {
-          snapshots.add(snapshot);
-        }
-        extract(snapshots, snapshot, contentClass, snapshottableClass, index);
-        return snapshots;
-      };
-    }
-
-    private static void extract(List<Snapshot> snapshots, Snapshot s, Class<?> contentClass, Class<? extends Snapshottable> snapshottableClass, Integer index) {
+    private static void extract(
+        List<Snapshot> snapshots,
+        Snapshot s,
+        Class<?> contentClass,
+        Class<? extends Snapshottable> snapshottableClass,
+        Integer index
+    ) {
       int c = 0;
       for (int i = 0; i < s.getChildren().size(); i++) {
         if (matches(s.getChildren().get(i), 0, contentClass, snapshottableClass, null)) {
@@ -57,7 +58,24 @@ public abstract class SubtreeDrawer implements Drawer {
       }
     }
 
-    private static boolean matches(Snapshot snapshot, int i, Class<?> contentClass, Class<? extends Snapshottable> snapshottableClass, Integer index) {
+    static Extractor matches(Class<?> contentClass, Class<? extends Snapshottable> snapshottableClass, Integer index) {
+      return snapshot -> {
+        List<Snapshot> snapshots = new ArrayList<>();
+        if (matches(snapshot, 0, contentClass, snapshottableClass, index)) {
+          snapshots.add(snapshot);
+        }
+        extract(snapshots, snapshot, contentClass, snapshottableClass, index);
+        return snapshots;
+      };
+    }
+
+    private static boolean matches(
+        Snapshot snapshot,
+        int i,
+        Class<?> contentClass,
+        Class<? extends Snapshottable> snapshottableClass,
+        Integer index
+    ) {
       return (contentClass == null || contentClass.isAssignableFrom(snapshot.getContent().
           getClass())) &&
           (snapshottableClass == null || snapshottableClass.isAssignableFrom(snapshot.getSnapshottableClass())) &&
@@ -66,17 +84,11 @@ public abstract class SubtreeDrawer implements Drawer {
 
   }
 
-  private final Extractor extractor;
-
-  public SubtreeDrawer(Extractor extractor) {
-    this.extractor = extractor;
-  }
+  protected abstract void innerDraw(double t, Snapshot snapshot, Graphics2D g);
 
   @Override
   public void draw(double t, Snapshot snapshot, Graphics2D g) {
     extractor.extract(snapshot).forEach(s -> innerDraw(t, s, g));
   }
-
-  protected abstract void innerDraw(double t, Snapshot snapshot, Graphics2D g);
 
 }

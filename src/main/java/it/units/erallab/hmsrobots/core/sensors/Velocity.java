@@ -19,14 +19,12 @@ package it.units.erallab.hmsrobots.core.sensors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.EnumSet;
 
 public class Velocity extends AbstractSensor {
-  public enum Axis {X, Y}
-
   @JsonProperty
   private final boolean rotated;
   @JsonProperty
@@ -48,10 +46,21 @@ public class Velocity extends AbstractSensor {
       @JsonProperty("maxVelocityNorm") double maxVelocityNorm,
       @JsonProperty("axes") EnumSet<Axis> axes
   ) {
-    super(axes.stream().map(a -> Domain.of(-maxVelocityNorm, maxVelocityNorm)).toArray(Domain[]::new));
+    super(axes.stream().map(a -> DoubleRange.of(-maxVelocityNorm, maxVelocityNorm)).toArray(DoubleRange[]::new));
     this.rotated = rotated;
     this.maxVelocityNorm = maxVelocityNorm;
     this.axes = axes;
+  }
+
+  public enum Axis {X, Y}
+
+  @Override
+  public String toString() {
+    return "Velocity{" +
+        "rotated=" + rotated +
+        ", axes=" + axes +
+        ", maxVelocityNorm=" + maxVelocityNorm +
+        '}';
   }
 
   @Override
@@ -59,7 +68,7 @@ public class Velocity extends AbstractSensor {
     double[] values = new double[domains.length];
     int c = 0;
     Point2 linearVelocity = voxel.getLinearVelocity();
-    Vector2 velocity = new Vector2(linearVelocity.x, linearVelocity.y);
+    Vector2 velocity = new Vector2(linearVelocity.x(), linearVelocity.y());
     double angle = voxel.getAngle();
     if (axes.contains(Axis.X)) {
       if (!rotated) {
@@ -77,14 +86,5 @@ public class Velocity extends AbstractSensor {
       }
     }
     return values;
-  }
-
-  @Override
-  public String toString() {
-    return "Velocity{" +
-        "rotated=" + rotated +
-        ", axes=" + axes +
-        ", maxVelocityNorm=" + maxVelocityNorm +
-        '}';
   }
 }

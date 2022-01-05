@@ -17,18 +17,20 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
+import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Poly;
+import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.objects.BreakableVoxel;
 
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
-public class VoxelPoly extends Poly {
+public class VoxelPoly implements Shape {
 
+  private final Poly poly;
   private final double angle;
   private final Point2 linearVelocity;
   private final boolean isTouchingGround;
@@ -38,16 +40,52 @@ public class VoxelPoly extends Poly {
   private final double controlEnergy;
   private final Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions;
 
-  public VoxelPoly(List<Point2> vertexes, double angle, Point2 linearVelocity, boolean isTouchingGround, double areaRatio, double areaRatioEnergy) {
-    this(vertexes, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, 0d, 0d);
+  public VoxelPoly(
+      Poly poly,
+      double angle,
+      Point2 linearVelocity,
+      boolean isTouchingGround,
+      double areaRatio,
+      double areaRatioEnergy
+  ) {
+    this(poly, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, 0d, 0d);
   }
 
-  public VoxelPoly(List<Point2> vertexes, double angle, Point2 linearVelocity, boolean isTouchingGround, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy) {
-    this(vertexes, angle, linearVelocity, isTouchingGround, areaRatio, areaRatioEnergy, lastAppliedForce, controlEnergy, Map.of());
+  public VoxelPoly(
+      Poly poly,
+      double angle,
+      Point2 linearVelocity,
+      boolean isTouchingGround,
+      double areaRatio,
+      double areaRatioEnergy,
+      double lastAppliedForce,
+      double controlEnergy
+  ) {
+    this(
+        poly,
+        angle,
+        linearVelocity,
+        isTouchingGround,
+        areaRatio,
+        areaRatioEnergy,
+        lastAppliedForce,
+        controlEnergy,
+        Map.of()
+    );
   }
 
-  public VoxelPoly(List<Point2> vertexes, double angle, Point2 linearVelocity, boolean isTouchingGround, double areaRatio, double areaRatioEnergy, double lastAppliedForce, double controlEnergy, Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions) {
-    super(vertexes);
+  public VoxelPoly(
+      Poly poly,
+      double angle,
+      Point2 linearVelocity,
+      boolean isTouchingGround,
+      double areaRatio,
+      double areaRatioEnergy,
+      double lastAppliedForce,
+      double controlEnergy,
+      Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> malfunctions
+  ) {
+    this.poly = poly;
     this.angle = angle;
     this.linearVelocity = linearVelocity;
     this.isTouchingGround = isTouchingGround;
@@ -62,14 +100,6 @@ public class VoxelPoly extends Poly {
     return angle;
   }
 
-  public Point2 getLinearVelocity() {
-    return linearVelocity;
-  }
-
-  public boolean isTouchingGround() {
-    return isTouchingGround;
-  }
-
   public double getAreaRatio() {
     return areaRatio;
   }
@@ -78,15 +108,42 @@ public class VoxelPoly extends Poly {
     return areaRatioEnergy;
   }
 
-  public double getLastAppliedForce() {
-    return lastAppliedForce;
-  }
-
   public double getControlEnergy() {
     return controlEnergy;
   }
 
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
+  }
+
+  public Point2 getLinearVelocity() {
+    return linearVelocity;
+  }
+
   public Map<BreakableVoxel.ComponentType, BreakableVoxel.MalfunctionType> getMalfunctions() {
     return malfunctions;
+  }
+
+  public boolean isTouchingGround() {
+    return isTouchingGround;
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return poly.boundingBox();
+  }
+
+  @Override
+  public Point2 center() {
+    return poly.center();
+  }
+
+  @Override
+  public double area() {
+    return poly.area();
+  }
+
+  public Point2[] vertexes() {
+    return poly.vertexes();
   }
 }

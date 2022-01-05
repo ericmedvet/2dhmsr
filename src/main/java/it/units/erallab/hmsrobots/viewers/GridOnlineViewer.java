@@ -24,7 +24,6 @@ import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,29 +42,16 @@ import java.util.function.Function;
  */
 public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
-  private static class TimedSnapshot {
-    private final double t;
-    private final Snapshot snapshot;
-
-    public TimedSnapshot(double t, Snapshot snapshot) {
-      this.t = t;
-      this.snapshot = snapshot;
-    }
-  }
-
   private final static int FRAME_RATE = 20;
   private final static int INIT_WIN_WIDTH = 1000;
   private final static int INIT_WIN_HEIGHT = 600;
-
   private final Grid<Drawer> drawersGrid;
   private final Queue<Grid<TimedSnapshot>> gridQueue;
   private final Grid<Queue<TimedSnapshot>> queueGrid;
-
   private final Canvas canvas;
   private final ScheduledExecutorService executor;
-
-  private double t;
   private final boolean running;
+  private double t;
 
   public GridOnlineViewer(Grid<String> namesGrid, Grid<Drawer> drawersGrid, ScheduledExecutorService executor) {
     super("World viewer");
@@ -116,19 +102,22 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
             synchronized (queueGrid) {
               for (Grid.Entry<Queue<TimedSnapshot>> entry : queueGrid) {
                 TimedSnapshot snapshot;
-                while ((snapshot = entry.getValue().peek()) != null) {
+                while ((snapshot = entry.value().peek()) != null) {
                   if (snapshot.t < t) {
-                    entry.getValue().poll();
+                    entry.value().poll();
                   } else {
                     break;
                   }
                 }
-                snapshotGrid.set(entry.getX(), entry.getY(), snapshot);
+                snapshotGrid.set(entry.key().x(), entry.key().y(), snapshot);
               }
             }
             boolean ready = true;
             for (Grid.Entry<Queue<TimedSnapshot>> entry : queueGrid) {
-              ready = ready && ((namesGrid.get(entry.getX(), entry.getY()) == null) || (snapshotGrid.get(entry.getX(), entry.getY()) != null));
+              ready = ready && ((namesGrid.get(entry.key().x(), entry.key().y()) == null) || (snapshotGrid.get(
+                  entry.key().x(),
+                  entry.key().y()
+              ) != null));
             }
             if (ready) {
               //update time
@@ -150,6 +139,77 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
           }
         }
     );
+  }
+
+  private record TimedSnapshot(double t, Snapshot snapshot) {}
+
+  public static <S> void run(
+      Task<S, ?> task,
+      Grid<NamedValue<S>> namedSolutions,
+      Function<String, Drawer> drawerSupplier
+  ) {
+    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
+        Grid.create(namedSolutions, p -> p == null ? null : p.name()),
+        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.name())),
+        uiExecutor
+    );
+    gridOnlineViewer.start(3);
+    GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
+        namedSolutions,
+        task,
+        gridOnlineViewer,
+        executor
+    );
+    runner.run();
+  }
+
+  public static <S> void run(Task<S, ?> task, Grid<NamedValue<S>> namedSolutions) {
+    run(task, namedSolutions, Drawers::basicWithMiniWorld);
+  }
+
+  public static <S> void run(Task<S, ?> task, List<S> ss) {
+    int nRows = (int) Math.ceil(Math.sqrt(ss.size()));
+    int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
+    Grid<NamedValue<S>> namedSolutions = Grid.create(nRows, nCols);
+    for (int i = 0; i < ss.size(); i++) {
+      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), new NamedValue<>(Integer.toString(i), ss.get(i)));
+    }
+    run(task, namedSolutions);
+  }
+
+  public static <S> void run(Task<S, ?> task, S s) {
+    run(task, Grid.create(1, 1, new NamedValue<>("", s)));
+  }
+
+  @Override
+  public SnapshotListener listener(final int lX, final int lY) {
+    return (double t, Snapshot snapshot) -> {
+      synchronized (queueGrid) {
+        queueGrid.get(lX, lY).offer(new TimedSnapshot(t, snapshot));
+        queueGrid.notifyAll();
+      }
+    };
+  }
+
+  private void renderFrame(Grid<TimedSnapshot> localSnapshotGrid) {
+    //get graphics
+    Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
+    g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
+    //iterate over snapshot grid
+    for (Grid.Entry<TimedSnapshot> entry : localSnapshotGrid) {
+      if (entry.value() != null) {
+        drawersGrid.get(entry.key().x(), entry.key().y()).draw(entry.value().t, entry.value().snapshot, g);
+      }
+    }
+    //dispose and encode
+    g.dispose();
+    BufferStrategy strategy = canvas.getBufferStrategy();
+    if (!strategy.contentsLost()) {
+      strategy.show();
+    }
+    Toolkit.getDefaultToolkit().sync();
   }
 
   public void start(int delay) {
@@ -197,72 +257,12 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
 
       }
     };
-    executor.scheduleAtFixedRate(drawer, Math.round(delay * 1000d), Math.round(1000d / (double) FRAME_RATE), TimeUnit.MILLISECONDS);
-  }
-
-  @Override
-  public SnapshotListener listener(final int lX, final int lY) {
-    return (double t, Snapshot snapshot) -> {
-      synchronized (queueGrid) {
-        queueGrid.get(lX, lY).offer(new TimedSnapshot(t, snapshot));
-        queueGrid.notifyAll();
-      }
-    };
-  }
-
-  private void renderFrame(Grid<TimedSnapshot> localSnapshotGrid) {
-    //get graphics
-    Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
-    g.setClip(0, 0, canvas.getWidth(), canvas.getHeight());
-    //iterate over snapshot grid
-    for (Grid.Entry<TimedSnapshot> entry : localSnapshotGrid) {
-      if (entry.getValue() != null) {
-        drawersGrid.get(entry.getX(), entry.getY()).draw(entry.getValue().t, entry.getValue().snapshot, g);
-      }
-    }
-    //dispose and encode
-    g.dispose();
-    BufferStrategy strategy = canvas.getBufferStrategy();
-    if (!strategy.contentsLost()) {
-      strategy.show();
-    }
-    Toolkit.getDefaultToolkit().sync();
-  }
-
-  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions, Function<String, Drawer> drawerSupplier) {
-    ScheduledExecutorService uiExecutor = Executors.newScheduledThreadPool(4);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    GridOnlineViewer gridOnlineViewer = new GridOnlineViewer(
-        Grid.create(namedSolutions, p -> p == null ? null : p.getLeft()),
-        Grid.create(namedSolutions, p -> drawerSupplier.apply(p.getLeft())),
-        uiExecutor
+    executor.scheduleAtFixedRate(
+        drawer,
+        Math.round(delay * 1000d),
+        Math.round(1000d / (double) FRAME_RATE),
+        TimeUnit.MILLISECONDS
     );
-    gridOnlineViewer.start(3);
-    GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
-        namedSolutions,
-        task,
-        gridOnlineViewer,
-        executor
-    );
-    runner.run();
-  }
-
-  public static <S> void run(Task<S, ?> task, Grid<Pair<String, S>> namedSolutions) {
-    run(task, namedSolutions, Drawers::basicWithMiniWorld);
-  }
-
-  public static <S> void run(Task<S, ?> task, List<S> ss) {
-    int nRows = (int) Math.ceil(Math.sqrt(ss.size()));
-    int nCols = (int) Math.ceil((double) ss.size() / (double) nRows);
-    Grid<Pair<String, S>> namedSolutions = Grid.create(nRows, nCols);
-    for (int i = 0; i < ss.size(); i++) {
-      namedSolutions.set(i % nRows, Math.floorDiv(i, nRows), Pair.of(Integer.toString(i), ss.get(i)));
-    }
-    run(task, namedSolutions);
-  }
-
-  public static <S> void run(Task<S, ?> task, S s) {
-    run(task, Grid.create(1, 1, Pair.of("", s)));
   }
 
 }

@@ -25,19 +25,24 @@ import java.util.logging.Logger;
  */
 public class VideoUtils {
 
-  public enum EncoderFacility {JCODEC, FFMPEG_LARGE, FFMPEG_SMALL}
-
   private static final EncoderFacility DEFAULT_ENCODER = EncoderFacility.JCODEC;
   private static final Logger L = Logger.getLogger(VideoUtils.class.getName());
 
   private VideoUtils() {
   }
 
+  public enum EncoderFacility {JCODEC, FFMPEG_LARGE, FFMPEG_SMALL}
+
   public static void encodeAndSave(List<BufferedImage> images, double frameRate, File file) throws IOException {
     encodeAndSave(images, frameRate, file, DEFAULT_ENCODER);
   }
 
-  public static void encodeAndSave(List<BufferedImage> images, double frameRate, File file, EncoderFacility encoder) throws IOException {
+  public static void encodeAndSave(
+      List<BufferedImage> images,
+      double frameRate,
+      File file,
+      EncoderFacility encoder
+  ) throws IOException {
     switch (encoder) {
       case JCODEC -> encodeAndSaveWithJCodec(images, frameRate, file);
       case FFMPEG_LARGE -> encodeAndSaveWithFFMpeg(images, frameRate, file, 18);
@@ -45,28 +50,12 @@ public class VideoUtils {
     }
   }
 
-  private static void encodeAndSaveWithJCodec(List<BufferedImage> images, double frameRate, File file) throws IOException {
-    SeekableByteChannel channel = NIOUtils.writableChannel(file);
-    SequenceEncoder encoder = new SequenceEncoder(
-        channel,
-        Rational.R((int) Math.round(frameRate), 1),
-        Format.MOV,
-        org.jcodec.common.Codec.H264,
-        null
-    );
-    //encode
-    try {
-      for (BufferedImage image : images) {
-        encoder.encodeNativeFrame(AWTUtil.fromBufferedImageRGB(image));
-      }
-    } catch (IOException ex) {
-      L.severe(String.format("Cannot encode image due to %s", ex));
-    }
-    encoder.finish();
-    NIOUtils.closeQuietly(channel);
-  }
-
-  private static void encodeAndSaveWithFFMpeg(List<BufferedImage> images, double frameRate, File file, int compression) throws IOException {
+  private static void encodeAndSaveWithFFMpeg(
+      List<BufferedImage> images,
+      double frameRate,
+      File file,
+      int compression
+  ) throws IOException {
     //save all files
     String workingDirName = file.getAbsoluteFile().getParentFile().getPath();
     String imagesDirName = workingDirName + File.separator + "imgs." + System.currentTimeMillis();
@@ -116,6 +105,31 @@ public class VideoUtils {
         }
       }
     }
+  }
+
+  private static void encodeAndSaveWithJCodec(
+      List<BufferedImage> images,
+      double frameRate,
+      File file
+  ) throws IOException {
+    SeekableByteChannel channel = NIOUtils.writableChannel(file);
+    SequenceEncoder encoder = new SequenceEncoder(
+        channel,
+        Rational.R((int) Math.round(frameRate), 1),
+        Format.MOV,
+        org.jcodec.common.Codec.H264,
+        null
+    );
+    //encode
+    try {
+      for (BufferedImage image : images) {
+        encoder.encodeNativeFrame(AWTUtil.fromBufferedImageRGB(image));
+      }
+    } catch (IOException ex) {
+      L.severe(String.format("Cannot encode image due to %s", ex));
+    }
+    encoder.finish();
+    NIOUtils.closeQuietly(channel);
   }
 
 }

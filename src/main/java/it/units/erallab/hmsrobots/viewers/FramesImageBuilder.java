@@ -30,10 +30,7 @@ import java.util.logging.Logger;
  */
 public class FramesImageBuilder implements SnapshotListener {
 
-  public enum Direction {
-    HORIZONTAL, VERTICAL
-  }
-
+  private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
   private final double initialT;
   private final double finalT;
   private final double dT;
@@ -49,9 +46,15 @@ public class FramesImageBuilder implements SnapshotListener {
   private int frameCount;
   private double lastT = Double.NEGATIVE_INFINITY;
 
-  private static final Logger L = Logger.getLogger(FramesImageBuilder.class.getName());
-
-  public FramesImageBuilder(double initialT, double finalT, double dT, int w, int h, Direction direction, Drawer drawer) {
+  public FramesImageBuilder(
+      double initialT,
+      double finalT,
+      double dT,
+      int w,
+      int h,
+      Direction direction,
+      Drawer drawer
+  ) {
     this.initialT = initialT;
     this.finalT = finalT;
     this.dT = dT;
@@ -71,6 +74,10 @@ public class FramesImageBuilder implements SnapshotListener {
     frameCount = 0;
   }
 
+  public enum Direction {
+    HORIZONTAL, VERTICAL
+  }
+
   public BufferedImage getImage() {
     return image;
   }
@@ -86,9 +93,19 @@ public class FramesImageBuilder implements SnapshotListener {
     lastT = t;
     BoundingBox imageFrame;
     if (direction.equals(Direction.HORIZONTAL)) {
-      imageFrame = BoundingBox.of((double) frameCount / (double) nOfFrames, 0, (double) (frameCount + 1) / (double) nOfFrames, 1d);
+      imageFrame = BoundingBox.of(
+          (double) frameCount / (double) nOfFrames,
+          0,
+          (double) (frameCount + 1) / (double) nOfFrames,
+          1d
+      );
     } else {
-      imageFrame = BoundingBox.of(0, (double) frameCount / (double) nOfFrames, 1, (double) (frameCount + 1) / (double) nOfFrames);
+      imageFrame = BoundingBox.of(
+          0,
+          (double) frameCount / (double) nOfFrames,
+          1,
+          (double) (frameCount + 1) / (double) nOfFrames
+      );
     }
     L.info(String.format("Rendering frame %d on %s", frameCount, imageFrame));
     frameCount = frameCount + 1;

@@ -17,7 +17,7 @@
 
 package it.units.erallab.hmsrobots.core.controllers;
 
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * @author "Eric Medvet" on 2021/12/03 for 2dhmsr
  */
-public class PosesController extends AbstractController<ControllableVoxel> {
+public class PosesController extends AbstractController {
 
   private final double stepT;
   private final List<Set<Grid.Key>> poses;
@@ -37,12 +37,12 @@ public class PosesController extends AbstractController<ControllableVoxel> {
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends ControllableVoxel> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     int poseIndex = (int) Math.round(t / stepT) % poses.size();
     Grid<Double> values = Grid.create(voxels, v -> -1d);
     for (Grid.Key key : poses.get(poseIndex)) {
-      if (key.getX() >= 0 && key.getX() < values.getW() && key.getY() >= 0 && key.getY() < values.getH()) {
-        values.set(key.getX(), key.getY(), 1d);
+      if (key.x() >= 0 && key.x() < values.getW() && key.y() >= 0 && key.y() < values.getH()) {
+        values.set(key.x(), key.y(), 1d);
       }
     }
     return values;

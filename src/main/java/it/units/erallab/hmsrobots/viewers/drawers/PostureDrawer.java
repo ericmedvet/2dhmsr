@@ -27,7 +27,6 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 import java.util.SortedMap;
-import java.util.stream.Collectors;
 
 /**
  * @author "Eric Medvet" on 2021/09/22 for 2dhmsr
@@ -39,11 +38,16 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
   private final Color dataColor;
   private final Color axesColor;
 
-  public PostureDrawer(Extractor extractor, double windowT, int n, boolean isBoolean, Color dataColor, Color axesColor) {
+  public PostureDrawer(
+      Extractor extractor, double windowT, int n, boolean isBoolean, Color dataColor, Color axesColor
+  ) {
     super(
         extractor,
         BehaviorUtils.voxelPolyGrid()
-            .andThen(g -> BehaviorUtils.computePosture(g.values().stream().filter(Objects::nonNull).collect(Collectors.toList()), n)),
+            .andThen(g -> BehaviorUtils.computePosture(g.values()
+                .stream()
+                .filter(Objects::nonNull)
+                .toList(), n)),
         windowT
     );
     this.n = n;
@@ -59,7 +63,11 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
   @Override
   protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, Grid<Boolean>> memory, Graphics2D g) {
     //compute aggregate
-    Grid<Double> average = Grid.create(n, n, (x, y) -> memory.values().stream().mapToDouble(grid -> grid.get(x, y) ? 1d : 0d).average().orElse(0d));
+    Grid<Double> average = Grid.create(
+        n,
+        n,
+        (x, y) -> memory.values().stream().mapToDouble(grid -> grid.get(x, y) ? 1d : 0d).average().orElse(0d)
+    );
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
     BoundingBox oBB = BoundingBox.of(
@@ -69,28 +77,29 @@ public class PostureDrawer extends MemoryDrawer<Grid<Boolean>> {
         g.getClip().getBounds2D().getMaxY()
     );
     BoundingBox pBB = (oBB.width() > oBB.height()) ? BoundingBox.of(
-        oBB.min.x + (oBB.width() - oBB.height()) / 2d + textH,
-        oBB.min.y + textH,
-        oBB.max.x - (oBB.width() - oBB.height()) / 2d - textH,
-        oBB.max.y - textH
+        oBB.min()
+            .x() + (oBB.width() - oBB.height()) / 2d + textH,
+        oBB.min().y() + textH,
+        oBB.max().x() - (oBB.width() - oBB.height()) / 2d - textH,
+        oBB.max().y() - textH
     ) : BoundingBox.of(
-        oBB.min.x + textH,
-        oBB.min.y + (oBB.height() - oBB.width()) / 2d + textH,
-        oBB.max.x - textH,
-        oBB.max.y - (oBB.height() - oBB.width()) / 2d - textH
+        oBB.min().x() + textH,
+        oBB.min().y() + (oBB.height() - oBB.width()) / 2d + textH,
+        oBB.max().x() - textH,
+        oBB.max().y() - (oBB.height() - oBB.width()) / 2d - textH
     );
     //draw data
     double l = pBB.width() / (double) n;
     average.forEach(e -> {
-      if (!isBoolean || e.getValue() > 0.5d) {
-        double minX = pBB.min.x + (double) e.getX() / (double) n * pBB.width();
-        double minY = pBB.min.y + (n - (double) e.getY() - 1) / (double) n * pBB.width();
-        g.setColor(isBoolean ? dataColor : DrawingUtils.alphaed(dataColor, e.getValue().floatValue()));
+      if (!isBoolean || e.value() > 0.5d) {
+        double minX = pBB.min().x() + (double) e.key().x() / (double) n * pBB.width();
+        double minY = pBB.min().y() + (n - (double) e.key().y() - 1) / (double) n * pBB.width();
+        g.setColor(isBoolean ? dataColor : DrawingUtils.alphaed(dataColor, e.value().floatValue()));
         g.fill(new Rectangle2D.Double(minX, minY, l, l));
       }
     });
     //draw box
     g.setColor(axesColor);
-    g.draw(new Rectangle2D.Double(pBB.min.x, pBB.min.y, pBB.width(), pBB.height()));
+    g.draw(new Rectangle2D.Double(pBB.min().x(), pBB.min().y(), pBB.width(), pBB.height()));
   }
 }

@@ -18,20 +18,50 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.apache.commons.lang3.ArrayUtils;
-import org.dyn4j.collision.Filter;
-import org.dyn4j.dynamics.RaycastResult;
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Ray;
+import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.DetectFilter;
+import org.dyn4j.world.result.RaycastResult;
 
-import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.DoubleStream;
 
 public class Lidar extends AbstractSensor {
+  @JsonProperty
+  private final double rayLength;
+  @JsonProperty
+  private final double[] rayDirections;
+
+  @JsonCreator
+  public Lidar(
+      @JsonProperty("rayLength") double rayLength,
+      @JsonProperty("rayDirections") double... rayDirections
+  ) {
+    super(Collections.nCopies(rayDirections.length, DoubleRange.of(0, rayLength)).toArray(DoubleRange[]::new));
+    this.rayLength = rayLength;
+    this.rayDirections = rayDirections;
+  }
+
+  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
+    this(
+        rayLength,
+        Arrays.stream(raysPerSide.entrySet().stream()
+            .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
+            .reduce(new double[]{}, ArrayUtils::addAll)).distinct().toArray()
+    );
+  }
+
   public enum Side {
 
     N(Math.PI / 4d, Math.PI * 3d / 4d),
@@ -50,65 +80,32 @@ public class Lidar extends AbstractSensor {
       this.endAngle = endAngle;
     }
 
-    public double getStartAngle() {
-      return startAngle;
-    }
-
     public double getEndAngle() {
       return endAngle;
     }
 
-  }
-
-  public static class RaycastFilter implements Filter, Serializable {
-
-    @Override
-    public boolean isAllowed(Filter f) {
-      if (f == null) return true;
-      return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
+    public double getStartAngle() {
+      return startAngle;
     }
 
   }
 
-  @JsonProperty
-  private final double rayLength;
-  @JsonProperty
-  private final double[] rayDirections;
-
-  @JsonCreator
-  public Lidar(
-      @JsonProperty("rayLength") double rayLength,
-      @JsonProperty("rayDirections") double... rayDirections
-  ) {
-    super(Collections.nCopies(rayDirections.length, Domain.of(0, rayLength)).toArray(Domain[]::new));
-    this.rayLength = rayLength;
-    this.rayDirections = rayDirections;
-  }
-
-  public Lidar(double rayLength, Map<Side, Integer> raysPerSide) {
-    this(
-        rayLength,
-        Arrays.stream(raysPerSide.entrySet().stream()
-            .map(e -> sampleRangeWithRays(e.getValue(), e.getKey().startAngle, e.getKey().endAngle))
-            .reduce(new double[]{}, ArrayUtils::addAll)).distinct().toArray()
-    );
-  }
+  private final static DetectFilter<Body, BodyFixture> FILTER = new DetectFilter<>(
+      true,
+      true,
+      f -> {
+        if (f == null)
+          return true;
+        return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
+      }
+  );
 
   private static double[] sampleRangeWithRays(int numberOfRays, double startAngle, double endAngle) {
     return numberOfRays == 1 ?
         new double[]{(endAngle - startAngle) / 2} :
-        DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1)).limit(numberOfRays).toArray();
-  }
-
-  @Override
-  public double[] sense(double t) {
-    List<RaycastResult> results = new ArrayList<>();
-    return Arrays.stream(rayDirections).map(rayDirection -> {
-      Ray ray = new Ray(voxel.getCenter(), rayDirection + voxel.getAngle());
-      results.clear();
-      voxel.getWorld().raycast(ray, rayLength, new RaycastFilter(), true, false, false, results);
-      return results.isEmpty() ? rayLength : results.get(0).getRaycast().getDistance();
-    }).toArray();
+        DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1))
+            .limit(numberOfRays)
+            .toArray();
   }
 
   @Override
@@ -116,7 +113,7 @@ public class Lidar extends AbstractSensor {
     return new Snapshot(
         new LidarReadings(
             Arrays.copyOf(readings, readings.length),
-            Arrays.stream(domains).map(d -> Domain.of(d.getMin(), d.getMax())).toArray(Domain[]::new),
+            Arrays.copyOf(domains, domains.length),
             voxel.getAngle(),
             Arrays.copyOf(rayDirections, rayDirections.length)
         ),
@@ -130,5 +127,15 @@ public class Lidar extends AbstractSensor {
         "rayLength=" + rayLength +
         ", rayDirections=" + Arrays.toString(rayDirections) +
         '}';
+  }
+
+  @Override
+  public double[] sense(double t) {
+    return Arrays.stream(rayDirections).map(rayDirection -> {
+      Point2 center = voxel.center();
+      Ray ray = new Ray(new Vector2(center.x(), center.y()), rayDirection + voxel.getAngle());
+      List<RaycastResult<Body, BodyFixture>> results = voxel.getWorld().raycast(ray, rayLength, FILTER);
+      return results.stream().mapToDouble(r -> r.getRaycast().getDistance()).min().orElse(rayLength);
+    }).toArray();
   }
 }

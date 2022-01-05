@@ -17,14 +17,13 @@
 
 package it.units.erallab.hmsrobots.behavior;
 
-import com.google.common.collect.Range;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.geometry.Shape;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -50,40 +49,135 @@ public class BehaviorUtils {
     double y = 0d;
     for (Shape shape : shapes) {
       Point2 center = shape.center();
-      x = x + center.x;
-      y = y + center.y;
+      x = x + center.x();
+      y = y + center.y();
     }
     return Point2.of(x / (double) shapes.size(), y / (double) shapes.size());
   }
 
-  public static <K> K getCentralElement(Grid<K> grid) {
-    if (grid.values().stream().noneMatch(Objects::nonNull)) {
-      throw new IllegalArgumentException("Cannot get central element of an empty grid");
-    }
-    double mX = grid.stream().filter(e -> e.getValue() != null).mapToInt(Grid.Entry::getX).average().orElse(0d);
-    double mY = grid.stream().filter(e -> e.getValue() != null).mapToInt(Grid.Entry::getY).average().orElse(0d);
-    double minD = Double.MAX_VALUE;
-    int closestX = 0;
-    int closestY = 0;
-    for (int x = 0; x < grid.getW(); x++) {
-      for (int y = 0; y < grid.getH(); y++) {
-        double d = (x - mX) * (x - mX) + (y - mY) * (y - mY);
-        if (d < minD) {
-          minD = d;
-          closestX = x;
-          closestY = y;
-        }
+  public static Grid<Boolean> computeAveragePosture(Collection<Grid<Boolean>> postures) {
+    int w = postures.iterator().next().getW();
+    int h = postures.iterator().next().getH();
+    return Grid.create(
+        w,
+        h,
+        (x, y) -> postures.stream().mapToDouble(p -> p.get(x, y) ? 1d : 0d).average().orElse(0d) > 0.5d
+    );
+  }
+
+  public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
+    double robotMinX = polies.stream()
+        .mapToDouble(b -> b.boundingBox().min().x())
+        .min()
+        .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMaxX = polies.stream()
+        .mapToDouble(b -> b.boundingBox().max().x())
+        .max()
+        .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    List<DoubleRange> contacts = polies.stream()
+        .filter(VoxelPoly::isTouchingGround)
+        .map(b -> DoubleRange.of(b.boundingBox().min().x(), b.boundingBox().max().x())).toList();
+    boolean[] mask = new boolean[n];
+    for (DoubleRange contact : contacts) {
+      int minIndex = (int) Math.round((contact.min() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int maxIndex = (int) Math.round((contact.max() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      for (int x = minIndex; x <= Math.min(maxIndex, n - 1); x++) {
+        mask[x] = true;
       }
     }
-    return grid.get(closestX, closestY);
+    return new Footprint(mask);
+  }
+
+  public static List<Gait> computeGaits(
+      SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval
+  ) {
+    // compute subsequences
+    Map<List<Footprint>, List<DoubleRange>> sequences = new HashMap<>();
+    List<Footprint> footprintList = new ArrayList<>(footprints.values());
+    List<DoubleRange> ranges = footprints.keySet()
+        .stream()
+        .map(d -> DoubleRange.of(d, d + interval))
+        .toList(); // list of range of each footprint
+    for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
+      for (int i = l; i <= footprintList.size(); i++) {
+        List<Footprint> sequence = footprintList.subList(i - l, i);
+        List<DoubleRange> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
+        // make sure there's no overlap
+        if (localRanges.size() == 0 || localRanges.get(localRanges.size() - 1).max() <= ranges.get(i - l).min()) {
+          localRanges.add(DoubleRange.of(
+              ranges.get(i - l).min(), // first t of the first footprint
+              ranges.get(i - 1).max() // last t of the last footprint
+          ));
+        }
+        sequences.put(sequence, localRanges);
+      }
+    }
+    // compute median interval
+    List<Double> allIntervals = sequences.values()
+        .stream()
+        .map(l -> IntStream.range(0, l.size() - 1)
+            .mapToObj(i -> l.get(i + 1).min() - l.get(i).max())
+            .toList()) // stream of List<Double>, each being a list of the intervals of that subsequence
+        .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).toList())
+        .orElse(List.of());
+    if (allIntervals.isEmpty()) {
+      return List.of();
+    }
+    double modeInterval = mode(allIntervals);
+    // compute gaits
+    return sequences.entrySet().stream().filter(e -> e.getValue().size() > 1) // discard subsequences observed only once
+        .map(e -> {
+          List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
+              .mapToObj(i -> e.getValue().get(i + 1).min() - e.getValue().get(i).max())
+              .toList();
+          List<Double> coverages = IntStream.range(0, intervals.size())
+              .mapToObj(i -> (e.getValue().get(i).max() - e.getValue().get(i).min()) / intervals.get(i))
+              .toList();
+          double localModeInterval = mode(intervals);
+          return new Gait(
+              e.getKey(),
+              localModeInterval,
+              coverages.stream().mapToDouble(d -> d).average().orElse(0d),
+              e.getValue().stream().mapToDouble(DoubleRange::extent).sum(),
+              (double) intervals.stream().filter(d -> d == localModeInterval).count() / (double) e.getValue().size()
+          );
+        }).filter(g -> g.getModeInterval() == modeInterval).toList();
+  }
+
+  public static Gait computeMainGait(
+      double interval, double longestInterval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n
+  ) {
+    List<Gait> gaits = computeGaits(
+        computeQuantizedFootprints(interval, polies, n),
+        2,
+        (int) Math.round(longestInterval / interval),
+        interval
+    );
+    if (gaits.isEmpty()) {
+      return null;
+    }
+    gaits.sort(Comparator.comparingDouble(Gait::getDuration).reversed());
+    return gaits.get(0);
   }
 
   public static Grid<Boolean> computePosture(Collection<? extends Shape> shapes, int n) {
-    Collection<BoundingBox> boxes = shapes.stream().map(Shape::boundingBox).collect(Collectors.toList());
-    double robotMinX = boxes.stream().mapToDouble(b -> b.min.x).min().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    double robotMaxX = boxes.stream().mapToDouble(b -> b.max.x).max().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    double robotMinY = boxes.stream().mapToDouble(b -> b.min.y).min().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    double robotMaxY = boxes.stream().mapToDouble(b -> b.max.y).max().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    Collection<BoundingBox> boxes = shapes.stream().map(Shape::boundingBox).toList();
+    double robotMinX = boxes.stream()
+        .mapToDouble(b -> b.min().x())
+        .min()
+        .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMaxX = boxes.stream()
+        .mapToDouble(b -> b.max().x())
+        .max()
+        .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMinY = boxes.stream()
+        .mapToDouble(b -> b.min().y())
+        .min()
+        .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
+    double robotMaxY = boxes.stream()
+        .mapToDouble(b -> b.max().y())
+        .max()
+        .orElseThrow(() -> new IllegalArgumentException("Empty robot"));
     //adjust box to make it squared
     if ((robotMaxY - robotMinY) < (robotMaxX - robotMinX)) {
       double d = (robotMaxX - robotMinX) - (robotMaxY - robotMinY);
@@ -96,10 +190,10 @@ public class BehaviorUtils {
     }
     Grid<Boolean> mask = Grid.create(n, n, false);
     for (BoundingBox b : boxes) {
-      int minXIndex = (int) Math.round((b.min.x - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      int maxXIndex = (int) Math.round((b.max.x - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      int minYIndex = (int) Math.round((b.min.y - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
-      int maxYIndex = (int) Math.round((b.max.y - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
+      int minXIndex = (int) Math.round((b.min().x() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int maxXIndex = (int) Math.round((b.max().x() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
+      int minYIndex = (int) Math.round((b.min().y() - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
+      int maxYIndex = (int) Math.round((b.max().y() - robotMinY) / (robotMaxY - robotMinY) * (double) (n - 1));
       for (int x = minXIndex; x <= maxXIndex; x++) {
         for (int y = minYIndex; y <= maxYIndex; y++) {
           mask.set(x, y, true);
@@ -109,33 +203,48 @@ public class BehaviorUtils {
     return mask;
   }
 
-  public static Footprint computeFootprint(Collection<? extends VoxelPoly> polies, int n) {
-    Collection<BoundingBox> boxes = polies.stream().map(Shape::boundingBox).collect(Collectors.toList());
-    double robotMinX = boxes.stream().mapToDouble(b -> b.min.x).min().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    double robotMaxX = boxes.stream().mapToDouble(b -> b.max.x).max().orElseThrow(() -> new IllegalArgumentException("Empty robot"));
-    List<Domain> contacts = polies.stream().filter(VoxelPoly::isTouchingGround).map(s -> Domain.of(s.boundingBox().min.x, s.boundingBox().max.x)).collect(Collectors.toList());
-    boolean[] mask = new boolean[n];
-    for (Domain contact : contacts) {
-      int minIndex = (int) Math.round((contact.getMin() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      int maxIndex = (int) Math.round((contact.getMax() - robotMinX) / (robotMaxX - robotMinX) * (double) (n - 1));
-      for (int x = minIndex; x <= Math.min(maxIndex, n - 1); x++) {
-        mask[x] = true;
+  public static SortedMap<Double, Footprint> computeQuantizedFootprints(
+      double interval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n
+  ) {
+    SortedMap<Double, Footprint> quantized = new TreeMap<>();
+    for (double t = polies.firstKey(); t <= polies.lastKey(); t = t + interval) {
+      List<Footprint> local = polies.subMap(t, t + interval)
+          .values()
+          .stream()
+          .map(voxelPolies -> computeFootprint(voxelPolies, n))
+          .toList();
+      double[] counts = new double[n];
+      double tot = local.size();
+      for (int x = 0; x < n; x++) {
+        final int finalX = x;
+        counts[x] = local.stream().mapToDouble(f -> f.getMask()[finalX] ? 1d : 0d).sum();
       }
+      boolean[] localFootprint = new boolean[n];
+      for (int x = 0; x < n; x++) {
+        if (counts[x] > tot / 2d) {
+          localFootprint[x] = true;
+        }
+      }
+      quantized.put(t, new Footprint(localFootprint));
     }
-    return new Footprint(mask);
+    return quantized;
   }
 
-  public static Grid<Boolean> computeAveragePosture(Collection<Grid<Boolean>> postures) {
-    int w = postures.iterator().next().getW();
-    int h = postures.iterator().next().getH();
-    return Grid.create(
-        w,
-        h,
-        (x, y) -> postures.stream()
-            .mapToDouble(p -> p.get(x, y) ? 1d : 0d)
-            .average()
-            .orElse(0d) > 0.5d
-    );
+  public static SortedMap<DoubleRange, Double> computeQuantizedSpectrum(
+      SortedMap<Double, Double> signal, double minF, double maxF, int nBins
+  ) {
+    SortedMap<Double, Double> spectrum = computeSpectrum(signal);
+    SortedMap<DoubleRange, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(DoubleRange::min));
+    double binSpan = (maxF - minF) / (double) nBins;
+    for (int i = 0; i < nBins; i++) {
+      double binMinF = minF + binSpan * (double) i;
+      double binMaxF = minF + binSpan * ((double) i + 1d);
+      qSpectrum.put(
+          DoubleRange.of(binMinF, binMaxF),
+          spectrum.subMap(binMinF, binMaxF).values().stream().mapToDouble(d -> d).average().orElse(0d)
+      );
+    }
+    return qSpectrum;
   }
 
   public static SortedMap<Double, Double> computeSpectrum(SortedMap<Double, Double> signal) {
@@ -165,128 +274,35 @@ public class BehaviorUtils {
     FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
     List<Double> f = Stream.of(fft.transform(signal, TransformType.FORWARD))
         .map(Complex::abs)
-        .collect(Collectors.toList())
+        .toList()
         .subList(0, paddedSize / 2 + 1);
     SortedMap<Double, Double> spectrum = new TreeMap<>();
     for (int i = 0; i < f.size(); i++) {
-      spectrum.put(
-          1d / dT / 2d * (double) i / (double) f.size(),
-          f.get(i)
-      );
+      spectrum.put(1d / dT / 2d * (double) i / (double) f.size(), f.get(i));
     }
     return spectrum;
   }
 
-  public static SortedMap<Domain, Double> computeQuantizedSpectrum(SortedMap<Double, Double> signal, double minF, double maxF, int nBins) {
-    SortedMap<Double, Double> spectrum = computeSpectrum(signal);
-    SortedMap<Domain, Double> qSpectrum = new TreeMap<>(Comparator.comparingDouble(Domain::getMin));
-    double binSpan = (maxF - minF) / (double) nBins;
-    for (int i = 0; i < nBins; i++) {
-      double binMinF = minF + binSpan * (double) i;
-      double binMaxF = minF + binSpan * ((double) i + 1d);
-      qSpectrum.put(
-          Domain.of(binMinF, binMaxF),
-          spectrum.subMap(binMinF, binMaxF).values().stream()
-              .mapToDouble(d -> d)
-              .average()
-              .orElse(0d)
-      );
+  public static <K> K getCentralElement(Grid<K> grid) {
+    if (grid.values().stream().noneMatch(Objects::nonNull)) {
+      throw new IllegalArgumentException("Cannot get central element of an empty grid");
     }
-    return qSpectrum;
-  }
-
-  public static Gait computeMainGait(double interval, double longestInterval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n) {
-    List<Gait> gaits = computeGaits(
-        computeQuantizedFootprints(interval, polies, n),
-        2,
-        (int) Math.round(longestInterval / interval),
-        interval
-    );
-    if (gaits.isEmpty()) {
-      return null;
-    }
-    gaits.sort(Comparator.comparingDouble(Gait::getDuration).reversed());
-    return gaits.get(0);
-  }
-
-  public static SortedMap<Double, Footprint> computeQuantizedFootprints(double interval, SortedMap<Double, Collection<? extends VoxelPoly>> polies, int n) {
-    SortedMap<Double, Footprint> quantized = new TreeMap<>();
-    for (double t = polies.firstKey(); t <= polies.lastKey(); t = t + interval) {
-      List<Footprint> local = polies.subMap(t, t + interval).values().stream()
-          .map(voxelPolies -> computeFootprint(voxelPolies, n))
-          .collect(Collectors.toList());
-      double[] counts = new double[n];
-      double tot = local.size();
-      for (int x = 0; x < n; x++) {
-        final int finalX = x;
-        counts[x] = local.stream().mapToDouble(f -> f.getMask()[finalX] ? 1d : 0d).sum();
-      }
-      boolean[] localFootprint = new boolean[n];
-      for (int x = 0; x < n; x++) {
-        if (counts[x] > tot / 2d) {
-          localFootprint[x] = true;
+    double mX = grid.stream().filter(e -> e.value() != null).mapToInt(e -> e.key().x()).average().orElse(0d);
+    double mY = grid.stream().filter(e -> e.value() != null).mapToInt(e -> e.key().y()).average().orElse(0d);
+    double minD = Double.MAX_VALUE;
+    int closestX = 0;
+    int closestY = 0;
+    for (int x = 0; x < grid.getW(); x++) {
+      for (int y = 0; y < grid.getH(); y++) {
+        double d = (x - mX) * (x - mX) + (y - mY) * (y - mY);
+        if (d < minD) {
+          minD = d;
+          closestX = x;
+          closestY = y;
         }
       }
-      quantized.put(t, new Footprint(localFootprint));
     }
-    return quantized;
-  }
-
-  public static List<Gait> computeGaits(SortedMap<Double, Footprint> footprints, int minSequenceLength, int maxSequenceLength, double interval) {
-    // compute subsequences
-    Map<List<Footprint>, List<Range<Double>>> sequences = new HashMap<>();
-    List<Footprint> footprintList = new ArrayList<>(footprints.values());
-    List<Range<Double>> ranges = footprints.keySet().stream()
-        .map(d -> Range.closedOpen(d, d + interval))
-        .collect(Collectors.toList()); // list of range of each footprint
-    for (int l = minSequenceLength; l <= maxSequenceLength; l++) {
-      for (int i = l; i <= footprintList.size(); i++) {
-        List<Footprint> sequence = footprintList.subList(i - l, i);
-        List<Range<Double>> localRanges = sequences.getOrDefault(sequence, new ArrayList<>());
-        // make sure there's no overlap
-        if (localRanges.size() == 0 || localRanges.get(localRanges.size() - 1).upperEndpoint() <= ranges.get(i - l).lowerEndpoint()) {
-          localRanges.add(Range.openClosed(
-              ranges.get(i - l).lowerEndpoint(), // first t of the first footprint
-              ranges.get(i - 1).upperEndpoint() // last t of the last footprint
-          ));
-        }
-        sequences.put(sequence, localRanges);
-      }
-    }
-    // compute median interval
-    List<Double> allIntervals = sequences.values().stream()
-        .map(l -> IntStream.range(0, l.size() - 1)
-            .mapToObj(i -> l.get(i + 1).lowerEndpoint() - l.get(i).lowerEndpoint())
-            .collect(Collectors.toList())
-        ) // stream of List<Double>, each being a list of the intervals of that subsequence
-        .reduce((l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList()))
-        .orElse(List.of());
-    if (allIntervals.isEmpty()) {
-      return List.of();
-    }
-    double modeInterval = mode(allIntervals);
-    // compute gaits
-    return sequences.entrySet().stream()
-        .filter(e -> e.getValue().size() > 1) // discard subsequences observed only once
-        .map(e -> {
-              List<Double> intervals = IntStream.range(0, e.getValue().size() - 1)
-                  .mapToObj(i -> e.getValue().get(i + 1).lowerEndpoint() - e.getValue().get(i).lowerEndpoint())
-                  .collect(Collectors.toList());
-              List<Double> coverages = IntStream.range(0, intervals.size())
-                  .mapToObj(i -> (e.getValue().get(i).upperEndpoint() - e.getValue().get(i).lowerEndpoint()) / intervals.get(i))
-                  .collect(Collectors.toList());
-              double localModeInterval = mode(intervals);
-              return new Gait(
-                  e.getKey(),
-                  localModeInterval,
-                  coverages.stream().mapToDouble(d -> d).average().orElse(0d),
-                  e.getValue().stream().mapToDouble(r -> r.upperEndpoint() - r.lowerEndpoint()).sum(),
-                  (double) intervals.stream().filter(d -> d == localModeInterval).count() / (double) e.getValue().size()
-              );
-            }
-        )
-        .filter(g -> g.getModeInterval() == modeInterval)
-        .collect(Collectors.toList());
+    return grid.get(closestX, closestY);
   }
 
   private static <K> K mode(Collection<K> collection) {

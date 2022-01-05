@@ -20,7 +20,7 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.viewers.DrawingUtils;
 
 import java.awt.*;
@@ -43,7 +43,18 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
   private final Color axesColor;
   private final Color textColor;
 
-  public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins, Color barFillColor, Color barLineColor, Color axesColor, Color textColor) {
+  public SpectrumDrawer(
+      Extractor extractor,
+      Function<Snapshot, Double> function,
+      double windowT,
+      double minF,
+      double maxF,
+      int nBins,
+      Color barFillColor,
+      Color barLineColor,
+      Color axesColor,
+      Color textColor
+  ) {
     super(extractor, function, windowT);
     this.minF = minF;
     this.maxF = maxF;
@@ -54,16 +65,34 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
     this.textColor = textColor;
   }
 
-  public SpectrumDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, double minF, double maxF, int nBins) {
-    this(extractor, function, windowT, minF, maxF, nBins, DrawingUtils.alphaed(DrawingUtils.Colors.DATA, .5f), DrawingUtils.Colors.DATA, DrawingUtils.Colors.AXES, DrawingUtils.Colors.TEXT);
+  public SpectrumDrawer(
+      Extractor extractor,
+      Function<Snapshot, Double> function,
+      double windowT,
+      double minF,
+      double maxF,
+      int nBins
+  ) {
+    this(
+        extractor,
+        function,
+        windowT,
+        minF,
+        maxF,
+        nBins,
+        DrawingUtils.alphaed(DrawingUtils.Colors.DATA, .5f),
+        DrawingUtils.Colors.DATA,
+        DrawingUtils.Colors.AXES,
+        DrawingUtils.Colors.TEXT
+    );
   }
 
   @Override
   protected void innerDraw(double t, Snapshot snapshot, SortedMap<Double, Double> memory, Graphics2D g) {
     //compute spectrum
-    SortedMap<Domain, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(memory, minF, maxF, nBins);
+    SortedMap<DoubleRange, Double> spectrum = BehaviorUtils.computeQuantizedSpectrum(memory, minF, maxF, nBins);
     double maxValue = spectrum.values().stream().mapToDouble(d -> d).max().orElse(0d);
-    Domain[] domains = spectrum.keySet().toArray(Domain[]::new);
+    DoubleRange[] domains = spectrum.keySet().toArray(DoubleRange[]::new);
     double[] values = spectrum.values().stream().mapToDouble(d -> d).toArray();
     //prepare clips
     double textH = g.getFontMetrics().getMaxAscent();
@@ -75,17 +104,17 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
         g.getClip().getBounds2D().getMaxY()
     );
     BoundingBox pBB = BoundingBox.of(
-        oBB.min.x + 5 * textW,
-        oBB.min.y + textH,
-        oBB.max.x - textW,
-        oBB.max.y - 3 * textH
+        oBB.min().x() + 5 * textW,
+        oBB.min().y() + textH,
+        oBB.max().x() - textW,
+        oBB.max().y() - 3 * textH
     );
     double binW = pBB.width() / (double) nBins;
     //draw bars
     for (int i = 0; i < nBins; i++) {
-      double minX = pBB.min.x + (double) i * binW;
+      double minX = pBB.min().x() + (double) i * binW;
       double barH = pBB.height() * values[i] / maxValue;
-      Shape shape = new Rectangle2D.Double(minX, pBB.min.y + pBB.height() - barH, binW, barH);
+      Shape shape = new Rectangle2D.Double(minX, pBB.min().y() + pBB.height() - barH, binW, barH);
       g.setColor(barFillColor);
       g.fill(shape);
       g.setColor(barLineColor);
@@ -93,23 +122,31 @@ public class SpectrumDrawer extends MemoryDrawer<Double> {
     }
     //draw x-axis
     g.setColor(axesColor);
-    g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
+    g.draw(new Line2D.Double(pBB.min().x(), pBB.max().y(), pBB.max().x(), pBB.max().y()));
     for (int i = 0; i <= nBins; i++) {
-      double x = pBB.min.x + (double) i * binW;
+      double x = pBB.min().x() + (double) i * binW;
       g.setColor(axesColor);
-      g.draw(new Line2D.Double(x, pBB.max.y, x, pBB.max.y + textH));
+      g.draw(new Line2D.Double(x, pBB.max().y(), x, pBB.max().y() + textH));
       g.setColor(textColor);
-      String s = String.format("%.1f", (i < nBins) ? domains[i].getMin() : domains[i - 1].getMax());
-      g.drawString(s, (float) x - g.getFontMetrics().stringWidth(s) / 2f, (float) (pBB.max.y + 2 * textH));
+      String s = String.format("%.1f", (i < nBins) ? domains[i].min() : domains[i - 1].max());
+      g.drawString(s, (float) x - g.getFontMetrics().stringWidth(s) / 2f, (float) (pBB.max().y() + 2 * textH));
     }
     //draw y-axis
     g.setColor(axesColor);
-    g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.min.x, pBB.min.y));
-    g.draw(new Line2D.Double(pBB.min.x - textW, pBB.max.y, pBB.min.x, pBB.max.y));
-    g.draw(new Line2D.Double(pBB.min.x - textW, pBB.min.y, pBB.min.x, pBB.min.y));
+    g.draw(new Line2D.Double(pBB.min().x(), pBB.max().y(), pBB.min().x(), pBB.min().y()));
+    g.draw(new Line2D.Double(pBB.min().x() - textW, pBB.max().y(), pBB.min().x(), pBB.max().y()));
+    g.draw(new Line2D.Double(pBB.min().x() - textW, pBB.min().y(), pBB.min().x(), pBB.min().y()));
     g.setColor(textColor);
     String s = String.format("%.1f", maxValue);
-    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.min.y + textH / 2d));
-    g.drawString("0", (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth("0")), (float) (pBB.max.y + textH / 2d));
+    g.drawString(
+        s,
+        (float) (pBB.min().x() - 2d * textW - g.getFontMetrics().stringWidth(s)),
+        (float) (pBB.min().y() + textH / 2d)
+    );
+    g.drawString(
+        "0",
+        (float) (pBB.min().x() - 2d * textW - g.getFontMetrics().stringWidth("0")),
+        (float) (pBB.max().y() + textH / 2d)
+    );
   }
 }

@@ -29,9 +29,8 @@ import java.util.function.Function;
  */
 public abstract class MemoryDrawer<K> extends SubtreeDrawer {
 
-  private final Function<Snapshot, K> function;
   protected final double windowT;
-
+  private final Function<Snapshot, K> function;
   private final SortedMap<Double, K> memory;
 
   public MemoryDrawer(Extractor extractor, Function<Snapshot, K> function, double windowT) {
@@ -40,6 +39,8 @@ public abstract class MemoryDrawer<K> extends SubtreeDrawer {
     this.windowT = windowT;
     memory = new TreeMap<>();
   }
+
+  protected abstract void innerDraw(double t, Snapshot snapshot, SortedMap<Double, K> memory, Graphics2D g);
 
   @Override
   protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
@@ -50,6 +51,4 @@ public abstract class MemoryDrawer<K> extends SubtreeDrawer {
     }
     innerDraw(t, snapshot, memory, g);
   }
-
-  protected abstract void innerDraw(double t, Snapshot snapshot, SortedMap<Double, K> memory, Graphics2D g);
 }

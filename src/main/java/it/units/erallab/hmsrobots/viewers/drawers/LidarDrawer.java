@@ -17,7 +17,7 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.LidarReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
@@ -36,7 +36,7 @@ public class LidarDrawer extends SubtreeDrawer {
   private final Color strokeColor;
 
   public LidarDrawer(Color strokeColor) {
-    super(Extractor.matches(null, SensingVoxel.class, null));
+    super(Extractor.matches(null, Voxel.class, null));
     this.strokeColor = strokeColor;
   }
 
@@ -56,7 +56,7 @@ public class LidarDrawer extends SubtreeDrawer {
     for (Snapshot lidarSnapshot : lidarSnapshots) {
       LidarReadings lidarReadings = (LidarReadings) lidarSnapshot.getContent();
       double angle = lidarReadings.getVoxelAngle();
-      double rayLength = lidarReadings.getDomains()[0].getMax();
+      double rayLength = lidarReadings.getDomains()[0].max();
       double[] rayDirections = lidarReadings.getRayDirections();
       double[] rayHits = lidarReadings.getReadings();
       for (int rayIdx = 0; rayIdx < rayDirections.length; rayIdx++) {
@@ -68,15 +68,15 @@ public class LidarDrawer extends SubtreeDrawer {
         g.draw(DrawingUtils.toPath(
             center,
             Point2.of(
-                center.x + rayLength * Math.cos(direction),
-                center.y + rayLength * Math.sin(direction)
+                center.x() + rayLength * Math.cos(direction),
+                center.y() + rayLength * Math.sin(direction)
             )
         ));
         // draw only hits
         if (rayHits[rayIdx] < rayLength) {
           g.draw(new Ellipse2D.Double(
-              center.x + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
-              center.y + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
+              center.x() + rayHits[rayIdx] * Math.cos(direction) - CIRCLE_SIZE / 2d,
+              center.y() + rayHits[rayIdx] * Math.sin(direction) - CIRCLE_SIZE / 2d,
               CIRCLE_SIZE,
               CIRCLE_SIZE
           ));

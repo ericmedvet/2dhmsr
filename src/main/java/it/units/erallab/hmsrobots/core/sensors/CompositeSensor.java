@@ -18,9 +18,9 @@
 package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
@@ -30,7 +30,7 @@ public abstract class CompositeSensor extends AbstractSensor {
   protected final Sensor sensor;
 
   public CompositeSensor(
-      Domain[] domains,
+      DoubleRange[] domains,
       Sensor sensor
   ) {
     super(domains);
@@ -50,20 +50,16 @@ public abstract class CompositeSensor extends AbstractSensor {
   }
 
   @Override
-  public void setVoxel(SensingVoxel voxel) {
-    super.setVoxel(voxel);
-    sensor.setVoxel(voxel);
-  }
-
-  @Override
   public Snapshot getSnapshot() {
     Snapshot snapshot = super.getSnapshot();
     snapshot.getChildren().add(sensor.getSnapshot());
     return snapshot;
   }
 
-  public Sensor getSensor() {
-    return sensor;
+  @Override
+  public void setVoxel(Voxel voxel) {
+    super.setVoxel(voxel);
+    sensor.setVoxel(voxel);
   }
 
   @Override
@@ -71,6 +67,10 @@ public abstract class CompositeSensor extends AbstractSensor {
     return getClass().getSimpleName() + "{" +
         "sensor=" + sensor +
         '}';
+  }
+
+  public Sensor getSensor() {
+    return sensor;
   }
 
 }

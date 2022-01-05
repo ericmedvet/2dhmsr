@@ -19,7 +19,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Collections;
 
@@ -30,7 +30,7 @@ public class SoftNormalization extends CompositeSensor {
       @JsonProperty("sensor") Sensor sensor
   ) {
     super(
-        Collections.nCopies(sensor.getDomains().length, Domain.of(0d, 1d)).toArray(Domain[]::new),
+        Collections.nCopies(sensor.getDomains().length, DoubleRange.of(0d, 1d)).toArray(DoubleRange[]::new),
         sensor
     );
   }
@@ -40,8 +40,7 @@ public class SoftNormalization extends CompositeSensor {
     double[] innerValues = sensor.getReadings();
     double[] values = new double[innerValues.length];
     for (int i = 0; i < values.length; i++) {
-      Domain d = sensor.getDomains()[i];
-      double v = (innerValues[i] - d.getMin()) / (d.getMax() - d.getMin());
+      double v = sensor.getDomains()[i].normalize(innerValues[i]);
       //tanh(((x*2)-1)*2)/2+1/2
       values[i] = Math.tanh(((v * 2d) - 1d) * 2d) / 2d + 0.5d;
     }

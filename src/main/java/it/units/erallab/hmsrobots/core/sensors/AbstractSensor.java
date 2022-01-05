@@ -17,43 +17,27 @@
 
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.snapshots.ScopedReadings;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
  */
-public abstract class AbstractSensor implements Sensor {
-  protected final Domain[] domains;
-  protected SensingVoxel voxel;
+public abstract class AbstractSensor implements Sensor, Serializable {
+  protected final DoubleRange[] domains;
+  protected Voxel voxel;
   protected double[] readings;
 
-  public AbstractSensor(Domain[] domains) {
+  public AbstractSensor(DoubleRange[] domains) {
     this.domains = domains;
   }
 
-  @Override
-  public Domain[] getDomains() {
-    return domains;
-  }
-
-  public SensingVoxel getVoxel() {
-    return voxel;
-  }
-
-  @Override
-  public void setVoxel(SensingVoxel voxel) {
-    this.voxel = voxel;
-  }
-
-  @Override
-  public double[] getReadings() {
-    return readings;
-  }
+  protected abstract double[] sense(double t);
 
   @Override
   public void act(double t) {
@@ -65,21 +49,35 @@ public abstract class AbstractSensor implements Sensor {
   }
 
   @Override
+  public DoubleRange[] getDomains() {
+    return domains;
+  }
+
+  @Override
+  public double[] getReadings() {
+    return readings;
+  }
+
+  @Override
   public Snapshot getSnapshot() {
-    return new Snapshot(
-        new ScopedReadings(
-            Arrays.copyOf(readings, readings.length),
-            Arrays.stream(domains).map(d -> Domain.of(d.getMin(), d.getMax())).toArray(Domain[]::new)
-        ),
-        getClass()
-    );
+    return new Snapshot(new ScopedReadings(
+        Arrays.copyOf(readings, readings.length),
+        Arrays.copyOf(domains, domains.length)
+    ), getClass());
+  }
+
+  public Voxel getVoxel() {
+    return voxel;
+  }
+
+  @Override
+  public void setVoxel(Voxel voxel) {
+    this.voxel = voxel;
   }
 
   @Override
   public String toString() {
     return getClass().getSimpleName();
   }
-
-  protected abstract double[] sense(double t);
 
 }

@@ -17,23 +17,21 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
-
-import java.io.Serializable;
 
 /**
  * @author eric
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public interface Controller<V extends ControllableVoxel> extends Resettable, Serializable {
+public interface Controller extends Resettable {
 
-  void control(double t, Grid<? extends V> voxels);
+  void control(double t, Grid<Voxel> voxels);
 
-  static <K extends ControllableVoxel> Controller<K> empty() {
-    return new Controller<>() {
+  static Controller empty() {
+    return new Controller() {
       @Override
-      public void control(double t, Grid<? extends K> voxels) {
+      public void control(double t, Grid<Voxel> voxels) {
       }
 
       @Override
@@ -41,5 +39,5 @@ public interface Controller<V extends ControllableVoxel> extends Resettable, Ser
       }
     };
   }
-  
+
 }

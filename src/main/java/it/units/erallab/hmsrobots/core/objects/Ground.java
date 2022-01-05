@@ -21,10 +21,10 @@ import it.units.erallab.hmsrobots.core.geometry.Poly;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +70,7 @@ public class Ground implements WorldObject, Snapshottable {
           new Vector2(xs[i] - xs[i - 1], baseY),
           new Vector2(xs[i] - xs[i - 1], ys[i])
       );
-      Body body = new Body(1);
+      Body body = new Body();
       body.addFixture(bodyPoly);
       body.setMass(MassType.INFINITE);
       body.translate(xs[i - 1], 0);
@@ -84,16 +84,7 @@ public class Ground implements WorldObject, Snapshottable {
   }
 
   @Override
-  public Snapshot getSnapshot() {
-    Point2[] vertices = new Point2[polygon.size()];
-    for (int i = 0; i < vertices.length; i++) {
-      vertices[i] = Point2.of(polygon.get(i));
-    }
-    return new Snapshot(Poly.of(vertices), getClass());
-  }
-
-  @Override
-  public void addTo(World world) {
+  public void addTo(World<Body> world) {
     for (Body body : bodies) {
       world.addBody(body);
     }
@@ -101,6 +92,15 @@ public class Ground implements WorldObject, Snapshottable {
 
   public List<Body> getBodies() {
     return bodies;
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    Point2[] vertices = new Point2[polygon.size()];
+    for (int i = 0; i < vertices.length; i++) {
+      vertices[i] = Point2.of(polygon.get(i));
+    }
+    return new Snapshot(Poly.of(vertices), getClass());
   }
 
   public double yAt(double x) {

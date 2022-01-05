@@ -42,6 +42,26 @@ public class UtilsTest {
   }
 
   /**
+   * Test of cropGrid method, of class Util.
+   */
+  @Test
+  public void testCropGrid() {
+    System.out.println("cropGrid");
+    Grid<Integer> inGrid = Grid.create(5, 4, 0);
+    inGrid.set(3, 1, 1);
+    inGrid.set(3, 2, 2);
+    inGrid.set(2, 3, 2);
+    inGrid.set(4, 3, 3);
+    Grid<Integer> expResult = Grid.create(3, 3, 0);
+    expResult.set(1, 0, 1);
+    expResult.set(1, 1, 2);
+    expResult.set(0, 2, 2);
+    expResult.set(2, 2, 3);
+    Grid<Integer> result = Utils.cropGrid(inGrid, i -> i > 0);
+    assertEquals(expResult, result);
+  }
+
+  /**
    * Test of gridLargestConnected method, of class Util.
    */
   @Test
@@ -66,26 +86,6 @@ public class UtilsTest {
     expResult.set(3, 2, true);
     expResult.set(2, 2, true);
     Grid<Boolean> result = Utils.gridLargestConnected(kGrid, b -> b);
-    assertEquals(expResult, result);
-  }
-
-  /**
-   * Test of cropGrid method, of class Util.
-   */
-  @Test
-  public void testCropGrid() {
-    System.out.println("cropGrid");
-    Grid<Integer> inGrid = Grid.create(5, 4, 0);
-    inGrid.set(3, 1, 1);
-    inGrid.set(3, 2, 2);
-    inGrid.set(2, 3, 2);
-    inGrid.set(4, 3, 3);
-    Grid<Integer> expResult = Grid.create(3, 3, 0);
-    expResult.set(1, 0, 1);
-    expResult.set(1, 1, 2);
-    expResult.set(0, 2, 2);
-    expResult.set(2, 2, 3);
-    Grid<Integer> result = Utils.cropGrid(inGrid, i -> i > 0);
     assertEquals(expResult, result);
   }
 

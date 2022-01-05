@@ -18,16 +18,10 @@ package it.units.erallab.hmsrobots.core.geometry;
 
 import java.io.Serializable;
 
-public class BoundingBox implements Shape, Serializable {
+public record BoundingBox(Point2 min, Point2 max) implements Shape, Serializable {
 
-  public final Point2 min;
-  public final Point2 max;
-
-  public static BoundingBox of(double minX, double minY, double maxX, double maxY) {
-    return of(
-        Point2.of(minX, minY),
-        Point2.of(maxX, maxY)
-    );
+  public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
+    return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
   }
 
   public static BoundingBox of(Point2... points) {
@@ -39,37 +33,16 @@ public class BoundingBox implements Shape, Serializable {
     double minY = Double.POSITIVE_INFINITY;
     double maxY = Double.NEGATIVE_INFINITY;
     for (Point2 point : points) {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
+      minX = Math.min(minX, point.x());
+      maxX = Math.max(maxX, point.x());
+      minY = Math.min(minY, point.y());
+      maxY = Math.max(maxY, point.y());
     }
-    return new BoundingBox(
-        Point2.of(minX, minY),
-        Point2.of(maxX, maxY)
-    );
+    return new BoundingBox(Point2.of(minX, minY), Point2.of(maxX, maxY));
   }
 
-  private BoundingBox(Point2 min, Point2 max) {
-    this.min = min;
-    this.max = max;
-  }
-
-  @Override
-  public String toString() {
-    return "BoundingBox{" +
-        "min=" + min +
-        ", max=" + max +
-        '}';
-  }
-
-  public static BoundingBox largest(BoundingBox bb1, BoundingBox bb2) {
-    return BoundingBox.of(bb1.min, bb1.max, bb2.min, bb2.max);
-  }
-
-  @Override
-  public Point2 center() {
-    return Point2.of((min.x + max.x) / 2d, (min.y + max.x) / 2d);
+  public static BoundingBox of(double minX, double minY, double maxX, double maxY) {
+    return of(Point2.of(minX, minY), Point2.of(maxX, maxY));
   }
 
   @Override
@@ -77,11 +50,21 @@ public class BoundingBox implements Shape, Serializable {
     return this;
   }
 
-  public double width() {
-    return max.x - min.x;
+  @Override
+  public Point2 center() {
+    return Point2.of((min.x() + max.x()) / 2d, (min.y() + max.y()) / 2d);
+  }
+
+  @Override
+  public double area() {
+    return width() * height();
   }
 
   public double height() {
-    return max.y - min.y;
+    return max.y() - min.y();
+  }
+
+  public double width() {
+    return max.x() - min.x();
   }
 }
