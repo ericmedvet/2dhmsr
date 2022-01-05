@@ -14,12 +14,13 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.util.Parametrized;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable, StatefulNN {
+public class QuantizedMultilayerSpikingNetworkWithConverters<N extends QuantizedMultilayerSpikingNetwork> implements TimedRealFunction, Parametrized, Resettable, Serializable, StatefulNN {
 
   @JsonProperty
   private final N multilayerSpikingNetwork;
