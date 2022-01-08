@@ -26,6 +26,7 @@ import it.units.erallab.hmsrobots.core.sensors.Touch;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import org.apache.commons.lang3.ArrayUtils;
 import org.dyn4j.collision.Filter;
 import org.dyn4j.dynamics.Body;
@@ -54,7 +55,7 @@ import java.util.List;
 public class Voxel implements Actionable, Serializable, Snapshottable, WorldObject, Shape {
 
   public static final double SIDE_LENGTH = 3d;
-  public static final double MASS_SIDE_LENGTH_RATIO = .40d;
+  public static final double MASS_SIDE_LENGTH_RATIO = .35d;
   public static final double SPRING_F = 8d;
   public static final double SPRING_D = 0.3d;
   public static final double MASS_LINEAR_DAMPING = 0.1d;
@@ -62,11 +63,9 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   public static final double FRICTION = 10d;
   public static final double RESTITUTION = 0.1d;
   public static final double MASS = 1d;
-  public static final boolean MASS_COLLISION_FLAG = false;
-  public static final double AREA_RATIO_MAX_DELTA = 0.225d;
+  public static final DoubleRange AREA_RATIO_PASSIVE_RANGE = DoubleRange.of(0.5, 1.5);
+  public static final DoubleRange AREA_RATIO_ACTIVE_RANGE = DoubleRange.of(0.8, 1.2);
   public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
-  public static final double MAX_FORCE = 100d;
-  public static final ForceMethod FORCE_METHOD = ForceMethod.DISTANCE;
   @JsonProperty
   protected final double springF;
   @JsonProperty
@@ -86,15 +85,11 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   @JsonProperty
   private final double mass;
   @JsonProperty
-  private final boolean massCollisionFlag;
+  private final DoubleRange areaRatioPassiveRange;
   @JsonProperty
-  private final double areaRatioMaxDelta;
+  private final DoubleRange areaRatioActiveRange;
   @JsonProperty
   private final EnumSet<SpringScaffolding> springScaffoldings;
-  @JsonProperty
-  private final double maxForce; //not used in distance forceMethod
-  @JsonProperty
-  private final ForceMethod forceMethod;
   @JsonProperty
   private final List<Sensor> sensors;
 
@@ -104,10 +99,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   private transient double areaRatioEnergy;
   private transient double controlEnergy;
   private transient double lastAppliedForce;
-
-  public enum ForceMethod {
-    DISTANCE, FORCE
-  }
 
   @JsonCreator
   public Voxel(
@@ -120,11 +111,9 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       @JsonProperty("friction") double friction,
       @JsonProperty("restitution") double restitution,
       @JsonProperty("mass") double mass,
-      @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
-      @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
+      @JsonProperty("areaRatioPassiveRange") DoubleRange areaRatioPassiveRange,
+      @JsonProperty("areaRatioActiveRange") DoubleRange areaRatioActiveRange,
       @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
-      @JsonProperty("maxForce") double maxForce,
-      @JsonProperty("forceMethod") ForceMethod forceMethod,
       @JsonProperty("sensors") List<Sensor> sensors
   ) {
     this.sideLength = sideLength;
@@ -136,16 +125,22 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     this.friction = friction;
     this.restitution = restitution;
     this.mass = mass;
-    this.massCollisionFlag = massCollisionFlag;
-    this.areaRatioMaxDelta = areaRatioMaxDelta;
+    this.areaRatioPassiveRange = areaRatioPassiveRange;
+    this.areaRatioActiveRange = areaRatioActiveRange;
     this.springScaffoldings = springScaffoldings;
-    this.maxForce = maxForce;
-    this.forceMethod = forceMethod;
     this.sensors = sensors;
+    if (areaRatioPassiveRange.min() < ((2 * massSideLengthRatio) * (2 * massSideLengthRatio))) {
+      throw new IllegalArgumentException(String.format(
+          "Min of areaRatioPassiveRange=%f cannot be lower than the value (%f) imposed by massSideLengthRatio=%f",
+          areaRatioPassiveRange.min(),
+          (2 * massSideLengthRatio) * (2 * massSideLengthRatio),
+          massSideLengthRatio
+      ));
+    }
     assemble();
   }
 
-  public Voxel(double maxForce, ForceMethod forceMethod, List<Sensor> sensors) {
+  public Voxel(List<Sensor> sensors) {
     this(
         SIDE_LENGTH,
         MASS_SIDE_LENGTH_RATIO,
@@ -156,17 +151,11 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
         FRICTION,
         RESTITUTION,
         MASS,
-        MASS_COLLISION_FLAG,
-        AREA_RATIO_MAX_DELTA,
+        AREA_RATIO_PASSIVE_RANGE,
+        AREA_RATIO_ACTIVE_RANGE,
         SPRING_SCAFFOLDINGS,
-        maxForce,
-        forceMethod,
         sensors
     );
-  }
-
-  public Voxel(List<Sensor> sensors) {
-    this(MAX_FORCE, FORCE_METHOD, sensors);
   }
 
   public enum SpringScaffolding {
@@ -230,27 +219,12 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       f = Math.signum(f);
     }
     lastAppliedForce = f;
-    if (forceMethod.equals(ForceMethod.FORCE)) {
-      double xc = 0d;
-      double yc = 0d;
-      for (Body body : vertexBodies) {
-        xc = xc + body.getWorldCenter().x;
-        yc = yc + body.getWorldCenter().y;
-      }
-      xc = xc / (double) vertexBodies.length;
-      yc = yc / (double) vertexBodies.length;
-      for (Body body : vertexBodies) {
-        Vector2 force = (new Vector2(xc, yc)).subtract(body.getWorldCenter()).getNormalized().multiply(f * maxForce);
-        body.applyForce(force);
-      }
-    } else if (forceMethod.equals(ForceMethod.DISTANCE)) {
-      for (DistanceJoint<Body> joint : springJoints) {
-        Voxel.SpringRange range = (SpringRange) joint.getUserData();
-        if (f >= 0) { // shrink
-          joint.setRestDistance(range.rest - (range.rest - range.min) * f);
-        } else if (f < 0) { // expand
-          joint.setRestDistance(range.rest + (range.max - range.rest) * -f);
-        }
+    for (DistanceJoint<Body> joint : springJoints) {
+      Voxel.SpringRange range = (SpringRange) joint.getUserData();
+      if (f >= 0) { // shrink
+        joint.setRestDistance(range.rest - (range.rest - range.min) * f);
+      } else if (f < 0) { // expand
+        joint.setRestDistance(range.rest + (range.max - range.rest) * -f);
       }
     }
   }
@@ -288,7 +262,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   private void assemble() {
     //compute densities
     double massSideLength = sideLength * massSideLengthRatio;
-    double density = mass * massSideLength / massSideLength / 4;
+    double density = mass * massSideLength * massSideLength / 4;
     //build bodies
     vertexBodies = new Body[4];
     vertexBodies[0] = new Body(); //NW
@@ -308,25 +282,47 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       body.setLinearDamping(massLinearDamping);
       body.setAngularDamping(massAngularDamping);
     }
-    //build distance joints
+    //build distance joints constraints
     List<DistanceJoint<Body>> allSpringJoints = new ArrayList<>();
-    double minSideLength = Math.sqrt(sideLength * sideLength * (1d - areaRatioMaxDelta));
-    double maxSideLength = Math.sqrt(sideLength * sideLength * (1d + areaRatioMaxDelta));
-    SpringRange sideParallelRange = new SpringRange(
-        minSideLength - 2d * massSideLength,
+    DoubleRange passiveSideRange = DoubleRange.of(
+        Math.sqrt(sideLength * sideLength * areaRatioPassiveRange.min()),
+        Math.sqrt(sideLength * sideLength * areaRatioPassiveRange.max())
+    );
+    DoubleRange activeSideRange = DoubleRange.of(
+        Math.sqrt(sideLength * sideLength * areaRatioActiveRange.min()),
+        Math.sqrt(sideLength * sideLength * areaRatioActiveRange.max())
+    );
+    SpringRange sideParallelPassiveRange = new SpringRange(
+        passiveSideRange.min() - 2d * massSideLength,
         sideLength - 2d * massSideLength,
-        maxSideLength - 2d * massSideLength
+        passiveSideRange.max() - 2d * massSideLength
     );
-    SpringRange sideCrossRange = new SpringRange(
-        Math.sqrt(massSideLength * massSideLength + sideParallelRange.min * sideParallelRange.min),
-        Math.sqrt(massSideLength * massSideLength + sideParallelRange.rest * sideParallelRange.rest),
-        Math.sqrt(massSideLength * massSideLength + sideParallelRange.max * sideParallelRange.max)
+    SpringRange sideCrossPassiveRange = new SpringRange(
+        Math.sqrt(massSideLength * massSideLength + sideParallelPassiveRange.min * sideParallelPassiveRange.min),
+        Math.sqrt(massSideLength * massSideLength + sideParallelPassiveRange.rest * sideParallelPassiveRange.rest),
+        Math.sqrt(massSideLength * massSideLength + sideParallelPassiveRange.max * sideParallelPassiveRange.max)
     );
-    SpringRange centralCrossRange = new SpringRange(
-        (minSideLength - massSideLength) * Math.sqrt(2d),
+    SpringRange centralCrossPassiveRange = new SpringRange(
+        (passiveSideRange.min() - massSideLength) * Math.sqrt(2d),
         (sideLength - massSideLength) * Math.sqrt(2d),
-        (maxSideLength - massSideLength) * Math.sqrt(2d)
+        (passiveSideRange.max() - massSideLength) * Math.sqrt(2d)
     );
+    SpringRange sideParallelActiveRange = new SpringRange(
+        activeSideRange.min() - 2d * massSideLength,
+        sideLength - 2d * massSideLength,
+        activeSideRange.max() - 2d * massSideLength
+    );
+    SpringRange sideCrossActiveRange = new SpringRange(
+        Math.sqrt(massSideLength * massSideLength + sideParallelActiveRange.min * sideParallelActiveRange.min),
+        Math.sqrt(massSideLength * massSideLength + sideParallelActiveRange.rest * sideParallelActiveRange.rest),
+        Math.sqrt(massSideLength * massSideLength + sideParallelActiveRange.max * sideParallelActiveRange.max)
+    );
+    SpringRange centralCrossActiveRange = new SpringRange(
+        (activeSideRange.min() - massSideLength) * Math.sqrt(2d),
+        (sideLength - massSideLength) * Math.sqrt(2d),
+        (activeSideRange.max() - massSideLength) * Math.sqrt(2d)
+    );
+    //build distance joints
     if (springScaffoldings.contains(SpringScaffolding.SIDE_INTERNAL)) {
       List<DistanceJoint<Body>> localSpringJoints = new ArrayList<>();
       localSpringJoints.add(new DistanceJoint<>(
@@ -354,7 +350,15 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
           vertexBodies[0].getWorldCenter().copy().add(+massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint<Body> joint : localSpringJoints) {
-        joint.setUserData(sideParallelRange);
+        joint.setUserData(sideParallelActiveRange);
+        if (sideParallelPassiveRange.min > Double.NEGATIVE_INFINITY) {
+          joint.setLowerLimit(sideParallelPassiveRange.min);
+          joint.setLowerLimitEnabled(true);
+        }
+        if (sideParallelPassiveRange.max < Double.POSITIVE_INFINITY) {
+          joint.setUpperLimit(sideParallelPassiveRange.max);
+          joint.setUpperLimitEnabled(true);
+        }
       }
       allSpringJoints.addAll(localSpringJoints);
     }
@@ -385,7 +389,15 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
           vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint<Body> joint : localSpringJoints) {
-        joint.setUserData(sideParallelRange);
+        joint.setUserData(sideParallelActiveRange);
+        if (sideParallelPassiveRange.min > Double.NEGATIVE_INFINITY) {
+          joint.setLowerLimit(sideParallelPassiveRange.min);
+          joint.setLowerLimitEnabled(true);
+        }
+        if (sideParallelPassiveRange.max < Double.POSITIVE_INFINITY) {
+          joint.setUpperLimit(sideParallelPassiveRange.max);
+          joint.setUpperLimitEnabled(true);
+        }
       }
       allSpringJoints.addAll(localSpringJoints);
     }
@@ -440,7 +452,15 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
           vertexBodies[0].getWorldCenter().copy().add(-massSideLength / 2d, -massSideLength / 2d)
       ));
       for (DistanceJoint<Body> joint : localSpringJoints) {
-        joint.setUserData(sideCrossRange);
+        joint.setUserData(sideCrossActiveRange);
+        if (sideCrossPassiveRange.min > Double.NEGATIVE_INFINITY) {
+          joint.setLowerLimit(sideCrossPassiveRange.min);
+          joint.setLowerLimitEnabled(true);
+        }
+        if (sideCrossPassiveRange.max < Double.POSITIVE_INFINITY) {
+          joint.setUpperLimit(sideCrossPassiveRange.max);
+          joint.setUpperLimitEnabled(true);
+        }
       }
       allSpringJoints.addAll(localSpringJoints);
     }
@@ -459,7 +479,15 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
           vertexBodies[3].getWorldCenter()
       ));
       for (DistanceJoint<Body> joint : localSpringJoints) {
-        joint.setUserData(centralCrossRange);
+        joint.setUserData(centralCrossActiveRange);
+        if (centralCrossPassiveRange.min > Double.NEGATIVE_INFINITY) {
+          joint.setLowerLimit(centralCrossPassiveRange.min);
+          joint.setLowerLimitEnabled(true);
+        }
+        if (centralCrossPassiveRange.max < Double.POSITIVE_INFINITY) {
+          joint.setUpperLimit(centralCrossPassiveRange.max);
+          joint.setUpperLimitEnabled(true);
+        }
       }
       allSpringJoints.addAll(localSpringJoints);
     }
@@ -614,12 +642,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   }
 
   public void setOwner(Robot robot) {
-    Filter filter;
-    if (massCollisionFlag) {
-      filter = new ParentFilter(robot);
-    } else {
-      filter = new RobotFilter();
-    }
+    Filter filter = new RobotFilter();
     for (Body vertexBody : vertexBodies) {
       vertexBody.setUserData(robot);
       vertexBody.getFixture(0).setFilter(filter);
@@ -628,7 +651,21 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
 
   @Override
   public String toString() {
-    return "Voxel{" + "sideLength=" + sideLength + ", massSideLengthRatio=" + massSideLengthRatio + ", springF=" + springF + ", springD=" + springD + ", massLinearDamping=" + massLinearDamping + ", massAngularDamping=" + massAngularDamping + ", friction=" + friction + ", restitution=" + restitution + ", mass=" + mass + ", massCollisionFlag=" + massCollisionFlag + ", areaRatioMaxDelta=" + areaRatioMaxDelta + ", springScaffoldings=" + springScaffoldings + ", areaRatioEnergy=" + areaRatioEnergy + '}';
+    return "Voxel{" +
+        "springF=" + springF +
+        ", sideLength=" + sideLength +
+        ", massSideLengthRatio=" + massSideLengthRatio +
+        ", springD=" + springD +
+        ", massLinearDamping=" + massLinearDamping +
+        ", massAngularDamping=" + massAngularDamping +
+        ", friction=" + friction +
+        ", restitution=" + restitution +
+        ", mass=" + mass +
+        ", areaRatioPassiveRange=" + areaRatioPassiveRange +
+        ", areaRatioActiveRange=" + areaRatioActiveRange +
+        ", springScaffoldings=" + springScaffoldings +
+        ", sensors=" + sensors +
+        '}';
   }
 
   public void translate(Vector2 v) {

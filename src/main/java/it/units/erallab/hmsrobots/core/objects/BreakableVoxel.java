@@ -60,11 +60,9 @@ public class BreakableVoxel extends Voxel {
       @JsonProperty("friction") double friction,
       @JsonProperty("restitution") double restitution,
       @JsonProperty("mass") double mass,
-      @JsonProperty("massCollisionFlag") boolean massCollisionFlag,
-      @JsonProperty("areaRatioMaxDelta") double areaRatioMaxDelta,
+      @JsonProperty("areaRatioPassiveRange") DoubleRange areaRatioPassiveRange,
+      @JsonProperty("areaRatioActiveRange") DoubleRange areaRatioActiveRange,
       @JsonProperty("springScaffoldings") EnumSet<SpringScaffolding> springScaffoldings,
-      @JsonProperty("maxForce") double maxForce,
-      @JsonProperty("forceMethod") ForceMethod forceMethod,
       @JsonProperty("sensors") List<Sensor> sensors,
       @JsonProperty("randomSeed") long randomSeed,
       @JsonProperty("malfunctions") Map<ComponentType, Set<MalfunctionType>> malfunctions,
@@ -81,32 +79,11 @@ public class BreakableVoxel extends Voxel {
         friction,
         restitution,
         mass,
-        massCollisionFlag,
-        areaRatioMaxDelta,
+        areaRatioPassiveRange,
+        areaRatioActiveRange,
         springScaffoldings,
-        maxForce,
-        forceMethod,
         sensors
     );
-    this.randomSeed = randomSeed;
-    this.malfunctions = malfunctions;
-    this.triggerThresholds = triggerThresholds;
-    this.restoreTime = restoreTime;
-    triggerCounters = new EnumMap<>(MalfunctionTrigger.class);
-    state = new EnumMap<>(ComponentType.class);
-    reset();
-  }
-
-  public BreakableVoxel(
-      double maxForce,
-      ForceMethod forceMethod,
-      List<Sensor> sensors,
-      long randomSeed,
-      Map<ComponentType, Set<MalfunctionType>> malfunctions,
-      Map<MalfunctionTrigger, Double> triggerThresholds,
-      double restoreTime
-  ) {
-    super(maxForce, forceMethod, sensors);
     this.randomSeed = randomSeed;
     this.malfunctions = malfunctions;
     this.triggerThresholds = triggerThresholds;
@@ -250,17 +227,12 @@ public class BreakableVoxel extends Voxel {
 
   @Override
   public String toString() {
-    return "BreakableVoxel{" +
-        "malfunctions=" + malfunctions +
-        ", triggerThresholds=" + triggerThresholds +
-        ", restoreTime=" + restoreTime +
-        '}';
+    return "BreakableVoxel{" + "malfunctions=" + malfunctions + ", triggerThresholds=" + triggerThresholds + ", restoreTime=" + restoreTime + '}';
   }
 
   public boolean isBroken() {
-    return !state.get(ComponentType.ACTUATOR).equals(MalfunctionType.NONE)
-        || !state.get(ComponentType.SENSORS).equals(MalfunctionType.NONE)
-        || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
+    return !state.get(ComponentType.ACTUATOR).equals(MalfunctionType.NONE) || !state.get(ComponentType.SENSORS)
+        .equals(MalfunctionType.NONE) || !state.get(ComponentType.STRUCTURE).equals(MalfunctionType.NONE);
   }
 
   private double[] random(DoubleRange[] domains) {
