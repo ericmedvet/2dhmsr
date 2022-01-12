@@ -9,8 +9,8 @@ import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.*;
+import org.dyn4j.world.World;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Federico Pigozzi <pigozzife@gmail.com>
  */
-public class Balancing extends AbstractTask<Robot<?>, BalanceOutcome> {
+public class Balancing extends AbstractTask<Robot, BalanceOutcome> {
 
   private final double finalT;
   private final double angle;
@@ -39,10 +39,10 @@ public class Balancing extends AbstractTask<Robot<?>, BalanceOutcome> {
   }
 
   @Override
-  public BalanceOutcome apply(Robot<?> robot, SnapshotListener listener) {
+  public BalanceOutcome apply(Robot robot, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
-    World world = new World();
+    World<Body> world = new World<>();
     world.setSettings(settings);
     List<WorldObject> worldObjects = new ArrayList<>();
     Ground ground = new Ground(new double[]{-GROUND_HALF_LENGTH, GROUND_HALF_LENGTH}, new double[]{0, 0});
@@ -54,9 +54,9 @@ public class Balancing extends AbstractTask<Robot<?>, BalanceOutcome> {
     robot.reset();
     //position robot: translate on x
     BoundingBox boundingBox = robot.boundingBox();
-    robot.translate(new Vector2(placement - boundingBox.min.x, 0));
+    robot.translate(new Vector2(placement - boundingBox.min().x(), 0));
     double targetHeight = platformHeight + Swing.PLATFORM_HEIGHT;
-    robot.translate(new Vector2(0, Math.abs(boundingBox.min.y - targetHeight)));
+    robot.translate(new Vector2(0, Math.abs(boundingBox.min().y() - targetHeight)));
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
@@ -72,18 +72,18 @@ public class Balancing extends AbstractTask<Robot<?>, BalanceOutcome> {
       }
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       observations.put(t, new Outcome.Observation(
-              Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-              platformHeight,
-              (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+          Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
+          platformHeight,
+          (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
       angles.put(t, Math.abs(swing.getAngle()) / angle);
     }
     if (stopped) {
       while (t < finalT) {
         observations.put(t, new Outcome.Observation(
-                Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-                platformHeight,
-                (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+            Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
+            platformHeight,
+            (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
         ));
         angles.put(t, 1.0);
         t = t + settings.getStepFrequency();
@@ -94,13 +94,14 @@ public class Balancing extends AbstractTask<Robot<?>, BalanceOutcome> {
     return new BalanceOutcome(observations, angles);
   }
 
-  public boolean stopCondition(Robot<?> robot) {
-    for (Grid.Entry<?> voxel : robot.getVoxels()) {
-      if (voxel.getValue() == null) {
+  public boolean stopCondition(Robot robot) {
+    for (Grid.Entry<Voxel> entry : robot.getVoxels()) {
+      if (entry.value() == null) {
         continue;
       }
-      for (Body vertexBody : ((SensingVoxel) voxel.getValue()).getVertexBodies()) {
-        List<Body> inContactBodies = vertexBody.getInContactBodies(false);
+      Voxel voxel = entry.value();
+      for (Body vertexBody : voxel.getVertexBodies()) {
+        List<Body> inContactBodies = voxel.getWorld().getInContactBodies(vertexBody, false);
         for (Body inContactBody : inContactBodies) {
           if ((inContactBody.getUserData() != null) && (inContactBody.getUserData().equals(Ground.class))) {
             return true;
