@@ -17,9 +17,8 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.*;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
-import org.apache.commons.math3.util.Pair;
 
 import java.io.Serializable;
 import java.util.*;
@@ -28,7 +27,57 @@ import java.util.stream.Collectors;
 /**
  * @author federico
  */
-public class SelfOrganizing implements Controller<SensingVoxel> {
+public class SelfOrganizing implements Controller {
+
+  @JsonProperty
+  private final Map<Integer, Neuron> neurons;
+
+  @JsonCreator
+  public SelfOrganizing(@JsonProperty("neurons") Map<Integer, Neuron> neurons) {
+    this.neurons = new HashMap<>();
+    for (Neuron entry : neurons.values()) {
+      copyNeuron(entry);
+    }
+  }
+
+  public SelfOrganizing(SelfOrganizing other) {
+    this(other.getNeuronsMap());
+  }
+
+  public static class ActuatorNeuron extends Neuron {
+
+    @JsonCreator
+    public ActuatorNeuron(
+        @JsonProperty("index") int idx,
+        @JsonProperty("x") int coord1,
+        @JsonProperty("y") int coord2
+    ) {
+      super(idx, coord1, coord2, MultiLayerPerceptron.ActivationFunction.TANH);
+    }
+
+    @Override
+    public void forward(Grid<Voxel> voxels, SelfOrganizing controller) {
+      Voxel voxel = voxels.get(x, y);
+      message = function.apply(ingoingEdges.stream().mapToDouble(e -> propagate(e, controller)).sum());
+      voxel.applyForce(message);
+    }
+
+    @Override
+    public boolean isActuator() {
+      return true;
+    }
+
+    @Override
+    public boolean isSensing() {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return super.toString().replace("Neuron", "Neuron.Actuator.");
+    }
+
+  }
 
   public static class Edge implements Serializable {
 
@@ -42,10 +91,12 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     private double bias;
 
     @JsonCreator
-    public Edge(@JsonProperty("source") int s,
-                @JsonProperty("target") int t,
-                @JsonProperty("weight") double w,
-                @JsonProperty("bias") double b) {
+    public Edge(
+        @JsonProperty("source") int s,
+        @JsonProperty("target") int t,
+        @JsonProperty("weight") double w,
+        @JsonProperty("bias") double b
+    ) {
       source = s;
       target = t;
       weight = w;
@@ -70,21 +121,57 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Edge edge = (Edge) o;
-      return source == edge.source && target == edge.target;
-    }
-
-    @Override
     public int hashCode() {
       return Objects.hash(source, target);
     }
 
     @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      Edge edge = (Edge) o;
+      return source == edge.source && target == edge.target;
+    }
+
+    @Override
     public String toString() {
       return "Edge{" + String.join(",", String.valueOf(source), String.valueOf(target)) + "}";
+    }
+
+  }
+
+  public static class HiddenNeuron extends Neuron {
+
+    @JsonCreator
+    public HiddenNeuron(
+        @JsonProperty("index") int idx,
+        @JsonProperty("x") int coord1,
+        @JsonProperty("y") int coord2,
+        @JsonProperty("function") MultiLayerPerceptron.ActivationFunction a
+    ) {
+      super(idx, coord1, coord2, a);
+    }
+
+    @Override
+    public void forward(Grid<Voxel> voxels, SelfOrganizing controller) {
+      message = function.apply(ingoingEdges.stream().mapToDouble(e -> propagate(e, controller)).sum());
+    }
+
+    @Override
+    public boolean isActuator() {
+      return false;
+    }
+
+    @Override
+    public boolean isSensing() {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return super.toString().replace("Neuron", "Neuron.Hidden.");
     }
 
   }
@@ -114,51 +201,36 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     protected transient double cache;
 
     @JsonCreator
-    public Neuron(@JsonProperty("index") int idx,
-                  @JsonProperty("x") int coord1,
-                  @JsonProperty("y") int coord2,
-                  @JsonProperty("function") MultiLayerPerceptron.ActivationFunction a) {
+    public Neuron(
+        @JsonProperty("index") int idx,
+        @JsonProperty("x") int x,
+        @JsonProperty("y") int y,
+        @JsonProperty("function") MultiLayerPerceptron.ActivationFunction function
+    ) {
       index = idx;
-      x = coord1;
-      y = coord2;
-      function = a;
+      this.x = x;
+      this.y = y;
+      this.function = function;
       ingoingEdges = new ArrayList<>();
       resetState();
     }
 
-    public abstract void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller);
+    public abstract void forward(Grid<Voxel> voxels, SelfOrganizing controller);
 
     public abstract boolean isActuator();
 
     public abstract boolean isSensing();
 
-    public boolean isHidden() {
-      return !(isSensing() || isActuator());
-    }
-
-    protected double propagate(SelfOrganizing.Edge e, SelfOrganizing controller) {
-      double[] params = e.getParams();
-      return controller.getNeuronsMap().get(e.getSource()).send() * params[0] + params[1];
+    public void addIngoingEdge(SelfOrganizing.Edge e) {
+      ingoingEdges.add(e);
     }
 
     public void advance() {
       cache = message;
     }
 
-    public double send() {
-      return cache;
-    }
-
-    public boolean hasInNeighbour(int other) {
-      return ingoingEdges.stream().mapToInt(Edge::getSource).anyMatch(i -> i == other);
-    }
-
     public MultiLayerPerceptron.ActivationFunction getActivation() {
       return function;
-    }
-
-    public void addIngoingEdge(SelfOrganizing.Edge e) {
-      ingoingEdges.add(e);
     }
 
     public int getIndex() {
@@ -177,17 +249,8 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
       return y;
     }
 
-    public void resetState() {
-      message = 0.0;
-      cache = 0.0;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Neuron neuron = (Neuron) o;
-      return index == neuron.index;
+    public boolean hasInNeighbour(int other) {
+      return ingoingEdges.stream().mapToInt(Edge::getSource).anyMatch(i -> i == other);
     }
 
     @Override
@@ -196,43 +259,39 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
 
     @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      Neuron neuron = (Neuron) o;
+      return index == neuron.index;
+    }
+
+    @Override
     public String toString() {
       return "Neuron." + function.toString().toLowerCase() + "{" + String.join(",", String.valueOf(index),
           String.valueOf(x), String.valueOf(y),
-          "[" + String.join(",", ingoingEdges.stream().map(Edge::toString).toArray(String[]::new)) + "]") + "}";
+          "[" + String.join(",", ingoingEdges.stream().map(Edge::toString).toArray(String[]::new)) + "]"
+      ) + "}";
     }
 
-  }
-
-  public static class ActuatorNeuron extends Neuron {
-
-    @JsonCreator
-    public ActuatorNeuron(@JsonProperty("index") int idx,
-                          @JsonProperty("x") int coord1,
-                          @JsonProperty("y") int coord2) {
-      super(idx, coord1, coord2, MultiLayerPerceptron.ActivationFunction.TANH);
+    public boolean isHidden() {
+      return !(isSensing() || isActuator());
     }
 
-    @Override
-    public void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller) {
-      SensingVoxel voxel = voxels.get(x, y);
-      message = function.apply(ingoingEdges.stream().mapToDouble(e -> propagate(e, controller)).sum());
-      voxel.applyForce(message);
+    protected double propagate(SelfOrganizing.Edge e, SelfOrganizing controller) {
+      double[] params = e.getParams();
+      return controller.getNeuronsMap().get(e.getSource()).send() * params[0] + params[1];
     }
 
-    @Override
-    public boolean isActuator() {
-      return true;
+    public void resetState() {
+      message = 0.0;
+      cache = 0.0;
     }
 
-    @Override
-    public boolean isSensing() {
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return super.toString().replace("Neuron", "Neuron.Actuator.");
+    public double send() {
+      return cache;
     }
 
   }
@@ -243,23 +302,26 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     private final int numSensor;
 
     @JsonCreator
-    public SensingNeuron(@JsonProperty("index") int idx,
-                         @JsonProperty("x") int coord1,
-                         @JsonProperty("y") int coord2,
-                         @JsonProperty("numSensor") int s) {
+    public SensingNeuron(
+        @JsonProperty("index") int idx,
+        @JsonProperty("x") int coord1,
+        @JsonProperty("y") int coord2,
+        @JsonProperty("numSensor") int s
+    ) {
       super(idx, coord1, coord2, MultiLayerPerceptron.ActivationFunction.TANH);
       numSensor = s;
     }
 
-    public int getNumSensor() {
-      return numSensor;
+    @Override
+    public void forward(Grid<Voxel> voxels, SelfOrganizing controller) {
+      Voxel voxel = voxels.get(x, y);
+      message = function.apply(voxel.getSensors().stream().flatMapToDouble(x -> Arrays.stream(x.getReadings()))
+          .toArray()[numSensor]);
     }
 
     @Override
-    public void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller) {
-      SensingVoxel voxel = voxels.get(x, y);
-      message = function.apply(voxel.getSensors().stream().flatMapToDouble(x -> Arrays.stream(x.getReadings()))
-          .toArray()[numSensor]);
+    public boolean isActuator() {
+      return false;
     }
 
     @Override
@@ -268,74 +330,49 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
 
     @Override
-    public boolean isActuator() {
-      return false;
-    }
-
-    @Override
     public String toString() {
       return super.toString().replace("Neuron", "Neuron.Sensing.");
     }
 
-  }
-
-  public static class HiddenNeuron extends Neuron {
-
-    @JsonCreator
-    public HiddenNeuron(@JsonProperty("index") int idx,
-                        @JsonProperty("x") int coord1,
-                        @JsonProperty("y") int coord2,
-                        @JsonProperty("function") MultiLayerPerceptron.ActivationFunction a) {
-      super(idx, coord1, coord2, a);
-    }
-
-    @Override
-    public void forward(Grid<? extends SensingVoxel> voxels, SelfOrganizing controller) {
-      message = function.apply(ingoingEdges.stream().mapToDouble(e -> propagate(e, controller)).sum());
-    }
-
-    @Override
-    public boolean isActuator() {
-      return false;
-    }
-
-    @Override
-    public boolean isSensing() {
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return super.toString().replace("Neuron", "Neuron.Hidden.");
+    public int getNumSensor() {
+      return numSensor;
     }
 
   }
 
-  @JsonProperty
-  private final Map<Integer, Neuron> neurons;
+  public Neuron addActuatorNeuron(int x, int y) {
+    int idx = getFirstAvailableIndex();
+    Neuron newNeuron = new ActuatorNeuron(idx, x, y);
+    neurons.put(idx, newNeuron);
+    return newNeuron;
+  }
 
-  @JsonCreator
-  public SelfOrganizing(@JsonProperty("neurons") Map<Integer, Neuron> neurons) {
-    this.neurons = new HashMap<>();
-    for (Neuron entry : neurons.values()) {
-      copyNeuron(entry);
+  public void addEdge(int source, int dest, double weight, double bias) {
+    if (neurons.get(dest).hasInNeighbour(source)) {
+      throw new RuntimeException(String.format("Adding already-present edge: [%d,%d]", source, dest));
     }
+    Edge edge = new Edge(source, dest, weight, bias);
+    neurons.get(dest).addIngoingEdge(edge);
   }
 
-  public SelfOrganizing(SelfOrganizing other) {
-    this(other.getNeuronsMap());
+  public Neuron addHiddenNeuron(MultiLayerPerceptron.ActivationFunction a, int x, int y) {
+    int idx = getFirstAvailableIndex();
+    Neuron newNeuron = new HiddenNeuron(idx, x, y, a);
+    neurons.put(idx, newNeuron);
+    return newNeuron;
   }
 
-  public Map<Integer, Neuron> getNeuronsMap() {
-    return neurons;
+  public Neuron addSensingNeuron(int x, int y, int s) {
+    int idx = getFirstAvailableIndex();
+    Neuron newNeuron = new SensingNeuron(idx, x, y, s);
+    neurons.put(idx, newNeuron);
+    return newNeuron;
   }
 
-  public List<Neuron> getNeurons() {
-    return neurons.values().stream().collect(Collectors.toUnmodifiableList());
-  }
-
-  public List<Edge> getEdges() {
-    return neurons.values().stream().flatMap(n -> n.getIngoingEdges().stream()).collect(Collectors.toUnmodifiableList());
+  @Override
+  public void control(double t, Grid<Voxel> voxels) {
+    getNeurons().forEach(n -> n.forward(voxels, this));
+    getNeurons().forEach(Neuron::advance);
   }
 
   public void copyNeuron(Neuron neuron) {
@@ -359,25 +396,10 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     }
   }
 
-  public Neuron addHiddenNeuron(MultiLayerPerceptron.ActivationFunction a, int x, int y) {
-    int idx = getFirstAvailableIndex();
-    Neuron newNeuron = new HiddenNeuron(idx, x, y, a);
-    neurons.put(idx, newNeuron);
-    return newNeuron;
-  }
-
-  public Neuron addActuatorNeuron(int x, int y) {
-    int idx = getFirstAvailableIndex();
-    Neuron newNeuron = new ActuatorNeuron(idx, x, y);
-    neurons.put(idx, newNeuron);
-    return newNeuron;
-  }
-
-  public Neuron addSensingNeuron(int x, int y, int s) {
-    int idx = getFirstAvailableIndex();
-    Neuron newNeuron = new SensingNeuron(idx, x, y, s);
-    neurons.put(idx, newNeuron);
-    return newNeuron;
+  public List<Edge> getEdges() {
+    return neurons.values()
+        .stream()
+        .flatMap(n -> n.getIngoingEdges().stream()).toList();
   }
 
   private int getFirstAvailableIndex() {
@@ -389,29 +411,12 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     return neurons.size();
   }
 
-  public void removeNeuron(Neuron neuron) {
-    for (Edge edge : getEdges()) {
-      if (edge.getSource() == neuron.getIndex() || edge.getTarget() == neuron.getIndex()) {
-        removeEdge(edge);
-      }
-    }
-    neurons.remove(neuron.getIndex());
+  public List<Neuron> getNeurons() {
+    return neurons.values().stream().toList();
   }
 
-  public void addEdge(int source, int dest, double weight, double bias) {
-    if (neurons.get(dest).hasInNeighbour(source)) {
-      throw new RuntimeException(String.format("Adding already-present edge: [%d,%d]", source, dest));
-    }
-    Edge edge = new Edge(source, dest, weight, bias);
-    neurons.get(dest).addIngoingEdge(edge);
-  }
-
-  public void removeEdge(Edge edge) {
-    removeEdge(edge.getSource(), edge.getTarget());
-  }
-
-  public void removeEdge(int source, int target) {
-    neurons.get(target).getIngoingEdges().removeIf(e -> e.getSource() == source);
+  public Map<Integer, Neuron> getNeuronsMap() {
+    return neurons;
   }
 
   public List<Edge> getOutgoingEdges(Neuron neuron) {
@@ -428,14 +433,25 @@ public class SelfOrganizing implements Controller<SensingVoxel> {
     return out;
   }
 
-  public Pair[] getValidAndDistinctCoordinates() {
-    return getNeurons().stream().map(n -> new Pair<>(n.getX(), n.getY())).distinct().toArray(Pair[]::new);
+  public Grid.Key[] getValidAndDistinctCoordinates() {
+    return getNeurons().stream().map(n -> new Grid.Key(n.getX(), n.getY())).distinct().toArray(Grid.Key[]::new);
   }
 
-  @Override
-  public void control(double t, Grid<? extends SensingVoxel> voxels) {
-    getNeurons().forEach(n -> n.forward(voxels, this));
-    getNeurons().forEach(Neuron::advance);
+  public void removeEdge(Edge edge) {
+    removeEdge(edge.getSource(), edge.getTarget());
+  }
+
+  public void removeEdge(int source, int target) {
+    neurons.get(target).getIngoingEdges().removeIf(e -> e.getSource() == source);
+  }
+
+  public void removeNeuron(Neuron neuron) {
+    for (Edge edge : getEdges()) {
+      if (edge.getSource() == neuron.getIndex() || edge.getTarget() == neuron.getIndex()) {
+        removeEdge(edge);
+      }
+    }
+    neurons.remove(neuron.getIndex());
   }
 
   @Override

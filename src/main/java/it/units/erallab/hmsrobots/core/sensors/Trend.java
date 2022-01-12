@@ -18,7 +18,7 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 import java.util.Arrays;
 
@@ -26,18 +26,11 @@ public class Trend extends AggregatorSensor {
 
   @JsonCreator
   public Trend(
-      @JsonProperty("sensor") Sensor sensor,
-      @JsonProperty("interval") double interval
+      @JsonProperty("sensor") Sensor sensor, @JsonProperty("interval") double interval
   ) {
-    super(
-        Arrays.stream(sensor.getDomains())
-            .map(d -> Domain.of(
-                -Math.abs(d.getMax() - d.getMin()) / interval,
-                Math.abs(d.getMax() - d.getMin()) / interval
-            )).toArray(Domain[]::new),
-        sensor,
-        interval
-    );
+    super(Arrays.stream(sensor.getDomains())
+        .map(d -> DoubleRange.of(-d.extent() / interval, d.extent() / interval))
+        .toArray(DoubleRange[]::new), sensor, interval);
     reset();
   }
 

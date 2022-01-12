@@ -19,13 +19,13 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public class StepController<V extends ControllableVoxel> extends AbstractController<V> {
+public class StepController extends AbstractController {
 
   @JsonProperty
-  private final AbstractController<V> innerController;
+  private final AbstractController innerController;
   @JsonProperty
   private final double stepT;
 
@@ -34,14 +34,15 @@ public class StepController<V extends ControllableVoxel> extends AbstractControl
 
   @JsonCreator
   public StepController(
-      @JsonProperty("innerController") AbstractController<V> innerController,
-      @JsonProperty("stepT") double stepT) {
+      @JsonProperty("innerController") AbstractController innerController,
+      @JsonProperty("stepT") double stepT
+  ) {
     this.innerController = innerController;
     this.stepT = stepT;
   }
 
   @Override
-  public Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels) {
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
     Grid<Double> controlSignals = innerController.computeControlSignals(t, voxels);
     if (t - lastT >= stepT || lastControlSignals == null) {
       lastControlSignals = Grid.create(controlSignals, v -> v);

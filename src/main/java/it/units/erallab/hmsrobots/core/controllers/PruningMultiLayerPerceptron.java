@@ -18,22 +18,11 @@
 package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.math3.util.Pair;
 
+import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable {
-
-  public enum Context {NETWORK, LAYER, NEURON}
-
-  public enum Criterion {
-    WEIGHT,
-    SIGNAL_MEAN,
-    ABS_SIGNAL_MEAN,
-    SIGNAL_VARIANCE,
-    RANDOM
-  }
+public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable, Serializable {
 
   @JsonProperty
   private final double pruningTime;
@@ -43,14 +32,14 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   private final Criterion criterion;
   @JsonProperty
   private final double rate;
-
   private boolean pruned;
   private long counter;
-
   private double[][][] prunedWeights;
   private double[][][] means;
   private double[][][] absMeans;
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
+
+  private record PruningPair(int[] indexes, double value) {}
 
   public PruningMultiLayerPerceptron(
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
@@ -69,7 +58,17 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     reset();
   }
 
-  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double[] weights, double pruningTime, Context context, Criterion criterion, double rate) {
+  public PruningMultiLayerPerceptron(
+      ActivationFunction activationFunction,
+      int nOfInput,
+      int[] innerNeurons,
+      int nOfOutput,
+      double[] weights,
+      double pruningTime,
+      Context context,
+      Criterion criterion,
+      double rate
+  ) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput, weights);
     this.pruningTime = pruningTime;
     this.context = context;
@@ -78,7 +77,16 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     reset();
   }
 
-  public PruningMultiLayerPerceptron(ActivationFunction activationFunction, int nOfInput, int[] innerNeurons, int nOfOutput, double pruningTime, Context context, Criterion criterion, double rate) {
+  public PruningMultiLayerPerceptron(
+      ActivationFunction activationFunction,
+      int nOfInput,
+      int[] innerNeurons,
+      int nOfOutput,
+      double pruningTime,
+      Context context,
+      Criterion criterion,
+      double rate
+  ) {
     super(activationFunction, nOfInput, innerNeurons, nOfOutput);
     this.pruningTime = pruningTime;
     this.context = context;
@@ -87,10 +95,101 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     reset();
   }
 
+  public enum Context {NETWORK, LAYER, NEURON}
+
+  public enum Criterion {
+    WEIGHT,
+    SIGNAL_MEAN,
+    ABS_SIGNAL_MEAN,
+    SIGNAL_VARIANCE,
+    RANDOM
+  }
+
   @Override
-  public void setParams(double[] params) {
-    super.setParams(params);
-    reset();
+  public double[] apply(double t, double[] input) {
+    if (t >= pruningTime) {
+      prune();
+    }
+    if (input.length != neurons[0]) {
+      throw new IllegalArgumentException(String.format(
+          "Expected input length is %d: found %d",
+          neurons[0],
+          input.length
+      ));
+    }
+    activationValues[0] = Arrays.stream(input).map(activationFunction::apply).toArray();
+    for (int i = 1; i < neurons.length; i++) {
+      activationValues[i] = new double[neurons[i]];
+      for (int j = 0; j < neurons[i]; j++) {
+        double sum = prunedWeights[i - 1][j][0]; //set the bias
+        for (int k = 1; k < neurons[i - 1] + 1; k++) {
+          double signal = activationValues[i - 1][k - 1] * prunedWeights[i - 1][j][k];
+          sum = sum + signal;
+          double delta = signal - means[i - 1][j][k];
+          means[i - 1][j][k] = means[i - 1][j][k] + delta / ((double) counter + 1d);
+          absMeans[i - 1][j][k] = absMeans[i - 1][j][k] + (Math.abs(signal) - absMeans[i - 1][j][k]) / ((double) counter + 1d);
+          meanDiffSquareSums[i - 1][j][k] = meanDiffSquareSums[i - 1][j][k] + delta * (signal - means[i - 1][j][k]);
+        }
+        activationValues[i][j] = activationFunction.apply(sum);
+      }
+    }
+    counter = counter + 1;
+    return activationValues[neurons.length - 1];
+  }
+
+  private void prune(List<PruningPair> localPairs) {
+    localPairs.sort(Comparator.comparing(PruningPair::value));
+    localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.indexes()));
+  }
+
+  private void prune(int[] is) {
+    int i = is[0];
+    int j = is[1];
+    int k = is[2];
+    prunedWeights[i - 1][j][k] = 0d;
+    if (criterion.equals(Criterion.SIGNAL_VARIANCE) && k != 0) {
+      prunedWeights[i - 1][j][0] = prunedWeights[i - 1][j][0] + prunedWeights[i - 1][j][k];
+    }
+  }
+
+  private void prune() {
+    pruned = true;
+    List<PruningPair> pairs = new ArrayList<>();
+    Random random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
+    for (int i = 1; i < neurons.length; i++) {
+      for (int j = 0; j < neurons[i]; j++) {
+        for (int k = 0; k < neurons[i - 1] + 1; k++) {
+          pairs.add(new PruningPair(
+              new int[]{i, j, k},
+              switch (criterion) {
+                case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
+                case SIGNAL_MEAN -> means[i - 1][j][k];
+                case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
+                case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
+                case RANDOM -> random.nextDouble();
+              }
+          ));
+        }
+      }
+    }
+    if (context.equals(Context.NETWORK)) {
+      prune(pairs);
+    } else if (context.equals(Context.LAYER)) {
+      for (int i = 1; i < neurons.length; i++) {
+        final int localI = i;
+        prune(pairs.stream().filter(p -> p.indexes()[0] == localI).toList());
+      }
+    } else if (context.equals(Context.NEURON)) {
+      for (int i = 1; i < neurons.length; i++) {
+        for (int j = 0; j < neurons[i]; j++) {
+          final int localI = i;
+          final int localJ = j;
+          prune(pairs.stream()
+              .filter(p -> p.indexes()[0] == localI && p.indexes()[1] == localJ)
+              .toList());
+        }
+      }
+    }
   }
 
   @Override
@@ -123,85 +222,10 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     }
   }
 
-  private void prune() {
-    pruned = true;
-    List<Pair<int[], Double>> pairs = new ArrayList<>();
-    Random random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
-    for (int i = 1; i < neurons.length; i++) {
-      for (int j = 0; j < neurons[i]; j++) {
-        for (int k = 0; k < neurons[i - 1] + 1; k++) {
-          pairs.add(Pair.create(
-              new int[]{i, j, k},
-              switch (criterion) {
-                case WEIGHT -> Math.abs(prunedWeights[i - 1][j][k]);
-                case SIGNAL_MEAN -> means[i - 1][j][k];
-                case ABS_SIGNAL_MEAN -> absMeans[i - 1][j][k];
-                case SIGNAL_VARIANCE -> meanDiffSquareSums[i - 1][j][k];
-                case RANDOM -> random.nextDouble();
-              }
-          ));
-        }
-      }
-    }
-    if (context.equals(Context.NETWORK)) {
-      prune(pairs);
-    } else if (context.equals(Context.LAYER)) {
-      for (int i = 1; i < neurons.length; i++) {
-        final int localI = i;
-        prune(pairs.stream().filter(p -> p.getKey()[0] == localI).collect(Collectors.toList()));
-      }
-    } else if (context.equals(Context.NEURON)) {
-      for (int i = 1; i < neurons.length; i++) {
-        for (int j = 0; j < neurons[i]; j++) {
-          final int localI = i;
-          final int localJ = j;
-          prune(pairs.stream().filter(p -> p.getKey()[0] == localI && p.getKey()[1] == localJ).collect(Collectors.toList()));
-        }
-      }
-    }
-  }
-
-  private void prune(List<Pair<int[], Double>> localPairs) {
-    localPairs.sort(Comparator.comparing(Pair::getValue));
-    localPairs.subList(0, (int) Math.round(localPairs.size() * rate)).forEach(p -> prune(p.getKey()));
-  }
-
-  private void prune(int[] is) {
-    int i = is[0];
-    int j = is[1];
-    int k = is[2];
-    prunedWeights[i - 1][j][k] = 0d;
-    if (criterion.equals(Criterion.SIGNAL_VARIANCE) && k != 0) {
-      prunedWeights[i - 1][j][0] = prunedWeights[i - 1][j][0] + prunedWeights[i - 1][j][k];
-    }
-  }
-
   @Override
-  public double[] apply(double t, double[] input) {
-    if (t >= pruningTime) {
-      prune();
-    }
-    if (input.length != neurons[0]) {
-      throw new IllegalArgumentException(String.format("Expected input length is %d: found %d", neurons[0], input.length));
-    }
-    activationValues[0] = Arrays.stream(input).map(activationFunction::apply).toArray();
-    for (int i = 1; i < neurons.length; i++) {
-      activationValues[i] = new double[neurons[i]];
-      for (int j = 0; j < neurons[i]; j++) {
-        double sum = prunedWeights[i - 1][j][0]; //set the bias
-        for (int k = 1; k < neurons[i - 1] + 1; k++) {
-          double signal = activationValues[i - 1][k - 1] * prunedWeights[i - 1][j][k];
-          sum = sum + signal;
-          double delta = signal - means[i - 1][j][k];
-          means[i - 1][j][k] = means[i - 1][j][k] + delta / ((double) counter + 1d);
-          absMeans[i - 1][j][k] = absMeans[i - 1][j][k] + (Math.abs(signal) - absMeans[i - 1][j][k]) / ((double) counter + 1d);
-          meanDiffSquareSums[i - 1][j][k] = meanDiffSquareSums[i - 1][j][k] + delta * (signal - means[i - 1][j][k]);
-        }
-        activationValues[i][j] = activationFunction.apply(sum);
-      }
-    }
-    counter = counter + 1;
-    return activationValues[neurons.length - 1];
+  public void setParams(double[] params) {
+    super.setParams(params);
+    reset();
   }
 
   @Override

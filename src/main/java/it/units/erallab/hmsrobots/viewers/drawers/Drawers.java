@@ -37,95 +37,16 @@ public class Drawers {
   private Drawers() {
   }
 
-  public static Drawer world() {
-    return Drawer.transform(
-        new AllRobotFollower(1.5d, 2),
-        Drawer.of(
-            new TargetDrawer(SubtreeDrawer.Extractor.matches(null, DistanceBasedDevoLocomotion.CurrentTarget.class, null)),
-            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, RigidBody.class, null)),
-            new VoxelDrawer(),
-            new SensorReadingsSectorDrawer(),
-            new LidarDrawer()
-        )
-    );
-  }
-
-  public static Drawer miniWorld() {
-    return Drawer.transform(
-        new AllRobotFollower(5, 4),
-        Drawer.of(
-            new PolyDrawer(SubtreeDrawer.Extractor.matches(null, RigidBody.class, null)),
-            new VoxelDrawer()
-        )
-    );
-  }
-
-  public static Drawer signalAndSpectrum(int robotIndex, double windowT, double minF, double maxF, int nBins, String title, Supplier<Function<Snapshot, Double>> functionSupplier) {
-    return Drawer.of(
-        Drawer.clip(
-            BoundingBox.of(0d, 0d, 1d, .5d),
-            Drawer.of(
-                Drawer.clear(),
-                new SignalDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
-                    functionSupplier.get(),
-                    windowT
-                ),
-                Drawer.text(title)
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(0d, 0.5d, 1d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new SpectrumDrawer(
-                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
-                    functionSupplier.get(),
-                    windowT, minF, maxF, nBins
-                )
-            )
-        )
-    );
-  }
-
-  public static Drawer spectra(int robotIndex, double windowT, double minF, double maxF, int nBins) {
-    return Drawer.of(
-        Drawer.clip(
-            BoundingBox.of(0d, 0d, .333d, 1d),
-            signalAndSpectrum(
-                robotIndex, windowT, minF, maxF, nBins, "vx",
-                () -> BehaviorUtils.voxelPolyGrid()
-                    .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(p -> p.getLinearVelocity().x)
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(0.333d, 0d, .666d, 1d),
-            signalAndSpectrum(
-                robotIndex, windowT, minF, maxF, nBins, "vy",
-                () -> BehaviorUtils.voxelPolyGrid()
-                    .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(p -> p.getLinearVelocity().y)
-            )
-        ),
-        Drawer.clip(
-            BoundingBox.of(0.666d, 0d, 1d, 1d),
-            signalAndSpectrum(
-                robotIndex, windowT, minF, maxF, nBins, "angle",
-                () -> BehaviorUtils.voxelPolyGrid()
-                    .andThen(BehaviorUtils::getCentralElement)
-                    .andThen(VoxelPoly::getAngle)
-            )
-        )
-    );
-  }
-
   public static Drawer basic(String string) {
     return Drawer.of(
         Drawer.clear(),
         world(),
         new InfoDrawer(string)
     );
+  }
+
+  public static Drawer basic() {
+    return basic("");
   }
 
   public static Drawer basicWithMiniWorld(String string) {
@@ -140,46 +61,58 @@ public class Drawers {
     );
   }
 
-  public static Drawer footprintsAndPosture(int robotIndex, double windowT, int nFootprint, int nPosture) {
+  public static Drawer basicWithMiniWorld() {
+    return basicWithMiniWorld("");
+  }
+
+  public static Drawer basicWithMiniWorldAndBrain(String string) {
     return Drawer.of(
         Drawer.clip(
-            BoundingBox.of(0d, 0.0d, .666d, 1d),
-            new FootprintDrawer(
-                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
-                windowT,
-                nFootprint
-            )
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld()
         ),
         Drawer.clip(
-            BoundingBox.of(0.666d, 0.0d, 1d, 1d),
-            new PostureDrawer(
-                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
-                windowT,
-                nPosture,
-                true
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d,
+                    Set.of(
+                        MLPDrawer.Part.ACTIVATION_VALUES,
+                        MLPDrawer.Part.WEIGHTS,
+                        MLPDrawer.Part.LEGEND,
+                        MLPDrawer.Part.T_AXIS,
+                        MLPDrawer.Part.STRUCTURE_AXIS,
+                        MLPDrawer.Part.HISTOGRAM
+                    )
+                )
             )
         )
     );
   }
 
-  public static Drawer basicWithMiniWorldAndSpectra(String string) {
+  public static Drawer basicWithMiniWorldAndBrainUsage(String string) {
     return Drawer.of(
-        Drawer.clear(),
         Drawer.clip(
-            BoundingBox.of(0d, 0.0d, 1d, 0.5d),
-            Drawer.of(
-                world(),
-                Drawer.clip(
-                    BoundingBox.of(0.5d, 0.01d, 0.95d, 0.2d),
-                    miniWorld()
-                )
-            )
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld()
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
-            spectra(0, 5, 0, 2, 8)
-        ),
-        new InfoDrawer(string)
+            Drawer.of(
+                Drawer.clear(),
+                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d,
+                    Set.of(
+                        MLPDrawer.Part.ACTIVATION_VALUES,
+                        MLPDrawer.Part.WEIGHTS,
+                        MLPDrawer.Part.VARIANCE_AND_WEIGHTS,
+                        MLPDrawer.Part.LEGEND,
+                        MLPDrawer.Part.T_AXIS,
+                        MLPDrawer.Part.STRUCTURE_AXIS,
+                        MLPDrawer.Part.HISTOGRAM
+                    )
+                )
+            )
+        )
     );
   }
 
@@ -204,18 +137,90 @@ public class Drawers {
     );
   }
 
-  public static Drawer basicWithMiniWorldAndBrainUsage(String string) {
+  public static Drawer basicWithMiniWorldAndSpectra(String string) {
+    return Drawer.of(
+        Drawer.clear(),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.0d, 1d, 0.5d),
+            Drawer.of(
+                world(),
+                Drawer.clip(
+                    BoundingBox.of(0.5d, 0.01d, 0.95d, 0.2d),
+                    miniWorld()
+                )
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            spectra(0, 5, 0, 2, 8)
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer footprintsAndPosture(int robotIndex, double windowT, int nFootprint, int nPosture) {
     return Drawer.of(
         Drawer.clip(
-            BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld()
+            BoundingBox.of(0d, 0.0d, .666d, 1d),
+            new FootprintDrawer(
+                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
+                windowT,
+                nFootprint
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.666d, 0.0d, 1d, 1d),
+            new PostureDrawer(
+                SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
+                windowT,
+                nPosture,
+                true
+            )
+        ),
+        new InfoDrawer(string)
+    );
+  }
+
+  public static Drawer miniWorld() {
+    return Drawer.transform(
+        new AllRobotFollower(5, 4),
+        Drawer.of(
+            new PolyDrawer(SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+            new VoxelDrawer()
+        )
+    );
+  }
+
+  public static Drawer signalAndSpectrum(
+      int robotIndex,
+      double windowT,
+      double minF,
+      double maxF,
+      int nBins,
+      String title,
+      Supplier<Function<Snapshot, Double>> functionSupplier
+  ) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, .5d),
+            Drawer.of(
+                Drawer.clear(),
+                new SignalDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
+                    functionSupplier.get(),
+                    windowT
+                ),
+                Drawer.text(title)
+            )
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
             Drawer.of(
                 Drawer.clear(),
-                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d,
-                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.VARIANCE_AND_WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
+                new SpectrumDrawer(
+                    SubtreeDrawer.Extractor.matches(RobotShape.class, Robot.class, robotIndex),
+                    functionSupplier.get(),
+                    windowT, minF, maxF, nBins
                 )
             )
         ),
@@ -223,31 +228,53 @@ public class Drawers {
     );
   }
 
-  public static Drawer basicWithMiniWorldAndBrain(String string) {
+  public static Drawer spectra(int robotIndex, double windowT, double minF, double maxF, int nBins) {
     return Drawer.of(
         Drawer.clip(
-            BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld()
-        ),
-        Drawer.clip(
-            BoundingBox.of(0d, 0.5d, 1d, 1d),
-            Drawer.of(
-                Drawer.clear(),
-                new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d,
-                    Set.of(MLPDrawer.Part.ACTIVATION_VALUES, MLPDrawer.Part.WEIGHTS, MLPDrawer.Part.LEGEND, MLPDrawer.Part.T_AXIS, MLPDrawer.Part.STRUCTURE_AXIS, MLPDrawer.Part.HISTOGRAM)
-                )
+            BoundingBox.of(0d, 0d, .333d, 1d),
+            signalAndSpectrum(
+                robotIndex, windowT, minF, maxF, nBins, "vx",
+                () -> BehaviorUtils.voxelPolyGrid()
+                    .andThen(BehaviorUtils::getCentralElement)
+                    .andThen(p -> p.getLinearVelocity().x())
             )
         ),
-        new InfoDrawer(string)
+        Drawer.clip(
+            BoundingBox.of(0.333d, 0d, .666d, 1d),
+            signalAndSpectrum(
+                robotIndex, windowT, minF, maxF, nBins, "vy",
+                () -> BehaviorUtils.voxelPolyGrid()
+                    .andThen(BehaviorUtils::getCentralElement)
+                    .andThen(p -> p.getLinearVelocity().y())
+            )
+        ),
+        Drawer.clip(
+            BoundingBox.of(0.666d, 0d, 1d, 1d),
+            signalAndSpectrum(
+                robotIndex, windowT, minF, maxF, nBins, "angle",
+                () -> BehaviorUtils.voxelPolyGrid()
+                    .andThen(BehaviorUtils::getCentralElement)
+                    .andThen(VoxelPoly::getAngle)
+            )
+        )
     );
   }
 
-  public static Drawer basic() {
-    return basic("");
-  }
-
-  public static Drawer basicWithMiniWorld() {
-    return basicWithMiniWorld("");
+  public static Drawer world() {
+    return Drawer.transform(
+        new AllRobotFollower(1.5d, 2),
+        Drawer.of(
+            new TargetDrawer(SubtreeDrawer.Extractor.matches(
+                null,
+                DistanceBasedDevoLocomotion.CurrentTarget.class,
+                null
+            )),
+            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+            new VoxelDrawer(),
+            new SensorReadingsSectorDrawer(),
+            new LidarDrawer()
+        )
+    );
   }
 
 }

@@ -16,47 +16,31 @@
  */
 package it.units.erallab.hmsrobots.core.geometry;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
-public class Poly implements Shape {
-
-  private final Point2[] vertexes;
-
-  public Poly(List<Point2> vertexes) {
-    this.vertexes = new Point2[vertexes.size()];
-    for (int i = 0; i < vertexes.size(); i++) {
-      this.vertexes[i] = vertexes.get(i);
-    }
-  }
-
-  private Poly(Point2... vertexes) {
-    this.vertexes = vertexes;
-  }
+public record Poly(Point2[] vertexes) implements Shape, Serializable {
 
   public static Poly of(Point2... vertexes) {
     return new Poly(vertexes);
   }
 
   @Override
-  public BoundingBox boundingBox() {
-    return BoundingBox.of(vertexes);
-  }
-
-  public Point2[] getVertexes() {
-    return vertexes;
-  }
-
   public double area() {
     double a = 0d;
     int l = vertexes.length;
     for (int i = 0; i < l; i++) {
-      a = a + vertexes[i].x * (vertexes[(l + i + 1) % l].y - vertexes[(l + i - 1) % l].y);
+      a = a + vertexes[i].x() * (vertexes[(l + i + 1) % l].y() - vertexes[(l + i - 1) % l].y());
     }
     a = 0.5d * Math.abs(a);
     return a;
+  }
+
+  @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.of(vertexes);
   }
 
   @Override

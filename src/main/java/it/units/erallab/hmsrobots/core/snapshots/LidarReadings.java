@@ -17,7 +17,7 @@
 
 package it.units.erallab.hmsrobots.core.snapshots;
 
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 /**
  * @author "Eric Medvet" on 2021/08/13 for 2dhmsr
@@ -26,17 +26,17 @@ public class LidarReadings extends ScopedReadings {
   private final double voxelAngle;
   private final double[] rayDirections;
 
-  public LidarReadings(double[] readings, Domain[] domains, double voxelAngle, double[] rayDirections) {
+  public LidarReadings(double[] readings, DoubleRange[] domains, double voxelAngle, double[] rayDirections) {
     super(readings, domains);
     this.voxelAngle = voxelAngle;
     this.rayDirections = rayDirections;
   }
 
-  public double getVoxelAngle() {
-    return voxelAngle;
-  }
-
   public double[] getRayDirections() {
     return rayDirections;
+  }
+
+  public double getVoxelAngle() {
+    return voxelAngle;
   }
 }

@@ -17,8 +17,8 @@
 
 package it.units.erallab.hmsrobots.core;
 
-public interface Actionable {
-  void act(final double t);
+import it.units.erallab.hmsrobots.core.controllers.Resettable;
 
-  void reset();
+public interface Actionable extends Resettable {
+  void act(final double t);
 }

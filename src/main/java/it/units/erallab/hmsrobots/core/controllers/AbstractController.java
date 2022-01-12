@@ -17,29 +17,31 @@
 
 package it.units.erallab.hmsrobots.core.controllers;
 
-import it.units.erallab.hmsrobots.core.objects.ControllableVoxel;
+import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public abstract class AbstractController<V extends ControllableVoxel> implements Controller<V> {
+import java.io.Serializable;
+
+public abstract class AbstractController implements Controller, Serializable {
+
+  public abstract Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels);
 
   @Override
-  public void control(double t, Grid<? extends V> voxels) {
+  public void control(double t, Grid<Voxel> voxels) {
     Grid<Double> controlSignals = computeControlSignals(t, voxels);
     voxels.forEach(e -> {
-      if (e.getValue() != null) {
-        e.getValue().applyForce(controlSignals.get(e.getX(), e.getY()));
+      if (e.value() != null) {
+        e.value().applyForce(controlSignals.get(e.key().x(), e.key().y()));
       }
     });
   }
 
-  public abstract Grid<Double> computeControlSignals(double t, Grid<? extends V> voxels);
-
-  public AbstractController<V> step(double stepT) {
-    return new StepController<>(this, stepT);
+  public AbstractController smoothed(double controlSignalSpeed) {
+    return new SmoothedController(this, controlSignalSpeed);
   }
 
-  public AbstractController<V> smoothed(double controlSignalSpeed) {
-    return new SmoothedController<>(this, controlSignalSpeed);
+  public AbstractController step(double stepT) {
+    return new StepController(this, stepT);
   }
 
 }

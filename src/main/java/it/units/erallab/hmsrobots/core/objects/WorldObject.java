@@ -16,13 +16,14 @@
  */
 package it.units.erallab.hmsrobots.core.objects;
 
-import org.dyn4j.dynamics.World;
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.world.World;
 
 /**
  * @author Eric Medvet <eric.medvet@gmail.com>
  */
 public interface WorldObject {
 
-  void addTo(World world);
+  void addTo(World<Body> world);
 
 }

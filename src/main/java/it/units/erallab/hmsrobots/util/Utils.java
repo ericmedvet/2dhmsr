@@ -18,11 +18,9 @@ package it.units.erallab.hmsrobots.util;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,7 +33,59 @@ public class Utils {
   private Utils() {
   }
 
-  private static final Logger L = Logger.getLogger(Utils.class.getName());
+  public static <K> Grid<K> cropGrid(Grid<K> inGrid, Predicate<K> p) {
+    //find bounds
+    int minX = inGrid.getW();
+    int maxX = 0;
+    int minY = inGrid.getH();
+    int maxY = 0;
+    for (Grid.Entry<K> entry : inGrid) {
+      if (p.test(entry.value())) {
+        minX = Math.min(minX, entry.key().x());
+        maxX = Math.max(maxX, entry.key().x());
+        minY = Math.min(minY, entry.key().y());
+        maxY = Math.max(maxY, entry.key().y());
+      }
+    }
+    //build new grid
+    Grid<K> outGrid = Grid.create(maxX - minX + 1, maxY - minY + 1);
+    //fill
+    for (int x = 0; x < outGrid.getW(); x++) {
+      for (int y = 0; y < outGrid.getH(); y++) {
+        outGrid.set(x, y, inGrid.get(x + minX, y + minY));
+      }
+    }
+    return outGrid;
+  }
+
+  public static <K> Grid<K> gridConnected(Grid<K> kGrid, Comparator<K> comparator, int n) {
+    record KeyPair(Grid.Key first, Grid.Key second) {}
+    Comparator<Grid.Entry<K>> entryComparator = (e1, e2) -> comparator.compare(e1.value(), e2.value());
+    Predicate<KeyPair> adjacencyPredicate = p -> (Math.abs(p.first()
+        .x() - p.second()
+        .x()) <= 1 && p.first().y() == p.second().y()) || (Math.abs(p.first()
+        .y() - p.second()
+        .y()) <= 1 && p.first().x() == p.second().x());
+    Grid.Entry<K> entryFirst = kGrid.stream()
+        .min(entryComparator)
+        .orElseThrow(() -> new IllegalArgumentException("Grid has no max element"));
+    Set<Grid.Entry<K>> selected = new HashSet<>(n);
+    selected.add(entryFirst);
+    while (selected.size() < n) {
+      Set<Grid.Entry<K>> candidates = kGrid.stream()
+          .filter(e -> e.value() != null)
+          .filter(e -> !selected.contains(e))
+          .filter(e -> selected.stream().anyMatch(f -> adjacencyPredicate.test(new KeyPair(e.key(), f.key()))))
+          .collect(Collectors.toSet());
+      if (candidates.isEmpty()) {
+        break;
+      }
+      selected.add(candidates.stream().min(entryComparator).orElse(entryFirst));
+    }
+    Grid<K> outGrid = Grid.create(kGrid.getW(), kGrid.getH());
+    selected.forEach(e -> outGrid.set(e.key().x(), e.key().y(), e.value()));
+    return outGrid;
+  }
 
   public static <K> Grid<K> gridLargestConnected(Grid<K> kGrid, Predicate<K> p) {
     Grid<Integer> iGrid = partitionGrid(kGrid, p);
@@ -63,35 +113,54 @@ public class Utils {
     //filter map
     Grid<K> filtered = Grid.create(kGrid);
     for (Grid.Entry<Integer> iEntry : iGrid) {
-      if (iEntry.getValue() != null && iEntry.getValue().equals(maxIndex)) {
-        filtered.set(iEntry.getX(), iEntry.getY(), kGrid.get(iEntry.getX(), iEntry.getY()));
+      if (iEntry.value() != null && iEntry.value().equals(maxIndex)) {
+        filtered.set(iEntry.key().x(), iEntry.key().y(), kGrid.get(iEntry.key().x(), iEntry.key().y()));
       }
     }
     return filtered;
   }
 
-  public static <K> Grid<K> gridConnected(Grid<K> kGrid, Comparator<K> comparator, int n) {
-    Comparator<Grid.Entry<K>> entryComparator = (e1, e2) -> comparator.compare(e1.getValue(), e2.getValue());
-    Predicate<Pair<Grid.Entry<?>, Grid.Entry<?>>> adjacencyPredicate = p -> (Math.abs(p.getLeft().getX() - p.getRight().getX()) <= 1 && p.getLeft().getY() == p.getRight().getY()) || (Math.abs(p.getLeft().getY() - p.getRight().getY()) <= 1 && p.getLeft().getX() == p.getRight().getX());
-    Grid.Entry<K> entryFirst = kGrid.stream()
-        .min(entryComparator)
-        .orElseThrow(() -> new IllegalArgumentException("Grid has no max element"));
-    Set<Grid.Entry<K>> selected = new HashSet<>(n);
-    selected.add(entryFirst);
-    while (selected.size() < n) {
-      Set<Grid.Entry<K>> candidates = kGrid.stream()
-          .filter(e -> e.getValue() != null)
-          .filter(e -> !selected.contains(e))
-          .filter(e -> selected.stream().anyMatch(f -> adjacencyPredicate.test(Pair.of(e, f))))
-          .collect(Collectors.toSet());
-      if (candidates.isEmpty()) {
-        break;
+  @SafeVarargs
+  public static <E> List<E> ofNonNull(E... es) {
+    List<E> list = new ArrayList<>();
+    for (E e : es) {
+      if (e != null) {
+        list.add(e);
       }
-      selected.add(candidates.stream().min(entryComparator).orElse(entryFirst));
     }
-    Grid<K> outGrid = Grid.create(kGrid.getW(), kGrid.getH());
-    selected.forEach(e -> outGrid.set(e.getX(), e.getY(), e.getValue()));
-    return outGrid;
+    return list;
+  }
+
+  public static String param(String pattern, String string, String paramName) {
+    Matcher matcher = Pattern.compile(pattern).matcher(string);
+    if (matcher.matches()) {
+      return matcher.group(paramName);
+    }
+    throw new IllegalStateException(String.format(
+        "Param %s not found in %s with pattern %s",
+        paramName,
+        string,
+        pattern
+    ));
+  }
+
+  public static Map<String, String> params(String pattern, String string) {
+    if (!string.matches(pattern)) {
+      return null;
+    }
+    Matcher m = Pattern.compile("\\(\\?<([a-zA-Z][a-zA-Z0-9]*)>").matcher(pattern);
+    List<String> groupNames = new ArrayList<>();
+    while (m.find()) {
+      groupNames.add(m.group(1));
+    }
+    Map<String, String> params = new HashMap<>();
+    for (String groupName : groupNames) {
+      String value = param(pattern, string, groupName);
+      if (value != null) {
+        params.put(groupName, value);
+      }
+    }
+    return params;
   }
 
   private static <K> Grid<Integer> partitionGrid(Grid<K> kGrid, Predicate<K> p) {
@@ -135,58 +204,6 @@ public class Utils {
     }
   }
 
-  public static <K> Grid<K> cropGrid(Grid<K> inGrid, Predicate<K> p) {
-    //find bounds
-    int minX = inGrid.getW();
-    int maxX = 0;
-    int minY = inGrid.getH();
-    int maxY = 0;
-    for (Grid.Entry<K> entry : inGrid) {
-      if (p.test(entry.getValue())) {
-        minX = Math.min(minX, entry.getX());
-        maxX = Math.max(maxX, entry.getX());
-        minY = Math.min(minY, entry.getY());
-        maxY = Math.max(maxY, entry.getY());
-      }
-    }
-    //build new grid
-    Grid<K> outGrid = Grid.create(maxX - minX + 1, maxY - minY + 1);
-    //fill
-    for (int x = 0; x < outGrid.getW(); x++) {
-      for (int y = 0; y < outGrid.getH(); y++) {
-        outGrid.set(x, y, inGrid.get(x + minX, y + minY));
-      }
-    }
-    return outGrid;
-  }
-
-  public static double shapeElongation(Grid<Boolean> posture, int n) {
-    if (posture.values().stream().noneMatch(e -> e)) {
-      throw new IllegalArgumentException("Grid is empty");
-    } else if (n <= 0) {
-      throw new IllegalArgumentException(String.format("Non-positive number of directions provided: %d", n));
-    }
-    List<Pair<Integer, Integer>> coordinates = posture.stream()
-        .filter(Grid.Entry::getValue)
-        .map(e -> Pair.of(e.getX(), e.getY()))
-        .collect(Collectors.toList());
-    List<Double> diameters = new ArrayList<>();
-    for (int i = 0; i < n; ++i) {
-      double theta = (2 * i * Math.PI) / n;
-      List<Pair<Double, Double>> rotatedCoordinates = coordinates.stream()
-          .map(p -> Pair.of(p.getLeft() * Math.cos(theta) - p.getRight() * Math.sin(theta), p.getLeft() * Math.sin(theta) + p.getRight() * Math.cos(theta)))
-          .collect(Collectors.toList());
-      double minX = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
-      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getLeft)).get().getLeft();
-      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Pair::getRight)).get().getRight();
-      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(Pair::getRight)).get().getRight();
-      double sideX = maxX - minX + 1;
-      double sideY = maxY - minY + 1;
-      diameters.add(Math.min(sideX, sideY) / Math.max(sideX, sideY));
-    }
-    return 1.0 - Collections.min(diameters);
-  }
-
   public static double shapeCompactness(Grid<Boolean> posture) {
     // approximate convex hull
     Grid<Boolean> convexHull = Grid.create(posture.getW(), posture.getH(), posture::get);
@@ -195,11 +212,11 @@ public class Utils {
     while (!none) {
       none = true;
       for (Grid.Entry<Boolean> entry : convexHull) {
-        if (convexHull.get(entry.getX(), entry.getY())) {
+        if (convexHull.get(entry.key().x(), entry.key().y())) {
           continue;
         }
-        int currentX = entry.getX();
-        int currentY = entry.getY();
+        int currentX = entry.key().x();
+        int currentY = entry.key().y();
         int adjacentCount = 0;
         // count how many of the Moore neighbors are true
         for (int i : new int[]{1, -1}) {
@@ -215,18 +232,24 @@ public class Utils {
           }
           neighborX = currentX + i;
           neighborY = currentY + i;
-          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(
+              neighborX,
+              neighborY
+          )) {
             adjacentCount += 1;
           }
           neighborX = currentX + i;
           neighborY = currentY - i;
-          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(neighborX, neighborY)) {
+          if (0 <= neighborX && 0 <= neighborY && neighborX < convexHull.getW() && neighborY < convexHull.getH() && convexHull.get(
+              neighborX,
+              neighborY
+          )) {
             adjacentCount += 1;
           }
         }
         // if at least five, fill the cell
         if (adjacentCount >= 5) {
-          convexHull.set(entry.getX(), entry.getY(), true);
+          convexHull.set(entry.key().x(), entry.key().y(), true);
           none = false;
         }
       }
@@ -238,42 +261,35 @@ public class Utils {
     return (double) nVoxels / nConvexHull;
   }
 
-  @SafeVarargs
-  public static <E> List<E> ofNonNull(E... es) {
-    List<E> list = new ArrayList<>();
-    for (E e : es) {
-      if (e != null) {
-        list.add(e);
-      }
+  @SuppressWarnings("OptionalGetWithoutIsPresent")
+  public static double shapeElongation(Grid<Boolean> posture, int n) {
+    if (posture.values().stream().noneMatch(e -> e)) {
+      throw new IllegalArgumentException("Grid is empty");
+    } else if (n <= 0) {
+      throw new IllegalArgumentException(String.format("Non-positive number of directions provided: %d", n));
     }
-    return list;
-  }
-
-  public static String param(String pattern, String string, String paramName) {
-    Matcher matcher = Pattern.compile(pattern).matcher(string);
-    if (matcher.matches()) {
-      return matcher.group(paramName);
+    List<Grid.Key> coordinates = posture.stream()
+        .filter(Grid.Entry::value)
+        .map(Grid.Entry::key)
+        .toList();
+    List<Double> diameters = new ArrayList<>();
+    for (int i = 0; i < n; ++i) {
+      double theta = (2 * i * Math.PI) / n;
+      List<Grid.Key> rotatedCoordinates = coordinates.stream()
+          .map(p -> new Grid.Key(
+              (int) Math.round(p.x() * Math.cos(theta) - p.y() * Math.sin(theta)),
+              (int) Math.round(p.x() * Math.sin(theta) + p.y() * Math.cos(theta))
+          ))
+          .toList();
+      double minX = rotatedCoordinates.stream().min(Comparator.comparingInt(Grid.Key::x)).get().x();
+      double maxX = rotatedCoordinates.stream().max(Comparator.comparingDouble(Grid.Key::x)).get().x();
+      double minY = rotatedCoordinates.stream().min(Comparator.comparingDouble(Grid.Key::y)).get().y();
+      double maxY = rotatedCoordinates.stream().max(Comparator.comparingDouble(Grid.Key::y)).get().y();
+      double sideX = maxX - minX + 1;
+      double sideY = maxY - minY + 1;
+      diameters.add(Math.min(sideX, sideY) / Math.max(sideX, sideY));
     }
-    throw new IllegalStateException(String.format("Param %s not found in %s with pattern %s", paramName, string, pattern));
-  }
-
-  public static Map<String, String> params(String pattern, String string) {
-    if (!string.matches(pattern)) {
-      return null;
-    }
-    Matcher m = Pattern.compile("\\(\\?<([a-zA-Z][a-zA-Z0-9]*)>").matcher(pattern);
-    List<String> groupNames = new ArrayList<>();
-    while (m.find()) {
-      groupNames.add(m.group(1));
-    }
-    Map<String, String> params = new HashMap<>();
-    for (String groupName : groupNames) {
-      String value = param(pattern, string, groupName);
-      if (value != null) {
-        params.put(groupName, value);
-      }
-    }
-    return params;
+    return 1.0 - Collections.min(diameters);
   }
 
 }

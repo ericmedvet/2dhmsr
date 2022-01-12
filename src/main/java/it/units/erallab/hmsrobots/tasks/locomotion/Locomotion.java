@@ -25,15 +25,16 @@ import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.Utils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.World;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
+public class Locomotion extends AbstractTask<Robot, Outcome> {
 
   public final static double INITIAL_PLACEMENT_X_GAP = 1d;
   public final static double INITIAL_PLACEMENT_Y_GAP = 1d;
@@ -56,61 +57,6 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     this.initialPlacement = initialPlacement;
   }
 
-  @Override
-  public Outcome apply(Robot<?> robot, SnapshotListener listener) {
-    StopWatch stopWatch = StopWatch.createStarted();
-    //init world
-    World world = new World();
-    world.setSettings(settings);
-    List<WorldObject> worldObjects = new ArrayList<>();
-    Ground ground = new Ground(groundProfile[0], groundProfile[1]);
-    ground.addTo(world);
-    worldObjects.add(ground);
-    robot.reset();
-    //position robot: translate on x
-    BoundingBox boundingBox = robot.boundingBox();
-    robot.translate(new Vector2(initialPlacement - boundingBox.min.x, 0));
-    //translate on y
-    double minYGap = robot.getVoxels().values().stream()
-        .filter(Objects::nonNull)
-        .mapToDouble(v -> v.boundingBox().min.y - ground.yAt(v.getCenter().x))
-        .min().orElse(0d);
-    robot.translate(new Vector2(0, INITIAL_PLACEMENT_Y_GAP - minYGap));
-    //get initial x
-    double initCenterX = robot.getCenter().x;
-    //add robot to world
-    robot.addTo(world);
-    worldObjects.add(robot);
-    //run
-    Map<Double, Outcome.Observation> observations = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
-    double t = 0d;
-    while (t < finalT) {
-      t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
-      observations.put(t, new Outcome.Observation(
-          Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-          ground.yAt(robot.getCenter().x),
-          (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
-      ));
-    }
-    stopWatch.stop();
-    //prepare outcome
-    return new Outcome(observations);
-  }
-
-  private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {
-    double[] xs = new double[n + 2];
-    double[] ys = new double[n + 2];
-    xs[0] = 0d;
-    xs[n + 1] = length;
-    ys[0] = borderHeight;
-    ys[n + 1] = borderHeight;
-    for (int i = 1; i < n + 1; i++) {
-      xs[i] = 1 + (double) (i - 1) * (length - 2d) / (double) n;
-      ys[i] = random.nextDouble() * peak;
-    }
-    return new double[][]{xs, ys};
-  }
-
   public static double[][] createTerrain(String name) {
     String flat = "flat";
     String flatWithStart = "flatWithStart-(?<seed>[0-9]+)";
@@ -119,6 +65,7 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     String downhill = "downhill-(?<angle>[0-9]+(\\.[0-9]+)?)";
     String uphill = "uphill-(?<angle>[0-9]+(\\.[0-9]+)?)";
     Map<String, String> params;
+    //noinspection UnusedAssignment
     if ((params = Utils.params(flat, name)) != null) {
       return new double[][]{
           new double[]{0, TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH, TERRAIN_LENGTH},
@@ -127,7 +74,8 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
     }
     if ((params = Utils.params(flatWithStart, name)) != null) {
       Random random = new Random(Integer.parseInt(params.get("seed")));
-      IntStream.range(0, random.nextInt(10) + 10).forEach(i -> random.nextDouble()); //it looks like that otherwise the 1st double of nextDouble() is always around 0.73...
+      IntStream.range(0, random.nextInt(10) + 10)
+          .forEach(i -> random.nextDouble()); //it looks like that otherwise the 1st double of nextDouble() is always around 0.73...
       double angle = Math.PI / 18d * (random.nextDouble() * 2d - 1d);
       double startLength = it.units.erallab.hmsrobots.core.objects.Voxel.SIDE_LENGTH * 8d;
       return new double[][]{
@@ -194,5 +142,60 @@ public class Locomotion extends AbstractTask<Robot<?>, Outcome> {
       };
     }
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));
+  }
+
+  private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {
+    double[] xs = new double[n + 2];
+    double[] ys = new double[n + 2];
+    xs[0] = 0d;
+    xs[n + 1] = length;
+    ys[0] = borderHeight;
+    ys[n + 1] = borderHeight;
+    for (int i = 1; i < n + 1; i++) {
+      xs[i] = 1 + (double) (i - 1) * (length - 2d) / (double) n;
+      ys[i] = random.nextDouble() * peak;
+    }
+    return new double[][]{xs, ys};
+  }
+
+  @Override
+  public Outcome apply(Robot robot, SnapshotListener listener) {
+    StopWatch stopWatch = StopWatch.createStarted();
+    //init world
+    World<Body> world = new World<>();
+    world.setSettings(settings);
+    List<WorldObject> worldObjects = new ArrayList<>();
+    Ground ground = new Ground(groundProfile[0], groundProfile[1]);
+    ground.addTo(world);
+    worldObjects.add(ground);
+    robot.reset();
+    //position robot: translate on x
+    BoundingBox boundingBox = robot.boundingBox();
+    robot.translate(new Vector2(initialPlacement - boundingBox.min().x(), 0));
+    //translate on y
+    double minYGap = robot.getVoxels().values().stream()
+        .filter(Objects::nonNull)
+        .mapToDouble(v -> v.boundingBox().min().y() - ground.yAt(v.center().x()))
+        .min().orElse(0d);
+    robot.translate(new Vector2(0, INITIAL_PLACEMENT_Y_GAP - minYGap));
+    //get initial x
+    double initCenterX = robot.center().x();
+    //add robot to world
+    robot.addTo(world);
+    worldObjects.add(robot);
+    //run
+    Map<Double, Outcome.Observation> observations = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
+    double t = 0d;
+    while (t < finalT) {
+      t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
+      observations.put(t, new Outcome.Observation(
+          Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
+          ground.yAt(robot.center().x()),
+          (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+      ));
+    }
+    stopWatch.stop();
+    //prepare outcome
+    return new Outcome(observations);
   }
 }

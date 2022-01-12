@@ -36,7 +36,14 @@ public class SignalDrawer extends MemoryDrawer<Double> {
   private final Color axesColor;
   private final Color textColor;
 
-  public SignalDrawer(Extractor extractor, Function<Snapshot, Double> function, double windowT, Color signalColor, Color axesColor, Color textColor) {
+  public SignalDrawer(
+      Extractor extractor,
+      Function<Snapshot, Double> function,
+      double windowT,
+      Color signalColor,
+      Color axesColor,
+      Color textColor
+  ) {
     super(extractor, function, windowT);
     this.signalColor = signalColor;
     this.axesColor = axesColor;
@@ -59,10 +66,10 @@ public class SignalDrawer extends MemoryDrawer<Double> {
         g.getClip().getBounds2D().getMaxY()
     );
     BoundingBox pBB = BoundingBox.of(
-        oBB.min.x + 5 * textW,
-        oBB.min.y + textH,
-        oBB.max.x - textW,
-        oBB.max.y - 3 * textH
+        oBB.min().x() + 5 * textW,
+        oBB.min().y() + textH,
+        oBB.max().x() - textW,
+        oBB.max().y() - 3 * textH
     );
     //draw data
     g.setColor(signalColor);
@@ -71,39 +78,47 @@ public class SignalDrawer extends MemoryDrawer<Double> {
     double minV = Arrays.stream(vs).min().orElse(0d);
     double maxV = Arrays.stream(vs).max().orElse(0d);
     for (int i = 1; i < ts.length; i++) {
-      double x1 = pBB.max.x - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
-      double x2 = pBB.max.x - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
-      double y1 = pBB.max.y - (vs[i - 1] - minV) / (maxV - minV) * pBB.height();
-      double y2 = pBB.max.y - (vs[i] - minV) / (maxV - minV) * pBB.height();
+      double x1 = pBB.max().x() - (ts[ts.length - 1] - ts[i - 1]) / windowT * pBB.width();
+      double x2 = pBB.max().x() - (ts[ts.length - 1] - ts[i]) / windowT * pBB.width();
+      double y1 = pBB.max().y() - (vs[i - 1] - minV) / (maxV - minV) * pBB.height();
+      double y2 = pBB.max().y() - (vs[i] - minV) / (maxV - minV) * pBB.height();
       g.draw(new Line2D.Double(x1, y1, x2, y2));
     }
     //draw x-axis
     g.setColor(axesColor);
-    g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.max.x, pBB.max.y));
+    g.draw(new Line2D.Double(pBB.min().x(), pBB.max().y(), pBB.max().x(), pBB.max().y()));
     double maxT = memory.lastKey();
     for (double tickT = Math.ceil(maxT - windowT); tickT < maxT; tickT++) {
       g.setColor(axesColor);
-      double x = (tickT - maxT + windowT) / windowT * (pBB.max.x - pBB.min.x) + pBB.min.x;
-      g.draw(new Line2D.Double(x, pBB.max.y, x, pBB.max.y + textH));
+      double x = (tickT - maxT + windowT) / windowT * (pBB.max().x() - pBB.min().x()) + pBB.min().x();
+      g.draw(new Line2D.Double(x, pBB.max().y(), x, pBB.max().y() + textH));
       g.setColor(textColor);
       String s = String.format("%.0f", tickT);
-      g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max.y + 2 * textH));
+      g.drawString(s, (float) (x - g.getFontMetrics().stringWidth(s) / 2f), (float) (pBB.max().y() + 2 * textH));
     }
     //draw 0-line
     if (maxV > 0 && minV < 0) {
       g.setColor(axesColor);
-      double y = pBB.max.y - (0 - minV) / (maxV - minV) * pBB.height();
-      g.draw(new Line2D.Double(pBB.min.x, y, pBB.max.x, y));
+      double y = pBB.max().y() - (0 - minV) / (maxV - minV) * pBB.height();
+      g.draw(new Line2D.Double(pBB.min().x(), y, pBB.max().x(), y));
     }
     //draw y-axis
     g.setColor(axesColor);
-    g.draw(new Line2D.Double(pBB.min.x, pBB.max.y, pBB.min.x, pBB.min.y));
-    g.draw(new Line2D.Double(pBB.min.x - textW, pBB.max.y, pBB.min.x, pBB.max.y));
-    g.draw(new Line2D.Double(pBB.min.x - textW, pBB.min.y, pBB.min.x, pBB.min.y));
+    g.draw(new Line2D.Double(pBB.min().x(), pBB.max().y(), pBB.min().x(), pBB.min().y()));
+    g.draw(new Line2D.Double(pBB.min().x() - textW, pBB.max().y(), pBB.min().x(), pBB.max().y()));
+    g.draw(new Line2D.Double(pBB.min().x() - textW, pBB.min().y(), pBB.min().x(), pBB.min().y()));
     g.setColor(textColor);
     String s = String.format("%.1f", maxV);
-    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.min.y + textH / 2d));
+    g.drawString(
+        s,
+        (float) (pBB.min().x() - 2d * textW - g.getFontMetrics().stringWidth(s)),
+        (float) (pBB.min().y() + textH / 2d)
+    );
     s = String.format("%.1f", minV);
-    g.drawString(s, (float) (pBB.min.x - 2d * textW - g.getFontMetrics().stringWidth(s)), (float) (pBB.max.y + textH / 2d));
+    g.drawString(
+        s,
+        (float) (pBB.min().x() - 2d * textW - g.getFontMetrics().stringWidth(s)),
+        (float) (pBB.max().y() + textH / 2d)
+    );
   }
 }

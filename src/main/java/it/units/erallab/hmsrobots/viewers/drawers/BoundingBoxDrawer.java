@@ -45,12 +45,7 @@ public class BoundingBoxDrawer extends SubtreeDrawer {
   @Override
   protected void innerDraw(double t, Snapshot snapshot, Graphics2D g) {
     BoundingBox box = ((Shape) snapshot.getContent()).boundingBox();
-    Rectangle2D rect = new Rectangle2D.Double(
-        box.min.x,
-        box.min.y,
-        box.max.x - box.min.x,
-        box.max.y - box.min.y
-    );
+    Rectangle2D rect = new Rectangle2D.Double(box.min().x(), box.min().y(), box.width(), box.height());
     g.setColor(fillColor);
     g.fill(rect);
     g.setColor(strokeColor);

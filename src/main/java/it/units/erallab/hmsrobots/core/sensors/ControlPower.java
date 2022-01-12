@@ -18,29 +18,26 @@ package it.units.erallab.hmsrobots.core.sensors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 public class ControlPower extends AbstractSensor {
 
-  private double lastT;
   @JsonProperty
   private final double controlInterval;
+  private double lastT;
 
   @JsonCreator
   public ControlPower(
       @JsonProperty("controlInterval") double controlInterval
   ) {
-    super(new Domain[]{
-        Domain.of(0, 1d / controlInterval)
+    super(new DoubleRange[]{
+        DoubleRange.of(0, 1d / controlInterval)
     });
     this.controlInterval = controlInterval;
   }
 
-  @Override
-  public double[] sense(double t) {
-    double power = voxel.getControlEnergy() / (t - lastT);
-    lastT = t;
-    return new double[]{power};
+  public double getControlInterval() {
+    return controlInterval;
   }
 
   @Override
@@ -49,14 +46,17 @@ public class ControlPower extends AbstractSensor {
     lastT = 0;
   }
 
-  public double getControlInterval() {
-    return controlInterval;
-  }
-
   @Override
   public String toString() {
     return "ControlPower{" +
         "controlInterval=" + controlInterval +
         '}';
+  }
+
+  @Override
+  public double[] sense(double t) {
+    double power = voxel.getControlEnergy() / (t - lastT);
+    lastT = t;
+    return new double[]{power};
   }
 }

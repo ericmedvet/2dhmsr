@@ -26,21 +26,6 @@ import java.util.stream.Collectors;
 
 public class DevoOutcome {
 
-  public static class DevoStageOutcome {
-    private final Robot<?> robot;
-    private final double velocity;
-    private final double time;
-    private final double distance;
-
-    public DevoStageOutcome(Robot<?> robot, Outcome outcome) {
-      this.robot = robot;
-      this.velocity = outcome.getVelocity();
-      this.time = outcome.getTime();
-      this.distance = outcome.getDistance();
-    }
-
-  }
-
   private final List<DevoStageOutcome> outcomeList;
 
   public DevoOutcome(List<DevoStageOutcome> outcomeList) {
@@ -56,6 +41,21 @@ public class DevoOutcome {
     outcomeList = new ArrayList<>();
   }
 
+  public static class DevoStageOutcome {
+    private final Robot robot;
+    private final double velocity;
+    private final double time;
+    private final double distance;
+
+    public DevoStageOutcome(Robot robot, Outcome outcome) {
+      this.robot = robot;
+      this.velocity = outcome.getVelocity();
+      this.time = outcome.getTime();
+      this.distance = outcome.getDistance();
+    }
+
+  }
+
   public void addDevoStageOutcome(DevoStageOutcome devoStageOutcome) {
     outcomeList.add(devoStageOutcome);
   }
@@ -64,20 +64,20 @@ public class DevoOutcome {
     return outcomeList;
   }
 
-  public List<Robot<?>> getRobots() {
+  public List<Double> getDistances() {
+    return outcomeList.stream().map(d -> d.distance).toList();
+  }
+
+  public List<Robot> getRobots() {
     return outcomeList.stream().map(devoStageOutcome -> devoStageOutcome.robot).collect(Collectors.toList());
   }
 
   public List<Double> getTimes() {
-    return outcomeList.stream().map(d -> d.time).collect(Collectors.toList());
+    return outcomeList.stream().map(d -> d.time).toList();
   }
 
   public List<Double> getVelocities() {
-    return outcomeList.stream().map(d -> d.velocity).collect(Collectors.toList());
-  }
-
-  public List<Double> getDistances() {
-    return outcomeList.stream().map(d -> d.distance).collect(Collectors.toList());
+    return outcomeList.stream().map(d -> d.velocity).toList();
   }
 
 }

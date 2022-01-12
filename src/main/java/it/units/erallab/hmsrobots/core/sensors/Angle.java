@@ -16,12 +16,12 @@
  */
 package it.units.erallab.hmsrobots.core.sensors;
 
-import it.units.erallab.hmsrobots.util.Domain;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 
 public class Angle extends AbstractSensor {
 
-  private final static Domain[] DOMAINS = new Domain[]{
-      Domain.of(-Math.PI, Math.PI)
+  private final static DoubleRange[] DOMAINS = new DoubleRange[]{
+      DoubleRange.of(-Math.PI, Math.PI)
   };
 
   public Angle() {

@@ -15,11 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package it.units.erallab.hmsrobots.core.snapshots;
+package it.units.erallab.hmsrobots.viewers;
 
 /**
- * @author eric on 2021/08/12 for 2dhmsr
+ * @author "Eric Medvet" on 2021/12/29 for 2dhmsr
  */
-public interface Snapshottable {
-  Snapshot getSnapshot();
-}
+public record NamedValue<T>(String name, T value) {}
