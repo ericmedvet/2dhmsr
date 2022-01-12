@@ -19,12 +19,13 @@ package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
-import it.units.erallab.hmsrobots.core.objects.Ground;
+import it.units.erallab.hmsrobots.core.objects.RigidBody;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.VoxelPoly;
+import it.units.erallab.hmsrobots.tasks.devolocomotion.DevoLocomotion;
 import it.units.erallab.hmsrobots.tasks.devolocomotion.DistanceBasedDevoLocomotion;
 import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 
@@ -175,7 +176,8 @@ public class Drawers {
                 nPosture,
                 true
             )
-        )
+        ),
+        new InfoDrawer(string)
     );
   }
 
@@ -221,7 +223,8 @@ public class Drawers {
                     windowT, minF, maxF, nBins
                 )
             )
-        )
+        ),
+        new InfoDrawer(string)
     );
   }
 
