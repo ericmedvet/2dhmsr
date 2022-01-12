@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 
 public class Outcome {
 
-  private final SortedMap<Double, Observation> observations;
+  protected final SortedMap<Double, Observation> observations;
 
   public Outcome(Map<Double, Observation> observations) {
     this.observations = Collections.unmodifiableSortedMap(new TreeMap<>(observations));
