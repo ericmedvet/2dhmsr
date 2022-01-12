@@ -72,18 +72,18 @@ public class Balancing extends AbstractTask<Robot, BalanceOutcome> {
       }
       t = AbstractTask.updateWorld(t, settings.getStepFrequency(), world, worldObjects, listener);
       observations.put(t, new Outcome.Observation(
-              Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-              platformHeight,
-              (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+          Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
+          platformHeight,
+          (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
       angles.put(t, Math.abs(swing.getAngle()) / angle);
     }
     if (stopped) {
       while (t < finalT) {
         observations.put(t, new Outcome.Observation(
-                Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
-                platformHeight,
-                (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
+            Grid.create(robot.getVoxels(), v -> v == null ? null : v.getVoxelPoly()),
+            platformHeight,
+            (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
         ));
         angles.put(t, 1.0);
         t = t + settings.getStepFrequency();

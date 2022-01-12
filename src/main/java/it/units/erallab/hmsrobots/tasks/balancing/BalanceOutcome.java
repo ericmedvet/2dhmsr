@@ -17,7 +17,9 @@ public class BalanceOutcome extends Outcome {
     this.angles = Collections.unmodifiableSortedMap(new TreeMap<>(angles));
   }
 
-  public SortedMap<Double, Double> getAngles() { return angles; }
+  public SortedMap<Double, Double> getAngles() {
+    return angles;
+  }
 
   public BalanceOutcome subOutcome(double startT, double endT) {
     return new BalanceOutcome(observations.subMap(startT, endT), angles.subMap(startT, endT));

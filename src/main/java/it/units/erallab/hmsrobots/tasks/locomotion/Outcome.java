@@ -36,7 +36,8 @@ public class Outcome {
     this.observations = Collections.unmodifiableSortedMap(new TreeMap<>(observations));
   }
 
-  public record Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {}
+  public record Observation(Grid<VoxelPoly> voxelPolies, double terrainHeight, double computationTime) {
+  }
 
   public double getAreaRatioEnergy() {
     double initialEnergy = observations.get(observations.firstKey())

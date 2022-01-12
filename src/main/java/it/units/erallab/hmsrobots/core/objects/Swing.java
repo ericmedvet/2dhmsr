@@ -23,10 +23,10 @@ public class Swing extends RigidBody {
 
   public Swing(double halfPlatformWidth, double platformHeight, double impulse) {
     Circle pivotPolygon = new Circle(0.000000001);
-    polygon = new Polygon(new Vector2(- halfPlatformWidth, platformHeight + PLATFORM_HEIGHT),
-            new Vector2(- halfPlatformWidth, platformHeight),
-            new Vector2(halfPlatformWidth, platformHeight),
-            new Vector2(halfPlatformWidth, platformHeight + PLATFORM_HEIGHT));
+    polygon = new Polygon(new Vector2(-halfPlatformWidth, platformHeight + PLATFORM_HEIGHT),
+        new Vector2(-halfPlatformWidth, platformHeight),
+        new Vector2(halfPlatformWidth, platformHeight),
+        new Vector2(halfPlatformWidth, platformHeight + PLATFORM_HEIGHT));
     Body pivot = new Body();
     pivot.addFixture(pivotPolygon);
     pivot.setMass(MassType.INFINITE);
