@@ -120,7 +120,6 @@ public class QuantizedDistributedSpikingSensingCALike extends AbstractController
 
   @Override
   public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
-    System.out.println("HHE");
     Grid<Double> controlSignals = Grid.create(voxels);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
