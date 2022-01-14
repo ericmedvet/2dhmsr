@@ -80,7 +80,7 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
   }
 
   @JsonProperty
-  private final int signals;
+  private final int stateSize;
   @JsonProperty
   private final Grid<Integer> nOfInputGrid;
   @JsonProperty
@@ -106,7 +106,7 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
       @JsonProperty("nOfOutputGrid") Grid<Integer> nOfOutputGrid,
       @JsonProperty("functions") Grid<TimedRealFunction> functions
   ) {
-    this.signals = stateSize;
+    this.stateSize = stateSize;
     this.nOfInputGrid = nOfInputGrid;
     this.nOfOutputGrid = nOfOutputGrid;
     this.functions = functions;
@@ -115,18 +115,18 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
     reset();
   }
 
-  public DistributedSensingCALike(Grid<? extends SensingVoxel> voxels, int signals) {
+  public DistributedSensingCALike(Grid<? extends SensingVoxel> voxels, int stateSize) {
     this(
-        signals,
-        Grid.create(voxels, v -> (v == null) ? 0 : nOfInputs(v, signals)),
-        Grid.create(voxels, v -> (v == null) ? 0 : nOfOutputs(v, signals)),
+        stateSize,
+        Grid.create(voxels, v -> (v == null) ? 0 : nOfInputs(v, stateSize)),
+        Grid.create(voxels, v -> (v == null) ? 0 : nOfOutputs(v, stateSize)),
         Grid.create(
             voxels.getW(),
             voxels.getH(),
             (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
-                (double[] in) -> new double[1 + signals],
-                nOfInputs(voxels.get(x, y), signals),
-                nOfOutputs(voxels.get(x, y), signals))
+                (double[] in) -> new double[1 + stateSize],
+                nOfInputs(voxels.get(x, y), stateSize),
+                nOfOutputs(voxels.get(x, y), stateSize))
             )
         )
     );
@@ -140,12 +140,12 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
   public void reset() {
     for (int x = 0; x < lastSignalsGrid.getW(); x++) {
       for (int y = 0; y < lastSignalsGrid.getH(); y++) {
-        lastSignalsGrid.set(x, y, new double[signals]);
+        lastSignalsGrid.set(x, y, new double[stateSize]);
       }
     }
     for (int x = 0; x < currentSignalsGrid.getW(); x++) {
       for (int y = 0; y < currentSignalsGrid.getH(); y++) {
-        currentSignalsGrid.set(x, y, new double[signals]);
+        currentSignalsGrid.set(x, y, new double[stateSize]);
       }
     }
     functions.values().stream().filter(Objects::nonNull).forEach(f -> {
@@ -168,10 +168,10 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
       double[] inputs = ArrayUtils.addAll(entry.getValue().getSensorReadings(), signals);
       //compute outputs
       TimedRealFunction function = functions.get(entry.getX(), entry.getY());
-      double[] outputs = function != null ? function.apply(t, inputs) : new double[1 + this.signals];
+      double[] outputs = function != null ? function.apply(t, inputs) : new double[1 + this.stateSize];
       //save outputs
       controlSignals.set(entry.getX(), entry.getY(), outputs[0]);
-      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, this.signals);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, this.stateSize);
     }
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
@@ -179,7 +179,7 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
       }
       int x = entry.getX();
       int y = entry.getY();
-      System.arraycopy(currentSignalsGrid.get(x, y), 0, lastSignalsGrid.get(x, y), 0, signals);
+      System.arraycopy(currentSignalsGrid.get(x, y), 0, lastSignalsGrid.get(x, y), 0, stateSize);
     }
     return controlSignals;
   }
@@ -193,8 +193,8 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
   }
 
   private double[] getLastSignals(int x, int y) {
-    double[] values = new double[signals * Dir.values().length];
-    if (signals <= 0) {
+    double[] values = new double[stateSize * Dir.values().length];
+    if (stateSize <= 0) {
       return values;
     }
     int c = 0;
@@ -203,9 +203,9 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
       int adjacentY = y + dir.dy;
       double[] lastSignals = lastSignalsGrid.get(adjacentX, adjacentY);
       if (lastSignals != null) {
-        System.arraycopy(lastSignals, 0, values, c, signals);
+        System.arraycopy(lastSignals, 0, values, c, stateSize);
       }
-      c = c + signals;
+      c = c + stateSize;
     }
     return values;
   }
@@ -213,7 +213,7 @@ public class DistributedSensingCALike extends AbstractController<SensingVoxel> {
   @Override
   public String toString() {
     return "DistributedSensing{" +
-        "signals=" + signals +
+        "signals=" + stateSize +
         ", functions=" + functions +
         '}';
   }
