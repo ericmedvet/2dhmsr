@@ -160,7 +160,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
 
   @Override
   public Grid<Double> computeControlSignals(double t, Grid<? extends SensingVoxel> voxels) {
-    Grid<Double> controSignals = Grid.create(voxels.getW(), voxels.getH());
+    Grid<Double> controlSignals = Grid.create(voxels);
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
       if (entry.getValue() == null) {
         continue;
@@ -172,7 +172,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
       TimedRealFunction function = functions.get(entry.getX(), entry.getY());
       double[] outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs(entry.getX(), entry.getY())];
       //save outputs
-      controSignals.set(entry.getX(), entry.getY(), outputs[0]);
+      controlSignals.set(entry.getX(), entry.getY(), outputs[0]);
       System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, outputs.length - 1);
     }
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
@@ -183,7 +183,7 @@ public class DistributedSensing extends AbstractController<SensingVoxel> {
       int y = entry.getY();
       System.arraycopy(currentSignalsGrid.get(x, y), 0, lastSignalsGrid.get(x, y), 0, currentSignalsGrid.get(x, y).length);
     }
-    return controSignals;
+    return controlSignals;
   }
 
   public int nOfInputs(int x, int y) {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.controllers.AbstractController;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
-import it.units.erallab.hmsrobots.core.controllers.TimedRealFunction;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.stv.QuantizedSpikeTrainToValueConverter;
 import it.units.erallab.hmsrobots.core.controllers.snndiscr.converters.vts.QuantizedValueToSpikeTrainConverter;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
@@ -17,17 +16,17 @@ import java.util.stream.IntStream;
 
 public class QuantizedDistributedSpikingSensing extends AbstractController<SensingVoxel> {
 
-  private static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
+  protected static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
 
-  private enum Dir {
+  protected enum Dir {
 
     N(0, -1, 0),
     E(1, 0, 1),
     S(0, 1, 2),
     W(-1, 0, 3);
 
-    private final int dx;
-    private final int dy;
+    final int dx;
+    final int dy;
     private final int index;
 
     Dir(int dx, int dy, int index) {
@@ -47,7 +46,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController<Sensi
   }
 
   @JsonProperty
-  private final int signals;
+  protected final int signals;
   @JsonProperty
   private final Grid<Integer> nOfInputGrid;
   @JsonProperty
@@ -60,7 +59,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController<Sensi
   private final Grid<QuantizedValueToSpikeTrainConverter[]> inputConverters;
 
   private double previousTime = 0;
-  private final Grid<int[][]> lastSignalsGrid;
+  protected final Grid<int[][]> lastSignalsGrid;
   private final Grid<int[][]> currentSignalsGrid;
 
   @JsonCreator
@@ -134,11 +133,11 @@ public class QuantizedDistributedSpikingSensing extends AbstractController<Sensi
       int[][] inputs = ArrayUtils.addAll(lastSignals, sensorValues);
       //compute outputs
       QuantizedMultivariateSpikingFunction function = functions.get(entry.getX(), entry.getY());
-      int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + signals * Dir.values().length][ARRAY_SIZE];
+      int[][] outputs = function != null ? function.apply(t, inputs) : new int[nOfOutputs(entry.getX(), entry.getY())][ARRAY_SIZE];
       //apply outputs
       double force = outputConverters.get(entry.getX(), entry.getY()).convert(outputs[0], t - previousTime);
       controlSignals.set(entry.getX(), entry.getY(), force);
-      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, signals * Dir.values().length);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.getX(), entry.getY()), 0, outputs.length - 1);
     }
     previousTime = t;
     for (Grid.Entry<? extends SensingVoxel> entry : voxels) {
@@ -147,7 +146,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController<Sensi
     return controlSignals;
   }
 
-  private int[][] getLastSignals(int x, int y) {
+  protected int[][] getLastSignals(int x, int y) {
     int[][] values = new int[signals * Dir.values().length][];
     if (signals <= 0) {
       return values;

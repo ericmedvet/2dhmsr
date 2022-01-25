@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.core.controllers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.units.erallab.hmsrobots.core.controllers.snndiscr.QuantizedDistributedSpikingSensing;
 import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
@@ -59,7 +60,7 @@ public class DistributedSensingNonDirectional extends DistributedSensing {
 
   @Override
   protected double[] getLastSignals(int x, int y) {
-    double[] values = new double[4 * signals];
+    double[] values = new double[signals * Dir.values().length];
     if (signals <= 0) {
       return values;
     }
