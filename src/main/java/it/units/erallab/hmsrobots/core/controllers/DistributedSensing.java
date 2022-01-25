@@ -22,7 +22,6 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -30,16 +29,77 @@ import java.util.Objects;
  */
 public class DistributedSensing extends AbstractController {
 
+  protected enum Dir {
+
+    N(0, -1, 0),
+    E(1, 0, 1),
+    S(0, 1, 2),
+    W(-1, 0, 3);
+
+    final int dx;
+    final int dy;
+    private final int index;
+
+    Dir(int dx, int dy, int index) {
+      this.dx = dx;
+      this.dy = dy;
+      this.index = index;
+    }
+
+    private static Dir adjacent(Dir dir) {
+      return switch (dir) {
+        case N -> Dir.S;
+        case E -> Dir.W;
+        case S -> Dir.N;
+        case W -> Dir.E;
+      };
+    }
+  }
+
+  protected static class FunctionWrapper implements TimedRealFunction {
+    @JsonProperty
+    private final TimedRealFunction inner;
+
+    @JsonCreator
+    public FunctionWrapper(@JsonProperty("inner") TimedRealFunction inner) {
+      this.inner = inner;
+    }
+
+    @Override
+    public double[] apply(double t, double[] in) {
+      return inner.apply(t, in);
+    }
+
+    @Override
+    public int getInputDimension() {
+      return inner.getInputDimension();
+    }
+
+    @Override
+    public int getOutputDimension() {
+      return inner.getOutputDimension();
+    }
+  }
+
   @JsonProperty
-  private final int signals;
+  protected final int signals;
   @JsonProperty
   private final Grid<Integer> nOfInputGrid;
   @JsonProperty
   private final Grid<Integer> nOfOutputGrid;
   @JsonProperty
   private final Grid<TimedRealFunction> functions;
-  private final Grid<double[]> lastSignalsGrid;
+
+  protected final Grid<double[]> lastSignalsGrid;
   private final Grid<double[]> currentSignalsGrid;
+
+  public static int nOfInputs(Voxel voxel, int signals) {
+    return signals * Dir.values().length + voxel.getSensors().stream().mapToInt(s -> s.getDomains().length).sum();
+  }
+
+  public static int nOfOutputs(Voxel voxel, int signals) {
+    return 1 + signals * Dir.values().length;
+  }
 
   @JsonCreator
   public DistributedSensing(
@@ -68,145 +128,14 @@ public class DistributedSensing extends AbstractController {
             (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
                 (double[] in) -> new double[1 + signals * Dir.values().length],
                 nOfInputs(voxels.get(x, y), signals),
-                nOfOutputs(voxels.get(x, y), signals)
-            )
+                nOfOutputs(voxels.get(x, y), signals))
             )
         )
     );
   }
 
-  private enum Dir {
-
-    N(0, -1, 0),
-    E(1, 0, 1),
-    S(0, 1, 2),
-    W(-1, 0, 3);
-
-    private final int dx;
-    private final int dy;
-    private final int index;
-
-    Dir(int dx, int dy, int index) {
-      this.dx = dx;
-      this.dy = dy;
-      this.index = index;
-    }
-
-    private static Dir adjacent(Dir dir) {
-      return switch (dir) {
-        case N -> Dir.S;
-        case E -> Dir.W;
-        case S -> Dir.N;
-        case W -> Dir.E;
-      };
-    }
-  }
-
-  private static class FunctionWrapper implements TimedRealFunction, Serializable {
-    @JsonProperty
-    private final TimedRealFunction inner;
-
-    @JsonCreator
-    public FunctionWrapper(@JsonProperty("inner") TimedRealFunction inner) {
-      this.inner = inner;
-    }
-
-    @Override
-    public double[] apply(double t, double[] in) {
-      return inner.apply(t, in);
-    }
-
-    @Override
-    public int getInputDimension() {
-      return inner.getInputDimension();
-    }
-
-    @Override
-    public int getOutputDimension() {
-      return inner.getOutputDimension();
-    }
-  }
-
-  public static int nOfInputs(Voxel voxel, int signals) {
-    return signals * Dir.values().length + voxel.getSensors().stream().mapToInt(s -> s.getDomains().length).sum();
-  }
-
-  public static int nOfOutputs(Voxel voxel, int signals) {
-    return 1 + signals * Dir.values().length;
-  }
-
-  @Override
-  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
-    Grid<Double> controSignals = Grid.create(voxels.getW(), voxels.getH());
-    for (Grid.Entry<Voxel> entry : voxels) {
-      if (entry.value() == null) {
-        continue;
-      }
-      //get inputs
-      double[] signals = getLastSignals(entry.key().x(), entry.key().y());
-      double[] inputs = ArrayUtils.addAll(entry.value().getSensorReadings(), signals);
-      //compute outputs
-      TimedRealFunction function = functions.get(entry.key().x(), entry.key().y());
-      double[] outputs = function != null ? function.apply(
-          t,
-          inputs
-      ) : new double[1 + this.signals * Dir.values().length];
-      //save outputs
-      controSignals.set(entry.key().x(), entry.key().y(), outputs[0]);
-      System.arraycopy(
-          outputs,
-          1,
-          currentSignalsGrid.get(entry.key().x(), entry.key().y()),
-          0,
-          this.signals * Dir.values().length
-      );
-    }
-    for (Grid.Entry<Voxel> entry : voxels) {
-      if (entry.value() == null) {
-        continue;
-      }
-      int x = entry.key().x();
-      int y = entry.key().y();
-      System.arraycopy(
-          currentSignalsGrid.get(x, y),
-          0,
-          lastSignalsGrid.get(x, y),
-          0,
-          this.signals * Dir.values().length
-      );
-    }
-    return controSignals;
-  }
-
   public Grid<TimedRealFunction> getFunctions() {
     return functions;
-  }
-
-  private double[] getLastSignals(int x, int y) {
-    double[] values = new double[signals * Dir.values().length];
-    if (signals <= 0) {
-      return values;
-    }
-    int c = 0;
-    for (Dir dir : Dir.values()) {
-      int adjacentX = x + dir.dx;
-      int adjacentY = y + dir.dy;
-      double[] lastSignals = lastSignalsGrid.get(adjacentX, adjacentY);
-      if (lastSignals != null) {
-        int index = Dir.adjacent(dir).index;
-        System.arraycopy(lastSignals, index * signals, values, c, signals);
-      }
-      c = c + signals;
-    }
-    return values;
-  }
-
-  public int nOfInputs(int x, int y) {
-    return nOfInputGrid.get(x, y);
-  }
-
-  public int nOfOutputs(int x, int y) {
-    return nOfOutputGrid.get(x, y);
   }
 
   @Override
@@ -226,6 +155,62 @@ public class DistributedSensing extends AbstractController {
         ((Resettable) f).reset();
       }
     });
+  }
+
+
+  @Override
+  public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
+    Grid<Double> controlSignals = Grid.create(voxels);
+    for (Grid.Entry<Voxel> entry : voxels) {
+      if (entry.value() == null) {
+        continue;
+      }
+      //get inputs
+      double[] signals = getLastSignals(entry.key().x(), entry.key().y());
+      double[] inputs = ArrayUtils.addAll(entry.value().getSensorReadings(), signals);
+      //compute outputs
+      TimedRealFunction function = functions.get(entry.key().x(), entry.key().y());
+      double[] outputs = function != null ? function.apply(t, inputs) : new double[nOfOutputs(entry.key().x(), entry.key().y())];
+      //save outputs
+      controlSignals.set(entry.key().x(), entry.key().y(), outputs[0]);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, outputs.length - 1);
+    }
+    for (Grid.Entry<Voxel> entry : voxels) {
+      if (entry.value() == null) {
+        continue;
+      }
+      int x = entry.key().x();
+      int y = entry.key().y();
+      System.arraycopy(currentSignalsGrid.get(x, y), 0, lastSignalsGrid.get(x, y), 0, currentSignalsGrid.get(x, y).length);
+    }
+    return controlSignals;
+  }
+
+  public int nOfInputs(int x, int y) {
+    return nOfInputGrid.get(x, y);
+  }
+
+  public int nOfOutputs(int x, int y) {
+    return nOfOutputGrid.get(x, y);
+  }
+
+  protected double[] getLastSignals(int x, int y) {
+    double[] values = new double[signals * Dir.values().length];
+    if (signals <= 0) {
+      return values;
+    }
+    int c = 0;
+    for (Dir dir : Dir.values()) {
+      int adjacentX = x + dir.dx;
+      int adjacentY = y + dir.dy;
+      double[] lastSignals = lastSignalsGrid.get(adjacentX, adjacentY);
+      if (lastSignals != null) {
+        int index = Dir.adjacent(dir).index;
+        System.arraycopy(lastSignals, index * signals, values, c, signals);
+      }
+      c = c + signals;
+    }
+    return values;
   }
 
   @Override

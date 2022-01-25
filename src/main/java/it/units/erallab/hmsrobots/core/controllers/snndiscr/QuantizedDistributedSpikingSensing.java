@@ -16,17 +16,17 @@ import java.util.stream.IntStream;
 
 public class QuantizedDistributedSpikingSensing extends AbstractController {
 
-  private static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
+  protected static final int ARRAY_SIZE = QuantizedValueToSpikeTrainConverter.ARRAY_SIZE;
 
-  private enum Dir {
+  protected enum Dir {
 
     N(0, -1, 0),
     E(1, 0, 1),
     S(0, 1, 2),
     W(-1, 0, 3);
 
-    private final int dx;
-    private final int dy;
+    final int dx;
+    final int dy;
     private final int index;
 
     Dir(int dx, int dy, int index) {
@@ -46,7 +46,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController {
   }
 
   @JsonProperty
-  private final int signals;
+  protected final int signals;
   @JsonProperty
   private final Grid<Integer> nOfInputGrid;
   @JsonProperty
@@ -59,7 +59,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController {
   private final Grid<QuantizedValueToSpikeTrainConverter[]> inputConverters;
 
   private double previousTime = 0;
-  private final Grid<int[][]> lastSignalsGrid;
+  protected final Grid<int[][]> lastSignalsGrid;
   private final Grid<int[][]> currentSignalsGrid;
 
   @JsonCreator
@@ -133,11 +133,11 @@ public class QuantizedDistributedSpikingSensing extends AbstractController {
       int[][] inputs = ArrayUtils.addAll(lastSignals, sensorValues);
       //compute outputs
       QuantizedMultivariateSpikingFunction function = functions.get(entry.key().x(), entry.key().y());
-      int[][] outputs = function != null ? function.apply(t, inputs) : new int[1 + signals * Dir.values().length][ARRAY_SIZE];
+      int[][] outputs = function != null ? function.apply(t, inputs) : new int[nOfOutputs(entry.key().x(), entry.key().y())][ARRAY_SIZE];
       //apply outputs
       double force = outputConverters.get(entry.key().x(), entry.key().y()).convert(outputs[0], t - previousTime);
       controlSignals.set(entry.key().x(), entry.key().y(), force);
-      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, signals * Dir.values().length);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, outputs.length - 1);
     }
     previousTime = t;
     for (Grid.Entry<Voxel> entry : voxels) {
@@ -146,7 +146,7 @@ public class QuantizedDistributedSpikingSensing extends AbstractController {
     return controlSignals;
   }
 
-  private int[][] getLastSignals(int x, int y) {
+  protected int[][] getLastSignals(int x, int y) {
     int[][] values = new int[signals * Dir.values().length][];
     if (signals <= 0) {
       return values;
