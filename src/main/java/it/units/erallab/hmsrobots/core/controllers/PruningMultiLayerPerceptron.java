@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.random.RandomGenerator;
 
 public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements TimedRealFunction, Resettable, Serializable {
 
@@ -155,7 +156,7 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   private void prune() {
     pruned = true;
     List<PruningPair> pairs = new ArrayList<>();
-    Random random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
+    RandomGenerator random = new Random((long) (10000 * weights[0][0][0])); // TODO to improve, should be passed to constructor
     for (int i = 1; i < neurons.length; i++) {
       for (int j = 0; j < neurons[i]; j++) {
         for (int k = 0; k < neurons[i - 1] + 1; k++) {

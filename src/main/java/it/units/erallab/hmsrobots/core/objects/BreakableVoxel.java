@@ -29,6 +29,7 @@ import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.DistanceJoint;
 
 import java.util.*;
+import java.util.random.RandomGenerator;
 
 public class BreakableVoxel extends Voxel {
 
@@ -47,7 +48,7 @@ public class BreakableVoxel extends Voxel {
   private transient double lastControlEnergy;
   private transient double lastAreaRatioEnergy;
   private transient double[] sensorReadings;
-  private transient Random random;
+  private transient RandomGenerator random;
 
   @JsonCreator
   public BreakableVoxel(
