@@ -24,7 +24,8 @@ public record DoubleRange(double min, double max) implements Serializable {
 
   public DoubleRange {
     if (max < min) {
-      throw new IllegalArgumentException(String.format("Max has to be lower or equal than min; %f is not than %f.",
+      throw new IllegalArgumentException(String.format(
+          "Max has to be lower or equal than min; %f is not than %f.",
           max,
           min
       ));
@@ -45,12 +46,12 @@ public record DoubleRange(double min, double max) implements Serializable {
     return Math.min(Math.max(value, min), max);
   }
 
-  public double normalize(double value) {
-    return (clip(value) - min) / (max - min);
-  }
-
   public double extent() {
     return max - min;
+  }
+
+  public double normalize(double value) {
+    return (clip(value) - min) / (max - min);
   }
 
 }

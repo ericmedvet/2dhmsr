@@ -43,16 +43,16 @@ public class TimeFunction extends AbstractSensor {
   }
 
   @Override
+  public double[] sense(double t) {
+    return new double[]{function.apply(t)};
+  }
+
+  @Override
   public String toString() {
     return "TimeFunction{" +
         "function=" + function +
         ", min=" + min +
         ", max=" + max +
         '}';
-  }
-
-  @Override
-  public double[] sense(double t) {
-    return new double[]{function.apply(t)};
   }
 }

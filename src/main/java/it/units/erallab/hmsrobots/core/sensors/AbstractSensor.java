@@ -45,10 +45,6 @@ public abstract class AbstractSensor implements Sensor, Serializable {
   }
 
   @Override
-  public void reset() {
-  }
-
-  @Override
   public DoubleRange[] getDomains() {
     return domains;
   }
@@ -73,6 +69,10 @@ public abstract class AbstractSensor implements Sensor, Serializable {
   @Override
   public void setVoxel(Voxel voxel) {
     this.voxel = voxel;
+  }
+
+  @Override
+  public void reset() {
   }
 
   @Override

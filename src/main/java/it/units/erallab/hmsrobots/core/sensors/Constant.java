@@ -50,14 +50,14 @@ public class Constant extends AbstractSensor {
   }
 
   @Override
+  public double[] sense(double t) {
+    return values;
+  }
+
+  @Override
   public String toString() {
     return "Constant{" +
         "values=" + Arrays.toString(values) +
         '}';
-  }
-
-  @Override
-  public double[] sense(double t) {
-    return values;
   }
 }

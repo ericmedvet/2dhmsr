@@ -40,8 +40,6 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
   private double[][][] absMeans;
   private double[][][] meanDiffSquareSums; //https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
 
-  private record PruningPair(int[] indexes, double value) {}
-
   public PruningMultiLayerPerceptron(
       @JsonProperty("activationFunction") ActivationFunction activationFunction,
       @JsonProperty("weights") double[][][] weights,
@@ -105,6 +103,8 @@ public class PruningMultiLayerPerceptron extends MultiLayerPerceptron implements
     SIGNAL_VARIANCE,
     RANDOM
   }
+
+  private record PruningPair(int[] indexes, double value) {}
 
   @Override
   public double[] apply(double t, double[] input) {

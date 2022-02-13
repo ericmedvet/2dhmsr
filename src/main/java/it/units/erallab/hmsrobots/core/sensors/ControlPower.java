@@ -41,6 +41,13 @@ public class ControlPower extends AbstractSensor {
   }
 
   @Override
+  public double[] sense(double t) {
+    double power = voxel.getControlEnergy() / (t - lastT);
+    lastT = t;
+    return new double[]{power};
+  }
+
+  @Override
   public void reset() {
     super.reset();
     lastT = 0;
@@ -51,12 +58,5 @@ public class ControlPower extends AbstractSensor {
     return "ControlPower{" +
         "controlInterval=" + controlInterval +
         '}';
-  }
-
-  @Override
-  public double[] sense(double t) {
-    double power = voxel.getControlEnergy() / (t - lastT);
-    lastT = t;
-    return new double[]{power};
   }
 }

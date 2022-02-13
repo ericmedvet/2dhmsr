@@ -196,6 +196,13 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
   }
 
   @Override
+  public int hashCode() {
+    int result = Objects.hash(w, h);
+    result = 31 * result + Arrays.hashCode(ts);
+    return result;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -203,13 +210,6 @@ public class Grid<T> implements Iterable<Grid.Entry<T>>, Serializable {
       return false;
     Grid<?> grid = (Grid<?>) o;
     return w == grid.w && h == grid.h && Arrays.equals(ts, grid.ts);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = Objects.hash(w, h);
-    result = 31 * result + Arrays.hashCode(ts);
-    return result;
   }
 
   @Override

@@ -69,11 +69,11 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   @JsonProperty
   protected final double springF;
   @JsonProperty
+  protected final double springD;
+  @JsonProperty
   private final double sideLength;
   @JsonProperty
   private final double massSideLengthRatio;
-  @JsonProperty
-  protected final double springD;
   @JsonProperty
   private final double massLinearDamping;
   @JsonProperty
@@ -202,45 +202,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   }
 
   @Override
-  public void reset() {
-    assemble();
-    areaRatioEnergy = 0d;
-    applyForce(0d);
-    controlEnergy = 0d;
-    lastAppliedForce = 0d;
-    sensors.forEach(s -> {
-      s.setVoxel(this);
-      s.reset();
-    });
-  }
-
-  public void applyForce(double f) {
-    if (Math.abs(f) > 1d) {
-      f = Math.signum(f);
-    }
-    lastAppliedForce = f;
-    for (DistanceJoint<Body> joint : springJoints) {
-      Voxel.SpringRange range = (SpringRange) joint.getUserData();
-      if (f >= 0) { // shrink
-        joint.setRestDistance(range.rest - (range.rest - range.min) * f);
-      } else if (f < 0) { // expand
-        joint.setRestDistance(range.rest + (range.max - range.rest) * -f);
-      }
-    }
-  }
-
-  public double[] getSensorReadings() {
-    return sensors.stream()
-        .map(Sensor::getReadings)
-        .reduce(ArrayUtils::addAll)
-        .orElse(new double[sensors.stream().mapToInt(s -> s.getDomains().length).sum()]);
-  }
-
-  public List<Sensor> getSensors() {
-    return sensors;
-  }
-
-  @Override
   public void addTo(World<Body> world) {
     if (this.world != null) {
       for (Body body : vertexBodies) {
@@ -256,6 +217,21 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     }
     for (Joint<Body> joint : springJoints) {
       world.addJoint(joint);
+    }
+  }
+
+  public void applyForce(double f) {
+    if (Math.abs(f) > 1d) {
+      f = Math.signum(f);
+    }
+    lastAppliedForce = f;
+    for (DistanceJoint<Body> joint : springJoints) {
+      Voxel.SpringRange range = (SpringRange) joint.getUserData();
+      if (f >= 0) { // shrink
+        joint.setRestDistance(range.rest - (range.rest - range.min) * f);
+      } else if (f < 0) { // expand
+        joint.setRestDistance(range.rest + (range.max - range.rest) * -f);
+      }
     }
   }
 
@@ -517,20 +493,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     return BoundingBox.of(Point2.of(minX, minY), Point2.of(maxX, maxY));
   }
 
-  public double getAngle() {
-    Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
-    Vector2 downSide = vertexBodies[2].getWorldCenter().copy().subtract(vertexBodies[3].getWorldCenter());
-    return (upSide.getDirection() + downSide.getDirection()) / 2d;
-  }
-
-  public double getAreaRatio() {
-    return area() / sideLength / sideLength;
-  }
-
-  public double getAreaRatioEnergy() {
-    return areaRatioEnergy;
-  }
-
   @Override
   public Point2 center() {
     double xc = 0d;
@@ -552,12 +514,34 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     ).area();
   }
 
+  public double getAngle() {
+    Vector2 upSide = vertexBodies[1].getWorldCenter().copy().subtract(vertexBodies[0].getWorldCenter());
+    Vector2 downSide = vertexBodies[2].getWorldCenter().copy().subtract(vertexBodies[3].getWorldCenter());
+    return (upSide.getDirection() + downSide.getDirection()) / 2d;
+  }
+
+  public double getAreaRatio() {
+    return area() / sideLength / sideLength;
+  }
+
+  public double getAreaRatioEnergy() {
+    return areaRatioEnergy;
+  }
+
+  public double getControlEnergy() {
+    return controlEnergy;
+  }
+
   private Vector2 getIndexedVertex(int i, int j) {
     Transform t = vertexBodies[i].getTransform();
     Rectangle rectangle = (Rectangle) vertexBodies[i].getFixture(0).getShape();
     Vector2 tV = rectangle.getVertices()[j].copy();
     t.transform(tV);
     return tV;
+  }
+
+  public double getLastAppliedForce() {
+    return lastAppliedForce;
   }
 
   public Point2 getLinearVelocity() {
@@ -568,6 +552,17 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
       y = y + vertex.getLinearVelocity().y;
     }
     return Point2.of(x / (double) vertexBodies.length, y / (double) vertexBodies.length);
+  }
+
+  public double[] getSensorReadings() {
+    return sensors.stream()
+        .map(Sensor::getReadings)
+        .reduce(ArrayUtils::addAll)
+        .orElse(new double[sensors.stream().mapToInt(s -> s.getDomains().length).sum()]);
+  }
+
+  public List<Sensor> getSensors() {
+    return sensors;
   }
 
   public double getSideLength() {
@@ -641,6 +636,19 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     return Poly.of(vertices);
   }
 
+  @Override
+  public void reset() {
+    assemble();
+    areaRatioEnergy = 0d;
+    applyForce(0d);
+    controlEnergy = 0d;
+    lastAppliedForce = 0d;
+    sensors.forEach(s -> {
+      s.setVoxel(this);
+      s.reset();
+    });
+  }
+
   public void setOwner(Robot robot) {
     Filter filter = new RobotFilter();
     for (Body vertexBody : vertexBodies) {
@@ -672,14 +680,6 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     for (Body body : vertexBodies) {
       body.translate(v);
     }
-  }
-
-  public double getControlEnergy() {
-    return controlEnergy;
-  }
-
-  public double getLastAppliedForce() {
-    return lastAppliedForce;
   }
 
 }

@@ -145,7 +145,13 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));
   }
 
-  private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, RandomGenerator random) {
+  private static double[][] randomTerrain(
+      int n,
+      double length,
+      double peak,
+      double borderHeight,
+      RandomGenerator random
+  ) {
     double[] xs = new double[n + 2];
     double[] ys = new double[n + 2];
     xs[0] = 0d;
