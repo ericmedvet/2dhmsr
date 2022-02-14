@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.random.RandomGenerator;
 
 /**
  * @author eric on 2020/12/18 for 2dhmsr
@@ -34,7 +35,7 @@ public class Noisy extends CompositeSensor {
   private final long seed;
 
   private final double[] sigmas;
-  private final Random random;
+  private final RandomGenerator random;
 
   @JsonCreator
   public Noisy(

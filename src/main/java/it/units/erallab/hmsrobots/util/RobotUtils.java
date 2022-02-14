@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.random.RandomGenerator;
 
 import static it.units.erallab.hmsrobots.util.Utils.params;
 
@@ -61,7 +62,7 @@ public class RobotUtils {
   private RobotUtils() {
   }
 
-  public static UnaryOperator<Robot> buildRobotTransformation(String name, Random externalRandom) {
+  public static UnaryOperator<Robot> buildRobotTransformation(String name, RandomGenerator externalRandom) {
     String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
     String broken = "broken-(?<ratio>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
     String identity = "identity";
@@ -75,7 +76,7 @@ public class RobotUtils {
       double thresholdStDev = Double.parseDouble(params.get("thresholdStDev"));
       double restoreTimeMean = Double.parseDouble(params.get("restTimeMean"));
       double restoreTimeStDev = Double.parseDouble(params.get("restTimeStDev"));
-      Random random;
+      RandomGenerator random;
       if (!params.get("seed").equals("rnd")) {
         random = new Random(Long.parseLong(params.get("seed")));
       } else {
@@ -100,7 +101,7 @@ public class RobotUtils {
     }
     if ((params = params(broken, name)) != null) {
       double ratio = Double.parseDouble(params.get("ratio"));
-      Random random;
+      RandomGenerator random;
       if (!params.get("seed").equals("rnd")) {
         random = new Random(Long.parseLong(params.get("seed")));
       } else {

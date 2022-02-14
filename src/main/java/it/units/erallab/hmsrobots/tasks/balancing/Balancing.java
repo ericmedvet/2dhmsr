@@ -9,10 +9,13 @@ import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.time.StopWatch;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.Settings;
-import org.dyn4j.geometry.*;
+import org.dyn4j.geometry.Vector2;
 import org.dyn4j.world.World;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,15 +23,22 @@ import java.util.concurrent.TimeUnit;
  */
 public class Balancing extends AbstractTask<Robot, BalanceOutcome> {
 
+  private static final double GROUND_HALF_LENGTH = 100.0D;
   private final double finalT;
   private final double angle;
   private final double halfPlatformWidth;
   private final double platformHeight;
   private final double placement;
   private final double impulse;
-  private static final double GROUND_HALF_LENGTH = 100.0D;
 
-  public Balancing(double finalT, double angle, double halfPlatformWidth, double placement, double impulse, Settings settings) {
+  public Balancing(
+      double finalT,
+      double angle,
+      double halfPlatformWidth,
+      double placement,
+      double impulse,
+      Settings settings
+  ) {
     super(settings);
     this.finalT = finalT;
     this.angle = angle;

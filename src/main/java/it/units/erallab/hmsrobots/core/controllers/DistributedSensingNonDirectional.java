@@ -26,10 +26,6 @@ import it.units.erallab.hmsrobots.util.Grid;
  */
 public class DistributedSensingNonDirectional extends DistributedSensing {
 
-  public static int nOfOutputs(Voxel voxel, int signals) {
-    return 1 + signals;
-  }
-
   @JsonCreator
   public DistributedSensingNonDirectional(
       @JsonProperty("signals") int signals,
@@ -51,10 +47,15 @@ public class DistributedSensingNonDirectional extends DistributedSensing {
             (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
                 (double[] in) -> new double[1 + stateSize],
                 nOfInputs(voxels.get(x, y), stateSize),
-                nOfOutputs(voxels.get(x, y), stateSize))
+                nOfOutputs(voxels.get(x, y), stateSize)
+            )
             )
         )
     );
+  }
+
+  public static int nOfOutputs(Voxel voxel, int signals) {
+    return 1 + signals;
   }
 
   @Override

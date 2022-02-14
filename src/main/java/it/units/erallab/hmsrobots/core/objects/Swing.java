@@ -6,7 +6,10 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.joint.Joint;
 import org.dyn4j.dynamics.joint.RevoluteJoint;
-import org.dyn4j.geometry.*;
+import org.dyn4j.geometry.Circle;
+import org.dyn4j.geometry.MassType;
+import org.dyn4j.geometry.Polygon;
+import org.dyn4j.geometry.Vector2;
 import org.dyn4j.world.World;
 
 import java.util.Arrays;
@@ -17,16 +20,18 @@ import java.util.List;
  */
 public class Swing extends RigidBody {
 
+  public static final double PLATFORM_HEIGHT = 2.0D;
   private final Joint<Body> joint;
   private final Polygon polygon;
-  public static final double PLATFORM_HEIGHT = 2.0D;
 
   public Swing(double halfPlatformWidth, double platformHeight, double impulse) {
     Circle pivotPolygon = new Circle(0.000000001);
-    polygon = new Polygon(new Vector2(-halfPlatformWidth, platformHeight + PLATFORM_HEIGHT),
+    polygon = new Polygon(
+        new Vector2(-halfPlatformWidth, platformHeight + PLATFORM_HEIGHT),
         new Vector2(-halfPlatformWidth, platformHeight),
         new Vector2(halfPlatformWidth, platformHeight),
-        new Vector2(halfPlatformWidth, platformHeight + PLATFORM_HEIGHT));
+        new Vector2(halfPlatformWidth, platformHeight + PLATFORM_HEIGHT)
+    );
     Body pivot = new Body();
     pivot.addFixture(pivotPolygon);
     pivot.setMass(MassType.INFINITE);
@@ -39,6 +44,16 @@ public class Swing extends RigidBody {
     joint = new RevoluteJoint<>(pivot, platform, new Vector2(0, platformHeight));
     bodies = List.of(platform, pivot);
     platform.applyImpulse(impulse);
+  }
+
+  @Override
+  public void addTo(World<Body> world) {
+    super.addTo(world);
+    world.addJoint(joint);
+  }
+
+  public double getAngle() {
+    return bodies.get(0).getTransform().getRotation().toRadians() * 180.0 / Math.PI;
   }
 
   private Polygon getRotatedPlatform() {
@@ -54,20 +69,13 @@ public class Swing extends RigidBody {
     return copyPolygon;
   }
 
-  public double getAngle() {
-    return bodies.get(0).getTransform().getRotation().toRadians() * 180.0 / Math.PI;
-  }
-
   @Override
   public Snapshot getSnapshot() {
     Polygon copyPolygon = getRotatedPlatform();
-    return new Snapshot(Poly.of(Arrays.stream(copyPolygon.getVertices()).map(Point2::of).toArray(Point2[]::new)), getClass());
-  }
-
-  @Override
-  public void addTo(World<Body> world) {
-    super.addTo(world);
-    world.addJoint(joint);
+    return new Snapshot(
+        Poly.of(Arrays.stream(copyPolygon.getVertices()).map(Point2::of).toArray(Point2[]::new)),
+        getClass()
+    );
   }
 
 }

@@ -96,6 +96,21 @@ public class VoxelPoly implements Shape {
     this.malfunctions = malfunctions;
   }
 
+  @Override
+  public BoundingBox boundingBox() {
+    return poly.boundingBox();
+  }
+
+  @Override
+  public double area() {
+    return poly.area();
+  }
+
+  @Override
+  public Point2 center() {
+    return poly.center();
+  }
+
   public double getAngle() {
     return angle;
   }
@@ -126,21 +141,6 @@ public class VoxelPoly implements Shape {
 
   public boolean isTouchingGround() {
     return isTouchingGround;
-  }
-
-  @Override
-  public BoundingBox boundingBox() {
-    return poly.boundingBox();
-  }
-
-  @Override
-  public Point2 center() {
-    return poly.center();
-  }
-
-  @Override
-  public double area() {
-    return poly.area();
   }
 
   public Point2[] vertexes() {
