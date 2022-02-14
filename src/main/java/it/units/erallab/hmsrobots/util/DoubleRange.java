@@ -17,9 +17,12 @@
 
 package it.units.erallab.hmsrobots.util;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public record DoubleRange(double min, double max) implements Serializable {
 
   public DoubleRange {
