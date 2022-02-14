@@ -28,6 +28,16 @@ public record Poly(Point2[] vertexes) implements Shape, Serializable {
   }
 
   @Override
+  public BoundingBox boundingBox() {
+    return BoundingBox.of(vertexes);
+  }
+
+  @Override
+  public Point2 center() {
+    return Point2.average(vertexes);
+  }
+
+  @Override
   public double area() {
     double a = 0d;
     int l = vertexes.length;
@@ -36,16 +46,6 @@ public record Poly(Point2[] vertexes) implements Shape, Serializable {
     }
     a = 0.5d * Math.abs(a);
     return a;
-  }
-
-  @Override
-  public BoundingBox boundingBox() {
-    return BoundingBox.of(vertexes);
-  }
-
-  @Override
-  public Point2 center() {
-    return Point2.average(vertexes);
   }
 
 }

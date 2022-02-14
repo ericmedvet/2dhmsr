@@ -51,13 +51,13 @@ public record BoundingBox(Point2 min, Point2 max) implements Shape, Serializable
   }
 
   @Override
-  public Point2 center() {
-    return Point2.of((min.x() + max.x()) / 2d, (min.y() + max.y()) / 2d);
+  public double area() {
+    return width() * height();
   }
 
   @Override
-  public double area() {
-    return width() * height();
+  public Point2 center() {
+    return Point2.of((min.x() + max.x()) / 2d, (min.y() + max.y()) / 2d);
   }
 
   public double height() {

@@ -77,13 +77,6 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
   }
 
   @Override
-  public void reset() {
-    voxels.values().stream().filter(Objects::nonNull).forEach(Voxel::reset);
-    assemble();
-    controller.reset();
-  }
-
-  @Override
   public void addTo(World<Body> world) {
     for (Voxel voxel : voxels.values()) {
       if (voxel != null) {
@@ -162,6 +155,13 @@ public class Robot implements Actionable, Serializable, WorldObject, Snapshottab
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
     reset();
+  }
+
+  @Override
+  public void reset() {
+    voxels.values().stream().filter(Objects::nonNull).forEach(Voxel::reset);
+    assemble();
+    controller.reset();
   }
 
   @Override

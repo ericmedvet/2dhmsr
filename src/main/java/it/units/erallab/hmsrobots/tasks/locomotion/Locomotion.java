@@ -32,6 +32,7 @@ import org.dyn4j.world.World;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
 
 public class Locomotion extends AbstractTask<Robot, Outcome> {
@@ -73,7 +74,7 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
       };
     }
     if ((params = Utils.params(flatWithStart, name)) != null) {
-      Random random = new Random(Integer.parseInt(params.get("seed")));
+      RandomGenerator random = new Random(Integer.parseInt(params.get("seed")));
       IntStream.range(0, random.nextInt(10) + 10)
           .forEach(i -> random.nextDouble()); //it looks like that otherwise the 1st double of nextDouble() is always around 0.73...
       double angle = Math.PI / 18d * (random.nextDouble() * 2d - 1d);
@@ -92,7 +93,7 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     if ((params = Utils.params(hilly, name)) != null) {
       double h = Double.parseDouble(params.get("h"));
       double w = Double.parseDouble(params.get("w"));
-      Random random = new Random(Integer.parseInt(params.get("seed")));
+      RandomGenerator random = new Random(Integer.parseInt(params.get("seed")));
       List<Double> xs = new ArrayList<>(List.of(0d, TERRAIN_BORDER_WIDTH));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
       while (xs.get(xs.size() - 1) < TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH) {
@@ -109,7 +110,7 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     if ((params = Utils.params(steppy, name)) != null) {
       double h = Double.parseDouble(params.get("h"));
       double w = Double.parseDouble(params.get("w"));
-      Random random = new Random(Integer.parseInt(params.get("seed")));
+      RandomGenerator random = new Random(Integer.parseInt(params.get("seed")));
       List<Double> xs = new ArrayList<>(List.of(0d, TERRAIN_BORDER_WIDTH));
       List<Double> ys = new ArrayList<>(List.of(TERRAIN_BORDER_HEIGHT, 0d));
       while (xs.get(xs.size() - 1) < TERRAIN_LENGTH - TERRAIN_BORDER_WIDTH) {
@@ -144,7 +145,13 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     throw new IllegalArgumentException(String.format("Unknown terrain name: %s", name));
   }
 
-  private static double[][] randomTerrain(int n, double length, double peak, double borderHeight, Random random) {
+  private static double[][] randomTerrain(
+      int n,
+      double length,
+      double peak,
+      double borderHeight,
+      RandomGenerator random
+  ) {
     double[] xs = new double[n + 2];
     double[] ys = new double[n + 2];
     xs[0] = 0d;

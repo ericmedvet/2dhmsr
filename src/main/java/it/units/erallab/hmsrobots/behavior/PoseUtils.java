@@ -50,8 +50,10 @@ public class PoseUtils {
     }
   }
 
-  private record ClusterablePosture(Set<Grid.Key> pose,
-                                    Grid<Boolean> posture) implements Clusterable {
+  private record ClusterablePosture(
+      Set<Grid.Key> pose,
+      Grid<Boolean> posture
+  ) implements Clusterable {
 
     @Override
     public double[] getPoint() {
@@ -82,7 +84,7 @@ public class PoseUtils {
         .filter(Grid.Entry::value)
         .map(Grid.Entry::key)
         .collect(Collectors.toSet());
-    double midCenterY = center.stream().mapToDouble(Grid.Key::x).average().orElse(0d);
+    double midCenterY = center.stream().mapToDouble(Grid.Key::y).average().orElse(0d);
     Set<Grid.Key> top = center.stream().filter(k -> k.y() <= midCenterY).collect(Collectors.toSet());
     Set<Grid.Key> bottom = center.stream().filter(k -> k.y() > midCenterY).collect(Collectors.toSet());
     return new LinkedHashSet<>(List.of(left, top, bottom, right));

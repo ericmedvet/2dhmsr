@@ -38,6 +38,15 @@ import java.util.Map;
 import java.util.stream.DoubleStream;
 
 public class Lidar extends AbstractSensor {
+  private final static DetectFilter<Body, BodyFixture> FILTER = new DetectFilter<>(
+      true,
+      true,
+      f -> {
+        if (f == null)
+          return true;
+        return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
+      }
+  );
   @JsonProperty
   private final double rayLength;
   @JsonProperty
@@ -90,22 +99,22 @@ public class Lidar extends AbstractSensor {
 
   }
 
-  private final static DetectFilter<Body, BodyFixture> FILTER = new DetectFilter<>(
-      true,
-      true,
-      f -> {
-        if (f == null)
-          return true;
-        return !(f instanceof Voxel.ParentFilter) && !(f instanceof Voxel.RobotFilter);
-      }
-  );
-
   private static double[] sampleRangeWithRays(int numberOfRays, double startAngle, double endAngle) {
     return numberOfRays == 1 ?
         new double[]{(endAngle - startAngle) / 2} :
         DoubleStream.iterate(startAngle, d -> d + (endAngle - startAngle) / (numberOfRays - 1))
             .limit(numberOfRays)
             .toArray();
+  }
+
+  @Override
+  public double[] sense(double t) {
+    return Arrays.stream(rayDirections).map(rayDirection -> {
+      Point2 center = voxel.center();
+      Ray ray = new Ray(new Vector2(center.x(), center.y()), rayDirection + voxel.getAngle());
+      List<RaycastResult<Body, BodyFixture>> results = voxel.getWorld().raycast(ray, rayLength, FILTER);
+      return results.stream().mapToDouble(r -> r.getRaycast().getDistance()).min().orElse(rayLength);
+    }).toArray();
   }
 
   @Override
@@ -127,15 +136,5 @@ public class Lidar extends AbstractSensor {
         "rayLength=" + rayLength +
         ", rayDirections=" + Arrays.toString(rayDirections) +
         '}';
-  }
-
-  @Override
-  public double[] sense(double t) {
-    return Arrays.stream(rayDirections).map(rayDirection -> {
-      Point2 center = voxel.center();
-      Ray ray = new Ray(new Vector2(center.x(), center.y()), rayDirection + voxel.getAngle());
-      List<RaycastResult<Body, BodyFixture>> results = voxel.getWorld().raycast(ray, rayLength, FILTER);
-      return results.stream().mapToDouble(r -> r.getRaycast().getDistance()).min().orElse(rayLength);
-    }).toArray();
   }
 }

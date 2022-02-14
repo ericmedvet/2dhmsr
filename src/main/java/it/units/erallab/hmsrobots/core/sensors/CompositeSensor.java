@@ -44,12 +44,6 @@ public abstract class CompositeSensor extends AbstractSensor {
   }
 
   @Override
-  public void reset() {
-    super.reset();
-    sensor.reset();
-  }
-
-  @Override
   public Snapshot getSnapshot() {
     Snapshot snapshot = super.getSnapshot();
     snapshot.getChildren().add(sensor.getSnapshot());
@@ -60,6 +54,12 @@ public abstract class CompositeSensor extends AbstractSensor {
   public void setVoxel(Voxel voxel) {
     super.setVoxel(voxel);
     sensor.setVoxel(voxel);
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    sensor.reset();
   }
 
   @Override

@@ -19,12 +19,12 @@ package it.units.erallab.hmsrobots.core.geometry;
 public interface Shape {
   BoundingBox boundingBox();
 
-  default Point2 center() {
-    return boundingBox().center();
-  }
-
   default double area() {
     return boundingBox().area();
+  }
+
+  default Point2 center() {
+    return boundingBox().center();
   }
 
 }
