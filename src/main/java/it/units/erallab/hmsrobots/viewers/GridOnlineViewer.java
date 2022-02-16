@@ -24,6 +24,7 @@ import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -141,7 +142,8 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     );
   }
 
-  private record TimedSnapshot(double t, Snapshot snapshot) {}
+  private record TimedSnapshot(double t, Snapshot snapshot) {
+  }
 
   public static <S> void run(
       Task<S, ?> task,
@@ -157,8 +159,7 @@ public class GridOnlineViewer extends JFrame implements GridSnapshotListener {
     );
     gridOnlineViewer.start(3);
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
-        namedSolutions,
-        task,
+        Grid.create(namedSolutions, s -> Pair.of(s, task)),
         gridOnlineViewer,
         executor
     );

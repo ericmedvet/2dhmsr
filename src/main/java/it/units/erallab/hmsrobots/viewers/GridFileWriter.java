@@ -24,6 +24,7 @@ import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
 import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -109,8 +110,7 @@ public class GridFileWriter implements Flushable, GridSnapshotListener {
         Grid.create(namedSolutions, p -> drawerSupplier.apply(p.name()))
     );
     GridEpisodeRunner<S> runner = new GridEpisodeRunner<>(
-        namedSolutions,
-        task,
+        Grid.create(namedSolutions, s -> Pair.of(s, task)),
         gridFileWriter,
         executor
     );
