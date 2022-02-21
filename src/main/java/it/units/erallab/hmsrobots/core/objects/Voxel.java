@@ -63,7 +63,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   public static final double FRICTION = 10d;
   public static final double RESTITUTION = 0.1d;
   public static final double MASS = 1d;
-  public static final DoubleRange AREA_RATIO_PASSIVE_RANGE = DoubleRange.of(0.5, 1.5);
+  public static final DoubleRange AREA_RATIO_PASSIVE_RANGE = DoubleRange.of(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
   public static final DoubleRange AREA_RATIO_ACTIVE_RANGE = DoubleRange.of(0.8, 1.2);
   public static final EnumSet<SpringScaffolding> SPRING_SCAFFOLDINGS = EnumSet.allOf(SpringScaffolding.class);
   @JsonProperty
@@ -129,7 +129,8 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
     this.areaRatioActiveRange = areaRatioActiveRange;
     this.springScaffoldings = springScaffoldings;
     this.sensors = sensors;
-    if (areaRatioPassiveRange.min() < ((2 * massSideLengthRatio) * (2 * massSideLengthRatio))) {
+    if (areaRatioPassiveRange.min() > Double.NEGATIVE_INFINITY &&
+        areaRatioPassiveRange.min() < ((2 * massSideLengthRatio) * (2 * massSideLengthRatio))) {
       throw new IllegalArgumentException(String.format(
           "Min of areaRatioPassiveRange=%f cannot be lower than the value (%f) imposed by massSideLengthRatio=%f",
           areaRatioPassiveRange.min(),
@@ -238,7 +239,7 @@ public class Voxel implements Actionable, Serializable, Snapshottable, WorldObje
   private void assemble() {
     //compute densities
     double massSideLength = sideLength * massSideLengthRatio;
-    double density = mass * massSideLength * massSideLength / 4;
+    double density = (mass / 4) / (massSideLength * massSideLength);
     //build bodies
     vertexBodies = new Body[4];
     vertexBodies[0] = new Body(); //NW
