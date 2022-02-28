@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.UnaryOperator;
+import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
 
 /**
@@ -57,11 +58,10 @@ public class Starter {
 
   private static void bipedAndBall() {
     //simple biped
-    Grid<Voxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
-        .apply(RobotUtils.buildShape("biped-7x4"));
+    Grid<Voxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0").apply(RobotUtils.buildShape(
+        "biped-7x4"));
     double f = 2d;
-    Robot bipedRobot = new Robot(new TimeFunctions(Grid.create(
-        bipedBody.getW(),
+    Robot bipedRobot = new Robot(new TimeFunctions(Grid.create(bipedBody.getW(),
         bipedBody.getH(),
         (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) bipedBody.getW()))
     )), SerializationUtils.clone(bipedBody));
@@ -70,8 +70,7 @@ public class Starter {
     Grid<Voxel> ballBody = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0")
         .apply(RobotUtils.buildShape("ball-7"));
     CentralizedSensing centralizedSensing = new CentralizedSensing(ballBody);
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
         new int[0],
         centralizedSensing.nOfOutputs()
@@ -89,11 +88,10 @@ public class Starter {
 
   private static void bipedCentralized() {
     Random random = new Random();
-    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouchSighted-f-f-0.05")
-        .apply(RobotUtils.buildShape("biped-5x3"));
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouchSighted-f-f-0.05").apply(RobotUtils.buildShape(
+        "biped-5x3"));
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
         new int[]{10, 5},
         centralizedSensing.nOfOutputs()
@@ -103,15 +101,11 @@ public class Starter {
     Robot robot = new Robot(centralizedSensing, SerializationUtils.clone(body));
     //episode
     Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-15"), new Settings());
-    GridOnlineViewer.run(
-        locomotion,
+    GridOnlineViewer.run(locomotion,
         Grid.create(1, 1, new NamedValue<>("robot", robot)),
-        s -> Drawer.of(
-            Drawer.clip(BoundingBox.of(0d, 0d, 1d, 0.5d), Drawers.basicWithMiniWorld(s)),
-            Drawer.clip(
-                BoundingBox.of(0d, 0.5d, 1d, 1d),
-                Drawer.of(
-                    Drawer.clear(),
+        s -> Drawer.of(Drawer.clip(BoundingBox.of(0d, 0d, 1d, 0.5d), Drawers.basicWithMiniWorld(s)),
+            Drawer.clip(BoundingBox.of(0d, 0.5d, 1d, 1d),
+                Drawer.of(Drawer.clear(),
                     new MLPDrawer(SubtreeDrawer.Extractor.matches(MLPState.class, null, null), 15d)
                 )
             )
@@ -140,8 +134,7 @@ public class Starter {
     int[] innerNeurons = new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3};
     int nOfWeights = MultiLayerPerceptron.countWeights(nOfInputs, innerNeurons, nOfOutputs);
     double[] weights = IntStream.range(0, nOfWeights).mapToDouble(i -> 2 * Math.random() - 1).toArray();
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
         nOfInputs,
         innerNeurons,
         nOfOutputs,
@@ -151,8 +144,7 @@ public class Starter {
     Robot centralized = new Robot(centralizedSensing, SerializationUtils.clone(body));
     //episode
     Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-30"), new Settings());
-    GridOnlineViewer.run(
-        locomotion,
+    GridOnlineViewer.run(locomotion,
         Grid.create(1, 1, new NamedValue<>("", centralized)),
         Drawers::basicWithMiniWorldAndBrainUsage
     );
@@ -163,8 +155,7 @@ public class Starter {
         .apply(RobotUtils.buildShape("biped-7x4"));
     //simple
     double f = 1d;
-    Robot phasesRobot = new Robot(new TimeFunctions(Grid.create(
-        body.getW(),
+    Robot phasesRobot = new Robot(new TimeFunctions(Grid.create(body.getW(),
         body.getH(),
         (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
     )), SerializationUtils.clone(body));
@@ -172,8 +163,7 @@ public class Starter {
     Random random = new Random();
     DistributedSensing distributedSensing = new DistributedSensing(body, 1);
     for (Grid.Entry<Voxel> entry : body) {
-      MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-          MultiLayerPerceptron.ActivationFunction.TANH,
+      MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
           distributedSensing.nOfInputs(entry.key().x(), entry.key().y()),
           new int[]{2},
           distributedSensing.nOfOutputs(entry.key().x(), entry.key().y())
@@ -186,8 +176,7 @@ public class Starter {
     Robot distHetero = new Robot(distributedSensing, SerializationUtils.clone(body));
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
+    MultiLayerPerceptron mlp = new PruningMultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
         new int[]{centralizedSensing.nOfInputs() * 2 / 3, centralizedSensing.nOfInputs() * 2 / 3},
         centralizedSensing.nOfOutputs(),
@@ -208,17 +197,14 @@ public class Starter {
     namedSolutionGrid.set(0, 0, new NamedValue<>("dist-hetero", distHetero));
     namedSolutionGrid.set(0, 1, new NamedValue<>("centralized", centralized));
     namedSolutionGrid.set(0, 2, new NamedValue<>("phasesRobot", phasesRobot));
-    namedSolutionGrid.set(
-        0,
+    namedSolutionGrid.set(0,
         3,
-        new NamedValue<>("phasesRobot-step-0.5", new Robot(
-            ((AbstractController) phasesRobot.getController()).step(0.5),
+        new NamedValue<>("phasesRobot-step-0.5", new Robot(((AbstractController) phasesRobot.getController()).step(0.5),
             SerializationUtils.clone(phasesRobot.getVoxels())
         ))
     );
     //GridOnlineViewer.run(locomotion, namedSolutionGrid);
-    GridOnlineViewer.run(
-        locomotion,
+    GridOnlineViewer.run(locomotion,
         Grid.create(1, 1, new NamedValue<>("phasesRobot", phasesRobot)),
         Drawers::basicWithMiniWorldAndSpectra
     );
@@ -240,13 +226,12 @@ public class Starter {
     Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t-0")
         .apply(RobotUtils.buildShape("worm-4x3"));
     double f = 1d;
-    Robot unbreakableRobot = new Robot(new TimeFunctions(Grid.create(
-        body.getW(),
+    Robot unbreakableRobot = new Robot(new TimeFunctions(Grid.create(body.getW(),
         body.getH(),
         (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
     )), body);
-    Robot breakableRobot = RobotUtils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0", new Random(0))
-        .apply(SerializationUtils.clone(unbreakableRobot));
+    Robot breakableRobot = RobotUtils.buildRobotTransformation("breakable-area-1000/500-3/0.5-0", new Random(0)).apply(
+        SerializationUtils.clone(unbreakableRobot));
     //episode
     Locomotion locomotion = new Locomotion(60, Locomotion.createTerrain("hilly-0.5-5-0"), new Settings());
     Grid<NamedValue<Robot>> namedSolutionGrid = Grid.create(1, 2);
@@ -264,22 +249,52 @@ public class Starter {
     GridOnlineViewer.run(locomotion, robot);
   }
 
+  private static void critical() {
+    String small = "000001-000011-000110-111110-011010";
+    String big = "111000000-011000000-111110000-111111100-111111110-111111111-111111111-111111110-111110000";
+    String s = big;
+    Grid<Boolean> shape = Grid.create(s.split("-").length,
+        s.split("-")[0].length(),
+        (x, y) -> s.split("-")[x].charAt(y) == '1'
+    );
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-a-0.0").apply(shape);
+    RandomGenerator r = new Random(1);
+    Robot robot = new Robot(new PhaseSin(1, 1, Grid.create(body, v -> r.nextGaussian())), body);
+    Locomotion locomotion = new Locomotion(10, Locomotion.createTerrain("hilly-3-30-0"), 100, new Settings());
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5,
+        7.5,
+        0.5,
+        300,
+        200,
+        FramesImageBuilder.Direction.HORIZONTAL,
+        Drawers.basic()
+    );
+    locomotion.apply(robot, framesImageBuilder);
+    try {
+      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/critical.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
   private static void devoComb() {
     int startingL = 3;
     double f = 1d;
     UnaryOperator<Robot> devoFunction = r -> {
       int l = (r == null) ? startingL : (r.getVoxels().getW() + 1);
-      Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0.01")
-          .apply(Grid.create(l, 2, (x, y) -> y > 0 || (x % 2 == 0)));
-      return new Robot(new TimeFunctions(Grid.create(
-          body.getW(),
+      Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0.01").apply(Grid.create(l,
+          2,
+          (x, y) -> y > 0 || (x % 2 == 0)
+      ));
+      return new Robot(new TimeFunctions(Grid.create(body.getW(),
           body.getH(),
           (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + Math.PI * ((double) x / (double) body.getW()))
       )), body);
     };
-    //DistanceBasedDevoLocomotion devoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion.createTerrain("downhill-20"), new Settings());
-    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(
-        10,
+    //DistanceBasedDevoLocomotion devoLocomotion = new DistanceBasedDevoLocomotion(20, 20, 60, Locomotion
+    // .createTerrain("downhill-20"), new Settings());
+    TimeBasedDevoLocomotion devoLocomotion = TimeBasedDevoLocomotion.uniformlyDistributedTimeBasedDevoLocomotion(10,
         40d,
         Locomotion.createTerrain("downhill-20"),
         new Settings()
@@ -293,27 +308,26 @@ public class Starter {
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    plainWorm();
+    //plainWorm();
     //cShaped();
     //multiped();
     //bipedAndBall();
     //bipedCentralized();
     //devoComb();
     //bipedPoses();
+    critical();
   }
 
   private static void multiped() {
     double f = 1d;
     Grid<Boolean> body = Grid.create(7, 2, (x, y) -> y == 1 || (x % 2 == 0));
-    Robot robot = new Robot(new TimeFunctions(Grid.create(
-        body.getW(),
+    Robot robot = new Robot(new TimeFunctions(Grid.create(body.getW(),
         body.getH(),
         (final Integer x, final Integer y) -> (Double t) -> Math.sin(-2 * Math.PI * f * t + 2 * Math.PI * ((double) x / (double) body.getW()) + Math.PI * ((double) y / (double) body.getH()))
     )), RobotUtils.buildSensorizingFunction("uniform-a-0.01").apply(body));
     Locomotion locomotion = new Locomotion(10, Locomotion.createTerrain("hilly-0.3-1-0"), new Settings());
     GridOnlineViewer.run(locomotion, robot);
-    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
-        5,
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(5,
         7,
         .75,
         300,
@@ -330,19 +344,19 @@ public class Starter {
   }
 
   private static void plainWorm() {
-    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouchSighted-t-f-0.01")
-        .apply(RobotUtils.buildShape("worm-10x4"));
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouchSighted-t-f-0.01").apply(RobotUtils.buildShape(
+        "worm-10x4"));
     double f = 2d;
     Robot robot = new Robot(new TimeFunctions(Grid.create(body.getW(), body.getH(),
         //(x, y) -> t -> Math.signum(Math.sin(-2 * Math.PI * f * t + ((x <= body.getW() / 2) ? Math.PI / 2d : 0d)))
-        (x, y) -> t -> Math.round(t / 5) % 2 == 0 ? 0 : Math.sin(-2 * Math.PI * f * t + ((x <= body.getW() / 2) ? Math.PI / 2d : 0d))
+        (x, y) -> t -> Math.round(t / 5) % 2 == 0 ? 0 : Math.sin(-2 * Math.PI * f * t + ((x <= body.getW() / 2) ?
+            Math.PI / 2d : 0d))
     )).smoothed(10), SerializationUtils.clone(body));
     robot = RobotUtils.buildRobotTransformation("broken-0.0-0", new Random(0)).apply(robot);
     //episode
     Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("flatWithStart-2"), new Settings());
     //GridOnlineViewer.run(locomotion, robot);
-    GridOnlineViewer.run(
-        locomotion,
+    GridOnlineViewer.run(locomotion,
         Grid.create(1, 1, new NamedValue<>("phasesRobot", robot)),
         Drawers::basicWithMiniWorldAndSpectra
     );
@@ -370,8 +384,7 @@ public class Starter {
     Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-ax+t+r-0").apply(shape);
     //centralized sensing
     CentralizedSensing centralizedSensing = new CentralizedSensing(body);
-    MultiLayerPerceptron mlp = new MultiLayerPerceptron(
-        MultiLayerPerceptron.ActivationFunction.TANH,
+    MultiLayerPerceptron mlp = new MultiLayerPerceptron(MultiLayerPerceptron.ActivationFunction.TANH,
         centralizedSensing.nOfInputs(),
         new int[0],
         centralizedSensing.nOfOutputs()
@@ -403,16 +416,14 @@ public class Starter {
 
   private static void rollingOne() {
     //one voxel robot
-    Grid<Voxel> oneBody = Grid.create(1, 1, new Voxel(List.of(
-        new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
+    Grid<Voxel> oneBody = Grid.create(1, 1, new Voxel(List.of(new Velocity(true, 8d, Velocity.Axis.X, Velocity.Axis.Y),
         new Trend(new Velocity(true, 4d, Velocity.Axis.X, Velocity.Axis.Y), 0.25),
         new Angle(),
         new Lidar(10, Map.of(Lidar.Side.E, 4))
     )));
     Robot robot = new Robot(new CentralizedSensing(oneBody, RealFunction.build(in -> new double[]{0d}, 1, 1)), oneBody);
     //episode
-    Locomotion locomotion = new Locomotion(
-        60,
+    Locomotion locomotion = new Locomotion(60,
         new double[][]{new double[]{0, 10, 30, 31, 100, 1000, 1010}, new double[]{100, 100, 80, 10, 10, 0, 100}},
         new Settings()
     );
