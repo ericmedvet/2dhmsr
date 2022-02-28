@@ -18,6 +18,7 @@
 package it.units.erallab.hmsrobots.viewers.drawers;
 
 import it.units.erallab.hmsrobots.behavior.BehaviorUtils;
+import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
@@ -68,7 +69,7 @@ public class Drawers {
     return Drawer.of(
         Drawer.clip(
             BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld()
+            Drawers.basicWithMiniWorld(string)
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
@@ -89,11 +90,28 @@ public class Drawers {
     );
   }
 
+  public static Drawer basicDistributedWithMiniWorld(String string) {
+    return Drawer.of(
+        Drawer.clip(
+            BoundingBox.of(0d, 0d, 1d, 0.5d),
+            Drawers.basicWithMiniWorld(string)
+        ),
+        Drawer.clip(
+            BoundingBox.of(0d, 0.5d, 1d, 1d),
+            Drawer.of(
+                Drawer.clear(),
+                new DistributedDrawer(SubtreeDrawer.Extractor.matches(DistributedSensing.DistributedSensingState.class, null, null), 15d
+                )
+            )
+        )
+    );
+  }
+
   public static Drawer basicWithMiniWorldAndBrainUsage(String string) {
     return Drawer.of(
         Drawer.clip(
             BoundingBox.of(0d, 0d, 1d, 0.5d),
-            Drawers.basicWithMiniWorld()
+            Drawers.basicWithMiniWorld(string)
         ),
         Drawer.clip(
             BoundingBox.of(0d, 0.5d, 1d, 1d),
