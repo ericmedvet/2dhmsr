@@ -20,9 +20,14 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public class StepController extends AbstractController {
+public class StepController extends AbstractController implements Snapshottable {
+
+  public record StepControllerState(double stepT) {
+  }
 
   @JsonProperty
   private final AbstractController innerController;
@@ -57,4 +62,12 @@ public class StepController extends AbstractController {
     lastT = Double.NEGATIVE_INFINITY;
   }
 
+  @Override
+  public Snapshot getSnapshot() {
+    Snapshot snapshot = new Snapshot(new StepControllerState(stepT), getClass());
+    if (innerController instanceof Snapshottable snapshottable) {
+      snapshot.getChildren().add(snapshottable.getSnapshot());
+    }
+    return snapshot;
+  }
 }

@@ -19,15 +19,19 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
+import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
+import it.units.erallab.hmsrobots.util.DoubleRange;
 import it.units.erallab.hmsrobots.util.Grid;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * @author eric
  */
-public class DistributedSensing extends AbstractController {
+public class DistributedSensing extends AbstractController implements Snapshottable {
 
   @JsonProperty
   protected final int signals;
@@ -39,6 +43,7 @@ public class DistributedSensing extends AbstractController {
   @JsonProperty
   private final Grid<TimedRealFunction> functions;
   private final Grid<double[]> currentSignalsGrid;
+  private final Grid<Double> controlSignalsGrid;
 
   @JsonCreator
   public DistributedSensing(
@@ -53,8 +58,10 @@ public class DistributedSensing extends AbstractController {
     this.functions = functions;
     lastSignalsGrid = Grid.create(functions, f -> new double[signals * Dir.values().length]);
     currentSignalsGrid = Grid.create(functions, f -> new double[signals * Dir.values().length]);
+    controlSignalsGrid = Grid.create(functions, f -> 0d);
     reset();
   }
+
   public DistributedSensing(Grid<Voxel> voxels, int signals) {
     this(
         signals,
@@ -125,6 +132,13 @@ public class DistributedSensing extends AbstractController {
     }
   }
 
+  public record DistributedSensingState(
+      Grid<Boolean> body,
+      Grid<Double> controlSignalsGrid,
+      Grid<double[]> lastSignalsGrid,
+      DoubleRange signalsDomain) {
+  }
+
   public static int nOfInputs(Voxel voxel, int signals) {
     return signals * Dir.values().length + voxel.getSensors().stream().mapToInt(s -> s.getDomains().length).sum();
   }
@@ -135,7 +149,6 @@ public class DistributedSensing extends AbstractController {
 
   @Override
   public Grid<Double> computeControlSignals(double t, Grid<Voxel> voxels) {
-    Grid<Double> controlSignals = Grid.create(voxels);
     for (Grid.Entry<Voxel> entry : voxels) {
       if (entry.value() == null) {
         continue;
@@ -150,7 +163,7 @@ public class DistributedSensing extends AbstractController {
           entry.key().y()
       )];
       //save outputs
-      controlSignals.set(entry.key().x(), entry.key().y(), outputs[0]);
+      controlSignalsGrid.set(entry.key().x(), entry.key().y(), outputs[0]);
       System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, outputs.length - 1);
     }
     for (Grid.Entry<Voxel> entry : voxels) {
@@ -167,7 +180,7 @@ public class DistributedSensing extends AbstractController {
           currentSignalsGrid.get(x, y).length
       );
     }
-    return controlSignals;
+    return Grid.copy(controlSignalsGrid);
   }
 
   public Grid<TimedRealFunction> getFunctions() {
@@ -199,6 +212,19 @@ public class DistributedSensing extends AbstractController {
 
   public int nOfOutputs(int x, int y) {
     return nOfOutputGrid.get(x, y);
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return new Snapshot(
+        new DistributedSensingState(
+            Grid.create(nOfInputGrid, i -> i > 0),
+            Grid.copy(controlSignalsGrid),
+            Grid.create(lastSignalsGrid, a -> Arrays.copyOf(a, a.length)),
+            DoubleRange.of(-1d, 1d)
+        ),
+        getClass()
+    );
   }
 
   @Override

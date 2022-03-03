@@ -18,6 +18,7 @@ package it.units.erallab.hmsrobots.viewers;
 
 import it.units.erallab.hmsrobots.tasks.Task;
 import it.units.erallab.hmsrobots.util.Grid;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -46,19 +47,16 @@ public class GridEpisodeRunner<S> implements Runnable {
     }
   }
 
-  private final Grid<NamedValue<S>> namedSolutionGrid;
-  private final Task<S, ?> episode;
+  private final Grid<Pair<NamedValue<S>, Task<S, ?>>> namedSolutionsAndTasksGrid;
   private final GridSnapshotListener gridSnapshotListener;
   private final ExecutorService executor;
 
   public GridEpisodeRunner(
-      Grid<NamedValue<S>> namedSolutionGrid,
-      Task<S, ?> episode,
+      Grid<Pair<NamedValue<S>, Task<S, ?>>> namedSolutionsAndTasksGrid,
       GridSnapshotListener gridSnapshotListener,
       ExecutorService executor
   ) {
-    this.namedSolutionGrid = namedSolutionGrid;
-    this.episode = episode;
+    this.namedSolutionsAndTasksGrid = namedSolutionsAndTasksGrid;
     this.executor = executor;
     this.gridSnapshotListener = gridSnapshotListener;
   }
@@ -67,9 +65,10 @@ public class GridEpisodeRunner<S> implements Runnable {
   public void run() {
     //start episodes
     List<Future<?>> results = new ArrayList<>();
-    namedSolutionGrid.stream()
-        .filter(p -> p.value() != null && p.value().value() != null)
+    namedSolutionsAndTasksGrid.stream()
+        .filter(p -> p.value() != null && p.value().getLeft() != null)
         .forEach(entry -> results.add(executor.submit(() -> {
+          Task<S, ?> episode = entry.value().getRight();
           L.fine(String.format(
               "Starting %s in position (%d,%d)",
               episode.getClass().getSimpleName(),
@@ -77,7 +76,7 @@ public class GridEpisodeRunner<S> implements Runnable {
               entry.key().y()
           ));
           Object outcome = episode.apply(
-              entry.value().value(),
+              entry.value().getLeft().value(),
               gridSnapshotListener.listener(entry.key().x(), entry.key().y())
           );
           L.fine(String.format(

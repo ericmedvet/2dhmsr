@@ -55,6 +55,8 @@ import java.util.stream.IntStream;
  */
 public class Starter {
 
+  // TODO clean up
+
   private static void bipedAndBall() {
     //simple biped
     Grid<Voxel> bipedBody = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
@@ -236,6 +238,36 @@ public class Starter {
     }*/
   }
 
+  private static void distBiped() {
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-t-f-0")
+        .apply(RobotUtils.buildShape("biped-4x3"));
+    //distribute sensing
+    Random random = new Random();
+    DistributedSensing distributedSensing = new DistributedSensing(body, 1);
+    for (Grid.Entry<Voxel> entry : body) {
+      MultiLayerPerceptron mlp = new MultiLayerPerceptron(
+          MultiLayerPerceptron.ActivationFunction.TANH,
+          distributedSensing.nOfInputs(entry.key().x(), entry.key().y()),
+          new int[]{2},
+          distributedSensing.nOfOutputs(entry.key().x(), entry.key().y())
+      );
+      double[] ws = mlp.getParams();
+      IntStream.range(0, ws.length).forEach(i -> ws[i] = random.nextDouble() * 2d - 1d);
+      mlp.setParams(ws);
+      distributedSensing.getFunctions().set(entry.key().x(), entry.key().y(), mlp);
+    }
+    Robot distHetero = new Robot(distributedSensing, SerializationUtils.clone(body));
+    //episode
+    Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-30"), new Settings());
+
+    GridOnlineViewer.run(
+        locomotion,
+        Grid.create(1, 1, new NamedValue<>("dist", distHetero)),
+        Drawers::basicDistributedWithMiniWorld
+    );
+
+  }
+
   private static void breakingWorm() {
     Grid<Voxel> body = RobotUtils.buildSensorizingFunction("spinedTouch-f-t-0")
         .apply(RobotUtils.buildShape("worm-4x3"));
@@ -288,12 +320,13 @@ public class Starter {
   }
 
   public static void main(String[] args) {
+    distBiped();
     //bipedWithBrain();
     //bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
-    plainWorm();
+    //plainWorm();
     //cShaped();
     //multiped();
     //bipedAndBall();
