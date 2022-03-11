@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2022 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots;
 import it.units.erallab.hmsrobots.behavior.PoseUtils;
 import it.units.erallab.hmsrobots.core.controllers.*;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.core.sensors.Angle;
@@ -31,13 +32,11 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
+import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
 import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
 import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
 import it.units.erallab.hmsrobots.viewers.NamedValue;
-import it.units.erallab.hmsrobots.viewers.drawers.Drawer;
-import it.units.erallab.hmsrobots.viewers.drawers.Drawers;
-import it.units.erallab.hmsrobots.viewers.drawers.MLPDrawer;
-import it.units.erallab.hmsrobots.viewers.drawers.SubtreeDrawer;
+import it.units.erallab.hmsrobots.viewers.drawers.*;
 import org.dyn4j.dynamics.Settings;
 
 import javax.imageio.ImageIO;
@@ -47,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
@@ -205,7 +205,7 @@ public class Starter {
     centralizedSensing.setFunction(mlp);
     Robot centralized = new Robot(centralizedSensing, SerializationUtils.clone(body));
     //episode
-    Locomotion locomotion = new Locomotion(10, Locomotion.createTerrain("downhill-30"), new Settings());
+    Locomotion locomotion = new Locomotion(30, Locomotion.createTerrain("downhill-30"), new Settings());
 
     Grid<NamedValue<Robot>> namedSolutionGrid = Grid.create(1, 4);
     namedSolutionGrid.set(0, 0, new NamedValue<>("dist-hetero", distHetero));
@@ -219,12 +219,49 @@ public class Starter {
             SerializationUtils.clone(phasesRobot.getVoxels())
         ))
     );
-    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
+
+    Function<String, Drawer> drawerProvider = s -> Drawer.of(
+        Drawer.clear(),
+        Drawer.transform(
+            new AllRobotFollower(1.5d, 2),
+            Drawer.of(
+                new GhostRobotDrawer(5, 1, 0, false),
+                new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+                new VoxelDrawer()
+            )
+        )
+    );
+
+    FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
+        5,
+        10,
+        1,
+        450,
+        300,
+        FramesImageBuilder.Direction.HORIZONTAL,
+        drawerProvider.apply("")
+    );
+    locomotion.apply(phasesRobot, framesImageBuilder);
+    try {
+      ImageIO.write(framesImageBuilder.getImage(), "png", new File("/home/eric/ghost.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    System.exit(0);
+
     GridOnlineViewer.run(
         locomotion,
         Grid.create(1, 1, new NamedValue<>("phasesRobot", phasesRobot)),
-        Drawers::basicWithMiniWorldAndSpectra
+        drawerProvider
     );
+
+
+    //GridOnlineViewer.run(locomotion, namedSolutionGrid);
+    /*GridOnlineViewer.run(
+        locomotion,
+        Grid.create(1, 1, new NamedValue<>("phasesRobot", phasesRobot)),
+        Drawers::basicWithMiniWorldAndSpectra
+    );*/
     /*try {
       GridFileWriter.save(
           locomotion,
@@ -300,13 +337,7 @@ public class Starter {
   private static void critical() {
     String small = "0111-0110-1111-1010-1010";
     String big = "1111111111-1111111111-1111111111-1111110011-1111100011-1111000000-1110000000-1100000000";
-    String s = big;
-    Grid<Boolean> shape = Grid.create(
-        s.split("-").length,
-        s.split("-")[0].length(),
-        (x, y) -> s.split("-")[x].charAt(y) == '1'
-    );
-    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-a-0.0").apply(shape);
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-a-0.0").apply(RobotUtils.buildShape("free-" + big));
     RandomGenerator r = new Random(1);
     Robot robot = new Robot(new PhaseSin(1, 1, Grid.create(body, v -> r.nextGaussian())), body);
     Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("hilly-3-30-0"), 100, new Settings());
@@ -358,7 +389,7 @@ public class Starter {
   public static void main(String[] args) {
     //distBiped();
     //bipedWithBrain();
-    //bipeds();
+    bipeds();
     //rollingOne();
     //rollingBall();
     //breakingWorm();
@@ -369,7 +400,7 @@ public class Starter {
     //bipedCentralized();
     //devoComb();
     //bipedPoses();
-    critical();
+    //critical();
   }
 
   private static void multiped() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2022 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -34,8 +34,6 @@ public class FramesImageBuilder implements SnapshotListener {
   private final double initialT;
   private final double finalT;
   private final double dT;
-  private final int w;
-  private final int h;
   private final Direction direction;
 
   private final Drawer drawer;
@@ -58,8 +56,6 @@ public class FramesImageBuilder implements SnapshotListener {
     this.initialT = initialT;
     this.finalT = finalT;
     this.dT = dT;
-    this.w = w;
-    this.h = h;
     this.direction = direction;
     this.drawer = drawer;
     nOfFrames = (int) Math.ceil((finalT - initialT) / dT);
@@ -84,31 +80,29 @@ public class FramesImageBuilder implements SnapshotListener {
 
   @Override
   public void listen(double t, Snapshot snapshot) {
-    if ((t < initialT) || (t >= finalT)) { //out of time window
-      return;
-    }
-    if ((t - lastT) < dT) { //wait for next snapshot
-      return;
-    }
-    lastT = t;
     BoundingBox imageFrame;
-    if (direction.equals(Direction.HORIZONTAL)) {
-      imageFrame = BoundingBox.of(
-          (double) frameCount / (double) nOfFrames,
-          0,
-          (double) (frameCount + 1) / (double) nOfFrames,
-          1d
-      );
+    if ((t < initialT) || (t >= finalT) || ((t - lastT) < dT)) { //out of time window
+      imageFrame = BoundingBox.of(-10, -10, -1, -1);
     } else {
-      imageFrame = BoundingBox.of(
-          0,
-          (double) frameCount / (double) nOfFrames,
-          1,
-          (double) (frameCount + 1) / (double) nOfFrames
-      );
+      if (direction.equals(Direction.HORIZONTAL)) {
+        imageFrame = BoundingBox.of(
+            (double) frameCount / (double) nOfFrames,
+            0,
+            (double) (frameCount + 1) / (double) nOfFrames,
+            1d
+        );
+      } else {
+        imageFrame = BoundingBox.of(
+            0,
+            (double) frameCount / (double) nOfFrames,
+            1,
+            (double) (frameCount + 1) / (double) nOfFrames
+        );
+      }
+      L.info(String.format("Rendering frame %d on %s", frameCount, imageFrame));
+      frameCount = frameCount + 1;
+      lastT = t;
     }
-    L.info(String.format("Rendering frame %d on %s", frameCount, imageFrame));
-    frameCount = frameCount + 1;
     Graphics2D g = image.createGraphics();
     g.setClip(0, 0, image.getWidth(), image.getHeight());
     Drawer.clip(imageFrame, drawer).draw(t, snapshot, g);
