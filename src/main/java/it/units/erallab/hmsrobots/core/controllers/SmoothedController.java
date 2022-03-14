@@ -35,7 +35,7 @@ public class SmoothedController extends AbstractController {
   @JsonCreator
   public SmoothedController(
       @JsonProperty("innerController") AbstractController innerController,
-      @JsonProperty("stepT") double controlSignalSpeed
+      @JsonProperty("controlSignalSpeed") double controlSignalSpeed
   ) {
     this.innerController = innerController;
     this.controlSignalSpeed = controlSignalSpeed;
