@@ -160,6 +160,7 @@ public class Example {
 
 ## Other research papers based on 2D-VSR-Sim
 
+- Nadizar, Medvet, Miras; [On the Schedule for Morphological Development of Evolved Modular Soft Robots](https://medvet.inginf.units.it/publications/2022-c-nmm-schedule/); 25th European Conference on Genetic Programming (EuroGP); 2022
 - Ferigo, Medvet, Iacca; [Optimizing the Sensory Apparatus of Voxel-based Soft Robots through Evolution and Babbling](https://medvet.inginf.units.it/publications/2021-j-fmi-optimizing/); Springer Nature Computer Science; 2022
 - Nadizar, Medvet, Nichele, Huse Ramstad, Pellegrino, Zullich; [Merging Pruning and Neuroevolution: towards Robust and Efficient Controllers for Modular Soft Robots](https://medvet.inginf.units.it/publications/2021-j-nmnhpz-merging/); Knowledge Engineering Review (KER); 2021
 - Ferigo, Iacca, Medvet, Pigozzi; [Evolving Hebbian Learning Rules in Voxel-based Soft Robots](https://medvet.inginf.units.it/publications/2021-p-fimp-evolving/); IEEE TechRxiv; 2021
