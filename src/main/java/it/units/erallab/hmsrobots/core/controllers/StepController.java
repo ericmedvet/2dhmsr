@@ -24,13 +24,11 @@ import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public class StepController extends AbstractController implements Snapshottable {
+public class StepController extends CompositeController implements Snapshottable {
 
   public record StepControllerState(double stepT) {
   }
 
-  @JsonProperty
-  private final AbstractController innerController;
   @JsonProperty
   private final double stepT;
 
@@ -42,7 +40,7 @@ public class StepController extends AbstractController implements Snapshottable 
       @JsonProperty("innerController") AbstractController innerController,
       @JsonProperty("stepT") double stepT
   ) {
-    this.innerController = innerController;
+    super(innerController);
     this.stepT = stepT;
   }
 
