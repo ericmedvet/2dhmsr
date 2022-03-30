@@ -488,7 +488,7 @@ public class Starter {
     try {
       GridFileWriter.save(
           locomotion,
-          Grid.create(1, 1, new NamedValue<Robot>("ball", robot)),
+          Grid.create(1, 1, new NamedValue<>("ball", robot)),
           600, 600,
           3, 30,
           VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/ball-w-activity.mp4")
