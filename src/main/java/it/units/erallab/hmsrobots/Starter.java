@@ -32,10 +32,7 @@ import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.erallab.hmsrobots.util.SerializationUtils;
-import it.units.erallab.hmsrobots.viewers.AllRobotFollower;
-import it.units.erallab.hmsrobots.viewers.FramesImageBuilder;
-import it.units.erallab.hmsrobots.viewers.GridOnlineViewer;
-import it.units.erallab.hmsrobots.viewers.NamedValue;
+import it.units.erallab.hmsrobots.viewers.*;
 import it.units.erallab.hmsrobots.viewers.drawers.*;
 import org.dyn4j.dynamics.Settings;
 
@@ -389,9 +386,9 @@ public class Starter {
   public static void main(String[] args) {
     //distBiped();
     //bipedWithBrain();
-    bipeds();
+    //bipeds();
     //rollingOne();
-    //rollingBall();
+    rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
@@ -484,23 +481,22 @@ public class Starter {
     centralizedSensing.setFunction(mlp);
     Robot robot = new Robot(centralizedSensing, SerializationUtils.clone(body));
     //episode
-    Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("downhill-30"), new Settings());
+    Locomotion locomotion = new Locomotion(13, Locomotion.createTerrain("downhill-30"), new Settings());
 
-    GridOnlineViewer.run(locomotion, Grid.create(1, 1, new NamedValue<>("", robot)), Drawers::basicWithMiniWorld);
-    /*
+    //GridOnlineViewer.run(locomotion, Grid.create(1, 1, new NamedValue<>("", robot)), Drawers::basicWithMiniWorld);
+
     try {
       GridFileWriter.save(
           locomotion,
-          Grid.create(1, 1, Pair.of("", robot)),
+          Grid.create(1, 1, new NamedValue<Robot>("ball", robot)),
           600, 600,
-          0, 30,
-          VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/ball-w-activity.mp4"),
-          drawerSupplier
+          3, 30,
+          VideoUtils.EncoderFacility.FFMPEG_SMALL, new File("/home/eric/ball-w-activity.mp4")
       );
     } catch (IOException e) {
       e.printStackTrace();
     }
-     */
+
   }
 
   private static void rollingOne() {
