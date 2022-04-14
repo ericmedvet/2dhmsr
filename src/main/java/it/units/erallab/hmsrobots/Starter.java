@@ -337,15 +337,25 @@ public class Starter {
     Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-a-0.0").apply(RobotUtils.buildShape("free-" + big));
     RandomGenerator r = new Random(1);
     Robot robot = new Robot(new PhaseSin(1, 1, Grid.create(body, v -> r.nextGaussian())), body);
-    Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("hilly-3-30-0"), 100, new Settings());
+    Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("downhill-20"), 100, new Settings());
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
         15,
-        17.5,
+        15.5,
         .5,
-        450,
-        300,
+        800,
+        800,
         FramesImageBuilder.Direction.HORIZONTAL,
-        Drawers.basic()
+        Drawer.of(
+            Drawer.clear(),
+            Drawer.transform(
+                new AllRobotFollower(1.5d, 2),
+                Drawer.of(
+                    new GhostRobotDrawer(3, 1, 0, true),
+                    new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+                    new VoxelDrawer()
+                )
+            )
+        )
     );
     locomotion.apply(robot, framesImageBuilder);
     try {
@@ -388,7 +398,7 @@ public class Starter {
     //bipedWithBrain();
     //bipeds();
     //rollingOne();
-    rollingBall();
+    //rollingBall();
     //breakingWorm();
     //plainWorm();
     //cShaped();
@@ -397,7 +407,7 @@ public class Starter {
     //bipedCentralized();
     //devoComb();
     //bipedPoses();
-    //critical();
+    critical();
   }
 
   private static void multiped() {
