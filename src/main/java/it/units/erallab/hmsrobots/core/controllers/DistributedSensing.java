@@ -37,11 +37,11 @@ public class DistributedSensing extends AbstractController implements Snapshotta
   protected final int signals;
   protected final Grid<double[]> lastSignalsGrid;
   @JsonProperty
-  private final Grid<Integer> nOfInputGrid;
+  protected final Grid<Integer> nOfInputGrid;
   @JsonProperty
-  private final Grid<Integer> nOfOutputGrid;
+  protected final Grid<Integer> nOfOutputGrid;
   @JsonProperty
-  private final Grid<TimedRealFunction> functions;
+  protected final Grid<TimedRealFunction> functions;
   private final Grid<double[]> currentSignalsGrid;
   private final Grid<Double> controlSignalsGrid;
 
