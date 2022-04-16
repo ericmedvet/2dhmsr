@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2022 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -30,10 +30,10 @@ import java.awt.geom.Path2D;
 public class VoxelDrawer extends SubtreeDrawer {
 
   private final static Color STROKE_COLOR = Color.BLUE;
-  private final static Color REST_FILL_COLOR = DrawingUtils.alphaed(Color.YELLOW, 0.5f);
-  private final static Color SHRUNK_FILL_COLOR = DrawingUtils.alphaed(Color.RED, 0.5f);
-  private final static Color EXPANDED_FILL_COLOR = DrawingUtils.alphaed(Color.GREEN, 0.5f);
-  private final static Color MALFUNCTION_COLOR = DrawingUtils.alphaed(Color.BLACK, 0.75f);
+  private final static Color REST_FILL_COLOR = DrawingUtils.alphaed(Color.YELLOW, 0.75f);
+  private final static Color SHRUNK_FILL_COLOR = DrawingUtils.alphaed(Color.RED, 0.75f);
+  private final static Color EXPANDED_FILL_COLOR = DrawingUtils.alphaed(Color.GREEN, 0.75f);
+  private final static Color MALFUNCTION_COLOR = DrawingUtils.alphaed(Color.BLACK, 0.95f);
   private final static float MALFUNCTION_STROKE_WIDTH = 3f;
   private final static float SHRUNK_RATIO = 0.75f;
   private final static float EXPANDEND_RATIO = 1.25f;
