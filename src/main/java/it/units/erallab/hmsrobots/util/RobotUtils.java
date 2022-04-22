@@ -203,6 +203,7 @@ public class RobotUtils {
     String comb = "comb-(?<w>\\d+)x(?<h>\\d+)";
     String t = "t-(?<w>\\d+)x(?<h>\\d+)";
     String free = "free-(?<s>[01-]+)";
+    String triangle = "triangle-(?<l>\\d+)";
     Map<String, String> params;
     if ((params = params(box, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
@@ -246,6 +247,10 @@ public class RobotUtils {
           s.split("-")[0].length(),
           (x, y) -> s.split("-")[x].charAt(y) == '1'
       );
+    }
+    if ((params = params(triangle, name)) != null) {
+      int l = Integer.parseInt(params.get("l"));
+      return Grid.create(l, l, (x, y) -> (y >= x));
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }
