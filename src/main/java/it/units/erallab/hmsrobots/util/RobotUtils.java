@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2022 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.random.RandomGenerator;
 
 import static it.units.erallab.hmsrobots.util.Utils.params;
 
@@ -61,7 +62,7 @@ public class RobotUtils {
   private RobotUtils() {
   }
 
-  public static UnaryOperator<Robot> buildRobotTransformation(String name, Random externalRandom) {
+  public static UnaryOperator<Robot> buildRobotTransformation(String name, RandomGenerator externalRandom) {
     String breakable = "breakable-(?<triggerType>time|area)-(?<thresholdMean>\\d+(\\.\\d+)?)/(?<thresholdStDev>\\d+(\\.\\d+)?)-(?<restTimeMean>\\d+(\\.\\d+)?)/(?<restTimeStDev>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
     String broken = "broken-(?<ratio>\\d+(\\.\\d+)?)-(?<seed>\\d+|rnd)";
     String identity = "identity";
@@ -75,7 +76,7 @@ public class RobotUtils {
       double thresholdStDev = Double.parseDouble(params.get("thresholdStDev"));
       double restoreTimeMean = Double.parseDouble(params.get("restTimeMean"));
       double restoreTimeStDev = Double.parseDouble(params.get("restTimeStDev"));
-      Random random;
+      RandomGenerator random;
       if (!params.get("seed").equals("rnd")) {
         random = new Random(Long.parseLong(params.get("seed")));
       } else {
@@ -100,7 +101,7 @@ public class RobotUtils {
     }
     if ((params = params(broken, name)) != null) {
       double ratio = Double.parseDouble(params.get("ratio"));
-      Random random;
+      RandomGenerator random;
       if (!params.get("seed").equals("rnd")) {
         random = new Random(Long.parseLong(params.get("seed")));
       } else {
@@ -200,6 +201,9 @@ public class RobotUtils {
     String tripod = "tripod-(?<w>\\d+)x(?<h>\\d+)";
     String ball = "ball-(?<d>\\d+)";
     String comb = "comb-(?<w>\\d+)x(?<h>\\d+)";
+    String t = "t-(?<w>\\d+)x(?<h>\\d+)";
+    String free = "free-(?<s>[01-]+)";
+    String triangle = "triangle-(?<l>\\d+)";
     Map<String, String> params;
     if ((params = params(box, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
@@ -229,6 +233,24 @@ public class RobotUtils {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
       return Grid.create(w, h, (x, y) -> (y >= h / 2 || x % 2 == 0));
+    }
+    if ((params = params(t, name)) != null) {
+      int w = Integer.parseInt(params.get("w"));
+      int h = Integer.parseInt(params.get("h"));
+      int pad = (int) Math.floor((Math.floor((double) w / 2) / 2));
+      return Grid.create(w, h, (x, y) -> (y == 0 || (x >= pad && x < h - pad - 1)));
+    }
+    if ((params = params(free, name)) != null) {
+      String s = params.get("s");
+      return Grid.create(
+          s.split("-").length,
+          s.split("-")[0].length(),
+          (x, y) -> s.split("-")[x].charAt(y) == '1'
+      );
+    }
+    if ((params = params(triangle, name)) != null) {
+      int l = Integer.parseInt(params.get("l"));
+      return Grid.create(l, l, (x, y) -> (y >= x));
     }
     throw new IllegalArgumentException(String.format("Unknown body name: %s", name));
   }

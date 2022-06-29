@@ -44,12 +44,6 @@ public abstract class CompositeSensor extends AbstractSensor {
   }
 
   @Override
-  public void reset() {
-    super.reset();
-    sensor.reset();
-  }
-
-  @Override
   public Snapshot getSnapshot() {
     Snapshot snapshot = super.getSnapshot();
     snapshot.getChildren().add(sensor.getSnapshot());
@@ -63,10 +57,20 @@ public abstract class CompositeSensor extends AbstractSensor {
   }
 
   @Override
+  public void reset() {
+    super.reset();
+    sensor.reset();
+  }
+
+  @Override
   public String toString() {
     return getClass().getSimpleName() + "{" +
         "sensor=" + sensor +
         '}';
+  }
+
+  public Sensor getInnermostSensor() {
+    return sensor instanceof CompositeSensor cs ? cs.getInnermostSensor() : sensor;
   }
 
   public Sensor getSensor() {

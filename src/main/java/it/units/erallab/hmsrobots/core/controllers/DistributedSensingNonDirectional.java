@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Eric Medvet <eric.medvet@gmail.com> (as Eric Medvet <eric.medvet@gmail.com>)
+ * Copyright (C) 2022 Giorgia Nadizar <giorgia.nadizar@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -22,13 +22,9 @@ import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
 /**
- * @author eric
+ * @author giorgia
  */
 public class DistributedSensingNonDirectional extends DistributedSensing {
-
-  public static int nOfOutputs(Voxel voxel, int signals) {
-    return 1 + signals;
-  }
 
   @JsonCreator
   public DistributedSensingNonDirectional(
@@ -51,10 +47,15 @@ public class DistributedSensingNonDirectional extends DistributedSensing {
             (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
                 (double[] in) -> new double[1 + stateSize],
                 nOfInputs(voxels.get(x, y), stateSize),
-                nOfOutputs(voxels.get(x, y), stateSize))
+                nOfOutputs(voxels.get(x, y), stateSize)
+            )
             )
         )
     );
+  }
+
+  public static int nOfOutputs(Voxel voxel, int signals) {
+    return 1 + signals;
   }
 
   @Override

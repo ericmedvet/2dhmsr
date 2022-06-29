@@ -55,15 +55,6 @@ public class Velocity extends AbstractSensor {
   public enum Axis {X, Y}
 
   @Override
-  public String toString() {
-    return "Velocity{" +
-        "rotated=" + rotated +
-        ", axes=" + axes +
-        ", maxVelocityNorm=" + maxVelocityNorm +
-        '}';
-  }
-
-  @Override
   public double[] sense(double t) {
     double[] values = new double[domains.length];
     int c = 0;
@@ -86,5 +77,14 @@ public class Velocity extends AbstractSensor {
       }
     }
     return values;
+  }
+
+  @Override
+  public String toString() {
+    return "Velocity{" +
+        "rotated=" + rotated +
+        ", axes=" + axes +
+        ", maxVelocityNorm=" + maxVelocityNorm +
+        '}';
   }
 }

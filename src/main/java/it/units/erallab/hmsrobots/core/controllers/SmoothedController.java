@@ -22,10 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
 import it.units.erallab.hmsrobots.util.Grid;
 
-public class SmoothedController extends AbstractController {
+public class SmoothedController extends CompositeController {
 
-  @JsonProperty
-  private final AbstractController innerController;
   @JsonProperty
   private final double controlSignalSpeed;
 
@@ -35,9 +33,9 @@ public class SmoothedController extends AbstractController {
   @JsonCreator
   public SmoothedController(
       @JsonProperty("innerController") AbstractController innerController,
-      @JsonProperty("stepT") double controlSignalSpeed
+      @JsonProperty("controlSignalSpeed") double controlSignalSpeed
   ) {
-    this.innerController = innerController;
+    super(innerController);
     this.controlSignalSpeed = controlSignalSpeed;
   }
 
