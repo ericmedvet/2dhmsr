@@ -122,6 +122,8 @@ public class RobotUtils {
   }
 
   public static Function<Grid<Boolean>, Grid<Voxel>> buildSensorizingFunction(String name) {
+    String touch = "touch-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
+    String sight = "sight-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String spineTouch = "spinedTouch-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String spineTouchSighted = "spinedTouchSighted-(?<cpg>[tf])-(?<malfunction>[tf])-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String uniform = "uniform-(?<sensors>(" + String.join("|", PREDEFINED_SENSORS.keySet()) + ")(\\+(" + String.join(
@@ -131,6 +133,34 @@ public class RobotUtils {
     String uniformAll = "uniformAll-(?<noiseSigma>\\d+(\\.\\d+)?)";
     String empty = "empty";
     Map<String, String> params;
+    if ((params = params(touch, name)) != null) {
+      final Map<String, String> pars = params;
+      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
+      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> {
+        if (!body.get(x, y)) {
+          return null;
+        }
+        return new Voxel(Utils.ofNonNull(
+            sensor("m", x, y, body, pars.get("malfunction").equals("t")),
+            sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
+            sensor("t", x, y, body, y == 0)
+        ).stream().map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0)).toList());
+      });
+    }
+    if ((params = params(sight, name)) != null) {
+      final Map<String, String> pars = params;
+      double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
+      return body -> Grid.create(body.getW(), body.getH(), (x, y) -> {
+        if (!body.get(x, y)) {
+          return null;
+        }
+        return new Voxel(Utils.ofNonNull(
+            sensor("m", x, y, body, pars.get("malfunction").equals("t")),
+            sensor("cpg", x, y, body, x == body.getW() - 1 && y == body.getH() - 1 && pars.get("cpg").equals("t")),
+            sensor("l5", x, y, body, x == body.getW() - 1)
+        ).stream().map(s -> noiseSigma == 0 ? s : new Noisy(s, noiseSigma, 0)).toList());
+      });
+    }
     if ((params = params(spineTouch, name)) != null) {
       final Map<String, String> pars = params;
       double noiseSigma = Double.parseDouble(params.get("noiseSigma"));
