@@ -19,6 +19,7 @@ package it.units.erallab.hmsrobots.core.controllers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.core.objects.Voxel;
+import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshottable;
 import it.units.erallab.hmsrobots.util.DoubleRange;
@@ -134,6 +135,7 @@ public class DistributedSensing extends AbstractController implements Snapshotta
 
   public record DistributedSensingState(
       Grid<Boolean> body,
+      Grid<MLPState> mlpStates,
       Grid<Double> controlSignalsGrid,
       Grid<double[]> lastSignalsGrid,
       DoubleRange signalsDomain) {
@@ -216,9 +218,17 @@ public class DistributedSensing extends AbstractController implements Snapshotta
 
   @Override
   public Snapshot getSnapshot() {
+    Grid<MLPState> mlpStateGrid = null;
+    if (functions.stream().findFirst().orElse(new Grid.Entry<>(new Grid.Key(0, 0), null)).value() instanceof MultiLayerPerceptron)
+      mlpStateGrid = Grid.create(
+          functions.getW(), functions.getH(),
+          (x, y) -> (nOfInputGrid.get(x, y) > 0 && functions.get(x, y) instanceof MultiLayerPerceptron mlp) ?
+              new MLPState(mlp.getActivationValues(), mlp.getWeights(), mlp.activationFunction.getDomain()) : null
+      );
     return new Snapshot(
         new DistributedSensingState(
             Grid.create(nOfInputGrid, i -> i > 0),
+            mlpStateGrid,
             Grid.copy(controlSignalsGrid),
             Grid.create(lastSignalsGrid, a -> Arrays.copyOf(a, a.length)),
             DoubleRange.of(-1d, 1d)
