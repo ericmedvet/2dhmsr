@@ -334,10 +334,11 @@ public class Starter {
   private static void critical() {
     String small = "0111-0110-1111-1010-1010";
     String big = "1111111111-1111111111-1111111111-1111110011-1111100011-1111000000-1110000000-1100000000";
-    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-a-0.0").apply(RobotUtils.buildShape("free-" + big));
+    String dog = "000000000110-000000000111-000000000110-011111111110-111111111110-101111111100-001100001100-001100001100-001110001110";
+    Grid<Voxel> body = RobotUtils.buildSensorizingFunction("uniform-a-0.0").apply(RobotUtils.buildShape("triangle-10"));
     RandomGenerator r = new Random(1);
     Robot robot = new Robot(new PhaseSin(1, 1, Grid.create(body, v -> r.nextGaussian())), body);
-    Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("downhill-20"), 100, new Settings());
+    Locomotion locomotion = new Locomotion(20, Locomotion.createTerrain("steppy-1-2.5-0"), 100, new Settings());
     FramesImageBuilder framesImageBuilder = new FramesImageBuilder(
         15,
         15.5,
