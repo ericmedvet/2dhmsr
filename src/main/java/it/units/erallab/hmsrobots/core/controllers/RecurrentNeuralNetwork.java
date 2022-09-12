@@ -22,7 +22,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.units.erallab.hmsrobots.util.Parametrized;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -41,6 +43,8 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
   private final double[][] recurrentWeights;
   @JsonProperty
   private final double[][] outputWeights;
+  @JsonProperty
+  private final double[][] biases;
   private final double[][] activationValues;
 
   @JsonCreator
@@ -49,7 +53,8 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
       @JsonProperty("neurons") int[] neurons,
       @JsonProperty("inputWeights") double[][] inputWeights,
       @JsonProperty("recurrentWeights") double[][] recurrentWeights,
-      @JsonProperty("outputWeights") double[][] outputWeights
+      @JsonProperty("outputWeights") double[][] outputWeights,
+      @JsonProperty("biases") double[][] biases
   ) {
     this.activationFunction = activationFunction;
     if (neurons.length != 3) {
@@ -63,7 +68,7 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
       throw new IllegalArgumentException(String.format(
           "Wrong number of input weights: %d expected, %d found",
           neurons[0] * neurons[1],
-          inputWeights.length
+          flat(inputWeights).length
       ));
     }
     this.inputWeights = inputWeights;
@@ -71,7 +76,7 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
       throw new IllegalArgumentException(String.format(
           "Wrong number of recurrent weights: %d expected, %d found",
           neurons[1] * neurons[1],
-          recurrentWeights.length
+          flat(recurrentWeights).length
       ));
     }
     this.recurrentWeights = recurrentWeights;
@@ -79,10 +84,18 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
       throw new IllegalArgumentException(String.format(
           "Wrong number of output weights: %d expected, %d found",
           neurons[1] * neurons[2],
-          outputWeights.length
+          flat(outputWeights).length
       ));
     }
     this.outputWeights = outputWeights;
+    if (flat(biases).length != neurons[1] + neurons[2]) {
+      throw new IllegalArgumentException(String.format(
+          "Wrong number of biases: %d expected, %d found",
+          neurons[1] + neurons[2],
+          flat(biases).length
+      ));
+    }
+    this.biases = biases;
     activationValues = new double[3][];
     IntStream.range(0, neurons.length).forEach(i -> activationValues[i] = new double[neurons[i]]);
   }
@@ -93,7 +106,8 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
         neurons,
         unflat(Arrays.copyOfRange(weights, 0, neurons[0] * neurons[1]), neurons[0], neurons[1]),
         unflat(Arrays.copyOfRange(weights, neurons[0] * neurons[1], neurons[0] * neurons[1] + neurons[1] * neurons[1]), neurons[1], neurons[1]),
-        unflat(Arrays.copyOfRange(weights, neurons[0] * neurons[1] + neurons[1] * neurons[1], neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2]), neurons[1], neurons[2])
+        unflat(Arrays.copyOfRange(weights, neurons[0] * neurons[1] + neurons[1] * neurons[1], neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2]), neurons[1], neurons[2]),
+        unflatBiases(Arrays.copyOfRange(weights, neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2], weights.length), neurons)
     );
   }
 
@@ -106,11 +120,13 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
     double[] flatInputWeights = flat(inputWeights);
     double[] flatRecurrentWeights = flat(recurrentWeights);
     double[] flatOutputWeights = flat(outputWeights);
+    double[] flatBiases = flat(biases);
 
-    double[] flatWeights = new double[flatInputWeights.length + flatRecurrentWeights.length + flatOutputWeights.length];
+    double[] flatWeights = new double[flatInputWeights.length + flatRecurrentWeights.length + flatOutputWeights.length + flatBiases.length];
     System.arraycopy(flatInputWeights, 0, flatWeights, 0, flatInputWeights.length);
     System.arraycopy(flatRecurrentWeights, 0, flatWeights, flatInputWeights.length, flatRecurrentWeights.length);
     System.arraycopy(flatOutputWeights, 0, flatWeights, flatInputWeights.length + flatRecurrentWeights.length, flatOutputWeights.length);
+    System.arraycopy(flatBiases, 0, flatWeights, flatInputWeights.length + flatRecurrentWeights.length + flatOutputWeights.length, flatBiases.length);
 
     return flatWeights;
   }
@@ -120,6 +136,7 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
     double[][] inputWeights = unflat(Arrays.copyOfRange(params, 0, neurons[0] * neurons[1]), neurons[0], neurons[1]);
     double[][] recurrentWeights = unflat(Arrays.copyOfRange(params, neurons[0] * neurons[1], neurons[0] * neurons[1] + neurons[1] * neurons[1]), neurons[1], neurons[1]);
     double[][] outputWeights = unflat(Arrays.copyOfRange(params, neurons[0] * neurons[1] + neurons[1] * neurons[1], neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2]), neurons[1], neurons[2]);
+    double[][] biases = unflatBiases(Arrays.copyOfRange(params, neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2], params.length), neurons);
 
     for (int i = 0; i < inputWeights.length; i++) {
       System.arraycopy(inputWeights[i], 0, this.inputWeights[i], 0, inputWeights[i].length);
@@ -130,18 +147,29 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
     for (int i = 0; i < outputWeights.length; i++) {
       System.arraycopy(outputWeights[i], 0, this.outputWeights[i], 0, outputWeights[i].length);
     }
+    for (int i = 0; i < biases.length; i++) {
+      System.arraycopy(biases[i], 0, this.biases[i], 0, biases[i].length);
+    }
+
   }
 
   private static double[] flat(double[][] weights) {
-    double[] flatWeights = new double[weights.length * weights[0].length];
-    int c = 0;
+    List<Double> flatWeights = new ArrayList<>();
     for (double[] weight : weights) {
-      for (int j = 0; j < weights[0].length; j++) {
-        flatWeights[c] = weight[j];
-        c++;
-      }
+      flatWeights.addAll(Arrays.stream(weight).boxed().toList());
     }
-    return flatWeights;
+    return flatWeights.stream().mapToDouble(i -> i).toArray();
+  }
+
+  private static double[][] unflatBiases(double[] flatBiases, int[] neurons) {
+    double[][] biases = new double[neurons.length - 1][];
+    int index = 0;
+    for (int i = 0; i < neurons.length - 1; i++) {
+      biases[i] = new double[neurons[i + 1]];
+      System.arraycopy(flatBiases, index, biases[i], 0, neurons[i + 1]);
+      index = index + neurons[i + 1];
+    }
+    return biases;
   }
 
   private static double[][] unflat(double[] flatWeights, int firstDimension, int secondDimension) {
@@ -157,7 +185,7 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
   }
 
   public static int countWeights(int[] neurons) {
-    return neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2];
+    return neurons[0] * neurons[1] + neurons[1] * neurons[1] + neurons[1] * neurons[2] + neurons[1] + neurons[2];
   }
 
   @Override
@@ -175,12 +203,13 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
       double recurrent = IntStream.range(0, neurons[1]).mapToDouble(h1 ->
           activationValues[1][h1] * recurrentWeights[h1][h]
       ).sum();
-      return activationFunction.apply(inputs + recurrent);
+      return activationFunction.apply(inputs + recurrent + biases[0][h]);
     }).toArray();
     activationValues[1] = recurrentOutputs;
     activationValues[2] = IntStream.range(0, neurons[2]).mapToDouble(o ->
         activationFunction.apply(
-            IntStream.range(0, neurons[1]).mapToDouble(h -> activationValues[1][h] * outputWeights[h][o]).sum()
+            biases[1][o] +
+                IntStream.range(0, neurons[1]).mapToDouble(h -> activationValues[1][h] * outputWeights[h][o]).sum()
         )
     ).toArray();
     return activationValues[2];
@@ -201,7 +230,12 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     RecurrentNeuralNetwork that = (RecurrentNeuralNetwork) o;
-    return activationFunction == that.activationFunction && Arrays.equals(neurons, that.neurons) && Arrays.deepEquals(inputWeights, that.inputWeights) && Arrays.deepEquals(recurrentWeights, that.recurrentWeights) && Arrays.deepEquals(outputWeights, that.outputWeights);
+    return activationFunction == that.activationFunction &&
+        Arrays.equals(neurons, that.neurons) &&
+        Arrays.deepEquals(inputWeights, that.inputWeights) &&
+        Arrays.deepEquals(recurrentWeights, that.recurrentWeights) &&
+        Arrays.deepEquals(outputWeights, that.outputWeights) &&
+        Arrays.deepEquals(biases, that.biases);
   }
 
   @Override
@@ -211,6 +245,7 @@ public class RecurrentNeuralNetwork implements Serializable, RealFunction, Param
     result = 31 * result + Arrays.deepHashCode(inputWeights);
     result = 31 * result + Arrays.deepHashCode(recurrentWeights);
     result = 31 * result + Arrays.deepHashCode(outputWeights);
+    result = 31 * result + Arrays.deepHashCode(biases);
     return result;
   }
 
