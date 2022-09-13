@@ -170,7 +170,6 @@ public class Locomotion extends AbstractTask<Robot, Outcome> {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World<Body> world = new World<>();
-    world.setGravity(new Vector2(0.0, 0.0));
     world.setSettings(settings);
     List<WorldObject> worldObjects = new ArrayList<>();
     Ground ground = new Ground(groundProfile[0], groundProfile[1]);

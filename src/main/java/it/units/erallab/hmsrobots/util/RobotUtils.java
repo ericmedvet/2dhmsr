@@ -201,6 +201,7 @@ public class RobotUtils {
     String tripod = "tripod-(?<w>\\d+)x(?<h>\\d+)";
     String ball = "ball-(?<d>\\d+)";
     String comb = "comb-(?<w>\\d+)x(?<h>\\d+)";
+    String cross = "cross-(?<w>\\d+)x(?<h>\\d+)";
     String t = "t-(?<w>\\d+)x(?<h>\\d+)";
     Map<String, String> params;
     if ((params = params(box, name)) != null) {
@@ -231,6 +232,11 @@ public class RobotUtils {
       int w = Integer.parseInt(params.get("w"));
       int h = Integer.parseInt(params.get("h"));
       return Grid.create(w, h, (x, y) -> (y >= h / 2 || x % 2 == 0));
+    }
+    if ((params = params(cross, name)) != null) {
+      int w = Integer.parseInt(params.get("w"));
+      int h = Integer.parseInt(params.get("h"));
+      return Grid.create(w, h, (x, y) -> (x == w / 2 || y == h / 2));
     }
     if ((params = params(t, name)) != null) {
       int w = Integer.parseInt(params.get("w"));
