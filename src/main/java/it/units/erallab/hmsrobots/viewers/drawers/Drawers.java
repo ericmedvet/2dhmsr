@@ -22,6 +22,7 @@ import it.units.erallab.hmsrobots.core.controllers.DistributedSensing;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.objects.Ground;
 import it.units.erallab.hmsrobots.core.objects.Robot;
+import it.units.erallab.hmsrobots.core.objects.Wall;
 import it.units.erallab.hmsrobots.core.snapshots.MLPState;
 import it.units.erallab.hmsrobots.core.snapshots.RobotShape;
 import it.units.erallab.hmsrobots.core.snapshots.Snapshot;
@@ -288,7 +289,7 @@ public class Drawers {
                 DistanceBasedDevoLocomotion.CurrentTarget.class,
                 null
             )),
-            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Ground.class, null)),
+            new PolyDrawer(PolyDrawer.TEXTURE_PAINT, SubtreeDrawer.Extractor.matches(null, Wall.class, null)),
             new VoxelDrawer(),
             new SensorReadingsSectorDrawer(),
             new LidarDrawer()
