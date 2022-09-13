@@ -69,8 +69,8 @@ public class SqueezeWithAffordances extends AbstractTask<Robot, AffordancesOutco
           0.0,
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
-      if (!controller.getLeftFirstContact()) controller.setLeftFirstContact(robot.getVoxels().stream().anyMatch(x -> isTouchingWall(x.value(), leftFrontWall)));
-      if (!controller.getRightFirstContact()) controller.setRightFirstContact(robot.getVoxels().stream().anyMatch(x -> isTouchingWall(x.value(), rightFrontWall)));
+      if (!controller.getLeftFirstContact()) controller.setLeftFirstContact(robot.getVoxels().stream().anyMatch(x -> x.value() != null && isTouchingWall(x.value(), leftFrontWall)));
+      if (!controller.getRightFirstContact()) controller.setRightFirstContact(robot.getVoxels().stream().anyMatch(x -> x.value() != null && isTouchingWall(x.value(), rightFrontWall)));
     }
     stopWatch.stop();
     //prepare outcome
