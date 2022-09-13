@@ -209,6 +209,14 @@ public class DistributedSensingWithAffordances extends AbstractController implem
 
   public List<Integer> getVotes() { return votes; }
 
+  public boolean getLeftFirstContact() { return leftFirstContact; }
+
+  public boolean getRightFirstContact() { return rightFirstContact; }
+
+  public void setRightFirstContact(boolean value) { rightFirstContact = value; }
+
+  public void setLeftFirstContact(boolean value) { leftFirstContact = value; }
+
   public Grid<TimedRealFunction> getFunctions() {
     return functions;
   }

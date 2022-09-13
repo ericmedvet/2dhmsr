@@ -13,6 +13,8 @@ public abstract class RigidBody implements WorldObject, Snapshottable {
 
   protected List<Body> bodies;
 
+  public List<Body> getBodies() { return bodies; }
+
   @Override
   public void addTo(World<Body> world) {
     for (Body body : bodies) {

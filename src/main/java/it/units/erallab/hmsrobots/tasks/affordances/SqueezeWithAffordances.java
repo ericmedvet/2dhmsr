@@ -3,9 +3,7 @@ package it.units.erallab.hmsrobots.tasks.affordances;
 import it.units.erallab.hmsrobots.core.controllers.DistributedSensingWithAffordances;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
 import it.units.erallab.hmsrobots.core.geometry.Point2;
-import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.Wall;
-import it.units.erallab.hmsrobots.core.objects.WorldObject;
+import it.units.erallab.hmsrobots.core.objects.*;
 import it.units.erallab.hmsrobots.core.snapshots.SnapshotListener;
 import it.units.erallab.hmsrobots.tasks.AbstractTask;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
@@ -61,6 +59,7 @@ public class SqueezeWithAffordances extends AbstractTask<Robot, AffordancesOutco
     worldObjects.add(robot);
     initialPlacement = robot.center();
     //run
+    DistributedSensingWithAffordances controller = (DistributedSensingWithAffordances) robot.getController();
     Map<Double, Outcome.Observation> observations = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
     double t = 0d;
     while (t < finalT) {
@@ -70,11 +69,24 @@ public class SqueezeWithAffordances extends AbstractTask<Robot, AffordancesOutco
           0.0,
           (double) stopWatch.getTime(TimeUnit.MILLISECONDS) / 1000d
       ));
+      if (!controller.getLeftFirstContact()) controller.setLeftFirstContact(robot.getVoxels().stream().anyMatch(x -> isTouchingWall(x.value(), leftFrontWall)));
+      if (!controller.getRightFirstContact()) controller.setRightFirstContact(robot.getVoxels().stream().anyMatch(x -> isTouchingWall(x.value(), rightFrontWall)));
     }
     stopWatch.stop();
     //prepare outcome
-    return new AffordancesOutcome(observations, target, initialPlacement,
-        (DistributedSensingWithAffordances) robot.getController(), isPassable);
+    return new AffordancesOutcome(observations, target, initialPlacement, controller, isPassable);
+  }
+
+  public static boolean isTouchingWall(Voxel voxel, Wall wall) {
+    for (Body vertexBody : voxel.getVertexBodies()) {
+      List<Body> inContactBodies = voxel.getWorld().getInContactBodies(vertexBody, false);
+      for (Body inContactBody : inContactBodies) {
+        if (inContactBody == wall.getBodies().get(0)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 }
