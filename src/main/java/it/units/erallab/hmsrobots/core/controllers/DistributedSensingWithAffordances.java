@@ -81,7 +81,7 @@ public class DistributedSensingWithAffordances extends AbstractController implem
             voxels.getW(),
             voxels.getH(),
             (x, y) -> voxels.get(x, y) == null ? null : new FunctionWrapper(RealFunction.build(
-                (double[] in) -> new double[1 + signals * Dir.values().length],
+                (double[] in) -> new double[2 + signals * Dir.values().length],
                 nOfInputs(voxels.get(x, y), signals),
                 nOfOutputs(voxels.get(x, y), signals)
             )
@@ -174,7 +174,7 @@ public class DistributedSensingWithAffordances extends AbstractController implem
       )];
       //save outputs
       controlSignalsGrid.set(entry.key().x(), entry.key().y(), outputs[0]);
-      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, outputs.length - 1);
+      System.arraycopy(outputs, 1, currentSignalsGrid.get(entry.key().x(), entry.key().y()), 0, outputs.length - 2);
       if (leftFirstContact && rightFirstContact) {
         tempVotes.add(outputs[outputs.length - 1]);
       }
@@ -206,6 +206,8 @@ public class DistributedSensingWithAffordances extends AbstractController implem
     votes.add((numPos >= numNeg) ? 1 : 0);
     tempVotes.clear();
   }
+
+  public List<Integer> getVotes() { return votes; }
 
   public Grid<TimedRealFunction> getFunctions() {
     return functions;

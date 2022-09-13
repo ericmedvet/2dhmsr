@@ -1,6 +1,8 @@
 package it.units.erallab.hmsrobots.tasks.affordances;
 
+import it.units.erallab.hmsrobots.core.controllers.DistributedSensingWithAffordances;
 import it.units.erallab.hmsrobots.core.geometry.BoundingBox;
+import it.units.erallab.hmsrobots.core.geometry.Point2;
 import it.units.erallab.hmsrobots.core.objects.Robot;
 import it.units.erallab.hmsrobots.core.objects.Wall;
 import it.units.erallab.hmsrobots.core.objects.WorldObject;
@@ -18,22 +20,24 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
-public class SqueezeWithAffordances extends AbstractTask<Robot, Outcome> {
+public class SqueezeWithAffordances extends AbstractTask<Robot, AffordancesOutcome> {
 
   private final int bodyLength;
   private final double apertureSize;
+  private final boolean isPassable;
   private final double finalT;
   private final double WALL_THICKNESS = 5.0;
 
-  public SqueezeWithAffordances(double finalT, int bodyLength, double apertureSize, Settings settings) {
+  public SqueezeWithAffordances(double finalT, int bodyLength, double apertureSize, boolean isPassable, Settings settings) {
     super(settings);
-    this.finalT = finalT;
     this.bodyLength = bodyLength;
     this.apertureSize = apertureSize;
+    this.isPassable = isPassable;
+    this.finalT = finalT;
   }
 
   @Override
-  public Outcome apply(Robot robot, SnapshotListener listener) {
+  public AffordancesOutcome apply(Robot robot, SnapshotListener listener) {
     StopWatch stopWatch = StopWatch.createStarted();
     //init world
     World<Body> world = new World<>();
@@ -47,13 +51,15 @@ public class SqueezeWithAffordances extends AbstractTask<Robot, Outcome> {
     rightFrontWall.addTo(world);
     worldObjects.add(rightFrontWall);
     robot.reset();
+    Point2 target = new Point2(0.0, bodyLength * 4);
     //position robot: translate
-    Vector2 initialPlacement = new Vector2(0, - bodyLength * 1.5);
+    Point2 initialPlacement = new Point2(0, - bodyLength * 1.5);
     BoundingBox boundingBox = robot.boundingBox();
-    robot.translate(new Vector2(initialPlacement.x - boundingBox.min().x(), initialPlacement.y - boundingBox.min().y()));
+    robot.translate(new Vector2(initialPlacement.x() - boundingBox.min().x(), initialPlacement.y() - boundingBox.min().y()));
     //add robot to world
     robot.addTo(world);
     worldObjects.add(robot);
+    initialPlacement = robot.center();
     //run
     Map<Double, Outcome.Observation> observations = new HashMap<>((int) Math.ceil(finalT / settings.getStepFrequency()));
     double t = 0d;
@@ -67,7 +73,8 @@ public class SqueezeWithAffordances extends AbstractTask<Robot, Outcome> {
     }
     stopWatch.stop();
     //prepare outcome
-    return new Outcome(observations);
+    return new AffordancesOutcome(observations, target, initialPlacement,
+        (DistributedSensingWithAffordances) robot.getController(), isPassable);
   }
 
 }
