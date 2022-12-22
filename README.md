@@ -2,6 +2,8 @@
 
 2D-VSR-Sim is a Java framework for experimenting with a 2-D version of the *voxel-based soft robots* (VSRs) [1].
 
+**A newer, better version of this software is [2d-MR-Sim](https://github.com/ericmedvet/2dmrsim); see also [2D-Robot-Evolution](https://github.com/ericmedvet/2d-robot-evolution/) for an extended documentation on how to use [2d-MR-Sim](https://github.com/ericmedvet/2dmrsim).**
+
 If you use this software, please cite one or both of the following papers:
 
 - Medvet, Bartoli, De Lorenzo, Seriani; [2D-VSR-Sim: a Simulation Tool for the Optimization of 2-D Voxel-based Soft Robots](https://doi.org/10.1016/j.softx.2020.100573); SoftwareX, 12:100573, 2020
